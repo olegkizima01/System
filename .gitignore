@@ -1,8 +1,9 @@
 # Windsurf Cleanup System - .gitignore
 
 # Конфігурації (ідентифікатори) - НЕ комітити!
-configs/
+configs/*
 !configs/.gitkeep
+!configs/README.md
 
 # Тимчасові файли
 *.tmp

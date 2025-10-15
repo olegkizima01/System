@@ -83,7 +83,10 @@ safe_remove ~/Library/Saved\ Application\ State/com.windsurf.savedState
 
 # 2. ВИДАЛЕННЯ ДОДАТКУ
 echo "\n[2/10] Видалення додатку Windsurf..."
+echo "⚠️  ВАЖЛИВО: Додаток Windsurf буде ВИДАЛЕНО!"
+echo "💡 Після cleanup потрібно буде скачати та встановити Windsurf заново"
 safe_remove /Applications/Windsurf.app
+echo "✅ Додаток видалено з /Applications"
 
 # 3. КЕШІ ТА ТИМЧАСОВІ ФАЙЛИ
 echo "\n[3/10] Очищення кешів і тимчасових файлів..."
@@ -230,14 +233,14 @@ if [ -f ~/Library/Application\ Support/Windsurf/User/globalStorage/storage.json 
 fi
 
 # Зберегти новий hostname
-echo "And-MAC" > "$NEW_CONFIG_PATH/hostname.txt"
+echo "$NEW_HOSTNAME" > "$NEW_CONFIG_PATH/hostname.txt"
 
 # Метадані
 cat > "$NEW_CONFIG_PATH/metadata.json" << EOF
 {
   "name": "$NEW_CONFIG_NAME",
   "created": "$(date +%Y-%m-%d\ %H:%M:%S)",
-  "hostname": "And-MAC",
+  "hostname": "$NEW_HOSTNAME",
   "description": "Auto-generated Windsurf profile"
 }
 EOF
@@ -258,12 +261,15 @@ safe_remove ~/Library/Application\ Support/Windsurf/product.json
 # 10. ЗМІНА СИСТЕМНИХ ІДЕНТИФІКАТОРІВ
 echo "\n[10/10] Зміна системних ідентифікаторів..."
 
-# Зміна hostname (тимчасово на 5 годин)
-NEW_HOSTNAME="And-MAC"
+# Генерація унікального hostname (випадковий)
+# Формат: Mac-<8 випадкових символів> (наприклад: Mac-A7F2E4B9)
+RANDOM_SUFFIX=$(openssl rand -hex 4 | tr '[:lower:]' '[:upper:]')
+NEW_HOSTNAME="Mac-${RANDOM_SUFFIX}"
 ORIGINAL_HOSTNAME=$(scutil --get HostName 2>/dev/null || echo "DEVs-Mac-Studio")
 
 echo "🔄 Зміна hostname на $NEW_HOSTNAME на 5 годин..."
 echo "📝 Оригінальний hostname: $ORIGINAL_HOSTNAME"
+echo "🎲 Новий унікальний hostname: $NEW_HOSTNAME"
 
 sudo scutil --set HostName "$NEW_HOSTNAME"
 sudo scutil --set LocalHostName "$NEW_HOSTNAME"
