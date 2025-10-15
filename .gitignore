@@ -1,0 +1,57 @@
+# Windsurf Cleanup System - .gitignore
+
+# Конфігурації (ідентифікатори) - НЕ комітити!
+configs/
+!configs/.gitkeep
+
+# Тимчасові файли
+*.tmp
+*.bak
+*.swp
+*.swo
+*~
+
+# Логи
+*.log
+logs/
+*.log.*
+
+# Бекапи (якщо хтось створить локально)
+backup/
+backups/
+*_backup/
+windsurf_backup_*/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Персональні налаштування
+.env
+.env.local
+config.local.sh
+my_*.sh
+
+# Тести (якщо будуть)
+test/
+tests/
+*.test.sh
+
+# Кеш
+.cache/
+cache/

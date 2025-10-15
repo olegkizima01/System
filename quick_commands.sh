@@ -15,6 +15,25 @@
 ./restore_windsurf_backup.sh
 
 # ============================================
+# ІНСТАЛЯЦІЯ WINDSURF ПІСЛЯ CLEANUP
+# ============================================
+
+# ⚠️ ВАЖЛИВО: Перезавантаження НЕ потрібне!
+# Windsurf можна запускати ОДРАЗУ після cleanup
+
+# Закрити Windsurf перед cleanup
+killall Windsurf 2>/dev/null
+
+# Запустити Windsurf після cleanup (зачекайте 5-10 сек)
+sleep 10 && open -a Windsurf
+
+# Або завантажити знову (якщо видалили)
+open https://codeium.com/windsurf
+
+# Через Homebrew
+brew install --cask windsurf
+
+# ============================================
 # КОРИСНІ КОМАНДИ
 # ============================================
 

@@ -4,6 +4,14 @@ echo "=================================================="
 echo "🚀 ГЛИБОКЕ ВИДАЛЕННЯ WINDSURF ДЛЯ НОВОГО КЛІЄНТА"
 echo "=================================================="
 
+# Директорії для конфігурацій
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+CONFIGS_DIR="$SCRIPT_DIR/configs"
+ORIGINAL_CONFIG="$CONFIGS_DIR/original"
+
+# Створити директорії якщо не існують
+mkdir -p "$CONFIGS_DIR"
+
 # Функція для безпечного видалення
 safe_remove() {
     if [ -e "$1" ]; then
@@ -11,6 +19,55 @@ safe_remove() {
         rm -rf "$1" 2>/dev/null
     fi
 }
+
+# Функція для збереження поточної конфігурації як оригінал
+save_as_original() {
+    echo "\n💎 Збереження поточної конфігурації як ОРИГІНАЛ..."
+    
+    mkdir -p "$ORIGINAL_CONFIG/User/globalStorage"
+    
+    # Зберегти Machine-ID
+    if [ -f ~/Library/Application\ Support/Windsurf/machineid ]; then
+        cp ~/Library/Application\ Support/Windsurf/machineid "$ORIGINAL_CONFIG/machineid"
+        echo "  ✓ Machine-ID збережено"
+    fi
+    
+    # Зберегти Storage
+    if [ -f ~/Library/Application\ Support/Windsurf/storage.json ]; then
+        cp ~/Library/Application\ Support/Windsurf/storage.json "$ORIGINAL_CONFIG/storage.json"
+        echo "  ✓ Storage збережено"
+    fi
+    
+    # Зберегти Global Storage
+    if [ -f ~/Library/Application\ Support/Windsurf/User/globalStorage/storage.json ]; then
+        cp ~/Library/Application\ Support/Windsurf/User/globalStorage/storage.json "$ORIGINAL_CONFIG/User/globalStorage/storage.json"
+        echo "  ✓ Global Storage збережено"
+    fi
+    
+    # Зберегти hostname
+    ORIGINAL_HOSTNAME=$(scutil --get HostName 2>/dev/null || echo "DEVs-Mac-Studio")
+    echo "$ORIGINAL_HOSTNAME" > "$ORIGINAL_CONFIG/hostname.txt"
+    echo "  ✓ Hostname збережено: $ORIGINAL_HOSTNAME"
+    
+    # Метадані
+    cat > "$ORIGINAL_CONFIG/metadata.json" << EOF
+{
+  "name": "original",
+  "created": "$(date +%Y-%m-%d\ %H:%M:%S)",
+  "hostname": "$ORIGINAL_HOSTNAME",
+  "description": "Original Windsurf configuration for auto-restore"
+}
+EOF
+    
+    echo "✅ Оригінальна конфігурація збережена!"
+}
+
+# Перевірити чи існує оригінальна конфігурація, якщо ні - зберегти
+if [ ! -d "$ORIGINAL_CONFIG" ]; then
+    echo "\n⚠️  Оригінальна конфігурація не знайдена!"
+    echo "📦 Зберігаю поточний стан як ОРИГІНАЛ..."
+    save_as_original
+fi
 
 # 1. ОСНОВНІ ПАПКИ WINDSURF
 echo "\n[1/10] Видалення основних папок..."
@@ -153,6 +210,41 @@ find ~/Library/Application\ Support/Windsurf -name "*.log" -delete 2>/dev/null
 
 echo "📁 Бекапи збережено в: $BACKUP_DIR"
 
+# Зберегти НОВУ конфігурацію в configs/
+echo "\n💾 Збереження нової конфігурації..."
+NEW_CONFIG_NAME="profile_$(date +%Y%m%d_%H%M%S)"
+NEW_CONFIG_PATH="$CONFIGS_DIR/$NEW_CONFIG_NAME"
+mkdir -p "$NEW_CONFIG_PATH/User/globalStorage"
+
+# Копіювати нові ідентифікатори
+if [ -f ~/Library/Application\ Support/Windsurf/machineid ]; then
+    cp ~/Library/Application\ Support/Windsurf/machineid "$NEW_CONFIG_PATH/machineid"
+fi
+
+if [ -f ~/Library/Application\ Support/Windsurf/storage.json ]; then
+    cp ~/Library/Application\ Support/Windsurf/storage.json "$NEW_CONFIG_PATH/storage.json"
+fi
+
+if [ -f ~/Library/Application\ Support/Windsurf/User/globalStorage/storage.json ]; then
+    cp ~/Library/Application\ Support/Windsurf/User/globalStorage/storage.json "$NEW_CONFIG_PATH/User/globalStorage/storage.json"
+fi
+
+# Зберегти новий hostname
+echo "And-MAC" > "$NEW_CONFIG_PATH/hostname.txt"
+
+# Метадані
+cat > "$NEW_CONFIG_PATH/metadata.json" << EOF
+{
+  "name": "$NEW_CONFIG_NAME",
+  "created": "$(date +%Y-%m-%d\ %H:%M:%S)",
+  "hostname": "And-MAC",
+  "description": "Auto-generated Windsurf profile"
+}
+EOF
+
+echo "✅ Нову конфігурацію збережено: $NEW_CONFIG_NAME"
+echo "📂 Локація: $NEW_CONFIG_PATH"
+
 # 9. ОЧИЩЕННЯ ГЛОБАЛЬНИХ НАЛАШТУВАНЬ ТА РОЗШИРЕНЬ
 echo "\n[9/10] Видалення розширень та глобальних налаштувань..."
 safe_remove ~/.windsurf/extensions
@@ -195,9 +287,53 @@ sudo killall -HUP mDNSResponder
     sudo dscacheutil -flushcache
     sudo killall -HUP mDNSResponder
     
-    # Відновлення machine-id та storage файлів
+    # Відновлення ОРИГІНАЛЬНОЇ конфігурації з configs/original
+    if [ -d "$ORIGINAL_CONFIG" ]; then
+        echo "🔄 Відновлення ОРИГІНАЛЬНОЇ конфігурації..."
+        
+        # Відновлення machineid
+        if [ -f "$ORIGINAL_CONFIG/machineid" ]; then
+            MACHINEID_PATH=~/Library/Application\ Support/Windsurf/machineid
+            mkdir -p "$(dirname "$MACHINEID_PATH")"
+            cp "$ORIGINAL_CONFIG/machineid" "$MACHINEID_PATH"
+            echo "✅ Machine-ID відновлено з оригіналу"
+        fi
+        
+        # Відновлення storage.json
+        if [ -f "$ORIGINAL_CONFIG/storage.json" ]; then
+            RESTORE_PATH=~/Library/Application\ Support/Windsurf/storage.json
+            mkdir -p "$(dirname "$RESTORE_PATH")"
+            cp "$ORIGINAL_CONFIG/storage.json" "$RESTORE_PATH"
+            echo "✅ Storage відновлено з оригіналу"
+        fi
+        
+        # Відновлення global storage
+        if [ -f "$ORIGINAL_CONFIG/User/globalStorage/storage.json" ]; then
+            RESTORE_PATH=~/Library/Application\ Support/Windsurf/User/globalStorage/storage.json
+            mkdir -p "$(dirname "$RESTORE_PATH")"
+            cp "$ORIGINAL_CONFIG/User/globalStorage/storage.json" "$RESTORE_PATH"
+            echo "✅ Global Storage відновлено з оригіналу"
+        fi
+        
+        # Відновлення hostname з оригіналу
+        if [ -f "$ORIGINAL_CONFIG/hostname.txt" ]; then
+            SAVED_HOSTNAME=$(cat "$ORIGINAL_CONFIG/hostname.txt")
+            echo "🔄 Відновлення оригінального hostname: $SAVED_HOSTNAME"
+            sudo scutil --set HostName "$SAVED_HOSTNAME"
+            sudo scutil --set LocalHostName "$SAVED_HOSTNAME"
+            sudo scutil --set ComputerName "$SAVED_HOSTNAME"
+            sudo dscacheutil -flushcache
+            sudo killall -HUP mDNSResponder
+        fi
+        
+        echo "✅ Оригінальна конфігурація повністю відновлена!"
+    else
+        echo "⚠️  Оригінальна конфігурація не знайдена в $ORIGINAL_CONFIG"
+    fi
+    
+    # Відновлення з тимчасового бекапу (для сумісності)
     if [ -d "$BACKUP_DIR" ]; then
-        echo "🔄 Відновлення machine-id та storage файлів з бекапу..."
+        echo "🔄 Відновлення з тимчасового бекапу (legacy)..."
         
         # Відновлення machineid
         if [ -f "$BACKUP_DIR/machineid.bak" ]; then
@@ -259,21 +395,43 @@ echo "   ✓ Змінено hostname на $NEW_HOSTNAME"
 echo "   ✓ Очищено DNS кеш"
 echo ""
 echo "💾 Інформація про бекапи:"
-echo "   • Директорія: $BACKUP_DIR"
+echo "   • Тимчасовий бекап: $BACKUP_DIR"
 echo "   • Machine-ID: $([ -f "$BACKUP_DIR/machineid.bak" ] && echo "✓ збережено" || echo "✗ не знайдено")"
 echo "   • Storage файли: $(find "$BACKUP_DIR" -name "*.json.bak" 2>/dev/null | wc -l | xargs) шт."
 echo ""
+echo "🔧 СИСТЕМА КОНФІГУРАЦІЙ:"
+echo "   • Оригінальна конфігурація: збережена в configs/original"
+echo "   • Нова конфігурація: $NEW_CONFIG_NAME"
+echo "   • Локація: $CONFIGS_DIR"
+echo "   • Управління: ./manage_configs.sh"
+echo ""
 echo "⏰ АВТОМАТИЧНЕ ВІДНОВЛЕННЯ:"
-echo "   • Через 5 годин всі оригінальні ідентифікатори буде відновлено"
-echo "   • Hostname повернеться до: '$ORIGINAL_HOSTNAME'"
-echo "   • Бекапи буде автоматично видалено після відновлення"
+echo "   • Через 5 годин буде відновлена ОРИГІНАЛЬНА конфігурація"
+echo "   • Hostname повернеться до оригінального"
+echo "   • Machine-ID та Device-ID повернуться до оригіналу"
 echo "   • PID процесу відновлення: $RESTORE_PID"
+echo ""
+echo "💡 УПРАВЛІННЯ КОНФІГУРАЦІЯМИ:"
+echo "   • Запустіть: ./manage_configs.sh"
+echo "   • Перемикайтеся між будь-якими збереженими профілями"
+echo "   • Зберігайте необмежену кількість конфігурацій"
 echo ""
 echo "⚠️  ВАЖЛИВО:"
 echo "   • НЕ перезавантажуйте Mac якщо хочете автовідновлення!"
 echo "   • Windsurf тепер сприйме систему як НОВОГО клієнта"
 echo "   • Для ручного відновлення: cp $BACKUP_DIR/* до відповідних директорій"
 echo ""
-echo "🔄 Для перезавантаження (вимкне автовідновлення): sudo shutdown -r now"
+echo "� ІНСТАЛЯЦІЯ WINDSURF:"
+echo "   • Windsurf можна встановлювати та запускати ОДРАЗУ (перезавантаження НЕ потрібне)"
+echo "   • Скачайте з: https://codeium.com/windsurf"
+echo "   • Або якщо вже встановлений: просто запустіть Windsurf.app"
+echo "   • При першому запуску він побачить вас як НОВОГО користувача"
+echo ""
+echo "💡 РЕКОМЕНДАЦІЇ:"
+echo "   • Якщо Windsurf вже запущений - закрийте його перед cleanup"
+echo "   • Після cleanup - зачекайте 5-10 секунд перед запуском Windsurf"
+echo "   • При першому запуску може попросити авторизацію - це нормально"
+echo ""
+echo "�🔄 Для перезавантаження (вимкне автовідновлення): sudo shutdown -r now"
 echo "📊 Для перевірки процесу відновлення: ps -p $RESTORE_PID"
 echo "=================================================="
