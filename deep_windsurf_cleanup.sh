@@ -107,7 +107,12 @@ echo "✅ Додаток видалено з /Applications"
 echo "\n[3/10] Очищення кешів і тимчасових файлів..."
 safe_remove ~/Library/Caches/Windsurf
 safe_remove ~/Library/Caches/windsurf
-safe_remove ~/Library/Caches/com.windsurf.*
+# Обробка глобальних шаблонів з 'setopt nullglob' щоб уникнути помилок
+setopt nullglob
+for cache_file in ~/Library/Caches/com.windsurf.*; do
+    safe_remove "$cache_file"
+done
+unsetopt nullglob
 find ~/Library/Caches -iname "*windsurf*" -maxdepth 2 -exec rm -rf {} + 2>/dev/null
 
 # 4. CONTAINERS І GROUP CONTAINERS
