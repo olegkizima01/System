@@ -43,6 +43,7 @@ Temporary Items
 .apdisk
 
 # Персональні налаштування
+# .env - тимчасово дозволено для налаштування
 .env
 .env.local
 config.local.sh
@@ -56,3 +57,13 @@ tests/
 # Кеш
 .cache/
 cache/
+
+# Virtual environments
+.venv/
+
+# Великі інсталяційні файли
+*.dmg
+*.zip
+*.app/
+Visual Studio Code*.app/
+Windsurf*.app/
