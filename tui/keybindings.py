@@ -4,6 +4,8 @@ from typing import Any, Callable, List, Sequence, Tuple
 
 from prompt_toolkit.key_binding import KeyBindings
 
+from tui.themes import THEME_NAMES
+
 
 def build_keybindings(
     *,
@@ -45,6 +47,7 @@ def build_keybindings(
     monitor_resolve_watch_items: Callable[[Any], Any],
     monitor_service: Any,
     fs_usage_service: Any,
+    opensnoop_service: Any,
 ) -> KeyBindings:
     kb = KeyBindings()
 
@@ -124,7 +127,7 @@ def build_keybindings(
         elif state.menu_level == MenuLevel.AGENT_SETTINGS:
             max_idx = max(0, len(get_agent_menu_items()) - 1)
         elif state.menu_level == MenuLevel.APPEARANCE:
-            max_idx = 3
+            max_idx = max(0, len(THEME_NAMES) - 1)
         elif state.menu_level == MenuLevel.LANGUAGE:
             max_idx = 1
 
@@ -273,7 +276,7 @@ def build_keybindings(
             return
 
         if state.menu_level == MenuLevel.APPEARANCE:
-            themes = ["monaco", "dracula", "nord", "gruvbox"]
+            themes = list(THEME_NAMES)
             state.menu_index = max(0, min(state.menu_index, len(themes) - 1))
             state.ui_theme = themes[state.menu_index]
             save_ui_settings()

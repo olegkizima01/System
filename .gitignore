@@ -58,6 +58,10 @@ tests/
 .cache/
 cache/
 
+# Python
+__pycache__/
+*.py[cod]
+
 # Virtual environments
 .venv/
 

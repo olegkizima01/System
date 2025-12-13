@@ -4,6 +4,8 @@ from typing import Any, Callable, List, Sequence, Tuple
 
 from prompt_toolkit.filters import Condition
 
+from tui.themes import THEME_NAMES
+
 
 def build_menu(
     *,
@@ -101,7 +103,7 @@ def build_menu(
 
         if state.menu_level == MenuLevel.APPEARANCE:
             result.append(("class:menu.title", f" {tr('menu.appearance.title', state.ui_lang)}\n\n"))
-            themes = ["monaco", "dracula", "nord", "gruvbox"]
+            themes = list(THEME_NAMES)
             state.menu_index = max(0, min(state.menu_index, len(themes) - 1))
             for i, t in enumerate(themes):
                 prefix = " > " if i == state.menu_index else "   "

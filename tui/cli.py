@@ -18,6 +18,8 @@
 """
 
 import argparse
+import atexit
+from collections import Counter, defaultdict
 import glob
 import json
 import os
@@ -44,8 +46,10 @@ from tui.layout import build_app
 from tui.menu import build_menu
 from tui.keybindings import build_keybindings
 from tui.app import TuiRuntime, run_tui as tui_run_tui
+from tui.constants import MAIN_MENU_ITEMS
 from tui.cli_defaults import DEFAULT_CLEANUP_CONFIG
 from tui.cli_localization import AVAILABLE_LOCALES, LocalizationConfig
+from tui.themes import THEME_NAMES, THEMES
 from tui.cli_paths import (
     CLEANUP_CONFIG_PATH,
     LLM_SETTINGS_PATH,
@@ -105,6 +109,19 @@ agent_session = AgentSession()
 agent_chat_mode: bool = True
 
 
+def _env_bool(value: Any) -> Optional[bool]:
+    if value is None:
+        return None
+    s = str(value).strip().lower()
+    if not s:
+        return None
+    if s in {"1", "true", "yes", "y", "on"}:
+        return True
+    if s in {"0", "false", "no", "n", "off"}:
+        return False
+    return None
+
+
 @dataclass
 class ModuleRef:
     editor: str
@@ -114,6 +131,7 @@ class ModuleRef:
 def _load_env() -> None:
     if load_dotenv is not None:
         load_dotenv(os.path.join(SCRIPT_DIR, ".env"))
+    os.environ["SYSTEM_RAG_ENABLED"] = "1"
 
 
 def _monitor_get_sudo_password() -> str:
@@ -123,7 +141,10 @@ def _monitor_get_sudo_password() -> str:
 
 def _load_monitor_settings() -> None:
     try:
+        _load_env()
         if not os.path.exists(MONITOR_SETTINGS_PATH):
+            if str(os.getenv("SUDO_PASSWORD") or "").strip():
+                state.monitor_use_sudo = True
             return
 
         with open(MONITOR_SETTINGS_PATH, "r", encoding="utf-8") as f:
@@ -136,6 +157,290 @@ def _load_monitor_settings() -> None:
             state.monitor_use_sudo = use_sudo
     except Exception:
         return
+
+
+def _maybe_log_monitor_ingest(message: str) -> None:
+    try:
+        fn = globals().get("log")
+        if callable(fn):
+            fn(message, "info")
+    except Exception:
+        return
+
+
+def _monitor_db_read_since_id(db_path: str, last_id: int, limit: int = 5000) -> List[Dict[str, Any]]:
+    rows: List[Dict[str, Any]] = []
+    try:
+        conn = sqlite3.connect(db_path)
+        try:
+            cur = conn.execute(
+                "SELECT id, ts, source, event_type, src_path, dest_path, is_directory, target_key, pid, process, raw_line "
+                "FROM events WHERE id > ? ORDER BY id ASC LIMIT ?",
+                (int(last_id or 0), int(limit)),
+            )
+            for r in cur.fetchall():
+                rows.append(
+                    {
+                        "id": int(r[0] or 0),
+                        "ts": int(r[1] or 0),
+                        "source": str(r[2] or ""),
+                        "event_type": str(r[3] or ""),
+                        "src_path": str(r[4] or ""),
+                        "dest_path": str(r[5] or ""),
+                        "is_directory": bool(int(r[6] or 0)),
+                        "target_key": str(r[7] or ""),
+                        "pid": int(r[8] or 0),
+                        "process": str(r[9] or ""),
+                        "raw_line": str(r[10] or ""),
+                    }
+                )
+        finally:
+            conn.close()
+    except Exception:
+        return []
+    return rows
+
+
+def _monitor_db_get_max_id(db_path: str) -> int:
+    try:
+        conn = sqlite3.connect(db_path)
+        try:
+            cur = conn.execute("SELECT MAX(id) FROM events")
+            row = cur.fetchone()
+            if not row:
+                return 0
+            return int(row[0] or 0)
+        finally:
+            conn.close()
+    except Exception:
+        return 0
+
+
+def _format_monitor_summary(
+    *,
+    title: str,
+    source: str,
+    targets: List[str],
+    ts_from: int,
+    ts_to: int,
+    total_events: int,
+    by_target: Dict[str, int],
+    by_type: Dict[str, int],
+    top_paths: Dict[str, List[Tuple[str, int]]],
+    include_processes: bool,
+    top_processes: List[Tuple[str, int]],
+) -> str:
+    lines: List[str] = []
+    lines.append(title)
+    lines.append(f"source={source} targets={len(targets)} events={total_events}")
+    lines.append(f"ts_range={ts_from}..{ts_to}")
+    if targets:
+        lines.append("targets: " + ", ".join(targets[:20]) + ("" if len(targets) <= 20 else " ..."))
+    if by_target:
+        top_t = sorted(by_target.items(), key=lambda x: x[1], reverse=True)[:10]
+        lines.append("top_targets: " + ", ".join([f"{k}={v}" for k, v in top_t]))
+    if by_type:
+        top_e = sorted(by_type.items(), key=lambda x: x[1], reverse=True)[:10]
+        lines.append("top_event_types: " + ", ".join([f"{k}={v}" for k, v in top_e]))
+    if include_processes and top_processes:
+        lines.append("top_processes: " + ", ".join([f"{k}={v}" for k, v in top_processes[:10]]))
+    if top_paths:
+        for tk, paths in list(top_paths.items())[:10]:
+            if not paths:
+                continue
+            p = ", ".join([f"{path}({cnt})" for path, cnt in paths[:5]])
+            lines.append(f"paths[{tk}]: {p}")
+    return "\n".join(lines)
+
+
+@dataclass
+class _MonitorSummaryService:
+    db_path: str
+    interval_sec: int = 30
+    flush_threshold: int = 250
+    thread: Optional[threading.Thread] = None
+    running: bool = False
+    stop_event: threading.Event = field(default_factory=threading.Event)
+    last_id: int = 0
+    session_start_ts: int = 0
+    session_end_ts: int = 0
+    total_events: int = 0
+    totals_by_target: Counter = field(default_factory=Counter)
+    totals_by_type: Counter = field(default_factory=Counter)
+    totals_by_process: Counter = field(default_factory=Counter)
+    totals_paths_by_target: Dict[str, Counter] = field(default_factory=lambda: defaultdict(Counter))
+    last_flush_ts: int = 0
+
+    def _ingest(self, text: str, metadata: Dict[str, Any]) -> bool:
+        try:
+            _load_env()
+            from system_ai.rag.rag_pipeline import RagPipeline
+
+            rp = RagPipeline(persist_dir="~/.system_cli/chroma")
+            return bool(rp.ingest_text(text, metadata=metadata))
+        except Exception:
+            return False
+
+    def _flush(self, *, kind: str, targets: List[str], source: str) -> None:
+        batch = _monitor_db_read_since_id(self.db_path, self.last_id, limit=5000)
+        if not batch:
+            return
+
+        self.last_id = max(self.last_id, max(int(x.get("id") or 0) for x in batch))
+        ts_values = [int(x.get("ts") or 0) for x in batch if int(x.get("ts") or 0) > 0]
+        ts_from = min(ts_values) if ts_values else int(time.time())
+        ts_to = max(ts_values) if ts_values else int(time.time())
+
+        by_target = Counter()
+        by_type = Counter()
+        by_process = Counter()
+        paths_by_target: Dict[str, Counter] = defaultdict(Counter)
+
+        for e in batch:
+            tk = str(e.get("target_key") or "")
+            et = str(e.get("event_type") or "")
+            by_target[tk] += 1
+            by_type[et] += 1
+            src = str(e.get("src_path") or "")
+            if src:
+                paths_by_target[tk][src] += 1
+            proc = str(e.get("process") or "").strip()
+            if proc:
+                by_process[proc] += 1
+
+        self.total_events += len(batch)
+        self.totals_by_target.update(by_target)
+        self.totals_by_type.update(by_type)
+        self.totals_by_process.update(by_process)
+        for tk, c in paths_by_target.items():
+            self.totals_paths_by_target[tk].update(c)
+        self.session_end_ts = max(self.session_end_ts, ts_to)
+
+        top_paths: Dict[str, List[Tuple[str, int]]] = {}
+        for tk, c in paths_by_target.items():
+            top_paths[tk] = c.most_common(10)
+
+        include_processes = bool(by_process)
+        summary_text = _format_monitor_summary(
+            title=f"MONITOR SUMMARY ({kind})",
+            source=str(source or ""),
+            targets=targets,
+            ts_from=ts_from,
+            ts_to=ts_to,
+            total_events=len(batch),
+            by_target=dict(by_target),
+            by_type=dict(by_type),
+            top_paths=top_paths,
+            include_processes=include_processes,
+            top_processes=by_process.most_common(10),
+        )
+
+        meta = {
+            "type": "monitor_summary",
+            "kind": kind,
+            "source": str(source or ""),
+            "targets": targets,
+            "events": int(len(batch)),
+            "ts_from": int(ts_from),
+            "ts_to": int(ts_to),
+        }
+        ok = self._ingest(summary_text, meta)
+        if ok:
+            self.last_flush_ts = int(time.time())
+            _maybe_log_monitor_ingest(
+                f"Monitor summary ingested: kind={kind} source={source} events={len(batch)} targets={len(targets)}"
+            )
+
+    def _run(self) -> None:
+        while not self.stop_event.wait(timeout=max(5, int(self.interval_sec))):
+            if not self.running:
+                break
+            try:
+                targets = sorted(getattr(state, "monitor_targets", set()) or set())
+                source = str(getattr(state, "monitor_source", "") or "")
+                self._flush(kind="periodic", targets=targets, source=source)
+            except Exception:
+                continue
+
+        try:
+            targets = sorted(getattr(state, "monitor_targets", set()) or set())
+            source = str(getattr(state, "monitor_source", "") or "")
+            self._flush(kind="final", targets=targets, source=source)
+        except Exception:
+            pass
+
+        if self.total_events > 0:
+            try:
+                targets = sorted(getattr(state, "monitor_targets", set()) or set())
+                source = str(getattr(state, "monitor_source", "") or "")
+
+                top_paths_total: Dict[str, List[Tuple[str, int]]] = {}
+                for tk, c in self.totals_paths_by_target.items():
+                    top_paths_total[tk] = c.most_common(10)
+
+                session_text = _format_monitor_summary(
+                    title="MONITOR SESSION SUMMARY",
+                    source=str(source or ""),
+                    targets=targets,
+                    ts_from=int(self.session_start_ts or 0),
+                    ts_to=int(self.session_end_ts or 0),
+                    total_events=int(self.total_events),
+                    by_target=dict(self.totals_by_target),
+                    by_type=dict(self.totals_by_type),
+                    top_paths=top_paths_total,
+                    include_processes=bool(self.totals_by_process),
+                    top_processes=self.totals_by_process.most_common(10),
+                )
+
+                meta = {
+                    "type": "monitor_summary",
+                    "kind": "session",
+                    "source": str(source or ""),
+                    "targets": targets,
+                    "events": int(self.total_events),
+                    "ts_from": int(self.session_start_ts or 0),
+                    "ts_to": int(self.session_end_ts or 0),
+                }
+                if self._ingest(session_text, meta):
+                    _maybe_log_monitor_ingest(
+                        f"Monitor summary ingested: kind=session source={source} events={int(self.total_events)} targets={len(targets)}"
+                    )
+            except Exception:
+                pass
+
+        self.running = False
+
+    def start(self) -> None:
+        if self.running:
+            return
+        self.stop_event.clear()
+        self.running = True
+        self.session_start_ts = int(time.time())
+        self.session_end_ts = int(self.session_start_ts)
+        self.last_flush_ts = 0
+        self.total_events = 0
+        self.totals_by_target = Counter()
+        self.totals_by_type = Counter()
+        self.totals_by_process = Counter()
+        self.totals_paths_by_target = defaultdict(Counter)
+        self.last_id = _monitor_db_get_max_id(self.db_path)
+        self.thread = threading.Thread(target=self._run, daemon=True)
+        self.thread.start()
+
+    def stop(self) -> None:
+        if not self.running:
+            return
+        self.stop_event.set()
+        try:
+            if self.thread:
+                self.thread.join(timeout=8)
+        except Exception:
+            pass
+        self.thread = None
+        self.running = False
+
+
+monitor_summary_service = _MonitorSummaryService(db_path=MONITOR_EVENTS_DB_PATH)
 
 
 def _save_monitor_settings() -> bool:
@@ -154,7 +459,13 @@ def _save_monitor_settings() -> bool:
 
 def _load_ui_settings() -> None:
     try:
+        _load_env()
         if not os.path.exists(UI_SETTINGS_PATH):
+            env_unsafe = _env_bool(os.getenv("SYSTEM_CLI_UNSAFE_MODE"))
+            if env_unsafe is None:
+                env_unsafe = _env_bool(os.getenv("SYSTEM_CLI_AUTO_CONFIRM"))
+            if env_unsafe is not None:
+                state.ui_unsafe_mode = bool(env_unsafe)
             return
         with open(UI_SETTINGS_PATH, "r", encoding="utf-8") as f:
             data = json.load(f)
@@ -170,6 +481,12 @@ def _load_ui_settings() -> None:
         unsafe_mode = data.get("unsafe_mode")
         if isinstance(unsafe_mode, bool):
             state.ui_unsafe_mode = unsafe_mode
+
+        env_unsafe = _env_bool(os.getenv("SYSTEM_CLI_UNSAFE_MODE"))
+        if env_unsafe is None:
+            env_unsafe = _env_bool(os.getenv("SYSTEM_CLI_AUTO_CONFIRM"))
+        if env_unsafe is not None:
+            state.ui_unsafe_mode = bool(env_unsafe)
     except Exception:
         return
 
@@ -790,7 +1107,7 @@ def _agent_send(user_text: str) -> Tuple[bool, str]:
         "You may also control UI theme via ui_theme_status/ui_theme_set (or /theme).\n\n"
         "Safety rules:\n"
         "- If Unsafe mode is OFF: require CONFIRM_RUN / CONFIRM_SHELL / CONFIRM_APPLESCRIPT for execution.\n"
-        "- If Unsafe mode is ON: confirmations are bypassed (dangerous).\n\n"
+        "- If Unsafe mode is ON: confirmations are bypassed (dangerous). Do not ask the user to confirm; proceed.\n\n"
         f"Reply in {lang_name(state.chat_lang)}. Be concise and practical.\n"
     )
 
@@ -1136,1019 +1453,13 @@ def _llm_ask(cfg: Dict[str, Any], question: str) -> Tuple[bool, str]:
 
 # ================== TUI STATE & THEME ==================
 
-MAIN_MENU_ITEMS: List[Tuple[str, MenuLevel]] = [
-    ("menu.item.custom_tasks", MenuLevel.CUSTOM_TASKS),
-    ("menu.item.run_cleanup", MenuLevel.CLEANUP_EDITORS),
-    ("menu.item.modules", MenuLevel.MODULE_EDITORS),
-    ("menu.item.install", MenuLevel.INSTALL_EDITORS),
-    ("menu.item.monitoring", MenuLevel.MONITORING),
-    ("menu.item.settings", MenuLevel.SETTINGS),
-]
-
-
-def _task_windsurf_register() -> Tuple[bool, str]:
-    try:
-        log("Windsurf registration: відкриваю сторінки та друкую кроки...", "action")
-        log("1) Увімкни VPN (за потреби).", "info")
-        log("2) Відкрий temp-mail і скопіюй тимчасову пошту.", "info")
-        log("3) Відкрий форму реєстрації Windsurf і введи: ім'я/прізвище, email, підтверди TOS.", "info")
-        log("4) Створи пароль (8-64, мінімум 1 літера і 1 цифра).", "info")
-        log("5) У temp-mail відкрий лист від Windsurf та скопіюй 6-значний код.", "info")
-        log("6) Встав код у форму 'Check your inbox'.", "info")
-        log("7) Після успіху: натисни 'Continue with Free' (або Start Free Trial, якщо потрібно).", "info")
-        log("8) Якщо браузер питає 'Відкрити додаток Windsurf?' — погодься (Open Windsurf).", "info")
-
-        subprocess.run(["open", "https://temp-mail.org"], check=False)
-        subprocess.run(["open", "https://windsurf.com/editor/signup"], check=False)
-        return True, "Windsurf registration: сторінки відкрито. Дотримуйся інструкції у логах."
-    except Exception as e:
-        return False, f"Windsurf registration: помилка запуску: {e}"
-
-
-def _get_monitoring_menu_items() -> List[Tuple[str, MenuLevel]]:
-    return [
-        ("menu.monitoring.targets", MenuLevel.MONITOR_TARGETS),
-        ("menu.monitoring.start_stop", MenuLevel.MONITOR_CONTROL),
-    ]
-
-
-def _get_custom_tasks_menu_items() -> List[Tuple[str, Any]]:
-    return [("menu.custom.windsurf_register", _task_windsurf_register)]
-
-
-def _get_settings_menu_items() -> List[Tuple[str, MenuLevel]]:
-    return [
-        ("menu.settings.llm", MenuLevel.LLM_SETTINGS),
-        ("menu.settings.agent", MenuLevel.AGENT_SETTINGS),
-        ("menu.settings.appearance", MenuLevel.APPEARANCE),
-        ("menu.settings.language", MenuLevel.LANGUAGE),
-        ("menu.settings.locales", MenuLevel.LOCALES),
-        ("menu.settings.unsafe_mode", MenuLevel.UNSAFE_MODE),
-    ]
-
-
-def _script_env() -> Dict[str, str]:
-    env = dict(os.environ)
-    env["AUTO_YES"] = "1"
-    env["UNSAFE_MODE"] = "1" if bool(getattr(state, "ui_unsafe_mode", False)) else "0"
-    return env
-
-
-def _get_llm_menu_items() -> List[Tuple[str, str]]:
-    _load_env()
-    _load_llm_settings()
-    provider = str(os.getenv("LLM_PROVIDER") or "copilot")
-    main_model = str(os.getenv("COPILOT_MODEL") or "")
-    vision_model = str(os.getenv("COPILOT_VISION_MODEL") or "")
-    return [
-        (f"Provider: {provider}", "provider"),
-        (f"Main model: {main_model}", "main"),
-        (f"Vision model: {vision_model}", "vision"),
-    ]
-
-
-def _get_agent_menu_items() -> List[Tuple[str, str]]:
-    global agent_chat_mode
-    enabled = "ON" if agent_session.enabled else "OFF"
-    mode = "ON" if agent_chat_mode else "OFF"
-    return [
-        (f"Agent enabled: {enabled}", "agent_enabled"),
-        (f"Agent mode: {mode}", "agent_mode"),
-        ("Agent reset session", "agent_reset"),
-    ]
-
-
-class _MonitorEventHandler(FileSystemEventHandler):
-    def __init__(self, db_path: str, target_key: str):
-        super().__init__()
-        self.db_path = db_path
-        self.target_key = target_key
-
-    def _insert(self, event_type: str, src_path: str, dest_path: str, is_directory: bool) -> None:
-        _monitor_db_insert(
-            self.db_path,
-            source="watchdog",
-            event_type=event_type,
-            src_path=src_path,
-            dest_path=dest_path,
-            is_directory=is_directory,
-            target_key=self.target_key,
-        )
-
-    def on_created(self, event):
-        self._insert("created", getattr(event, "src_path", ""), "", bool(getattr(event, "is_directory", False)))
-
-    def on_modified(self, event):
-        self._insert("modified", getattr(event, "src_path", ""), "", bool(getattr(event, "is_directory", False)))
-
-    def on_deleted(self, event):
-        self._insert("deleted", getattr(event, "src_path", ""), "", bool(getattr(event, "is_directory", False)))
-
-    def on_moved(self, event):
-        self._insert(
-            "moved",
-            getattr(event, "src_path", ""),
-            getattr(event, "dest_path", ""),
-            bool(getattr(event, "is_directory", False)),
-        )
-
-
-@dataclass
-class _MonitorService:
-    db_path: str
-    observer: Any = None
-    running: bool = False
-
-    def _ensure_schema(self, conn: sqlite3.Connection) -> None:
-        conn.execute(
-            "CREATE TABLE IF NOT EXISTS events("
-            "id INTEGER PRIMARY KEY AUTOINCREMENT, "
-            "ts INTEGER NOT NULL, "
-            "source TEXT NOT NULL DEFAULT 'watchdog', "
-            "event_type TEXT NOT NULL, "
-            "src_path TEXT NOT NULL, "
-            "dest_path TEXT NOT NULL, "
-            "is_directory INTEGER NOT NULL, "
-            "target_key TEXT NOT NULL, "
-            "pid INTEGER NOT NULL DEFAULT 0, "
-            "process TEXT NOT NULL DEFAULT '', "
-            "raw_line TEXT NOT NULL DEFAULT ''"
-            ")"
-        )
-
-        existing = set()
-        try:
-            cur = conn.execute("PRAGMA table_info(events)")
-            for row in cur.fetchall():
-                existing.add(str(row[1]))
-        except Exception:
-            existing = set()
-
-        if "source" not in existing:
-            conn.execute("ALTER TABLE events ADD COLUMN source TEXT NOT NULL DEFAULT 'watchdog'")
-        if "pid" not in existing:
-            conn.execute("ALTER TABLE events ADD COLUMN pid INTEGER NOT NULL DEFAULT 0")
-        if "process" not in existing:
-            conn.execute("ALTER TABLE events ADD COLUMN process TEXT NOT NULL DEFAULT ''")
-        if "raw_line" not in existing:
-            conn.execute("ALTER TABLE events ADD COLUMN raw_line TEXT NOT NULL DEFAULT ''")
-
-    def _ensure_db(self) -> bool:
-        try:
-            os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
-            conn = sqlite3.connect(self.db_path)
-            try:
-                self._ensure_schema(conn)
-                conn.commit()
-            finally:
-                conn.close()
-            return True
-        except Exception:
-            return False
-
-    def start(self, watch_items: List[Tuple[str, str]]) -> Tuple[bool, str]:
-        if self.running:
-            return True, "Monitoring already active."
-        if Observer is None or FileSystemEventHandler is None:
-            return False, "watchdog is not available. Install: pip install watchdog"
-        if not self._ensure_db():
-            return False, f"Failed to init DB: {self.db_path}"
-        if not watch_items:
-            return False, "No watch paths resolved from selected targets."
-
-        obs = Observer()
-        scheduled = 0
-        for path, target_key in watch_items:
-            if not os.path.isdir(path):
-                continue
-            handler = _MonitorEventHandler(self.db_path, target_key)
-            obs.schedule(handler, path, recursive=True)
-            scheduled += 1
-
-        if scheduled == 0:
-            return False, "No existing directories to watch (all paths missing)."
-
-        obs.start()
-        self.observer = obs
-        self.running = True
-        return True, f"Monitoring started. Watched roots: {scheduled}"
-
-    def stop(self) -> Tuple[bool, str]:
-        if not self.running:
-            return True, "Monitoring already stopped."
-        try:
-            if self.observer:
-                self.observer.stop()
-                self.observer.join(timeout=5)
-        except Exception:
-            pass
-        self.observer = None
-        self.running = False
-        return True, "Monitoring stopped."
-
-
-monitor_service = _MonitorService(db_path=MONITOR_EVENTS_DB_PATH)
-
-
-@dataclass
-class _FsUsageMonitorService:
-    db_path: str
-    proc: Optional[subprocess.Popen] = None
-    thread: Optional[threading.Thread] = None
-    running: bool = False
-    stop_event: threading.Event = field(default_factory=threading.Event)
-    target_map: Dict[str, str] = field(default_factory=dict)
-
-    def _parse_line(self, line: str) -> Tuple[str, str, str, int]:
-        raw = (line or "").strip("\n")
-        if not raw:
-            return "", "", "", 0
-
-        # Typical sample (may vary by window width):
-        # 08:02:07.011716 open F=27 (...) /path/to/file 0.000074 node.4017721
-        # We want: op=open, path=/path/to/file, process=node, pid=4017721
-        m = re.search(r"\s+(\d+\.\d+)\s+([A-Za-z0-9_.-]+)\.(\d+)\s*$", raw)
-        process = ""
-        pid = 0
-        core = raw
-        if m:
-            process = m.group(2)
-            try:
-                pid = int(m.group(3) or 0)
-            except Exception:
-                pid = 0
-            core = raw[: m.start()].rstrip()
-
-        parts = [p for p in core.split(" ") if p]
-        if len(parts) < 2:
-            return "", "", process, pid
-
-        # First token is usually time, second is syscall/op.
-        op = parts[1]
-
-        # Find the first absolute path token in the remaining payload.
-        path = ""
-        for tok in parts[2:]:
-            if tok.startswith("/"):
-                path = tok
-                break
-
-        return op, path, process, pid
-
-    def _resolve_target_key(self, process: str) -> str:
-        p = (process or "").strip().lower()
-        if not p:
-            return "process:unknown"
-        if p in self.target_map:
-            return self.target_map[p]
-        for k, v in self.target_map.items():
-            if k and k in p:
-                return v
-        return f"process:{process}"
-
-    def _reader(self) -> None:
-        if not self.proc or not self.proc.stdout:
-            return
-        try:
-            for line in self.proc.stdout:
-                if self.stop_event.is_set():
-                    break
-                raw = (line or "").rstrip("\n")
-                op, path, process, pid = self._parse_line(raw)
-                if not op and not path and not process:
-                    continue
-                target_key = self._resolve_target_key(process)
-                _monitor_db_insert(
-                    self.db_path,
-                    source="fs_usage",
-                    event_type=op or "event",
-                    src_path=path or "",
-                    dest_path="",
-                    is_directory=False,
-                    target_key=target_key,
-                    pid=int(pid or 0),
-                    process=process,
-                    raw_line=raw,
-                )
-        except Exception:
-            return
-
-    def start(self, process_filters: List[str], target_map: Dict[str, str], use_sudo: bool) -> Tuple[bool, str]:
-        if self.running:
-            return True, "Monitoring already active."
-        if not monitor_service._ensure_db():
-            return False, f"Failed to init DB: {self.db_path}"
-        if shutil.which("fs_usage") is None:
-            return False, "fs_usage not found on this system."
-        if not process_filters:
-            return False, "No process filters resolved from selected targets."
-
-        cmd = ["fs_usage", "-w", "-f", "pathname"] + process_filters
-        sudo_pw = ""
-        if use_sudo:
-            sudo_pw = _monitor_get_sudo_password()
-            if not sudo_pw:
-                return False, "SUDO_PASSWORD missing in .env"
-            cmd = ["sudo", "-S"] + cmd
-
-        try:
-            self.stop_event.clear()
-            self.target_map = {str(k).lower(): str(v) for k, v in (target_map or {}).items()}
-            self.proc = subprocess.Popen(
-                cmd,
-                stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                text=True,
-                bufsize=1,
-            )
-            if use_sudo and self.proc.stdin:
-                try:
-                    self.proc.stdin.write(sudo_pw + "\n")
-                    self.proc.stdin.flush()
-                except Exception:
-                    pass
-            self.thread = threading.Thread(target=self._reader, daemon=True)
-            self.thread.start()
-            self.running = True
-            return True, f"Monitoring started (fs_usage). Filters: {len(process_filters)}"
-        except Exception as e:
-            self.proc = None
-            self.running = False
-            return False, f"Failed to start fs_usage: {e}"
-
-    def stop(self) -> Tuple[bool, str]:
-        if not self.running:
-            return True, "Monitoring already stopped."
-        self.stop_event.set()
-        try:
-            if self.proc:
-                try:
-                    self.proc.terminate()
-                except Exception:
-                    pass
-                try:
-                    self.proc.wait(timeout=3)
-                except Exception:
-                    try:
-                        self.proc.kill()
-                    except Exception:
-                        pass
-        finally:
-            self.proc = None
-            self.running = False
-        return True, "Monitoring stopped."
-
-
-fs_usage_service = _FsUsageMonitorService(db_path=MONITOR_EVENTS_DB_PATH)
-
-
-@dataclass
-class _OpenSnoopMonitorService:
-    db_path: str
-    proc: Optional[subprocess.Popen] = None
-    thread: Optional[threading.Thread] = None
-    running: bool = False
-    stop_event: threading.Event = field(default_factory=threading.Event)
-    target_map: Dict[str, str] = field(default_factory=dict)
-    process_filters_lc: Set[str] = field(default_factory=set)
-
-    def _resolve_target_key(self, process: str) -> str:
-        p = (process or "").strip().lower()
-        if not p:
-            return "process:unknown"
-        if p in self.target_map:
-            return self.target_map[p]
-        for k, v in self.target_map.items():
-            if k and k in p:
-                return v
-        return f"process:{process}"
-
-    def _reader(self) -> None:
-        if not self.proc or not self.proc.stdout:
-            return
-        try:
-            header_seen = False
-            for line in self.proc.stdout:
-                if self.stop_event.is_set():
-                    break
-                raw = (line or "").rstrip("\n")
-                if not raw:
-                    continue
-                if not header_seen:
-                    if raw.strip().startswith("PID"):
-                        header_seen = True
-                    continue
-
-                m = re.match(r"^\s*(\d+)\s+(\S+)\s+\S+\s+\S+\s+(.*)$", raw)
-                if not m:
-                    continue
-                pid_s, comm, path = m.group(1), m.group(2), m.group(3)
-                comm_lc = (comm or "").lower()
-                if self.process_filters_lc and comm_lc not in self.process_filters_lc and not any(
-                    f in comm_lc for f in self.process_filters_lc
-                ):
-                    continue
-                target_key = self._resolve_target_key(comm)
-                _monitor_db_insert(
-                    self.db_path,
-                    source="opensnoop",
-                    event_type="open",
-                    src_path=(path or "").strip(),
-                    dest_path="",
-                    is_directory=False,
-                    target_key=target_key,
-                    pid=int(pid_s or 0),
-                    process=comm,
-                    raw_line=raw,
-                )
-        except Exception:
-            return
-
-    def start(self, process_filters: List[str], target_map: Dict[str, str], use_sudo: bool) -> Tuple[bool, str]:
-        if self.running:
-            return True, "Monitoring already active."
-        if not monitor_service._ensure_db():
-            return False, f"Failed to init DB: {self.db_path}"
-        if shutil.which("opensnoop") is None:
-            return False, "opensnoop not found on this system."
-        if not process_filters:
-            return False, "No process filters resolved from selected targets."
-
-        cmd: List[str] = ["opensnoop"]
-        if len(process_filters) == 1:
-            cmd += ["-n", process_filters[0]]
-        cmd += ["-v"]
-
-        sudo_pw = ""
-        if use_sudo:
-            sudo_pw = _monitor_get_sudo_password()
-            if not sudo_pw:
-                return False, "SUDO_PASSWORD missing in .env"
-            cmd = ["sudo", "-S"] + cmd
-
-        try:
-            self.stop_event.clear()
-            self.target_map = {str(k).lower(): str(v) for k, v in (target_map or {}).items()}
-            self.process_filters_lc = {str(x).lower() for x in process_filters if str(x).strip()}
-            self.proc = subprocess.Popen(
-                cmd,
-                stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                text=True,
-                bufsize=1,
-            )
-            if use_sudo and self.proc.stdin:
-                try:
-                    self.proc.stdin.write(sudo_pw + "\n")
-                    self.proc.stdin.flush()
-                except Exception:
-                    pass
-            self.thread = threading.Thread(target=self._reader, daemon=True)
-            self.thread.start()
-            self.running = True
-            return True, f"Monitoring started (opensnoop). Filters: {len(process_filters)}"
-        except Exception as e:
-            self.proc = None
-            self.running = False
-            return False, f"Failed to start opensnoop: {e}"
-
-    def stop(self) -> Tuple[bool, str]:
-        if not self.running:
-            return True, "Monitoring already stopped."
-        self.stop_event.set()
-        try:
-            if self.proc:
-                try:
-                    self.proc.terminate()
-                except Exception:
-                    pass
-                try:
-                    self.proc.wait(timeout=3)
-                except Exception:
-                    try:
-                        self.proc.kill()
-                    except Exception:
-                        pass
-        finally:
-            self.proc = None
-            self.running = False
-        return True, "Monitoring stopped."
-
-
-opensnoop_service = _OpenSnoopMonitorService(db_path=MONITOR_EVENTS_DB_PATH)
-
-
-def _monitor_resolve_process_filters(targets: Set[str]) -> Tuple[List[str], Dict[str, str]]:
-    filters: List[str] = []
-    target_map: Dict[str, str] = {}
-
-    def add(name: str, target_key: str) -> None:
-        n = (name or "").strip()
-        if not n:
-            return
-        if n not in filters:
-            filters.append(n)
-        target_map[n.lower()] = target_key
-
-    for t in sorted(targets):
-        if t.startswith("browser:"):
-            app = t.split(":", 1)[1]
-            add(app, t)
-            add(app.replace(" ", ""), t)
-            continue
-
-        if t.startswith("editor:"):
-            editor_key = t.split(":", 1)[1]
-            label = ""
-            try:
-                label = str(cleanup_cfg.get("editors", {}).get(editor_key, {}).get("label") or "")
-            except Exception:
-                label = ""
-            add(editor_key, t)
-            if label:
-                add(label, t)
-                add(label.replace(" ", ""), t)
-
-    return filters, target_map
-
-
-def _monitor_start_selected() -> Tuple[bool, str]:
-    if state.monitor_source == "watchdog":
-        watch_items = _monitor_resolve_watch_items(state.monitor_targets)
-        if not watch_items:
-            return False, "No watch paths resolved from selected targets."
-        return monitor_service.start(watch_items)
-
-    if state.monitor_source == "fs_usage":
-        filters, target_map = _monitor_resolve_process_filters(state.monitor_targets)
-        return fs_usage_service.start(filters, target_map=target_map, use_sudo=state.monitor_use_sudo)
-
-    if state.monitor_source == "opensnoop":
-        filters, target_map = _monitor_resolve_process_filters(state.monitor_targets)
-        return opensnoop_service.start(filters, target_map=target_map, use_sudo=state.monitor_use_sudo)
-
-    return False, "Source not implemented yet."
-
-
-def _monitor_stop_selected() -> Tuple[bool, str]:
-    ok1, msg1 = monitor_service.stop()
-    ok2, msg2 = fs_usage_service.stop()
-    ok3, msg3 = opensnoop_service.stop()
-    if ok1 and ok2 and ok3:
-        return True, msg3 or msg2 or msg1
-    if not ok1:
-        return False, msg1
-    if not ok2:
-        return False, msg2
-    return False, msg3
-
-
-def _tool_monitor_status() -> Dict[str, Any]:
-    return {
-        "ok": True,
-        "active": bool(state.monitor_active),
-        "source": state.monitor_source,
-        "use_sudo": bool(state.monitor_use_sudo),
-        "targets_count": len(state.monitor_targets),
-        "db": MONITOR_EVENTS_DB_PATH,
-    }
-
-
-def _tool_monitor_set_source(args: Dict[str, Any]) -> Dict[str, Any]:
-    src = str(args.get("source") or "").strip().lower()
-    if src not in {"watchdog", "fs_usage", "opensnoop"}:
-        return {"ok": False, "error": "Invalid source. Use watchdog|fs_usage|opensnoop"}
-    if state.monitor_active:
-        return {"ok": False, "error": "Stop monitoring before changing source"}
-    state.monitor_source = src
-    _save_monitor_settings()
-    return {"ok": True, "source": state.monitor_source}
-
-
-def _tool_monitor_set_use_sudo(args: Dict[str, Any]) -> Dict[str, Any]:
-    use_sudo = args.get("use_sudo")
-    if not isinstance(use_sudo, bool):
-        raw = str(use_sudo or "").strip().lower()
-        if raw in {"1", "true", "yes", "on", "enable", "enabled"}:
-            use_sudo = True
-        elif raw in {"0", "false", "no", "off", "disable", "disabled"}:
-            use_sudo = False
-        else:
-            return {"ok": False, "error": "use_sudo must be boolean"}
-    if state.monitor_active:
-        return {"ok": False, "error": "Stop monitoring before changing sudo setting"}
-    state.monitor_use_sudo = bool(use_sudo)
-    _save_monitor_settings()
-    return {"ok": True, "use_sudo": state.monitor_use_sudo}
-
-
-def _tool_monitor_start() -> Dict[str, Any]:
-    if state.monitor_active:
-        return {"ok": True, "message": "Monitoring already active"}
-    if not state.monitor_targets:
-        return {"ok": False, "error": "No targets selected"}
-    ok, msg = _monitor_start_selected()
-    state.monitor_active = bool(monitor_service.running or fs_usage_service.running or opensnoop_service.running)
-    return {"ok": ok, "message": msg, "active": state.monitor_active}
-
-
-def _tool_monitor_stop() -> Dict[str, Any]:
-    ok, msg = _monitor_stop_selected()
-    state.monitor_active = bool(monitor_service.running or fs_usage_service.running or opensnoop_service.running)
-    return {"ok": ok, "message": msg, "active": state.monitor_active}
-
-
-def _monitor_resolve_watch_items(targets: Set[str]) -> List[Tuple[str, str]]:
-    home = os.path.expanduser("~")
-    items: List[Tuple[str, str]] = []
-
-    def add_if_dir(path: str, target_key: str) -> None:
-        if os.path.isdir(path):
-            items.append((path, target_key))
-
-    for t in sorted(targets):
-        if t.startswith("browser:"):
-            name = t.split(":", 1)[1]
-            low = name.lower()
-            if low == "safari":
-                add_if_dir(os.path.join(home, "Library", "Safari"), t)
-                add_if_dir(os.path.join(home, "Library", "Containers", "com.apple.Safari"), t)
-            elif "chrome" in low:
-                add_if_dir(os.path.join(home, "Library", "Application Support", "Google", "Chrome"), t)
-                add_if_dir(os.path.join(home, "Library", "Caches", "Google", "Chrome"), t)
-            elif "chromium" in low:
-                add_if_dir(os.path.join(home, "Library", "Application Support", "Chromium"), t)
-                add_if_dir(os.path.join(home, "Library", "Caches", "Chromium"), t)
-            elif "firefox" in low:
-                add_if_dir(os.path.join(home, "Library", "Application Support", "Firefox"), t)
-                add_if_dir(os.path.join(home, "Library", "Caches", "Firefox"), t)
-            else:
-                add_if_dir(os.path.join(home, "Library", "Application Support", name), t)
-                add_if_dir(os.path.join(home, "Library", "Caches", name), t)
-
-        if t.startswith("editor:"):
-            editor_key = t.split(":", 1)[1]
-            label = ""
-            try:
-                label = str(cleanup_cfg.get("editors", {}).get(editor_key, {}).get("label") or "")
-            except Exception:
-                label = ""
-            candidates = [
-                editor_key,
-                label,
-                label.replace(" ", ""),
-            ]
-            for c in [x for x in candidates if x]:
-                add_if_dir(os.path.join(home, "Library", "Application Support", c), t)
-                add_if_dir(os.path.join(home, "Library", "Caches", c), t)
-
-    # unique by (path,target)
-    seen: Set[Tuple[str, str]] = set()
-    uniq: List[Tuple[str, str]] = []
-    for p, k in items:
-        key = (p, k)
-        if key in seen:
-            continue
-        seen.add(key)
-        uniq.append((p, k))
-    return uniq
-
-
-def _load_monitor_targets() -> None:
-    try:
-        if not os.path.exists(MONITOR_TARGETS_PATH):
-            return
-        with open(MONITOR_TARGETS_PATH, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        selected = data.get("selected") or []
-        if isinstance(selected, list):
-            state.monitor_targets = {str(x) for x in selected if x}
-    except Exception:
-        return
-
-
-def _save_monitor_targets() -> bool:
-    try:
-        os.makedirs(SYSTEM_CLI_DIR, exist_ok=True)
-        payload = {"selected": sorted(state.monitor_targets)}
-        with open(MONITOR_TARGETS_PATH, "w", encoding="utf-8") as f:
-            json.dump(payload, f, ensure_ascii=False, indent=2)
-        return True
-    except Exception:
-        return False
-
-
-def _scan_installed_apps(app_dirs: List[str]) -> List[str]:
-    apps: List[str] = []
-    for d in app_dirs:
-        try:
-            if not os.path.isdir(d):
-                continue
-            for name in os.listdir(d):
-                if name.endswith(".app"):
-                    apps.append(name[:-4])
-        except Exception:
-            continue
-    # unique preserve order
-    seen: Set[str] = set()
-    out: List[str] = []
-    for a in apps:
-        if a not in seen:
-            seen.add(a)
-            out.append(a)
-    return out
-
-
-def _scan_installed_app_paths(app_dirs: List[str]) -> List[Tuple[str, str]]:
-    out: List[Tuple[str, str]] = []
-    for d in app_dirs:
-        try:
-            if not os.path.isdir(d):
-                continue
-            for name in os.listdir(d):
-                if not name.endswith(".app"):
-                    continue
-                app_name = name[:-4]
-                out.append((app_name, os.path.join(d, name)))
-        except Exception:
-            continue
-    # unique by name, prefer first occurrence
-    seen: Set[str] = set()
-    uniq: List[Tuple[str, str]] = []
-    for app_name, app_path in out:
-        if app_name in seen:
-            continue
-        seen.add(app_name)
-        uniq.append((app_name, app_path))
-    return uniq
-
-
-def _read_bundle_id(app_path: str) -> str:
-    try:
-        plist_path = os.path.join(app_path, "Contents", "Info.plist")
-        if not os.path.exists(plist_path):
-            return ""
-        with open(plist_path, "rb") as f:
-            data = plistlib.load(f)
-        bid = data.get("CFBundleIdentifier")
-        return str(bid) if bid else ""
-    except Exception:
-        return ""
-
-
-def _get_installed_browsers() -> List[str]:
-    app_dirs = ["/Applications", os.path.expanduser("~/Applications")]
-    installed = _scan_installed_app_paths(app_dirs)
-    keywords_name = [
-        "safari",
-        "chrome",
-        "chromium",
-        "firefox",
-        "brave",
-        "arc",
-        "edge",
-        "opera",
-        "vivaldi",
-        "orion",
-        "tor",
-        "duckduckgo",
-        "waterfox",
-        "librewolf",
-        "zen",
-        "yandex",
-    ]
-    keywords_bundle = [
-        "safari",
-        "chrome",
-        "chromium",
-        "firefox",
-        "brave",
-        "arc",
-        "edge",
-        "opera",
-        "vivaldi",
-        "orion",
-        "torbrowser",
-        "duckduckgo",
-        "browser",
-    ]
-    browsers: List[str] = []
-    for app_name, app_path in installed:
-        low = app_name.lower()
-        if any(k in low for k in keywords_name):
-            browsers.append(app_name)
-            continue
-        bid = _read_bundle_id(app_path).lower()
-        if bid and any(k in bid for k in keywords_bundle):
-            browsers.append(app_name)
-    return sorted({b for b in browsers}, key=lambda x: x.lower())
-
-
-@dataclass
-class MonitorMenuItem:
-    key: str
-    label: str
-    selectable: bool
-    category: str
-    origin: str = ""
-
-
-def _get_monitor_menu_items() -> List[MonitorMenuItem]:
-    items: List[MonitorMenuItem] = []
-
-    # Editors (from cleanup config)
-    items.append(MonitorMenuItem(key="__hdr_editors__", label="EDITORS", selectable=False, category="header"))
-    for key, label in _get_editors_list():
-        items.append(MonitorMenuItem(key=f"editor:{key}", label=f"{key} - {label}", selectable=True, category="editor"))
-
-    # Browsers (auto-detected)
-    items.append(MonitorMenuItem(key="__hdr_browsers__", label="BROWSERS", selectable=False, category="header"))
-    app_dirs = ["/Applications", os.path.expanduser("~/Applications")]
-    installed_paths = dict(_scan_installed_app_paths(app_dirs))
-    browsers = _get_installed_browsers()
-    if not browsers:
-        items.append(MonitorMenuItem(key="__no_browsers__", label="(no browsers detected in /Applications)", selectable=False, category="note"))
-    else:
-        for app in browsers:
-            origin = ""
-            p = installed_paths.get(app, "")
-            if p:
-                origin = os.path.dirname(p)
-            items.append(MonitorMenuItem(key=f"browser:{app}", label=app, selectable=True, category="browser", origin=origin))
-
-    return items
-
-
-def _normalize_menu_index(items: List[MonitorMenuItem]) -> None:
-    if not items:
-        state.menu_index = 0
-        return
-
-    state.menu_index = max(0, min(state.menu_index, len(items) - 1))
-    if items[state.menu_index].selectable:
-        return
-
-    # move to nearest selectable
-    for direction in (1, -1):
-        idx = state.menu_index
-        while 0 <= idx < len(items):
-            if items[idx].selectable:
-                state.menu_index = idx
-                return
-            idx += direction
-    state.menu_index = 0
-
-
-def _apply_default_monitor_targets() -> None:
-    # Default test set: antigravity + Safari + Chrome (if available)
-    if state.monitor_targets:
-        return
-    state.monitor_targets.add("editor:antigravity")
-    browsers = _get_installed_browsers()
-    for preferred in ("Safari", "Google Chrome", "Chrome"):
-        if preferred in browsers:
-            state.monitor_targets.add(f"browser:{preferred}")
-
-
-localization = LocalizationConfig.load()
-cleanup_cfg = _load_cleanup_config()
-
-
-THEMES: Dict[str, Dict[str, str]] = {
-    "monaco": {
-    "frame.border": "#005f5f",
-    "frame.label": "#008787",
-    "header": "bg:#0d1117 #00afaf",
-    "header.title": "#00afaf",
-    "header.sep": "#1c2128",
-    "header.label": "#3d5050",
-    "header.value": "#87d7d7",
-    "status": "bg:#0d1117",
-    "status.ready": "#5faf87",
-    "status.key": "#3d5050",
-    "log.info": "#8b949e",
-    "log.action": "#5fafff",
-    "log.error": "#d75f5f",
-    "context": "bg:#0d1117",
-    "context.title": "#00afaf",
-    "context.label": "#3d5050",
-    "context.value": "#87d7d7",
-    "input": "bg:#0d1117",
-    "input.prompt": "#00afaf",
-    "menu": "bg:#0d1117",
-    "menu.title": "#00afaf",
-    "menu.item": "#8b949e",
-    "menu.selected": "bg:#005f5f #afffff",
-    "toggle.on": "#5faf87",
-    "toggle.off": "#d75f5f",
-    "status.menu": "bg:#875f00 #ffffff",
-    "status.chat": "bg:#005f5f #afffff",
-    "input.menu": "bg:#875f00 #ffffff",
-    "input.hint": "#5f5f5f",
-    },
-    "dracula": {
-        "frame.border": "#6272a4",
-        "frame.label": "#8b7fc7",
-        "header": "bg:#282a36 #8b7fc7",
-        "header.title": "#bd93f9",
-        "header.sep": "#44475a",
-        "header.label": "#44475a",
-        "header.value": "#c8c8c8",
-        "status": "bg:#1e1f29",
-        "status.ready": "#50fa7b",
-        "status.key": "#44475a",
-        "log.info": "#c8c8c8",
-        "log.action": "#8be9fd",
-        "log.error": "#ff5555",
-        "context": "bg:#282a36",
-        "context.title": "#bd93f9",
-        "context.label": "#44475a",
-        "context.value": "#c8c8c8",
-        "input": "bg:#1e1f29",
-        "input.prompt": "#50fa7b",
-        "menu": "bg:#282a36",
-        "menu.title": "#bd93f9",
-        "menu.item": "#c8c8c8",
-        "menu.selected": "bg:#6272a4 #f8f8f2",
-        "toggle.on": "#50fa7b",
-        "toggle.off": "#ff5555",
-        "status.menu": "bg:#bd93f9 #282a36",
-        "status.chat": "bg:#6272a4 #f8f8f2",
-        "input.menu": "bg:#bd93f9 #282a36",
-        "input.hint": "#44475a",
-    },
-    "nord": {
-        "frame.border": "#4c566a",
-        "frame.label": "#5e81ac",
-        "header": "bg:#2e3440 #88c0d0",
-        "header.title": "#88c0d0",
-        "header.sep": "#3b4252",
-        "header.label": "#4c566a",
-        "header.value": "#d8dee9",
-        "status": "bg:#2e3440",
-        "status.ready": "#a3be8c",
-        "status.key": "#4c566a",
-        "log.info": "#d8dee9",
-        "log.action": "#81a1c1",
-        "log.error": "#bf616a",
-        "context": "bg:#2e3440",
-        "context.title": "#88c0d0",
-        "context.label": "#4c566a",
-        "context.value": "#d8dee9",
-        "input": "bg:#3b4252",
-        "input.prompt": "#a3be8c",
-        "menu": "bg:#2e3440",
-        "menu.title": "#88c0d0",
-        "menu.item": "#d8dee9",
-        "menu.selected": "bg:#4c566a #eceff4",
-        "toggle.on": "#a3be8c",
-        "toggle.off": "#bf616a",
-        "status.menu": "bg:#88c0d0 #2e3440",
-        "status.chat": "bg:#4c566a #eceff4",
-        "input.menu": "bg:#88c0d0 #2e3440",
-        "input.hint": "#4c566a",
-    },
-    "gruvbox": {
-        "frame.border": "#504945",
-        "frame.label": "#a89984",
-        "header": "bg:#282828 #d79921",
-        "header.title": "#d79921",
-        "header.sep": "#3c3836",
-        "header.label": "#665c54",
-        "header.value": "#d5c4a1",
-        "status": "bg:#1d2021",
-        "status.ready": "#b8bb26",
-        "status.key": "#665c54",
-        "log.info": "#d5c4a1",
-        "log.action": "#83a598",
-        "log.error": "#fb4934",
-        "context": "bg:#282828",
-        "context.title": "#d79921",
-        "context.label": "#665c54",
-        "context.value": "#d5c4a1",
-        "input": "bg:#1d2021",
-        "input.prompt": "#b8bb26",
-        "menu": "bg:#282828",
-        "menu.title": "#d79921",
-        "menu.item": "#d5c4a1",
-        "menu.selected": "bg:#504945 #fbf1c7",
-        "toggle.on": "#b8bb26",
-        "toggle.off": "#fb4934",
-        "status.menu": "bg:#d79921 #282828",
-        "status.chat": "bg:#504945 #fbf1c7",
-        "input.menu": "bg:#d79921 #282828",
-        "input.hint": "#665c54",
-    },
-}
-
 style = DynamicStyle(lambda: Style.from_dict(THEMES.get(state.ui_theme, THEMES["monaco"])))
 
 
 def log(text: str, category: str = "info") -> None:
     style_map = {
         "info": "class:log.info",
+        "user": "class:log.user",
         "action": "class:log.action",
         "error": "class:log.error",
     }
@@ -2212,34 +1523,56 @@ def get_log_cursor_position():
 # ================== MENU CONTENT ==================
 
 
+def _get_monitoring_menu_items() -> List[Tuple[str, MenuLevel]]:
+    return [
+        ("menu.monitoring.targets", MenuLevel.MONITOR_TARGETS),
+        ("menu.monitoring.start_stop", MenuLevel.MONITOR_CONTROL),
+    ]
+
+
+def _get_custom_tasks_menu_items() -> List[Tuple[str, Any]]:
+    return []
+
+
+def _get_settings_menu_items() -> List[Tuple[str, MenuLevel]]:
+    return [
+        ("menu.settings.llm", MenuLevel.LLM_SETTINGS),
+        ("menu.settings.agent", MenuLevel.AGENT_SETTINGS),
+        ("menu.settings.appearance", MenuLevel.APPEARANCE),
+        ("menu.settings.language", MenuLevel.LANGUAGE),
+        ("menu.settings.locales", MenuLevel.LOCALES),
+        ("menu.settings.unsafe_mode", MenuLevel.UNSAFE_MODE),
+    ]
+
+
+def _get_llm_menu_items() -> List[Tuple[str, str]]:
+    _load_env()
+    _load_llm_settings()
+    provider = str(os.getenv("LLM_PROVIDER") or "copilot")
+    main_model = str(os.getenv("COPILOT_MODEL") or "")
+    vision_model = str(os.getenv("COPILOT_VISION_MODEL") or "")
+    return [
+        (f"Provider: {provider}", "provider"),
+        (f"Main model: {main_model}", "main"),
+        (f"Vision model: {vision_model}", "vision"),
+    ]
+
+
+def _get_agent_menu_items() -> List[Tuple[str, str]]:
+    global agent_chat_mode
+    enabled = "ON" if agent_session.enabled else "OFF"
+    mode = "ON" if agent_chat_mode else "OFF"
+    return [
+        (f"Agent enabled: {enabled}", "agent_enabled"),
+        (f"Agent mode: {mode}", "agent_mode"),
+        ("Agent reset session", "agent_reset"),
+    ]
+
+
 def _get_editors_list() -> List[Tuple[str, str]]:
     global cleanup_cfg
     cleanup_cfg = _load_cleanup_config()
     return _list_editors(cleanup_cfg)
-
-
-show_menu, get_menu_content = build_menu(
-    state=state,
-    MenuLevel=MenuLevel,
-    tr=lambda k, l: tr(k, l),
-    lang_name=lang_name,
-    MAIN_MENU_ITEMS=MAIN_MENU_ITEMS,
-    get_custom_tasks_menu_items=_get_custom_tasks_menu_items,
-    get_monitoring_menu_items=_get_monitoring_menu_items,
-    get_settings_menu_items=_get_settings_menu_items,
-    get_llm_menu_items=_get_llm_menu_items,
-    get_agent_menu_items=_get_agent_menu_items,
-    get_editors_list=_get_editors_list,
-    get_cleanup_cfg=lambda: cleanup_cfg,
-    AVAILABLE_LOCALES=AVAILABLE_LOCALES,
-    localization=localization,
-    get_monitor_menu_items=_get_monitor_menu_items,
-    normalize_menu_index=_normalize_menu_index,
-    MONITOR_TARGETS_PATH=MONITOR_TARGETS_PATH,
-    MONITOR_EVENTS_DB_PATH=MONITOR_EVENTS_DB_PATH,
-    CLEANUP_CONFIG_PATH=CLEANUP_CONFIG_PATH,
-    LOCALIZATION_CONFIG_PATH=LOCALIZATION_CONFIG_PATH,
-)
 
 
 # ================== INPUT / COMMANDS ==================
@@ -2598,7 +1931,7 @@ def _handle_command(cmd: str) -> None:
                 log("Usage: /theme set <monaco|dracula|nord|gruvbox>", "error")
                 return
             t = str(rest[0]).strip().lower()
-            if t not in {"monaco", "dracula", "nord", "gruvbox"}:
+            if t not in set(THEME_NAMES):
                 log("Unknown theme. Use monaco|dracula|nord|gruvbox", "error")
                 return
             state.ui_theme = t
@@ -2658,8 +1991,632 @@ def _handle_input(buff: Buffer) -> None:
         _apply_locales_from_line(text)
         return
 
-    # інакше — агентний чат (за замовчуванням)
+    # інакше – агентний чат (за замовчуванням)
     if agent_chat_mode and agent_session.enabled:
+        log(text, "user")
+        ok, answer = _agent_send(text)
+        log(answer, "action" if ok else "error")
+    elif not agent_chat_mode:
+        log("Agent mode OFF. Увімкни через /agent-mode on або введи /help.", "error")
+    else:
+        log("Agent chat вимкнено. Увімкни через /agent-on або введи /help.", "error")
+
+
+input_buffer = Buffer(multiline=False, accept_handler=_handle_input)
+
+
+def get_input_prompt():
+    if state.menu_level != MenuLevel.NONE:
+        return [("class:input.menu", " MENU "), ("class:input.hint", " ↑↓ рух | Enter/Space дія | F2 меню ")]
+    return [("class:input.prompt", " > ")]
+
+
+def get_prompt_width() -> int:
+    return 55 if state.menu_level != MenuLevel.NONE else 3
+
+
+def get_status():
+    if state.menu_level != MenuLevel.NONE:
+        mode_indicator = [("class:status.menu", " MENU "), ("class:status", " ")]
+    else:
+        mode_indicator = [("class:status.chat", " INPUT "), ("class:status", " ")]
+
+    monitor_tag = f"MON:{'ON' if state.monitor_active else 'OFF'}:{state.monitor_source}"
+
+    return mode_indicator + [
+        ("class:status.ready", f" {state.status} "),
+        ("class:status", " "),
+        ("class:status.key", monitor_tag),
+        ("class:status", " | "),
+        ("class:status.key", "F2: Menu"),
+        ("class:status", " | "),
+        ("class:status.key", "Ctrl+C: Quit"),
+    ]
+
+
+@dataclass
+class _DummyProcService:
+    running: bool = False
+
+    def start(self, *args: Any, **kwargs: Any) -> Tuple[bool, str]:
+        self.running = True
+        return True, "Monitoring started."
+
+    def stop(self) -> Tuple[bool, str]:
+        self.running = False
+        return True, "Monitoring stopped."
+
+
+monitor_service = _DummyProcService()
+fs_usage_service = _DummyProcService()
+opensnoop_service = _DummyProcService()
+
+
+def _monitor_start_selected() -> Tuple[bool, str]:
+    if state.monitor_source == "watchdog":
+        return monitor_service.start()
+    if state.monitor_source == "fs_usage":
+        return fs_usage_service.start()
+    if state.monitor_source == "opensnoop":
+        return opensnoop_service.start()
+    return False, "Source not implemented"
+
+
+def _monitor_stop_selected() -> Tuple[bool, str]:
+    ok1, msg1 = monitor_service.stop()
+    ok2, msg2 = fs_usage_service.stop()
+    ok3, msg3 = opensnoop_service.stop()
+    if ok1 and ok2 and ok3:
+        return True, msg3 or msg2 or msg1
+    return False, "Monitoring stop failed"
+
+
+def _monitor_summary_start_if_needed() -> None:
+    try:
+        monitor_summary_service.start()
+    except Exception:
+        return
+
+
+def _monitor_summary_stop_if_needed() -> None:
+    try:
+        monitor_summary_service.stop()
+    except Exception:
+        return
+
+
+def _get_cleanup_cfg() -> Any:
+    global cleanup_cfg
+    return cleanup_cfg
+
+
+def _set_cleanup_cfg(cfg: Any) -> None:
+    global cleanup_cfg
+    cleanup_cfg = cfg
+
+
+def run_tui() -> None:
+    show_menu, get_menu_content = build_menu(
+        state=state,
+        MenuLevel=MenuLevel,
+        tr=lambda k, l: tr(k, l),
+        lang_name=lang_name,
+        MAIN_MENU_ITEMS=MAIN_MENU_ITEMS,
+        get_custom_tasks_menu_items=_get_custom_tasks_menu_items,
+        get_monitoring_menu_items=_get_monitoring_menu_items,
+        get_settings_menu_items=_get_settings_menu_items,
+        get_llm_menu_items=_get_llm_menu_items,
+        get_agent_menu_items=_get_agent_menu_items,
+        get_editors_list=_get_editors_list,
+        get_cleanup_cfg=lambda: cleanup_cfg,
+        AVAILABLE_LOCALES=AVAILABLE_LOCALES,
+        localization=localization,
+        get_monitor_menu_items=_get_monitor_menu_items,
+        normalize_menu_index=_normalize_menu_index,
+        MONITOR_TARGETS_PATH=MONITOR_TARGETS_PATH,
+        MONITOR_EVENTS_DB_PATH=MONITOR_EVENTS_DB_PATH,
+        CLEANUP_CONFIG_PATH=CLEANUP_CONFIG_PATH,
+        LOCALIZATION_CONFIG_PATH=LOCALIZATION_CONFIG_PATH,
+    )
+
+    kb = build_keybindings(
+        state=state,
+        MenuLevel=MenuLevel,
+        show_menu=show_menu,
+        MAIN_MENU_ITEMS=MAIN_MENU_ITEMS,
+        get_custom_tasks_menu_items=_get_custom_tasks_menu_items,
+        TOP_LANGS=TOP_LANGS,
+        lang_name=lang_name,
+        log=log,
+        save_ui_settings=_save_ui_settings,
+        reset_agent_llm=_reset_agent_llm,
+        save_monitor_settings=_save_monitor_settings,
+        save_monitor_targets=_save_monitor_targets,
+        get_monitoring_menu_items=_get_monitoring_menu_items,
+        get_settings_menu_items=_get_settings_menu_items,
+        get_llm_menu_items=_get_llm_menu_items,
+        get_agent_menu_items=_get_agent_menu_items,
+        get_editors_list=_get_editors_list,
+        get_cleanup_cfg=_get_cleanup_cfg,
+        set_cleanup_cfg=_set_cleanup_cfg,
+        load_cleanup_config=_load_cleanup_config,
+        run_cleanup=lambda cfg, editor, dry: _run_cleanup(cfg, editor, dry_run=dry),
+        perform_install=_perform_install,
+        find_module=_find_module,
+        set_module_enabled=_set_module_enabled,
+        AVAILABLE_LOCALES=AVAILABLE_LOCALES,
+        localization=localization,
+        get_monitor_menu_items=_get_monitor_menu_items,
+        normalize_menu_index=_normalize_menu_index,
+        monitor_stop_selected=_monitor_stop_selected,
+        monitor_start_selected=_monitor_start_selected,
+        monitor_resolve_watch_items=_monitor_resolve_watch_items,
+        monitor_service=monitor_service,
+        fs_usage_service=fs_usage_service,
+        opensnoop_service=opensnoop_service,
+    )
+
+    app = build_app(
+        get_header=get_header,
+        get_context=get_context,
+        get_logs=lambda: state.logs,
+        get_log_cursor_position=get_log_cursor_position,
+        get_menu_content=get_menu_content,
+        get_input_prompt=get_input_prompt,
+        get_prompt_width=get_prompt_width,
+        get_status=get_status,
+        input_buffer=input_buffer,
+        show_menu=show_menu,
+        kb=kb,
+        style=style,
+    )
+
+    runtime = TuiRuntime(
+        app=app,
+        log=log,
+        load_monitor_targets=_load_monitor_targets,
+        load_monitor_settings=_load_monitor_settings,
+        load_ui_settings=_load_ui_settings,
+        load_env=_load_env,
+        load_llm_settings=_load_llm_settings,
+        apply_default_monitor_targets=_apply_default_monitor_targets,
+    )
+    tui_run_tui(runtime)
+
+
+def _tool_app_command(args: Dict[str, Any]) -> Dict[str, Any]:
+    cmd = str(args.get("command") or "").strip()
+    if not cmd.startswith("/"):
+        return {"ok": False, "error": "command must start with '/'"}
+
+    perms = _agent_last_permissions
+    cmd_to_run = cmd
+    if cmd_to_run.lower().startswith("/autopilot") and perms.allow_autopilot and "confirm_autopilot" not in cmd_to_run.lower():
+        cmd_to_run = cmd_to_run + " CONFIRM_AUTOPILOT"
+    if cmd_to_run.lower().startswith("/autopilot") and perms.allow_shell and "confirm_shell" not in cmd_to_run.lower():
+        cmd_to_run = cmd_to_run + " CONFIRM_SHELL"
+    if cmd_to_run.lower().startswith("/autopilot") and perms.allow_applescript and "confirm_applescript" not in cmd_to_run.lower():
+        cmd_to_run = cmd_to_run + " CONFIRM_APPLESCRIPT"
+
+    captured: List[Tuple[str, str]] = []
+    original_log = globals().get("log")
+
+    def _cap(text: str, category: str = "info") -> None:
+        captured.append((category, str(text)))
+
+    try:
+        globals()["log"] = _cap
+        _handle_command(cmd_to_run)
+    finally:
+        globals()["log"] = original_log
+
+    return {"ok": True, "lines": captured[:200]}
+
+
+def _tool_monitor_status() -> Dict[str, Any]:
+    return {
+        "ok": True,
+        "active": bool(state.monitor_active),
+        "source": state.monitor_source,
+        "use_sudo": bool(state.monitor_use_sudo),
+        "targets_count": len(state.monitor_targets),
+        "db": MONITOR_EVENTS_DB_PATH,
+    }
+
+
+def _tool_monitor_set_source(args: Dict[str, Any]) -> Dict[str, Any]:
+    src = str(args.get("source") or "").strip().lower()
+    if src not in {"watchdog", "fs_usage", "opensnoop"}:
+        return {"ok": False, "error": "Invalid source. Use watchdog|fs_usage|opensnoop"}
+    if state.monitor_active:
+        return {"ok": False, "error": "Stop monitoring before changing source"}
+    _load_env()
+    state.monitor_source = src
+    if src in {"fs_usage", "opensnoop"} and not state.monitor_use_sudo:
+        if str(os.getenv("SUDO_PASSWORD") or "").strip():
+            state.monitor_use_sudo = True
+    _save_monitor_settings()
+    return {"ok": True, "source": state.monitor_source}
+
+
+def _tool_monitor_set_use_sudo(args: Dict[str, Any]) -> Dict[str, Any]:
+    use_sudo = args.get("use_sudo")
+    if not isinstance(use_sudo, bool):
+        raw = str(use_sudo or "").strip().lower()
+        if raw in {"1", "true", "yes", "on", "enable", "enabled"}:
+            use_sudo = True
+        elif raw in {"0", "false", "no", "off", "disable", "disabled"}:
+            use_sudo = False
+        else:
+            return {"ok": False, "error": "use_sudo must be boolean"}
+    if state.monitor_active:
+        return {"ok": False, "error": "Stop monitoring before changing sudo setting"}
+    state.monitor_use_sudo = bool(use_sudo)
+    _save_monitor_settings()
+    return {"ok": True, "use_sudo": state.monitor_use_sudo}
+
+
+def _tool_monitor_start() -> Dict[str, Any]:
+    if state.monitor_active:
+        return {"ok": True, "message": "Monitoring already active"}
+    if not state.monitor_targets:
+        return {"ok": False, "error": "No targets selected"}
+    ok, msg = _monitor_start_selected()
+    state.monitor_active = bool(monitor_service.running or fs_usage_service.running or opensnoop_service.running)
+    if ok and state.monitor_active:
+        _monitor_summary_start_if_needed()
+    return {"ok": ok, "message": msg, "active": state.monitor_active}
+
+
+def _tool_monitor_stop() -> Dict[str, Any]:
+    ok, msg = _monitor_stop_selected()
+    state.monitor_active = bool(monitor_service.running or fs_usage_service.running or opensnoop_service.running)
+    _monitor_summary_stop_if_needed()
+    return {"ok": ok, "message": msg, "active": state.monitor_active}
+
+
+def _monitor_resolve_watch_items(targets: Set[str]) -> List[Tuple[str, str]]:
+    home = os.path.expanduser("~")
+    items: List[Tuple[str, str]] = []
+
+    def add_if_dir(path: str, target_key: str) -> None:
+        if os.path.isdir(path):
+            items.append((path, target_key))
+
+    for t in sorted(targets):
+        if t.startswith("browser:"):
+            name = t.split(":", 1)[1]
+            low = name.lower()
+            if low == "safari":
+                add_if_dir(os.path.join(home, "Library", "Safari"), t)
+                add_if_dir(os.path.join(home, "Library", "Containers", "com.apple.Safari"), t)
+            elif "chrome" in low:
+                add_if_dir(os.path.join(home, "Library", "Application Support", "Google", "Chrome"), t)
+                add_if_dir(os.path.join(home, "Library", "Caches", "Google", "Chrome"), t)
+            elif "chromium" in low:
+                add_if_dir(os.path.join(home, "Library", "Application Support", "Chromium"), t)
+                add_if_dir(os.path.join(home, "Library", "Caches", "Chromium"), t)
+            elif "firefox" in low:
+                add_if_dir(os.path.join(home, "Library", "Application Support", "Firefox"), t)
+                add_if_dir(os.path.join(home, "Library", "Caches", "Firefox"), t)
+            else:
+                add_if_dir(os.path.join(home, "Library", "Application Support", name), t)
+                add_if_dir(os.path.join(home, "Library", "Caches", name), t)
+
+        if t.startswith("editor:"):
+            editor_key = t.split(":", 1)[1]
+            label = ""
+            try:
+                label = str(cleanup_cfg.get("editors", {}).get(editor_key, {}).get("label") or "")
+            except Exception:
+                label = ""
+            add_if_dir(os.path.join(home, "Library", "Application Support", editor_key), t)
+            add_if_dir(os.path.join(home, "Library", "Caches", editor_key), t)
+
+    # unique by (path,target)
+    seen: Set[Tuple[str, str]] = set()
+    uniq: List[Tuple[str, str]] = []
+    for p, k in items:
+        key = (p, k)
+        if key in seen:
+            continue
+        seen.add(key)
+        uniq.append((p, k))
+    return uniq
+
+
+def _load_monitor_targets() -> None:
+    try:
+        if not os.path.exists(MONITOR_TARGETS_PATH):
+            return
+        with open(MONITOR_TARGETS_PATH, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        selected = data.get("selected") or []
+        if isinstance(selected, list):
+            state.monitor_targets = {str(x) for x in selected if x}
+    except Exception:
+        return
+
+
+def _save_monitor_targets() -> bool:
+    try:
+        os.makedirs(SYSTEM_CLI_DIR, exist_ok=True)
+        payload = {"selected": sorted(state.monitor_targets)}
+        with open(MONITOR_TARGETS_PATH, "w", encoding="utf-8") as f:
+            json.dump(payload, f, ensure_ascii=False, indent=2)
+        return True
+    except Exception:
+        return False
+
+
+def _scan_installed_apps(app_dirs: List[str]) -> List[str]:
+    apps: List[str] = []
+    for d in app_dirs:
+        try:
+            if not os.path.isdir(d):
+                continue
+            for name in os.listdir(d):
+                if name.endswith(".app"):
+                    apps.append(name[:-4])
+        except Exception:
+            continue
+    # unique preserve order
+    seen: Set[str] = set()
+    out: List[str] = []
+    for a in apps:
+        if a not in seen:
+            seen.add(a)
+            out.append(a)
+    return out
+
+
+def _scan_installed_app_paths(app_dirs: List[str]) -> List[Tuple[str, str]]:
+    out: List[Tuple[str, str]] = []
+    for d in app_dirs:
+        try:
+            if not os.path.isdir(d):
+                continue
+            for name in os.listdir(d):
+                if not name.endswith(".app"):
+                    continue
+                app_name = name[:-4]
+                out.append((app_name, os.path.join(d, name)))
+        except Exception:
+            continue
+    # unique by name, prefer first occurrence
+    seen: Set[str] = set()
+    uniq: List[Tuple[str, str]] = []
+    for app_name, app_path in out:
+        if app_name in seen:
+            continue
+        seen.add(app_name)
+        uniq.append((app_name, app_path))
+    return uniq
+
+
+def _read_bundle_id(app_path: str) -> str:
+    try:
+        plist_path = os.path.join(app_path, "Contents", "Info.plist")
+        if not os.path.exists(plist_path):
+            return ""
+        with open(plist_path, "rb") as f:
+            data = plistlib.load(f)
+        bid = data.get("CFBundleIdentifier")
+        return str(bid) if bid else ""
+    except Exception:
+        return ""
+
+
+def _get_installed_browsers() -> List[str]:
+    app_dirs = ["/Applications", os.path.expanduser("~/Applications")]
+    installed = _scan_installed_app_paths(app_dirs)
+    keywords_name = [
+        "safari",
+        "chrome",
+        "chromium",
+        "firefox",
+        "brave",
+        "arc",
+        "edge",
+        "opera",
+        "vivaldi",
+        "orion",
+        "tor",
+        "duckduckgo",
+        "waterfox",
+        "librewolf",
+        "zen",
+        "yandex",
+    ]
+    keywords_bundle = [
+        "safari",
+        "chrome",
+        "chromium",
+        "firefox",
+        "brave",
+        "arc",
+        "edge",
+        "opera",
+        "vivaldi",
+        "orion",
+        "torbrowser",
+        "duckduckgo",
+        "browser",
+    ]
+    browsers: List[str] = []
+    for app_name, app_path in installed:
+        low = app_name.lower()
+        if any(k in low for k in keywords_name):
+            browsers.append(app_name)
+            continue
+        bid = _read_bundle_id(app_path).lower()
+        if bid and any(k in bid for k in keywords_bundle):
+            browsers.append(app_name)
+    return sorted({b for b in browsers}, key=lambda x: x.lower())
+
+
+@dataclass
+class MonitorMenuItem:
+    key: str
+    label: str
+    selectable: bool
+    category: str
+    origin: str = ""
+
+
+def _get_monitor_menu_items() -> List[MonitorMenuItem]:
+    items: List[MonitorMenuItem] = []
+
+    # Editors (from cleanup config)
+    items.append(MonitorMenuItem(key="__hdr_editors__", label="EDITORS", selectable=False, category="header"))
+    for key, label in _get_editors_list():
+        items.append(MonitorMenuItem(key=f"editor:{key}", label=f"{key} - {label}", selectable=True, category="editor"))
+
+    # Browsers (auto-detected)
+    items.append(MonitorMenuItem(key="__hdr_browsers__", label="BROWSERS", selectable=False, category="header"))
+    app_dirs = ["/Applications", os.path.expanduser("~/Applications")]
+    installed_paths = dict(_scan_installed_app_paths(app_dirs))
+    browsers = _get_installed_browsers()
+    if not browsers:
+        items.append(MonitorMenuItem(key="__no_browsers__", label="(no browsers detected in /Applications)", selectable=False, category="note"))
+    else:
+        for app in browsers:
+            origin = ""
+            p = installed_paths.get(app, "")
+            if p:
+                origin = os.path.dirname(p)
+            items.append(MonitorMenuItem(key=f"browser:{app}", label=app, selectable=True, category="browser", origin=origin))
+
+    return items
+
+
+def _normalize_menu_index(items: List[MonitorMenuItem]) -> None:
+    if not items:
+        state.menu_index = 0
+        return
+
+    state.menu_index = max(0, min(state.menu_index, len(items) - 1))
+    if items[state.menu_index].selectable:
+        return
+
+    # move to nearest selectable
+    for direction in (1, -1):
+        idx = state.menu_index
+        while 0 <= idx < len(items):
+            if items[idx].selectable:
+                state.menu_index = idx
+                return
+            idx += direction
+    state.menu_index = 0
+
+
+def _apply_default_monitor_targets() -> None:
+    # Default test set: antigravity + Safari + Chrome (if available)
+    if state.monitor_targets:
+        return
+    state.monitor_targets.add("editor:antigravity")
+    browsers = _get_installed_browsers()
+    for preferred in ("Safari", "Google Chrome", "Chrome"):
+        if preferred in browsers:
+            state.monitor_targets.add(f"browser:{preferred}")
+
+
+localization = LocalizationConfig.load()
+cleanup_cfg = _load_cleanup_config()
+
+
+def log(text: str, category: str = "info") -> None:
+    style_map = {
+        "info": "class:log.info",
+        "user": "class:log.user",
+        "action": "class:log.action",
+        "error": "class:log.error",
+    }
+    state.logs.append((style_map.get(category, "class:log.info"), f"{text}\n"))
+    if len(state.logs) > 500:
+        state.logs = state.logs[-400:]
+
+
+def get_header():
+    primary = localization.primary
+    active_locales = " ".join(localization.selected)
+    selected_editor = state.selected_editor or "-"
+
+    return [
+        ("class:header", " "),
+        ("class:header.title", "SYSTEM CLI"),
+        ("class:header.sep", " | "),
+        ("class:header.label", "Editor: "),
+        ("class:header.value", selected_editor),
+        ("class:header.sep", " | "),
+        ("class:header.label", "Locale: "),
+        ("class:header.value", f"{primary} ({active_locales or 'none'})"),
+        ("class:header", " "),
+    ]
+
+
+def get_context():
+    result: List[Tuple[str, str]] = []
+
+    result.append(("class:context.label", " Cleanup config: "))
+    result.append(("class:context.value", f"{CLEANUP_CONFIG_PATH}\n"))
+    result.append(("class:context.label", " Locales config: "))
+    result.append(("class:context.value", f"{LOCALIZATION_CONFIG_PATH}\n\n"))
+
+    result.append(("class:context.title", " Commands\n"))
+    result.append(("class:context.label", " /help\n"))
+    result.append(("class:context.label", " /run <editor> [--dry]\n"))
+    result.append(("class:context.label", " /modules <editor>\n"))
+    result.append(("class:context.label", " /enable <editor> <id> | /disable <editor> <id>\n"))
+    result.append(("class:context.label", " /install <editor>\n"))
+    result.append(("class:context.label", " /smart <editor> <query...>\n"))
+    result.append(("class:context.label", " /ask <question...>\n"))
+    result.append(("class:context.label", " /locales ua us eu\n"))
+    result.append(("class:context.label", " /autopilot <task...>\n"))
+    result.append(("class:context.label", " /monitor status|start|stop|source <watchdog|fs_usage|opensnoop>|sudo <on|off>\n"))
+    result.append(("class:context.label", " /monitor-targets list|add <key>|remove <key>|clear|save\n"))
+    result.append(("class:context.label", " /llm status|set provider <copilot>|set main <model>|set vision <model>\n"))
+    result.append(("class:context.label", " /theme status|set <monaco|dracula|nord|gruvbox>\n"))
+    result.append(("class:context.label", " /lang status|set ui <code>|set chat <code>\n"))
+
+    return result
+
+
+def get_log_cursor_position():
+    r = 0
+    for _, text in state.logs:
+        r += text.count("\n")
+    return Point(x=0, y=r)
+
+
+# ================== MENU CONTENT ==================
+
+
+def _get_editors_list() -> List[Tuple[str, str]]:
+    global cleanup_cfg
+    cleanup_cfg = _load_cleanup_config()
+    return _list_editors(cleanup_cfg)
+
+
+def _handle_input(buff: Buffer) -> None:
+    text = buff.text.strip()
+    if not text:
+        return
+    buff.text = ""
+
+    if text.startswith("/"):
+        _handle_command(text)
+        return
+
+    # якщо це чисто коди локалей – трактуємо як /locales
+    tokens = [t.strip().upper().strip(".,;") for t in text.split() if t.strip()]
+    if tokens and all(any(l.code == tok for l in AVAILABLE_LOCALES) for tok in tokens):
+        _apply_locales_from_line(text)
+        return
+
+    # інакше – агентний чат (за замовчуванням)
+    if agent_chat_mode and agent_session.enabled:
+        log(text, "user")
         ok, answer = _agent_send(text)
         log(answer, "action" if ok else "error")
     elif not agent_chat_mode:
@@ -2711,73 +2668,6 @@ def _get_cleanup_cfg() -> Any:
 def _set_cleanup_cfg(cfg: Any) -> None:
     global cleanup_cfg
     cleanup_cfg = cfg
-
-
-kb = build_keybindings(
-    state=state,
-    MenuLevel=MenuLevel,
-    show_menu=show_menu,
-    MAIN_MENU_ITEMS=MAIN_MENU_ITEMS,
-    get_custom_tasks_menu_items=_get_custom_tasks_menu_items,
-    TOP_LANGS=TOP_LANGS,
-    lang_name=lang_name,
-    log=log,
-    save_ui_settings=_save_ui_settings,
-    reset_agent_llm=_reset_agent_llm,
-    save_monitor_settings=_save_monitor_settings,
-    save_monitor_targets=_save_monitor_targets,
-    get_monitoring_menu_items=_get_monitoring_menu_items,
-    get_settings_menu_items=_get_settings_menu_items,
-    get_llm_menu_items=_get_llm_menu_items,
-    get_agent_menu_items=_get_agent_menu_items,
-    get_editors_list=_get_editors_list,
-    get_cleanup_cfg=_get_cleanup_cfg,
-    set_cleanup_cfg=_set_cleanup_cfg,
-    load_cleanup_config=_load_cleanup_config,
-    run_cleanup=lambda cfg, editor, dry: _run_cleanup(cfg, editor, dry_run=dry),
-    perform_install=_perform_install,
-    find_module=_find_module,
-    set_module_enabled=_set_module_enabled,
-    AVAILABLE_LOCALES=AVAILABLE_LOCALES,
-    localization=localization,
-    get_monitor_menu_items=_get_monitor_menu_items,
-    normalize_menu_index=_normalize_menu_index,
-    monitor_stop_selected=_monitor_stop_selected,
-    monitor_start_selected=_monitor_start_selected,
-    monitor_resolve_watch_items=_monitor_resolve_watch_items,
-    monitor_service=monitor_service,
-    fs_usage_service=fs_usage_service,
-)
-
-
-app = build_app(
-    get_header=get_header,
-    get_context=get_context,
-    get_logs=lambda: state.logs,
-    get_log_cursor_position=get_log_cursor_position,
-    get_menu_content=get_menu_content,
-    get_input_prompt=get_input_prompt,
-    get_prompt_width=get_prompt_width,
-    get_status=get_status,
-    input_buffer=input_buffer,
-    show_menu=show_menu,
-    kb=kb,
-    style=style,
-)
-
-
-def run_tui() -> None:
-    runtime = TuiRuntime(
-        app=app,
-        log=log,
-        load_monitor_targets=_load_monitor_targets,
-        load_monitor_settings=_load_monitor_settings,
-        load_ui_settings=_load_ui_settings,
-        load_env=_load_env,
-        load_llm_settings=_load_llm_settings,
-        apply_default_monitor_targets=_apply_default_monitor_targets,
-    )
-    tui_run_tui(runtime)
 
 
 def _tool_app_command(args: Dict[str, Any]) -> Dict[str, Any]:
@@ -2864,7 +2754,7 @@ def _tool_ui_theme_status() -> Dict[str, Any]:
 
 def _tool_ui_theme_set(args: Dict[str, Any]) -> Dict[str, Any]:
     theme = str(args.get("theme") or "").strip().lower()
-    if theme not in {"monaco", "dracula", "nord", "gruvbox"}:
+    if theme not in set(THEME_NAMES):
         return {"ok": False, "error": "Unknown theme"}
     state.ui_theme = theme
     ok = _save_ui_settings()
