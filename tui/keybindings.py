@@ -11,6 +11,7 @@ def build_keybindings(
     MenuLevel: Any,
     show_menu: Any,
     MAIN_MENU_ITEMS: Sequence[Tuple[str, Any]],
+    get_custom_tasks_menu_items: Callable[[], List[Tuple[str, Any]]],
     TOP_LANGS: Sequence[str],
     lang_name: Callable[[str], str],
     log: Callable[[str, str], None],
@@ -67,6 +68,7 @@ def build_keybindings(
             state.menu_level = MenuLevel.NONE
             state.menu_index = 0
         elif state.menu_level in {
+            MenuLevel.CUSTOM_TASKS,
             MenuLevel.CLEANUP_EDITORS,
             MenuLevel.MODULE_EDITORS,
             MenuLevel.MODULE_LIST,
@@ -76,6 +78,7 @@ def build_keybindings(
             MenuLevel.MONITOR_TARGETS,
             MenuLevel.MONITOR_CONTROL,
             MenuLevel.SETTINGS,
+            MenuLevel.UNSAFE_MODE,
             MenuLevel.LLM_SETTINGS,
             MenuLevel.AGENT_SETTINGS,
             MenuLevel.APPEARANCE,
@@ -96,6 +99,8 @@ def build_keybindings(
         max_idx = 0
         if state.menu_level == MenuLevel.MAIN:
             max_idx = len(MAIN_MENU_ITEMS) - 1
+        elif state.menu_level == MenuLevel.CUSTOM_TASKS:
+            max_idx = max(0, len(get_custom_tasks_menu_items()) - 1)
         elif state.menu_level == MenuLevel.MONITORING:
             max_idx = max(0, len(get_monitoring_menu_items()) - 1)
         elif state.menu_level in {MenuLevel.CLEANUP_EDITORS, MenuLevel.MODULE_EDITORS, MenuLevel.INSTALL_EDITORS}:
@@ -108,6 +113,8 @@ def build_keybindings(
             max_idx = len(AVAILABLE_LOCALES) - 1
         elif state.menu_level == MenuLevel.SETTINGS:
             max_idx = max(0, len(get_settings_menu_items()) - 1)
+        elif state.menu_level == MenuLevel.UNSAFE_MODE:
+            max_idx = 0
         elif state.menu_level == MenuLevel.MONITOR_TARGETS:
             max_idx = max(0, len(get_monitor_menu_items()) - 1)
         elif state.menu_level == MenuLevel.MONITOR_CONTROL:
@@ -226,6 +233,19 @@ def build_keybindings(
             state.menu_index = 0
             return
 
+        if state.menu_level == MenuLevel.CUSTOM_TASKS:
+            items = get_custom_tasks_menu_items()
+            if not items:
+                return
+            state.menu_index = max(0, min(state.menu_index, len(items) - 1))
+            _label, action = items[state.menu_index]
+            try:
+                ok, msg = action()
+                log(msg, "action" if ok else "error")
+            except Exception as e:
+                log(f"Custom task failed: {e}", "error")
+            return
+
         if state.menu_level == MenuLevel.MONITORING:
             items = get_monitoring_menu_items()
             if not items:
@@ -244,6 +264,12 @@ def build_keybindings(
             _, lvl = items[state.menu_index]
             state.menu_level = lvl
             state.menu_index = 0
+            return
+
+        if state.menu_level == MenuLevel.UNSAFE_MODE:
+            state.ui_unsafe_mode = not bool(getattr(state, "ui_unsafe_mode", False))
+            save_ui_settings()
+            log(f"Unsafe mode: {'ON' if state.ui_unsafe_mode else 'OFF'}", "action")
             return
 
         if state.menu_level == MenuLevel.APPEARANCE:
@@ -327,7 +353,7 @@ def build_keybindings(
         if state.menu_level == MenuLevel.MONITOR_CONTROL:
             if state.monitor_active:
                 ok, msg = monitor_stop_selected()
-                state.monitor_active = bool(monitor_service.running or fs_usage_service.running)
+                state.monitor_active = bool(monitor_service.running or fs_usage_service.running or opensnoop_service.running)
                 log(msg, "action" if ok else "error")
                 return
 
@@ -341,7 +367,7 @@ def build_keybindings(
                 return
 
             ok, msg = monitor_start_selected()
-            state.monitor_active = bool(monitor_service.running or fs_usage_service.running)
+            state.monitor_active = bool(monitor_service.running or fs_usage_service.running or opensnoop_service.running)
             log(msg, "action" if ok else "error")
             return
 

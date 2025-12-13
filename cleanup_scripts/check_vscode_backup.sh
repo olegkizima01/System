@@ -63,7 +63,11 @@ fi
 # Перевірка збережених конфігурацій
 echo "\n📂 Збережені конфігурації:"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-CONFIGS_DIR="$SCRIPT_DIR/configs_vscode"
+REPO_ROOT="$SCRIPT_DIR"
+if [ ! -f "$REPO_ROOT/cleanup_modules.json" ] && [ -f "$SCRIPT_DIR/../cleanup_modules.json" ]; then
+    REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+fi
+CONFIGS_DIR="$REPO_ROOT/configs_vscode"
 
 if [ -d "$CONFIGS_DIR" ]; then
     CONFIG_COUNT=$(ls -1 "$CONFIGS_DIR" 2>/dev/null | wc -l | xargs)

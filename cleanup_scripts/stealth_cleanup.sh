@@ -1,36 +1,53 @@
 #!/bin/zsh
 
-echo "🕵️  VS CODE STEALTH CLEANUP SYSTEM - ADVANCED FINGERPRINT REMOVAL"
-echo "=================================================================="
+setopt NULL_GLOB
+
+echo "🕵️  STEALTH CLEANUP SYSTEM - ADVANCED FINGERPRINT REMOVAL"
+echo "=========================================================="
 
 # Директорії для конфігурацій
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-CONFIGS_DIR="$SCRIPT_DIR/configs_vscode"
+REPO_ROOT="$SCRIPT_DIR"
+if [ ! -f "$REPO_ROOT/cleanup_modules.json" ] && [ -f "$SCRIPT_DIR/../cleanup_modules.json" ]; then
+    REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+fi
+CONFIGS_DIR="$REPO_ROOT/configs"
 
 # Завантаження змінних середовища
-ENV_FILE="$SCRIPT_DIR/.env"
+ENV_FILE="$REPO_ROOT/.env"
 if [ -f "$ENV_FILE" ]; then
     export $(grep -v '^#' "$ENV_FILE" | grep -v '^$' | xargs)
 fi
 
+# Режими виконання
+AUTO_YES="${AUTO_YES:-1}"
+UNSAFE_MODE="${UNSAFE_MODE:-0}"
+
 # Налаштування SUDO_ASKPASS
-export SUDO_ASKPASS="$SCRIPT_DIR/sudo_helper.sh"
+SUDO_HELPER="$REPO_ROOT/cleanup_scripts/sudo_helper.sh"
+if [ ! -f "$SUDO_HELPER" ] && [ -f "$REPO_ROOT/sudo_helper.sh" ]; then
+    SUDO_HELPER="$REPO_ROOT/sudo_helper.sh"
+fi
+export SUDO_ASKPASS="$SUDO_HELPER"
 chmod +x "$SUDO_ASKPASS" 2>/dev/null
+
+sudo() { command sudo -A "$@"; }
+
+if [ "${UNSAFE_MODE}" != "1" ]; then
+    echo "\n🛡️  SAFE_MODE: stealth_cleanup вимкнено. Увімкніть UNSAFE_MODE=1 якщо усвідомлюєте ризики."
+    exit 0
+fi
 
 # Запит sudo прав
 echo "\n🔑 Потрібні права адміністратора для глибокого очищення..."
-if [ -n "$SUDO_PASSWORD" ]; then
-    echo "$SUDO_PASSWORD" | sudo -S -v 2>/dev/null
-else
-    sudo -v
-fi
+sudo -v 2>/dev/null
 
 if [ $? -ne 0 ]; then
     echo "❌ Помилка: невірний пароль sudo. Вихід."
     exit 1
 fi
 
-echo "✅ Права отримано. Починаю VS Code stealth очищення..."
+echo "✅ Права отримано. Починаю стелс очищення..."
 
 # =============================================================================
 # 1. HARDWARE FINGERPRINT CLEANUP
@@ -148,18 +165,25 @@ if [ -n "$ACTIVE_INTERFACE" ]; then
     
     # DNS over HTTPS (DoH) налаштування
     echo "🔒 Налаштування DNS over HTTPS..."
-    
-    # Випадковий вибір DoH провайдера
-    DOH_PROVIDERS=("1.1.1.1 1.0.0.1" "9.9.9.9 149.112.112.112" "8.8.8.8 8.8.4.4")
-    SELECTED_DNS=${DOH_PROVIDERS[$((RANDOM % ${#DOH_PROVIDERS[@]}))]}
-    
-    # Налаштування DNS для Wi-Fi
-    sudo networksetup -setdnsservers "Wi-Fi" $SELECTED_DNS 2>/dev/null
-    
-    # Налаштування DNS для Ethernet (якщо є)
-    sudo networksetup -setdnsservers "Ethernet" $SELECTED_DNS 2>/dev/null
-    
-    echo "✅ DNS налаштовано на: $SELECTED_DNS"
+
+    # Випадковий вибір DoH провайдера (масив з двох IP)
+    DOH_PROVIDERS_IP1=("1.1.1.1" "9.9.9.9" "8.8.8.8")
+    DOH_PROVIDERS_IP2=("1.0.0.1" "149.112.112.112" "8.8.4.4")
+    IDX=$((RANDOM % ${#DOH_PROVIDERS_IP1[@]}))
+    DNS1=${DOH_PROVIDERS_IP1[$IDX]}
+    DNS2=${DOH_PROVIDERS_IP2[$IDX]}
+
+    # Налаштування DNS для Wi‑Fi, якщо сервіс існує
+    if networksetup -listallnetworkservices 2>/dev/null | grep -qx "Wi-Fi"; then
+        sudo networksetup -setdnsservers "Wi-Fi" "$DNS1" "$DNS2" >/dev/null 2>&1
+    fi
+
+    # Налаштування DNS для Ethernet (якщо є сервіс)
+    if networksetup -listallnetworkservices 2>/dev/null | grep -qx "Ethernet"; then
+        sudo networksetup -setdnsservers "Ethernet" "$DNS1" "$DNS2" >/dev/null 2>&1
+    fi
+
+    echo "✅ DNS налаштовано на: $DNS1 $DNS2"
     
     # Очищення DNS кешу (розширене)
     echo "🔄 Агресивне очищення DNS кешу..."
@@ -180,16 +204,16 @@ fi
 echo "✅ Мережеві ідентифікатори та DNS захист оновлено"
 
 # =============================================================================
-# 5. ELECTRON/WEBVIEW FINGERPRINT SPOOFING FOR VS CODE
+# 5. BROWSER/WEBVIEW FINGERPRINT SPOOFING
 # =============================================================================
-echo "\n[5/10] 🌐 Налаштування VS Code WebView fingerprint spoofing..."
+echo "\n[5/10] 🌐 Налаштування WebView fingerprint spoofing..."
 
-# Створення конфігурації для Electron/Chromium в VS Code
-VSCODE_CONFIG_DIR=~/Library/Application\ Support/Code/User
-mkdir -p "$VSCODE_CONFIG_DIR"
+# Створення конфігурації для Electron/Chromium
+ELECTRON_CONFIG_DIR=~/Library/Application\ Support/Windsurf/User
+mkdir -p "$ELECTRON_CONFIG_DIR"
 
 # Створення preferences для spoofing
-cat > "$VSCODE_CONFIG_DIR/preferences" << 'EOF'
+cat > "$ELECTRON_CONFIG_DIR/preferences" << 'EOF'
 {
   "webrtc": {
     "ip_handling_policy": "disable_non_proxied_udp",
@@ -206,11 +230,10 @@ cat > "$VSCODE_CONFIG_DIR/preferences" << 'EOF'
 }
 EOF
 
-# Розширений WebView fingerprint protection для VS Code
-cat > "$VSCODE_CONFIG_DIR/vscode_protection.js" << 'EOF'
-// VS Code Advanced fingerprint randomization
+# Розширений WebView fingerprint protection
+cat > "$ELECTRON_CONFIG_DIR/advanced_protection.js" << 'EOF'
+// Canvas fingerprint randomization
 (function() {
-    // Canvas fingerprint randomization
     const originalGetContext = HTMLCanvasElement.prototype.getContext;
     HTMLCanvasElement.prototype.getContext = function(type, ...args) {
         const context = originalGetContext.call(this, type, ...args);
@@ -239,7 +262,7 @@ cat > "$VSCODE_CONFIG_DIR/vscode_protection.js" << 'EOF'
             };
             const originalCreateOffer = pc.createOffer;
             pc.createOffer = function() {
-                return Promise.reject(new Error('WebRTC blocked for VS Code'));
+                return Promise.reject(new Error('WebRTC blocked'));
             };
             return pc;
         };
@@ -248,21 +271,19 @@ cat > "$VSCODE_CONFIG_DIR/vscode_protection.js" << 'EOF'
     }
 
     // Audio fingerprinting protection
-    if (window.AudioContext) {
-        const originalCreateAnalyser = AudioContext.prototype.createAnalyser;
-        AudioContext.prototype.createAnalyser = function() {
-            const analyser = originalCreateAnalyser.call(this);
-            const originalGetFloatFrequencyData = analyser.getFloatFrequencyData;
-            analyser.getFloatFrequencyData = function(array) {
-                originalGetFloatFrequencyData.call(this, array);
-                // Add noise to audio fingerprint
-                for (let i = 0; i < array.length; i++) {
-                    array[i] += (Math.random() - 0.5) * 0.1;
-                }
-            };
-            return analyser;
+    const originalCreateAnalyser = AudioContext.prototype.createAnalyser;
+    AudioContext.prototype.createAnalyser = function() {
+        const analyser = originalCreateAnalyser.call(this);
+        const originalGetFloatFrequencyData = analyser.getFloatFrequencyData;
+        analyser.getFloatFrequencyData = function(array) {
+            originalGetFloatFrequencyData.call(this, array);
+            // Add noise to audio fingerprint
+            for (let i = 0; i < array.length; i++) {
+                array[i] += (Math.random() - 0.5) * 0.1;
+            }
         };
-    }
+        return analyser;
+    };
 
     // Screen fingerprinting protection
     Object.defineProperty(screen, 'width', {
@@ -300,20 +321,18 @@ cat > "$VSCODE_CONFIG_DIR/vscode_protection.js" << 'EOF'
 
     // Font fingerprinting protection
     const originalOffsetWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetWidth');
-    if (originalOffsetWidth) {
-        Object.defineProperty(HTMLElement.prototype, 'offsetWidth', {
-            get: function() {
-                const width = originalOffsetWidth.get.call(this);
-                return width + Math.floor(Math.random() * 3) - 1;
-            }
-        });
-    }
+    Object.defineProperty(HTMLElement.prototype, 'offsetWidth', {
+        get: function() {
+            const width = originalOffsetWidth.get.call(this);
+            return width + Math.floor(Math.random() * 3) - 1;
+        }
+    });
 
-    console.log('🕵️ VS Code advanced fingerprint protection loaded');
+    console.log('🕵️ Advanced fingerprint protection loaded');
 })();
 EOF
 
-echo "✅ VS Code WebView fingerprint spoofing налаштовано"
+echo "✅ WebView fingerprint spoofing налаштовано"
 
 # =============================================================================
 # 6. TIME AND LOCALE RANDOMIZATION
@@ -328,9 +347,9 @@ echo "🔄 Встановлення часового поясу: $RANDOM_TZ"
 sudo systemsetup -settimezone "$RANDOM_TZ" 2>/dev/null
 
 # Синхронізація часу з невеликим offset
-sudo sntp -sS time.apple.com 2>/dev/null
+sudo sntp -sS time.apple.com >/dev/null 2>&1
 sleep 1
-sudo date -u $(date -u -v+$((RANDOM % 60))S +%m%d%H%M%y) 2>/dev/null
+sudo date -u $(date -u -v+$((RANDOM % 60))S +%m%d%H%M%y) >/dev/null 2>&1
 
 echo "✅ Часові налаштування рандомізовано"
 
@@ -360,45 +379,43 @@ sudo killall mDNSResponderHelper 2>/dev/null
 echo "✅ Системні метадані очищено"
 
 # =============================================================================
-# 8. BEHAVIORAL PATTERN OBFUSCATION FOR VS CODE
+# 8. BEHAVIORAL PATTERN OBFUSCATION
 # =============================================================================
-echo "\n[8/10] 🎭 Налаштування обфускації поведінкових патернів для VS Code..."
+echo "\n[8/10] 🎭 Налаштування обфускації поведінкових патернів..."
 
-# Створення скрипта для рандомізації поведінки VS Code
-cat > "$SCRIPT_DIR/vscode_behavior_randomizer.sh" << 'EOF'
+# Створення скрипта для рандомізації поведінки
+mkdir -p "$REPO_ROOT/cleanup_scripts" 2>/dev/null
+cat > "$REPO_ROOT/cleanup_scripts/behavior_randomizer.sh" << 'EOF'
 #!/bin/zsh
-# Behavioral pattern randomization for VS Code
+# Behavioral pattern randomization for Windsurf
 
 # Random typing delays
-export VSCODE_TYPING_DELAY=$((50 + RANDOM % 200))
+export WINDSURF_TYPING_DELAY=$((50 + RANDOM % 200))
 
 # Random cursor movements
-export VSCODE_CURSOR_RANDOMIZE=1
+export WINDSURF_CURSOR_RANDOMIZE=1
 
 # Random pause intervals
-export VSCODE_PAUSE_INTERVAL=$((5 + RANDOM % 15))
+export WINDSURF_PAUSE_INTERVAL=$((5 + RANDOM % 15))
 
 # Random code completion delays
-export VSCODE_COMPLETION_DELAY=$((100 + RANDOM % 300))
-
-# Random extension loading delays
-export VSCODE_EXTENSION_DELAY=$((200 + RANDOM % 500))
+export WINDSURF_COMPLETION_DELAY=$((100 + RANDOM % 300))
 EOF
 
-chmod +x "$SCRIPT_DIR/vscode_behavior_randomizer.sh"
+chmod +x "$REPO_ROOT/cleanup_scripts/behavior_randomizer.sh"
 
 # Створення launch agent для автозапуску
 mkdir -p ~/Library/LaunchAgents
-cat > ~/Library/LaunchAgents/com.vscode.behavior.plist << EOF
+cat > ~/Library/LaunchAgents/com.windsurf.behavior.plist << EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>com.vscode.behavior</string>
+    <string>com.windsurf.behavior</string>
     <key>ProgramArguments</key>
     <array>
-        <string>$SCRIPT_DIR/vscode_behavior_randomizer.sh</string>
+        <string>$REPO_ROOT/cleanup_scripts/behavior_randomizer.sh</string>
     </array>
     <key>RunAtLoad</key>
     <true/>
@@ -406,50 +423,51 @@ cat > ~/Library/LaunchAgents/com.vscode.behavior.plist << EOF
 </plist>
 EOF
 
-launchctl load ~/Library/LaunchAgents/com.vscode.behavior.plist 2>/dev/null
+launchctl load ~/Library/LaunchAgents/com.windsurf.behavior.plist 2>/dev/null
 
-echo "✅ Поведінкова обфускація для VS Code налаштована"
+echo "✅ Поведінкова обфускація налаштована"
 
 # =============================================================================
-# 9. ADVANCED VS CODE CLEANUP
+# 9. ADVANCED WINDSURF CLEANUP
 # =============================================================================
-echo "\n[9/10] 💻 Розширене очищення VS Code..."
+echo "\n[9/10] 🌊 Розширене очищення Windsurf..."
 
 # Запуск оригінального cleanup
-echo "🔄 Виконання базового VS Code cleanup..."
-"$SCRIPT_DIR/deep_vscode_cleanup.sh" >/dev/null 2>&1
+echo "🔄 Виконання базового cleanup..."
+if [ -f "$REPO_ROOT/cleanup_scripts/deep_windsurf_cleanup.sh" ]; then
+    "$REPO_ROOT/cleanup_scripts/deep_windsurf_cleanup.sh" >/dev/null 2>&1
+elif [ -f "$REPO_ROOT/deep_windsurf_cleanup.sh" ]; then
+    "$REPO_ROOT/deep_windsurf_cleanup.sh" >/dev/null 2>&1
+fi
 
 # Додаткове очищення специфічних fingerprints
-echo "🔄 Додаткове очищення VS Code fingerprints..."
+echo "🔄 Додаткове очищення fingerprints..."
 
 # Очищення WebKit кешів
 rm -rf ~/Library/Caches/com.apple.WebKit.* 2>/dev/null
 rm -rf ~/Library/WebKit/* 2>/dev/null
 
-# Очищення Electron кешів для VS Code
-rm -rf ~/Library/Application\ Support/Code/GPUCache/* 2>/dev/null
-rm -rf ~/Library/Application\ Support/Code/ShaderCache/* 2>/dev/null
-rm -rf ~/Library/Application\ Support/Code/Code\ Cache/* 2>/dev/null
+# Очищення Electron кешів
+rm -rf ~/Library/Application\ Support/Windsurf/GPUCache/* 2>/dev/null
+rm -rf ~/Library/Application\ Support/Windsurf/ShaderCache/* 2>/dev/null
 
-# Створення фейкових hardware fingerprints для VS Code
-mkdir -p ~/Library/Application\ Support/Code/User/globalStorage
-cat > ~/Library/Application\ Support/Code/User/globalStorage/hardware.json << EOF
+# Створення фейкових hardware fingerprints
+mkdir -p ~/Library/Application\ Support/Windsurf/User/globalStorage
+cat > ~/Library/Application\ Support/Windsurf/User/globalStorage/hardware.json << EOF
 {
   "gpu": "Apple M$(($((RANDOM % 3)) + 1)) $(($((RANDOM % 4)) + 8))-Core GPU",
   "memory": "$(($((RANDOM % 4)) + 8))GB",
   "cores": "$(($((RANDOM % 4)) + 4))",
-  "screen": "$((1920 + RANDOM % 1000))x$((1080 + RANDOM % 500))",
-  "ide": "vscode",
-  "version": "1.$(($((RANDOM % 10)) + 80)).$(($RANDOM % 10))"
+  "screen": "$((1920 + RANDOM % 1000))x$((1080 + RANDOM % 500))"
 }
 EOF
 
-echo "✅ Розширене VS Code очищення завершено"
+echo "✅ Розширене Windsurf очищення завершено"
 
 # =============================================================================
 # 10. STEALTH VERIFICATION
 # =============================================================================
-echo "\n[10/10] ✅ Перевірка VS Code stealth налаштувань..."
+echo "\n[10/10] ✅ Перевірка стелс налаштувань..."
 
 echo "🔍 Поточні ідентифікатори:"
 echo "   Hostname: $(scutil --get HostName 2>/dev/null || echo 'Не встановлено')"
@@ -460,24 +478,23 @@ echo "   Timezone: $(systemsetup -gettimezone 2>/dev/null | cut -d' ' -f3-)"
 HW_UUID=$(system_profiler SPHardwareDataType 2>/dev/null | grep "Hardware UUID" | awk '{print $3}')
 echo "   Hardware UUID: ${HW_UUID:0:8}...${HW_UUID: -8}"
 
-# Перевірка VS Code Machine-ID
-if [ -f ~/Library/Application\ Support/Code/machineid ]; then
-    MACHINE_ID=$(cat ~/Library/Application\ Support/Code/machineid)
-    echo "   VS Code Machine-ID: ${MACHINE_ID:0:8}...${MACHINE_ID: -8}"
+# Перевірка Machine-ID
+if [ -f ~/Library/Application\ Support/Windsurf/machineid ]; then
+    MACHINE_ID=$(cat ~/Library/Application\ Support/Windsurf/machineid)
+    echo "   Machine-ID: ${MACHINE_ID:0:8}...${MACHINE_ID: -8}"
 fi
 
-echo "\n🎉 VS CODE STEALTH CLEANUP ЗАВЕРШЕНО!"
+echo "\n🎉 STEALTH CLEANUP ЗАВЕРШЕНО!"
 echo "=========================================================="
 echo "✅ Всі системні fingerprints рандомізовано"
 echo "✅ Поведінкові патерни обфусковано"
 echo "✅ Мережеві ідентифікатори змінено"
 echo "✅ Системні логи очищено"
 echo "✅ WebView fingerprinting заблоковано"
-echo "✅ VS Code специфічні fingerprints оброблено"
 echo ""
 echo "⚠️  ВАЖЛИВО:"
 echo "   • Тепер використовуйте VPN з іншою країною"
 echo "   • Підключіться до іншої мережі WiFi"
-echo "   • VS Code має сприйняти вас як абсолютно нового користувача"
+echo "   • Windsurf має сприйняти вас як абсолютно нового користувача"
 echo ""
-echo "🚀 Готово до запуску VS Code!"
+echo "🚀 Готово до запуску Windsurf!"

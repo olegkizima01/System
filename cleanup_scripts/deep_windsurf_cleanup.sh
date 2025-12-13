@@ -6,13 +6,17 @@ echo "=================================================="
 
 # Директорії для конфігурацій
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-CONFIGS_DIR="$SCRIPT_DIR/configs"
+REPO_ROOT="$SCRIPT_DIR"
+if [ ! -f "$REPO_ROOT/cleanup_modules.json" ] && [ -f "$SCRIPT_DIR/../cleanup_modules.json" ]; then
+    REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+fi
+CONFIGS_DIR="$REPO_ROOT/configs"
 
 # Завантаження змінних середовища з .env
-ENV_FILE="$SCRIPT_DIR/.env"
-if [ ! -f "$ENV_FILE" ] && [ -f "$SCRIPT_DIR/.env.example" ]; then
+ENV_FILE="$REPO_ROOT/.env"
+if [ ! -f "$ENV_FILE" ] && [ -f "$REPO_ROOT/.env.example" ]; then
     echo "⚙️  Створюю .env з .env.example..."
-    cp "$SCRIPT_DIR/.env.example" "$ENV_FILE"
+    cp "$REPO_ROOT/.env.example" "$ENV_FILE"
     echo "✅ Файл .env створено"
 fi
 
@@ -21,14 +25,35 @@ if [ -f "$ENV_FILE" ]; then
     export $(grep -v '^#' "$ENV_FILE" | grep -v '^$' | xargs)
 fi
 
+# Режими виконання
+AUTO_YES="${AUTO_YES:-1}"
+UNSAFE_MODE="${UNSAFE_MODE:-0}"
+
+confirm() {
+    local prompt="$1"
+    if [ "${AUTO_YES}" = "1" ]; then
+        return 0
+    fi
+    read -q "REPLY?${prompt} (y/n) "
+    echo ""
+    [[ "$REPLY" =~ ^[Yy]$ ]]
+}
+
 # Налаштування SUDO_ASKPASS для автоматичного введення пароля
-export SUDO_ASKPASS="$SCRIPT_DIR/sudo_helper.sh"
+SUDO_HELPER="$REPO_ROOT/cleanup_scripts/sudo_helper.sh"
+if [ ! -f "$SUDO_HELPER" ] && [ -f "$REPO_ROOT/sudo_helper.sh" ]; then
+    SUDO_HELPER="$REPO_ROOT/sudo_helper.sh"
+fi
+export SUDO_ASKPASS="$SUDO_HELPER"
 chmod +x "$SUDO_ASKPASS" 2>/dev/null
+
+# Завжди використовуємо askpass-режим, щоб не було TTY prompt
+sudo() { command sudo -A "$@"; }
 
 # Запит пароля sudo на початку (використовує SUDO_ASKPASS якщо доступно)
 echo "\n🔑 Для виконання системних змін потрібен пароль адміністратора."
 if [ -n "$SUDO_PASSWORD" ]; then
-    echo "$SUDO_PASSWORD" | sudo -S -v 2>/dev/null
+    sudo -v 2>/dev/null
 else
     sudo -v
 fi
@@ -48,12 +73,10 @@ if pgrep -f "Visual Studio Code" > /dev/null 2>&1; then
     if [ "${WINDSURF_FULL_AUTO:-0}" = "1" ]; then
         echo "ℹ️  FULL-режим: автоматичне продовження cleanup без запиту користувача"
     else
-        read -q "REPLY?Продовжити cleanup? (y/n) "
-        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        if ! confirm "Продовжити cleanup?"; then
             echo "\n❌ Cleanup скасовано"
             exit 1
         fi
-        echo ""
     fi
 fi
 
@@ -270,6 +293,15 @@ for service in "Windsurf" "windsurf" "com.windsurf" "Windsurf Editor" "Codeium W
 done
 
 echo "✅ Keychain очищено (розширене очищення)"
+
+if [ "${UNSAFE_MODE}" != "1" ]; then
+    echo "\n🛡️  SAFE_MODE: виконую лише деінсталяцію/очистку (без підміни ідентифікаторів, hostname, мережі)."
+    echo "🔥 Видаляю Application Support/Windsurf..."
+    safe_remove ~/Library/Application\ Support/Windsurf
+    xcrun --kill-cache 2>/dev/null
+    echo "✅ SAFE_MODE cleanup завершено."
+    exit 0
+fi
 
 # ДОДАТКОВО: Очищення всіх баз даних та сховищ ДО резервування
 echo "\n🗑️  Очищення баз даних та локальних сховищ (перед резервуванням)..."
@@ -562,17 +594,6 @@ echo "📋 Процес автовідновлення запущено (PID: $R
 echo "⏰ Оригінальні налаштування будуть відновлено за 5 годин"
 echo ""
 
-# Додано функцію для автоматичного введення пароля через sudo
-askpass_helper() {
-    echo "Ваш_пароль_тут"  # ЗАМІНІТЬ на ваш пароль або використовуйте безпечний метод
-}
-
-# Встановлення askpass для sudo
-export SUDO_ASKPASS="$(mktemp)"
-echo "#!/bin/sh" > "$SUDO_ASKPASS"
-echo "askpass_helper" >> "$SUDO_ASKPASS"
-chmod +x "$SUDO_ASKPASS"
-
 # ФІНАЛЬНЕ ОЧИЩЕННЯ
 echo "\n🧹 Фінальне очищення залишкових файлів..."
 find ~/Library -iname "*windsurf*" -maxdepth 3 -not -path "*/Trash/*" -exec rm -rf {} + 2>/dev/null
@@ -594,8 +615,8 @@ xcrun --kill-cache 2>/dev/null
 echo "✅ Кеші інструментів розробника очищено."
 
 # Додати запис в історію
-if [ -f "$SCRIPT_DIR/history_tracker.sh" ]; then
-    "$SCRIPT_DIR/history_tracker.sh" add "windsurf" "cleanup" "Full cleanup completed. New hostname: $NEW_HOSTNAME" 2>/dev/null
+if [ -f "$REPO_ROOT/history_tracker.sh" ]; then
+    "$REPO_ROOT/history_tracker.sh" add "windsurf" "cleanup" "Full cleanup completed. New hostname: $NEW_HOSTNAME" 2>/dev/null
 fi
 
 echo "\n=================================================="

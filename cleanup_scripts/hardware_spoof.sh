@@ -5,20 +5,67 @@ echo "🔧 HARDWARE SPOOFING - Advanced Fingerprint Manipulation"
 echo "========================================================"
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-
-# Завантаження sudo helper
-if [ -f "$SCRIPT_DIR/.env" ]; then
-    export $(grep -v '^#' "$SCRIPT_DIR/.env" | grep -v '^$' | xargs)
+REPO_ROOT="$SCRIPT_DIR"
+if [ ! -f "$REPO_ROOT/cleanup_modules.json" ] && [ -f "$SCRIPT_DIR/../cleanup_modules.json" ]; then
+    REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 fi
 
-export SUDO_ASKPASS="$SCRIPT_DIR/sudo_helper.sh"
+# Завантаження sudo helper
+if [ -f "$REPO_ROOT/.env" ]; then
+    export $(grep -v '^#' "$REPO_ROOT/.env" | grep -v '^$' | xargs)
+fi
+
+# Режими виконання
+AUTO_YES="${AUTO_YES:-1}"
+UNSAFE_MODE="${UNSAFE_MODE:-0}"
+
+confirm() {
+    local prompt="$1"
+    if [ "${AUTO_YES}" = "1" ]; then
+        return 0
+    fi
+    read -q "REPLY?${prompt} (y/n) "
+    echo ""
+    [[ "$REPLY" =~ ^[Yy]$ ]]
+}
+
+SUDO_HELPER="$REPO_ROOT/cleanup_scripts/sudo_helper.sh"
+if [ ! -f "$SUDO_HELPER" ] && [ -f "$REPO_ROOT/sudo_helper.sh" ]; then
+    SUDO_HELPER="$REPO_ROOT/sudo_helper.sh"
+fi
+export SUDO_ASKPASS="$SUDO_HELPER"
 chmod +x "$SUDO_ASKPASS" 2>/dev/null
 
+# Завжди використовуємо askpass-режим, щоб не було TTY prompt
+sudo() { command sudo -A "$@"; }
+
+if [ "${UNSAFE_MODE}" != "1" ]; then
+    echo "\n🛡️  SAFE_MODE: hardware_spoof вимкнено. Увімкніть UNSAFE_MODE=1 якщо усвідомлюєте ризики."
+    exit 0
+fi
+
 echo "🔑 Отримання sudo прав..."
-if [ -n "$SUDO_PASSWORD" ]; then
-    echo "$SUDO_PASSWORD" | sudo -S -v 2>/dev/null
+sudo -v 2>/dev/null
+
+# Перевірка SIP (System Integrity Protection)
+echo "\n🔍 Перевірка статусу SIP..."
+SIP_STATUS=$(csrutil status 2>/dev/null | grep -o 'enabled\|disabled' || echo "unknown")
+if [ "$SIP_STATUS" = "enabled" ]; then
+    echo "⚠️  УВАГА: SIP увімкнений. NVRAM операції не спрацюють."
+    echo "💡 Для повного hardware spoofing відключіть SIP:"
+    echo "   1. Boot into Recovery Mode"
+    echo "   2. Run: csrutil disable"
+    echo "   3. Reboot"
+    echo ""
+    if ! confirm "Продовжити без NVRAM?"; then
+        echo "\n❌ Скасовано"
+        exit 1
+    fi
+    echo ""
+    SKIP_NVRAM=1
 else
-    sudo -v
+    echo "✅ SIP відключений, NVRAM операції доступні"
+    SKIP_NVRAM=0
 fi
 
 # =============================================================================
@@ -37,9 +84,14 @@ echo "   MLB: $NEW_MLB"
 echo "   ROM: $NEW_ROM"
 
 # Спроба зміни через NVRAM (потребує відключеного SIP)
-sudo nvram SystemSerialNumber="$NEW_SERIAL" 2>/dev/null
-sudo nvram MLB="$NEW_MLB" 2>/dev/null
-sudo nvram ROM="$NEW_ROM" 2>/dev/null
+if [ "$SKIP_NVRAM" -eq 0 ]; then
+    sudo nvram SystemSerialNumber="$NEW_SERIAL" 2>/dev/null
+    sudo nvram MLB="$NEW_MLB" 2>/dev/null
+    sudo nvram ROM="$NEW_ROM" 2>/dev/null
+    echo "✅ NVRAM оновлено"
+else
+    echo "⏭️  NVRAM пропущено (SIP enabled)"
+fi
 
 # Альтернативний метод через system_profiler hook
 cat > /tmp/system_profiler_hook.sh << EOF
@@ -204,6 +256,7 @@ export MALLOC_CONF="junk:true,zero:true"
 cat > /tmp/memory_randomizer.sh << 'EOF'
 #!/bin/zsh
 # Memory layout randomizer
+setopt NULL_GLOB
 while true; do
     # Алокація випадкових блоків пам'яті для зміни layout
     dd if=/dev/zero of=/tmp/mem_$RANDOM bs=1024 count=$((RANDOM % 1000)) 2>/dev/null &
@@ -213,7 +266,8 @@ done
 EOF
 
 chmod +x /tmp/memory_randomizer.sh
-/tmp/memory_randomizer.sh &
+/tmp/memory_randomizer.sh >/dev/null 2>&1 &
+disown
 MEMORY_PID=$!
 
 echo "✅ Memory layout рандомізація активна (PID: $MEMORY_PID)"

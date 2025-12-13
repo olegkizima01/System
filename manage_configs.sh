@@ -6,6 +6,7 @@
 CONFIGS_DIR="$(dirname "$0")/configs"
 ORIGINAL_CONFIG="$CONFIGS_DIR/original"
 CURRENT_WINDSURF_DIR=~/Library/Application\ Support/Windsurf
+LOG_FILE="$CONFIGS_DIR/audit.log"
 
 echo "╔═══════════════════════════════════════════════════════════════╗"
 echo "║                                                               ║"
@@ -17,6 +18,14 @@ echo ""
 
 # Створити директорії якщо не існують
 mkdir -p "$CONFIGS_DIR"
+
+# Функція логування
+log_action() {
+    local action="$1"
+    local profile="$2"
+    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+    echo "[$timestamp] $action: $profile" >> "$LOG_FILE"
+}
 
 # Функція для збереження поточної конфігурації
 save_current_config() {

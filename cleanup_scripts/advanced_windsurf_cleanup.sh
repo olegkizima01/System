@@ -6,6 +6,41 @@
 # ═══════════════════════════════════════════════════════════════
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="$SCRIPT_DIR"
+if [ ! -f "$REPO_ROOT/cleanup_modules.json" ] && [ -f "$SCRIPT_DIR/../cleanup_modules.json" ]; then
+    REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+fi
+
+# Завантаження змінних середовища
+ENV_FILE="$REPO_ROOT/.env"
+if [ -f "$ENV_FILE" ]; then
+    export $(grep -v '^#' "$ENV_FILE" | grep -v '^$' | xargs)
+fi
+
+# Режими виконання
+AUTO_YES="${AUTO_YES:-1}"
+UNSAFE_MODE="${UNSAFE_MODE:-0}"
+
+# SUDO_ASKPASS
+SUDO_HELPER="$REPO_ROOT/cleanup_scripts/sudo_helper.sh"
+if [ ! -f "$SUDO_HELPER" ] && [ -f "$REPO_ROOT/sudo_helper.sh" ]; then
+    SUDO_HELPER="$REPO_ROOT/sudo_helper.sh"
+fi
+export SUDO_ASKPASS="$SUDO_HELPER"
+chmod +x "$SUDO_ASKPASS" 2>/dev/null
+sudo() { command sudo -A "$@"; }
+
+if [ "${UNSAFE_MODE}" != "1" ]; then
+    echo "\n🛡️  SAFE_MODE: advanced_windsurf_cleanup вимкнено. Увімкніть UNSAFE_MODE=1 якщо потрібно."
+    exit 0
+fi
+
+# Перевірка sudo доступу (неінтерактивно через SUDO_ASKPASS)
+sudo -v 2>/dev/null
+if [ $? -ne 0 ]; then
+    echo "❌ Помилка: не вдалося отримати sudo права. Перевірте SUDO_PASSWORD у .env"
+    exit 1
+fi
 
 # Кольори
 RED='\033[0;31m'

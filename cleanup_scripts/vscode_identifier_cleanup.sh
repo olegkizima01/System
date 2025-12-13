@@ -1,11 +1,46 @@
 #!/bin/zsh
 
 # ═══════════════════════════════════════════════════════════════
-#  🔄 WINDSURF IDENTIFIER CLEANUP - Повне очищення ідентифікаторів
+#  🔄 VS CODE IDENTIFIER CLEANUP - Повне очищення ідентифікаторів
 #  Видаляє всі ідентифікатори для обходу обмежень облікового запису
 # ═══════════════════════════════════════════════════════════════
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="$SCRIPT_DIR"
+if [ ! -f "$REPO_ROOT/cleanup_modules.json" ] && [ -f "$SCRIPT_DIR/../cleanup_modules.json" ]; then
+    REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+fi
+
+# Завантаження змінних середовища
+ENV_FILE="$REPO_ROOT/.env"
+if [ -f "$ENV_FILE" ]; then
+    export $(grep -v '^#' "$ENV_FILE" | grep -v '^$' | xargs)
+fi
+
+# Режими виконання
+AUTO_YES="${AUTO_YES:-1}"
+UNSAFE_MODE="${UNSAFE_MODE:-0}"
+
+# SUDO_ASKPASS
+SUDO_HELPER="$REPO_ROOT/cleanup_scripts/sudo_helper.sh"
+if [ ! -f "$SUDO_HELPER" ] && [ -f "$REPO_ROOT/sudo_helper.sh" ]; then
+    SUDO_HELPER="$REPO_ROOT/sudo_helper.sh"
+fi
+export SUDO_ASKPASS="$SUDO_HELPER"
+chmod +x "$SUDO_ASKPASS" 2>/dev/null
+sudo() { command sudo -A "$@"; }
+
+if [ "${UNSAFE_MODE}" != "1" ]; then
+    echo "\n🛡️  SAFE_MODE: vscode_identifier_cleanup вимкнено. Увімкніть UNSAFE_MODE=1 якщо потрібно."
+    exit 0
+fi
+
+# Перевірка sudo доступу (неінтерактивно через SUDO_ASKPASS)
+sudo -v 2>/dev/null
+if [ $? -ne 0 ]; then
+    echo "❌ Помилка: не вдалося отримати sudo права. Перевірте SUDO_PASSWORD у .env"
+    exit 1
+fi
 
 # Кольори
 RED='\033[0;31m'
@@ -17,7 +52,7 @@ WHITE='\033[1;37m'
 NC='\033[0m'
 
 echo "${CYAN}╔══════════════════════════════════════════════════════════════╗${NC}"
-echo "${CYAN}║${NC}  ${GREEN}🔄 WINDSURF IDENTIFIER CLEANUP${NC}                            ${CYAN}║${NC}"
+echo "${CYAN}║${NC}  ${GREEN}🔄 VS CODE IDENTIFIER CLEANUP${NC}                             ${CYAN}║${NC}"
 echo "${CYAN}║${NC}  ${WHITE}Повне очищення ідентифікаторів для обходу лімітів${NC}        ${CYAN}║${NC}"
 echo "${CYAN}╚══════════════════════════════════════════════════════════════╝${NC}"
 echo ""
@@ -32,15 +67,15 @@ generate_machine_id() {
     openssl rand -hex 16
 }
 
-# Зупинка Windsurf якщо запущений
-echo "${YELLOW}🛑 Зупинка Windsurf...${NC}"
-pkill -f windsurf 2>/dev/null
-pkill -f Windsurf 2>/dev/null
+# Зупинка VS Code якщо запущений
+echo "${YELLOW}🛑 Зупинка VS Code...${NC}"
+pkill -f "Visual Studio Code" 2>/dev/null
+pkill -f "Code" 2>/dev/null
 sleep 2
 
 # 1. Очищення Machine ID
 echo "${BLUE}[1/8] Очищення Machine ID...${NC}"
-MACHINEID_PATH=~/Library/Application\ Support/Windsurf/machineid
+MACHINEID_PATH=~/Library/Application\ Support/Code/machineid
 if [ -f "$MACHINEID_PATH" ]; then
     NEW_MACHINE_ID=$(generate_machine_id)
     echo "$NEW_MACHINE_ID" > "$MACHINEID_PATH"
@@ -52,8 +87,8 @@ fi
 # 2. Очищення Storage файлів
 echo "${BLUE}[2/8] Очищення Storage файлів...${NC}"
 STORAGE_PATHS=(
-    ~/Library/Application\ Support/Windsurf/storage.json
-    ~/Library/Application\ Support/Windsurf/User/globalStorage/storage.json
+    ~/Library/Application\ Support/Code/storage.json
+    ~/Library/Application\ Support/Code/User/globalStorage/storage.json
 )
 
 for STORAGE_PATH in "${STORAGE_PATHS[@]}"; do
@@ -81,20 +116,20 @@ done
 
 # 3. Видалення кешів та баз даних
 echo "${BLUE}[3/8] Видалення кешів та баз даних...${NC}"
-rm -rf ~/Library/Application\ Support/Windsurf/User/globalStorage/state.vscdb* 2>/dev/null
-rm -rf ~/Library/Application\ Support/Windsurf/Local\ Storage 2>/dev/null
-rm -rf ~/Library/Application\ Support/Windsurf/Session\ Storage 2>/dev/null
-rm -rf ~/Library/Application\ Support/Windsurf/IndexedDB 2>/dev/null
-rm -rf ~/Library/Application\ Support/Windsurf/databases 2>/dev/null
-rm -rf ~/Library/Application\ Support/Windsurf/GPUCache 2>/dev/null
-rm -rf ~/Library/Application\ Support/Windsurf/CachedData 2>/dev/null
-rm -rf ~/Library/Application\ Support/Windsurf/Code\ Cache 2>/dev/null
-rm -rf ~/Library/Application\ Support/Windsurf/User/workspaceStorage 2>/dev/null
+rm -rf ~/Library/Application\ Support/Code/User/globalStorage/state.vscdb* 2>/dev/null
+rm -rf ~/Library/Application\ Support/Code/Local\ Storage 2>/dev/null
+rm -rf ~/Library/Application\ Support/Code/Session\ Storage 2>/dev/null
+rm -rf ~/Library/Application\ Support/Code/IndexedDB 2>/dev/null
+rm -rf ~/Library/Application\ Support/Code/databases 2>/dev/null
+rm -rf ~/Library/Application\ Support/Code/GPUCache 2>/dev/null
+rm -rf ~/Library/Application\ Support/Code/CachedData 2>/dev/null
+rm -rf ~/Library/Application\ Support/Code/Code\ Cache 2>/dev/null
+rm -rf ~/Library/Application\ Support/Code/User/workspaceStorage 2>/dev/null
 echo "  ✓ Кеші та бази даних видалено"
 
 # 4. Очищення Keychain
 echo "${BLUE}[4/8] Очищення Keychain...${NC}"
-for service in "Windsurf" "windsurf" "com.windsurf" "Windsurf Editor" "Codeium Windsurf" "Codeium" "codeium" "codeium.com" "api.codeium.com"; do
+for service in "Code" "Visual Studio Code" "com.microsoft.VSCode" "VS Code" "GitHub" "github.com" "Microsoft" "microsoft.com"; do
     security delete-generic-password -s "$service" 2>/dev/null
     security delete-internet-password -s "$service" 2>/dev/null
     security delete-generic-password -l "$service" 2>/dev/null
@@ -103,11 +138,11 @@ echo "  ✓ Keychain очищено"
 
 # 5. Видалення cookies та веб-даних
 echo "${BLUE}[5/8] Видалення cookies та веб-даних...${NC}"
-rm -rf ~/Library/Application\ Support/Windsurf/Cookies* 2>/dev/null
-rm -rf ~/Library/Application\ Support/Windsurf/Network\ Persistent\ State 2>/dev/null
-rm -rf ~/Library/Application\ Support/Windsurf/TransportSecurity 2>/dev/null
-rm -rf ~/Library/Application\ Support/Windsurf/Trust\ Tokens* 2>/dev/null
-rm -rf ~/Library/Application\ Support/Windsurf/SharedStorage* 2>/dev/null
+rm -rf ~/Library/Application\ Support/Code/Cookies* 2>/dev/null
+rm -rf ~/Library/Application\ Support/Code/Network\ Persistent\ State 2>/dev/null
+rm -rf ~/Library/Application\ Support/Code/TransportSecurity 2>/dev/null
+rm -rf ~/Library/Application\ Support/Code/Trust\ Tokens* 2>/dev/null
+rm -rf ~/Library/Application\ Support/Code/SharedStorage* 2>/dev/null
 echo "  ✓ Cookies та веб-дані видалено"
 
 # 6. Генерація нового hostname (тимчасово)
@@ -143,7 +178,7 @@ echo "${BLUE}[8/8] Планування відновлення hostname...${NC}"
     sudo scutil --set ComputerName "$ORIGINAL_HOSTNAME" 2>/dev/null
     sudo dscacheutil -flushcache 2>/dev/null
     sudo killall -HUP mDNSResponder 2>/dev/null
-} > /tmp/windsurf_hostname_restore_$$.log 2>&1 &
+} > /tmp/vscode_hostname_restore_$$.log 2>&1 &
 
 RESTORE_PID=$!
 echo "  ✓ Відновлення заплановано (PID: $RESTORE_PID)"
@@ -162,6 +197,6 @@ echo "${GREEN}║${NC}    ✓ Cookies та веб-дані видалено     
 echo "${GREEN}║${NC}    ✓ Hostname змінено на: ${YELLOW}$NEW_HOSTNAME${NC}                    ${GREEN}║${NC}"
 echo "${GREEN}║${NC}    ✓ DNS кеш очищено                                      ${GREEN}║${NC}"
 echo "${GREEN}║${NC}                                                            ${GREEN}║${NC}"
-echo "${GREEN}║${NC}  ${YELLOW}💡 Тепер можна запускати Windsurf як новий користувач${NC}     ${GREEN}║${NC}"
+echo "${GREEN}║${NC}  ${YELLOW}💡 Тепер можна запускати VS Code як новий користувач${NC}      ${GREEN}║${NC}"
 echo "${GREEN}╚══════════════════════════════════════════════════════════════╝${NC}"
 echo ""

@@ -8,14 +8,18 @@ echo "=================================================="
 
 # Директорії для конфігурацій
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-CONFIGS_DIR="$SCRIPT_DIR/configs_vscode"
+REPO_ROOT="$SCRIPT_DIR"
+if [ ! -f "$REPO_ROOT/cleanup_modules.json" ] && [ -f "$SCRIPT_DIR/../cleanup_modules.json" ]; then
+    REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+fi
+CONFIGS_DIR="$REPO_ROOT/configs_vscode"
 ORIGINAL_CONFIG="$CONFIGS_DIR/original"
 
 # Завантаження змінних середовища з .env
-ENV_FILE="$SCRIPT_DIR/.env"
-if [ ! -f "$ENV_FILE" ] && [ -f "$SCRIPT_DIR/.env.example" ]; then
+ENV_FILE="$REPO_ROOT/.env"
+if [ ! -f "$ENV_FILE" ] && [ -f "$REPO_ROOT/.env.example" ]; then
     echo "⚙️  Створюю .env з .env.example..."
-    cp "$SCRIPT_DIR/.env.example" "$ENV_FILE"
+    cp "$REPO_ROOT/.env.example" "$ENV_FILE"
     echo "✅ Файл .env створено"
 fi
 
@@ -24,30 +28,37 @@ if [ -f "$ENV_FILE" ]; then
     export $(grep -v '^#' "$ENV_FILE" | grep -v '^$' | xargs)
 fi
 
+# Режими виконання
+AUTO_YES="${AUTO_YES:-1}"
+UNSAFE_MODE="${UNSAFE_MODE:-0}"
+
+confirm() {
+    local prompt="$1"
+    if [ "${AUTO_YES}" = "1" ]; then
+        return 0
+    fi
+    read -q "REPLY?${prompt} (y/n) "
+    echo ""
+    [[ "$REPLY" =~ ^[Yy]$ ]]
+}
+
 # Налаштування SUDO_ASKPASS для автоматичного введення пароля
-export SUDO_ASKPASS="$SCRIPT_DIR/sudo_helper.sh"
+SUDO_HELPER="$REPO_ROOT/cleanup_scripts/sudo_helper.sh"
+if [ ! -f "$SUDO_HELPER" ] && [ -f "$REPO_ROOT/sudo_helper.sh" ]; then
+    SUDO_HELPER="$REPO_ROOT/sudo_helper.sh"
+fi
+export SUDO_ASKPASS="$SUDO_HELPER"
 chmod +x "$SUDO_ASKPASS" 2>/dev/null
+
+# Завжди використовуємо askpass-режим, щоб не було TTY prompt
+sudo() { command sudo -A "$@"; }
 
 # Запит пароля sudo на початку (використовує SUDO_ASKPASS якщо доступно)
 echo "\n🔑 Для виконання системних змін потрібен пароль адміністратора."
-if [ -n "$SUDO_PASSWORD" ]; then
-    echo "$SUDO_PASSWORD" | sudo -S -v 2>/dev/null
-    if [ $? -ne 0 ]; then
-        echo "❌ Помилка: невірний пароль sudo або недостатньо прав. Вихід."
-        exit 1
-    fi
-else
-    # Для веб-інтерфейсу використовуємо SUDO_ASKPASS
-    if [ -n "$SUDO_ASKPASS" ] && [ -f "$SUDO_ASKPASS" ]; then
-        sudo -A -v 2>/dev/null
-        if [ $? -ne 0 ]; then
-            echo "❌ Помилка: невірний пароль sudo або недостатньо прав. Вихід."
-            exit 1
-        fi
-    else
-        echo "⚠️  Запуск без sudo прав (веб-режим)"
-        # Продовжуємо без sudo для команд, які його не потребують
-    fi
+sudo -v 2>/dev/null
+if [ $? -ne 0 ]; then
+    echo "❌ Помилка: невірний пароль sudo або недостатньо прав. Вихід."
+    exit 1
 fi
 echo "✅ Права адміністратора отримано."
 
@@ -56,12 +67,10 @@ echo "\n🔍 Перевірка активних процесів..."
 if pgrep -f "Windsurf" > /dev/null 2>&1; then
     echo "⚠️  УВАГА: Windsurf активний!"
     echo "💡 Рекомендація: Закрийте Windsurf перед cleanup для уникнення конфліктів"
-    read -q "REPLY?Продовжити cleanup? (y/n) "
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    if ! confirm "Продовжити cleanup?"; then
         echo "\n❌ Cleanup скасовано"
         exit 1
     fi
-    echo ""
 fi
 
 # Генерація унікального hostname - розширений список (150+ імен)
@@ -159,6 +168,14 @@ for service in "Visual Studio Code" "vscode" "VSCode" "com.microsoft.VSCode" "co
 done
 echo "✅ Keychain очищено"
 
+if [ "${UNSAFE_MODE}" != "1" ]; then
+    echo "\n🛡️  SAFE_MODE: виконую лише деінсталяцію/очистку (без підміни ідентифікаторів, hostname, мережі)."
+    safe_remove ~/Library/Application\ Support/Code
+    safe_remove ~/Library/Application\ Support/Code\ -\ Insiders
+    echo "✅ SAFE_MODE cleanup завершено."
+    exit 0
+fi
+
 # 8. Резервування та підміна ID
 echo "\n[8/12] Резервування та підміна ідентифікаторів..."
 BACKUP_DIR="/tmp/vscode_backup_$(date +%s)"
@@ -226,9 +243,9 @@ safe_remove ~/Library/Application\ Support/Code/Session\ Storage
 echo "\n[10/12] Зміна hostname..."
 echo " $ORIGINAL_HOSTNAME → $NEW_HOSTNAME"
 if [ -n "$SUDO_PASSWORD" ]; then
-    echo "$SUDO_PASSWORD" | sudo -S scutil --set HostName "$NEW_HOSTNAME"
-    echo "$SUDO_PASSWORD" | sudo -S scutil --set LocalHostName "$NEW_HOSTNAME"
-    echo "$SUDO_PASSWORD" | sudo -S scutil --set ComputerName "$NEW_HOSTNAME"
+    sudo scutil --set HostName "$NEW_HOSTNAME"
+    sudo scutil --set LocalHostName "$NEW_HOSTNAME"
+    sudo scutil --set ComputerName "$NEW_HOSTNAME"
 else
     sudo scutil --set HostName "$NEW_HOSTNAME"
     sudo scutil --set LocalHostName "$NEW_HOSTNAME"
@@ -238,8 +255,8 @@ fi
 # Очищення DNS кешу
 echo " Очищення DNS кешу..."
 if [ -n "$SUDO_PASSWORD" ]; then
-    echo "$SUDO_PASSWORD" | sudo -S dscacheutil -flushcache
-    echo "$SUDO_PASSWORD" | sudo -S killall -HUP mDNSResponder 2>/dev/null
+    sudo dscacheutil -flushcache
+    sudo killall -HUP mDNSResponder 2>/dev/null
 else
     sudo dscacheutil -flushcache
     sudo killall -HUP mDNSResponder 2>/dev/null
@@ -253,8 +270,8 @@ if [ -n "$ACTIVE_INTERFACE" ]; then
     ORIGINAL_MAC=$(ifconfig "$ACTIVE_INTERFACE" | awk '/ether/{print $2}')
     echo "$ORIGINAL_MAC" > "$ORIGINAL_CONFIG/mac_address.txt"
     if [ -n "$SUDO_PASSWORD" ]; then
-        echo "$SUDO_PASSWORD" | sudo -S arp -a -d 2>/dev/null
-        echo "$SUDO_PASSWORD" | sudo -S ipconfig set "$ACTIVE_INTERFACE" DHCP 2>/dev/null
+        sudo arp -a -d 2>/dev/null
+        sudo ipconfig set "$ACTIVE_INTERFACE" DHCP 2>/dev/null
     else
         sudo arp -a -d 2>/dev/null
         sudo ipconfig set "$ACTIVE_INTERFACE" DHCP 2>/dev/null
@@ -268,11 +285,11 @@ fi
     echo "\n⏰ Відновлення оригіналу..."
     SAVED_HOSTNAME=$(cat "$ORIGINAL_CONFIG/hostname.txt" 2>/dev/null || echo "$ORIGINAL_HOSTNAME")
     if [ -n "$SUDO_PASSWORD" ]; then
-        echo "$SUDO_PASSWORD" | sudo -S scutil --set HostName "$SAVED_HOSTNAME"
-        echo "$SUDO_PASSWORD" | sudo -S scutil --set LocalHostName "$SAVED_HOSTNAME"
-        echo "$SUDO_PASSWORD" | sudo -S scutil --set ComputerName "$SAVED_HOSTNAME"
-        echo "$SUDO_PASSWORD" | sudo -S dscacheutil -flushcache
-        echo "$SUDO_PASSWORD" | sudo -S killall -HUP mDNSResponder 2>/dev/null
+        sudo scutil --set HostName "$SAVED_HOSTNAME"
+        sudo scutil --set LocalHostName "$SAVED_HOSTNAME"
+        sudo scutil --set ComputerName "$SAVED_HOSTNAME"
+        sudo dscacheutil -flushcache
+        sudo killall -HUP mDNSResponder 2>/dev/null
     else
         sudo scutil --set HostName "$SAVED_HOSTNAME"
         sudo scutil --set LocalHostName "$SAVED_HOSTNAME"
@@ -290,7 +307,7 @@ fi
     if [ -f "$ORIGINAL_CONFIG/mac_address.txt" ] && [ -n "$ACTIVE_INTERFACE" ]; then
         SAVED_MAC=$(cat "$ORIGINAL_CONFIG/mac_address.txt")
         if [ -n "$SUDO_PASSWORD" ]; then
-            echo "$SUDO_PASSWORD" | sudo -S ifconfig "$ACTIVE_INTERFACE" ether "$SAVED_MAC"
+            sudo ifconfig "$ACTIVE_INTERFACE" ether "$SAVED_MAC"
         else
             sudo ifconfig "$ACTIVE_INTERFACE" ether "$SAVED_MAC"
         fi
@@ -312,8 +329,8 @@ safe_remove ~/Library/Application\ Support/Code
 
 # 13. АВТОМАТИЧНА ІНСТАЛЯЦІЯ VS CODE
 echo "\n[13/13] Автоматична інсталяція VS Code..."
-VSCODE_ZIP="$SCRIPT_DIR/VSCode-darwin-universal.zip"
-VSCODE_APP="$SCRIPT_DIR/Visual Studio Code.app"
+VSCODE_ZIP="$REPO_ROOT/VSCode-darwin-universal.zip"
+VSCODE_APP="$REPO_ROOT/Visual Studio Code.app"
 
 # Перевірка ZIP файлу
 if [ -f "$VSCODE_ZIP" ]; then
@@ -321,12 +338,12 @@ if [ -f "$VSCODE_ZIP" ]; then
     echo "🔄 Розпакування..."
     
     # Розпакування ZIP (швидка версія)
-    cd "$SCRIPT_DIR"
+    cd "$REPO_ROOT"
     unzip -o "$VSCODE_ZIP" > /dev/null
     
     if [ $? -eq 0 ] && [ -d "Visual Studio Code.app" ]; then
         echo "✅ ZIP розпаковано успішно"
-        VSCODE_APP="$SCRIPT_DIR/Visual Studio Code.app"
+        VSCODE_APP="$REPO_ROOT/Visual Studio Code.app"
     else
         echo "❌ Помилка розпакування ZIP"
     fi
@@ -340,7 +357,7 @@ if [ -d "$VSCODE_APP" ]; then
     # Видалити старий якщо існує
     if [ -d "/Applications/Visual Studio Code.app" ]; then
         if [ -n "$SUDO_PASSWORD" ]; then
-            echo "$SUDO_PASSWORD" | sudo -S rm -rf "/Applications/Visual Studio Code.app"
+            sudo rm -rf "/Applications/Visual Studio Code.app"
         else
             sudo rm -rf "/Applications/Visual Studio Code.app"
         fi
@@ -349,7 +366,7 @@ if [ -d "$VSCODE_APP" ]; then
     
     # Копіювання в Applications
     if [ -n "$SUDO_PASSWORD" ]; then
-        echo "$SUDO_PASSWORD" | sudo -S cp -R "$VSCODE_APP" /Applications/
+        sudo cp -R "$VSCODE_APP" /Applications/
     else
         sudo cp -R "$VSCODE_APP" /Applications/
     fi
@@ -361,8 +378,8 @@ if [ -d "$VSCODE_APP" ]; then
         sleep 2
         
         # Очищення тимчасових файлів
-        if [ -f "$VSCODE_ZIP" ] && [ -d "$SCRIPT_DIR/Visual Studio Code.app" ]; then
-            rm -rf "$SCRIPT_DIR/Visual Studio Code.app"
+        if [ -f "$VSCODE_ZIP" ] && [ -d "$REPO_ROOT/Visual Studio Code.app" ]; then
+            rm -rf "$REPO_ROOT/Visual Studio Code.app"
             echo "🧹 Тимчасові файли очищено"
         fi
         
@@ -372,13 +389,13 @@ if [ -d "$VSCODE_APP" ]; then
     fi
 else
     echo "⚠️  VS Code не знайдено"
-    echo "💡 Переконайтесь що файл VSCode-darwin-universal.zip знаходиться в: $SCRIPT_DIR"
+    echo "💡 Переконайтесь що файл VSCode-darwin-universal.zip знаходиться в: $REPO_ROOT"
     echo "💡 Або скачайте VS Code вручну з: https://code.visualstudio.com/"
 fi
 
 # Додати запис в історію
-if [ -f "$SCRIPT_DIR/history_tracker.sh" ]; then
-    "$SCRIPT_DIR/history_tracker.sh" add "vscode" "cleanup" "Full cleanup completed. New hostname: $NEW_HOSTNAME" 2>/dev/null
+if [ -f "$REPO_ROOT/history_tracker.sh" ]; then
+    "$REPO_ROOT/history_tracker.sh" add "vscode" "cleanup" "Full cleanup completed. New hostname: $NEW_HOSTNAME" 2>/dev/null
 fi
 
 echo "\n=================================================="

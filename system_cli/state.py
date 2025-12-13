@@ -8,6 +8,7 @@ from typing import List, Optional, Set, Tuple
 class MenuLevel(Enum):
     NONE = "none"
     MAIN = "main"
+    CUSTOM_TASKS = "custom_tasks"
     CLEANUP_EDITORS = "cleanup_editors"
     MODULE_EDITORS = "module_editors"
     MODULE_LIST = "module_list"
@@ -17,6 +18,7 @@ class MenuLevel(Enum):
     MONITOR_TARGETS = "monitor_targets"
     MONITOR_CONTROL = "monitor_control"
     SETTINGS = "settings"
+    UNSAFE_MODE = "unsafe_mode"
     LLM_SETTINGS = "llm_settings"
     AGENT_SETTINGS = "agent_settings"
     APPEARANCE = "appearance"
@@ -37,6 +39,7 @@ class AppState:
     ui_theme: str = "monaco"
     ui_lang: str = "uk"
     chat_lang: str = "uk"
+    ui_unsafe_mode: bool = False
 
 
 state = AppState()

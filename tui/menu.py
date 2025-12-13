@@ -12,6 +12,7 @@ def build_menu(
     tr: Callable[[str, str], str],
     lang_name: Callable[[str], str],
     MAIN_MENU_ITEMS: Sequence[Tuple[str, Any]],
+    get_custom_tasks_menu_items: Callable[[], List[Tuple[str, Any]]],
     get_monitoring_menu_items: Callable[[], List[Tuple[str, Any]]],
     get_settings_menu_items: Callable[[], List[Tuple[str, Any]]],
     get_llm_menu_items: Callable[[], List[Tuple[str, Any]]],
@@ -40,6 +41,16 @@ def build_menu(
                 prefix = " > " if i == state.menu_index else "   "
                 style_cls = "class:menu.selected" if i == state.menu_index else "class:menu.item"
                 result.append((style_cls, f"{prefix}{tr(name, state.ui_lang)}\n"))
+            return result
+
+        if state.menu_level == MenuLevel.CUSTOM_TASKS:
+            result.append(("class:menu.title", f" {tr('menu.custom_tasks.title', state.ui_lang)}\n\n"))
+            items = get_custom_tasks_menu_items()
+            state.menu_index = max(0, min(state.menu_index, len(items) - 1))
+            for i, (label, _) in enumerate(items):
+                prefix = " > " if i == state.menu_index else "   "
+                style_cls = "class:menu.selected" if i == state.menu_index else "class:menu.item"
+                result.append((style_cls, f"{prefix}{tr(label, state.ui_lang)}\n"))
             return result
 
         if state.menu_level == MenuLevel.MONITORING:
@@ -110,6 +121,16 @@ def build_menu(
                 style_cls = "class:menu.selected" if i == state.menu_index else "class:menu.item"
                 result.append((style_cls, f"{prefix}{label}\n"))
             result.append(("class:menu.item", "\n Enter: cycle | /lang set ui|chat <code>\n"))
+            return result
+
+        if state.menu_level == MenuLevel.UNSAFE_MODE:
+            result.append(("class:menu.title", f" {tr('menu.unsafe_mode.title', state.ui_lang)}\n\n"))
+            on = bool(getattr(state, "ui_unsafe_mode", False))
+            toggle_style = "class:toggle.on" if on else "class:toggle.off"
+            mark = "ON" if on else "OFF"
+            result.append(("class:menu.selected", " > Unsafe mode ["))
+            result.append((toggle_style, f"{mark}"))
+            result.append(("class:menu.selected", "]\n"))
             return result
 
         if state.menu_level == MenuLevel.MONITOR_CONTROL:

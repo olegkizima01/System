@@ -167,6 +167,9 @@ def _load_ui_settings() -> None:
         chat_lang = str(data.get("chat_lang") or "").strip().lower()
         if chat_lang:
             state.chat_lang = normalize_lang(chat_lang)
+        unsafe_mode = data.get("unsafe_mode")
+        if isinstance(unsafe_mode, bool):
+            state.ui_unsafe_mode = unsafe_mode
     except Exception:
         return
 
@@ -178,6 +181,7 @@ def _save_ui_settings() -> bool:
             "theme": str(state.ui_theme or "monaco").strip().lower() or "monaco",
             "ui_lang": normalize_lang(state.ui_lang),
             "chat_lang": normalize_lang(state.chat_lang),
+            "unsafe_mode": bool(state.ui_unsafe_mode),
         }
         with open(UI_SETTINGS_PATH, "w", encoding="utf-8") as f:
             json.dump(payload, f, ensure_ascii=False, indent=2)
@@ -352,7 +356,37 @@ def _safe_abspath(path: str) -> str:
     expanded = os.path.expanduser(path)
     if os.path.isabs(expanded):
         return expanded
+    if expanded.startswith("./"):
+        expanded = expanded[2:]
     return os.path.abspath(os.path.join(SCRIPT_DIR, expanded))
+
+
+def _resolve_script_path(script: str) -> str:
+    expanded = os.path.expanduser(str(script or "").strip())
+    if not expanded:
+        return ""
+    if os.path.isabs(expanded):
+        return expanded
+
+    raw = expanded
+    if raw.startswith("./"):
+        raw = raw[2:]
+
+    cleanup_dir = os.path.join(SCRIPT_DIR, "cleanup_scripts")
+    base = os.path.basename(raw)
+
+    candidates = [
+        os.path.abspath(os.path.join(SCRIPT_DIR, raw)),
+        os.path.abspath(os.path.join(cleanup_dir, raw)),
+        os.path.abspath(os.path.join(cleanup_dir, base)),
+        os.path.abspath(os.path.join(SCRIPT_DIR, base)),
+    ]
+
+    for p in candidates:
+        if os.path.exists(p):
+            return p
+
+    return candidates[0]
 
 
 def _scan_traces(editor: str) -> Dict[str, Any]:
@@ -553,7 +587,7 @@ def _tool_create_module(args: Dict[str, Any]) -> Dict[str, Any]:
     name = str(args.get("name", "")).strip() or module_id
     description = str(args.get("description", "")).strip()
     enabled = bool(args.get("enabled", True))
-    script = str(args.get("script", "")).strip() or f"./{module_id}.sh"
+    script = str(args.get("script", "")).strip() or f"./cleanup_scripts/{module_id}.sh"
     content = str(args.get("script_content", "")).strip()
     overwrite = bool(args.get("overwrite", False))
 
@@ -577,6 +611,9 @@ def _tool_create_module(args: Dict[str, Any]) -> Dict[str, Any]:
         content = "#!/bin/zsh\n" + content
 
     try:
+        parent = os.path.dirname(script_path)
+        if parent:
+            os.makedirs(parent, exist_ok=True)
         with open(script_path, "w", encoding="utf-8") as f:
             f.write(content)
         subprocess.run(["chmod", "+x", script_path], check=False)
@@ -627,18 +664,18 @@ def _tool_run_module(args: Dict[str, Any], allow_run: bool) -> Dict[str, Any]:
     if not script:
         return {"ok": False, "error": "Module has no script"}
 
-    script_path = _safe_abspath(script)
+    script_path = _resolve_script_path(script)
     if not os.path.exists(script_path):
         return {"ok": False, "error": f"Script not found: {script_path}"}
 
     try:
         subprocess.run(["chmod", "+x", script_path], check=False)
-        proc = subprocess.run([script_path], cwd=SCRIPT_DIR, capture_output=True, text=True)
+        proc = subprocess.run([script_path], cwd=SCRIPT_DIR, capture_output=True, text=True, env=_script_env())
         return {
             "ok": proc.returncode == 0,
             "returncode": proc.returncode,
-            "stdout": (proc.stdout or "")[-8000:],
-            "stderr": (proc.stderr or "")[-8000:],
+            "stdout": proc.stdout,
+            "stderr": proc.stderr,
         }
     except Exception as e:
         return {"ok": False, "error": str(e)}
@@ -731,11 +768,20 @@ def _agent_send(user_text: str) -> Tuple[bool, str]:
 
     _init_agent_tools()
 
-    allow_run = _is_confirmed_run(user_text)
-    allow_shell = _is_confirmed_shell(user_text)
-    allow_applescript = _is_confirmed_applescript(user_text)
+    _load_ui_settings()
+    unsafe_mode = bool(getattr(state, "ui_unsafe_mode", False))
+
+    allow_run = unsafe_mode or _is_confirmed_run(user_text)
+    allow_autopilot = unsafe_mode or _is_confirmed_autopilot(user_text)
+    allow_shell = unsafe_mode or _is_confirmed_shell(user_text)
+    allow_applescript = unsafe_mode or _is_confirmed_applescript(user_text)
     global _agent_last_permissions
-    _agent_last_permissions = _permissions_from_text(user_text)
+    _agent_last_permissions = CommandPermissions(
+        allow_run=allow_run,
+        allow_autopilot=allow_autopilot,
+        allow_shell=allow_shell,
+        allow_applescript=allow_applescript,
+    )
 
     system_prompt = (
         "You are an interactive assistant for a macOS cleanup/monitoring CLI.\n"
@@ -743,9 +789,8 @@ def _agent_send(user_text: str) -> Tuple[bool, str]:
         "You may execute any in-app command via app_command (equivalent to typing /... in the TUI).\n"
         "You may also control UI theme via ui_theme_status/ui_theme_set (or /theme).\n\n"
         "Safety rules:\n"
-        "- Never run run_module without explicit user confirmation (CONFIRM_RUN in user's message).\n"
-        "- Never run run_shell without CONFIRM_SHELL.\n"
-        "- Never run run_applescript without CONFIRM_APPLESCRIPT.\n\n"
+        "- If Unsafe mode is OFF: require CONFIRM_RUN / CONFIRM_SHELL / CONFIRM_APPLESCRIPT for execution.\n"
+        "- If Unsafe mode is ON: confirmations are bypassed (dangerous).\n\n"
         f"Reply in {lang_name(state.chat_lang)}. Be concise and practical.\n"
     )
 
@@ -886,22 +931,22 @@ def _set_module_enabled(cfg: Dict[str, Any], ref: ModuleRef, enabled: bool) -> b
 
 
 def _run_script(script_path: str) -> int:
-    full = script_path
-    if not os.path.isabs(full):
-        full = os.path.join(SCRIPT_DIR, script_path)
+    full = _resolve_script_path(script_path)
 
     if not os.path.exists(full):
         return 1
 
     try:
         subprocess.run(["chmod", "+x", full], check=False)
-        proc = subprocess.run([full], cwd=SCRIPT_DIR)
+        proc = subprocess.run([full], cwd=SCRIPT_DIR, env=_script_env())
         return proc.returncode
     except Exception:
         return 1
 
 
 def _run_cleanup(cfg: Dict[str, Any], editor: str, dry_run: bool = False) -> Tuple[bool, str]:
+    _load_env()
+    _load_ui_settings()
     editors = cfg.get("editors", {})
     if editor not in editors:
         return False, f"Невідомий редактор: {editor}"
@@ -1092,12 +1137,32 @@ def _llm_ask(cfg: Dict[str, Any], question: str) -> Tuple[bool, str]:
 # ================== TUI STATE & THEME ==================
 
 MAIN_MENU_ITEMS: List[Tuple[str, MenuLevel]] = [
+    ("menu.item.custom_tasks", MenuLevel.CUSTOM_TASKS),
     ("menu.item.run_cleanup", MenuLevel.CLEANUP_EDITORS),
     ("menu.item.modules", MenuLevel.MODULE_EDITORS),
     ("menu.item.install", MenuLevel.INSTALL_EDITORS),
     ("menu.item.monitoring", MenuLevel.MONITORING),
     ("menu.item.settings", MenuLevel.SETTINGS),
 ]
+
+
+def _task_windsurf_register() -> Tuple[bool, str]:
+    try:
+        log("Windsurf registration: відкриваю сторінки та друкую кроки...", "action")
+        log("1) Увімкни VPN (за потреби).", "info")
+        log("2) Відкрий temp-mail і скопіюй тимчасову пошту.", "info")
+        log("3) Відкрий форму реєстрації Windsurf і введи: ім'я/прізвище, email, підтверди TOS.", "info")
+        log("4) Створи пароль (8-64, мінімум 1 літера і 1 цифра).", "info")
+        log("5) У temp-mail відкрий лист від Windsurf та скопіюй 6-значний код.", "info")
+        log("6) Встав код у форму 'Check your inbox'.", "info")
+        log("7) Після успіху: натисни 'Continue with Free' (або Start Free Trial, якщо потрібно).", "info")
+        log("8) Якщо браузер питає 'Відкрити додаток Windsurf?' — погодься (Open Windsurf).", "info")
+
+        subprocess.run(["open", "https://temp-mail.org"], check=False)
+        subprocess.run(["open", "https://windsurf.com/editor/signup"], check=False)
+        return True, "Windsurf registration: сторінки відкрито. Дотримуйся інструкції у логах."
+    except Exception as e:
+        return False, f"Windsurf registration: помилка запуску: {e}"
 
 
 def _get_monitoring_menu_items() -> List[Tuple[str, MenuLevel]]:
@@ -1107,6 +1172,10 @@ def _get_monitoring_menu_items() -> List[Tuple[str, MenuLevel]]:
     ]
 
 
+def _get_custom_tasks_menu_items() -> List[Tuple[str, Any]]:
+    return [("menu.custom.windsurf_register", _task_windsurf_register)]
+
+
 def _get_settings_menu_items() -> List[Tuple[str, MenuLevel]]:
     return [
         ("menu.settings.llm", MenuLevel.LLM_SETTINGS),
@@ -1114,7 +1183,15 @@ def _get_settings_menu_items() -> List[Tuple[str, MenuLevel]]:
         ("menu.settings.appearance", MenuLevel.APPEARANCE),
         ("menu.settings.language", MenuLevel.LANGUAGE),
         ("menu.settings.locales", MenuLevel.LOCALES),
+        ("menu.settings.unsafe_mode", MenuLevel.UNSAFE_MODE),
     ]
+
+
+def _script_env() -> Dict[str, str]:
+    env = dict(os.environ)
+    env["AUTO_YES"] = "1"
+    env["UNSAFE_MODE"] = "1" if bool(getattr(state, "ui_unsafe_mode", False)) else "0"
+    return env
 
 
 def _get_llm_menu_items() -> List[Tuple[str, str]]:
@@ -1282,21 +1359,41 @@ class _FsUsageMonitorService:
     stop_event: threading.Event = field(default_factory=threading.Event)
     target_map: Dict[str, str] = field(default_factory=dict)
 
-    def _parse_line(self, line: str) -> Tuple[str, str]:
+    def _parse_line(self, line: str) -> Tuple[str, str, str, int]:
         raw = (line or "").strip("\n")
         if not raw:
-            return "", ""
-        parts = [p for p in raw.split(" ") if p]
-        if len(parts) < 3:
-            return "", ""
+            return "", "", "", 0
+
+        # Typical sample (may vary by window width):
+        # 08:02:07.011716 open F=27 (...) /path/to/file 0.000074 node.4017721
+        # We want: op=open, path=/path/to/file, process=node, pid=4017721
+        m = re.search(r"\s+(\d+\.\d+)\s+([A-Za-z0-9_.-]+)\.(\d+)\s*$", raw)
+        process = ""
+        pid = 0
+        core = raw
+        if m:
+            process = m.group(2)
+            try:
+                pid = int(m.group(3) or 0)
+            except Exception:
+                pid = 0
+            core = raw[: m.start()].rstrip()
+
+        parts = [p for p in core.split(" ") if p]
+        if len(parts) < 2:
+            return "", "", process, pid
+
+        # First token is usually time, second is syscall/op.
         op = parts[1]
-        process = parts[-1]
+
+        # Find the first absolute path token in the remaining payload.
         path = ""
-        for tok in reversed(parts[:-1]):
-            if "/" in tok or tok.startswith("./"):
+        for tok in parts[2:]:
+            if tok.startswith("/"):
                 path = tok
                 break
-        return op, path
+
+        return op, path, process, pid
 
     def _resolve_target_key(self, process: str) -> str:
         p = (process or "").strip().lower()
@@ -1317,11 +1414,9 @@ class _FsUsageMonitorService:
                 if self.stop_event.is_set():
                     break
                 raw = (line or "").rstrip("\n")
-                op, path = self._parse_line(raw)
-                if not op and not path:
+                op, path, process, pid = self._parse_line(raw)
+                if not op and not path and not process:
                     continue
-                parts = [p for p in raw.split(" ") if p]
-                process = parts[-1] if parts else ""
                 target_key = self._resolve_target_key(process)
                 _monitor_db_insert(
                     self.db_path,
@@ -1331,7 +1426,7 @@ class _FsUsageMonitorService:
                     dest_path="",
                     is_directory=False,
                     target_key=target_key,
-                    pid=0,
+                    pid=int(pid or 0),
                     process=process,
                     raw_line=raw,
                 )
@@ -1343,10 +1438,12 @@ class _FsUsageMonitorService:
             return True, "Monitoring already active."
         if not monitor_service._ensure_db():
             return False, f"Failed to init DB: {self.db_path}"
+        if shutil.which("fs_usage") is None:
+            return False, "fs_usage not found on this system."
         if not process_filters:
             return False, "No process filters resolved from selected targets."
 
-        cmd = ["fs_usage", "-w", "-f", "filesys"] + process_filters
+        cmd = ["fs_usage", "-w", "-f", "pathname"] + process_filters
         sudo_pw = ""
         if use_sudo:
             sudo_pw = _monitor_get_sudo_password()
@@ -2127,6 +2224,7 @@ show_menu, get_menu_content = build_menu(
     tr=lambda k, l: tr(k, l),
     lang_name=lang_name,
     MAIN_MENU_ITEMS=MAIN_MENU_ITEMS,
+    get_custom_tasks_menu_items=_get_custom_tasks_menu_items,
     get_monitoring_menu_items=_get_monitoring_menu_items,
     get_settings_menu_items=_get_settings_menu_items,
     get_llm_menu_items=_get_llm_menu_items,
@@ -2204,12 +2302,15 @@ def _handle_command(cmd: str) -> None:
             log("Usage: /autopilot <task...> [CONFIRM_AUTOPILOT]", "error")
             return
 
-        allow_autopilot = _is_confirmed_autopilot(cmd)
-        allow_shell = _is_confirmed_shell(cmd)
-        allow_applescript = _is_confirmed_applescript(cmd)
+        _load_ui_settings()
+        unsafe_mode = bool(getattr(state, "ui_unsafe_mode", False))
+
+        allow_autopilot = unsafe_mode or _is_confirmed_autopilot(cmd)
+        allow_shell = unsafe_mode or _is_confirmed_shell(cmd)
+        allow_applescript = unsafe_mode or _is_confirmed_applescript(cmd)
 
         if not allow_autopilot:
-            log("Autopilot confirmation required. Add CONFIRM_AUTOPILOT to the same line.", "error")
+            log("Autopilot confirmation required. Add CONFIRM_AUTOPILOT to the same line (or enable Unsafe mode).", "error")
             return
 
         def _runner() -> None:
@@ -2617,6 +2718,7 @@ kb = build_keybindings(
     MenuLevel=MenuLevel,
     show_menu=show_menu,
     MAIN_MENU_ITEMS=MAIN_MENU_ITEMS,
+    get_custom_tasks_menu_items=_get_custom_tasks_menu_items,
     TOP_LANGS=TOP_LANGS,
     lang_name=lang_name,
     log=log,
@@ -2894,16 +2996,19 @@ def cli_main(argv: List[str]) -> None:
         raise SystemExit(0 if ok else 1)
 
     if args.command == "autopilot":
-        if not args.confirm_autopilot:
-            print("Confirmation required: pass --confirm-autopilot")
+        _load_ui_settings()
+        unsafe_mode = bool(getattr(state, "ui_unsafe_mode", False))
+
+        if not unsafe_mode and not args.confirm_autopilot:
+            print("Confirmation required: pass --confirm-autopilot (or enable Unsafe mode in TUI Settings)")
             raise SystemExit(1)
         try:
             from system_ai.autopilot.autopilot_agent import AutopilotAgent
 
             agent = AutopilotAgent(
                 allow_autopilot=True,
-                allow_shell=bool(args.confirm_shell),
-                allow_applescript=bool(args.confirm_applescript),
+                allow_shell=True if unsafe_mode else bool(args.confirm_shell),
+                allow_applescript=True if unsafe_mode else bool(args.confirm_applescript),
             )
             for event in agent.run_task(args.task, max_steps=int(args.max_steps)):
                 step = event.get("step")
