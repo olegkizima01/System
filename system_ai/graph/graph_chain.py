@@ -146,8 +146,19 @@ class LangGoalGraph:
         state: Dict[str, Any] = {"goal": goal, "step": 0, "max_steps": int(max_steps)}
 
         for update in self._graph.stream(state):
+            # LangGraph stream yields updates keyed by node name, e.g.:
+            # {"plan": {"step": 1, "plan": <StepPlan>}}
+            # We must merge inner payloads into the shared state.
             if isinstance(update, dict):
-                state.update(update)
+                for _node, payload in update.items():
+                    if isinstance(payload, dict):
+                        state.update(payload)
+                    else:
+                        state[_node] = payload
+
+            # Match GoalGraph semantics: yield once per completed cycle.
+            if not (isinstance(update, dict) and "verify" in update):
+                continue
 
             step = int(state.get("step") or 0)
             yield {
