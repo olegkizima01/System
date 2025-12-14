@@ -1,7 +1,7 @@
 
 import json
 import os
-from typing import Any, List, Optional, Tuple
+from typing import Any, Callable, List, Optional, Tuple
 
 import requests
 from langchain_core.messages import (
@@ -318,7 +318,14 @@ class CopilotLLM(BaseChatModel):
                 # Якщо це не JSON — трактуємо як звичайну відповідь
                 return ChatResult(generations=[ChatGeneration(message=AIMessage(content=content))])
 
-            return ChatResult(generations=[ChatGeneration(message=AIMessage(content=content, tool_calls=tool_calls))])
+            if tool_calls:
+                msg_content = final_answer if final_answer else ""
+                return ChatResult(generations=[ChatGeneration(message=AIMessage(content=msg_content, tool_calls=tool_calls))])
+
+            if final_answer:
+                return ChatResult(generations=[ChatGeneration(message=AIMessage(content=final_answer))])
+
+            return ChatResult(generations=[ChatGeneration(message=AIMessage(content=content))])
 
         except requests.exceptions.HTTPError as e:
             # Check for Vision error (400) and try fallback
@@ -377,10 +384,99 @@ class CopilotLLM(BaseChatModel):
                                     "args": args,
                                 })
                         final_answer = str(parsed.get("final_answer", ""))
-                        if final_answer:
+                        if tool_calls:
+                            content = final_answer if final_answer else ""
+                        elif final_answer:
                             content = final_answer
             except json.JSONDecodeError:
                 pass  # Keep content as plain text if JSON parsing fails
         
         return ChatResult(generations=[ChatGeneration(message=AIMessage(content=content, tool_calls=tool_calls))])
+
+
+    def invoke_with_stream(
+        self,
+        messages: List[BaseMessage],
+        *,
+        on_delta: Optional[Callable[[str], None]] = None,
+    ) -> AIMessage:
+        session_token, api_endpoint = self._get_session_token()
+        api_endpoint = "https://api.githubcopilot.com"
+
+        headers = {
+            "Authorization": f"Bearer {session_token}",
+            "Content-Type": "application/json",
+            "Editor-Version": "vscode/1.85.0",
+            "Copilot-Vision-Request": "true",
+        }
+
+        payload = self._build_payload(messages, stream=True)
+        response = requests.post(
+            f"{api_endpoint}/chat/completions",
+            headers=headers,
+            data=json.dumps(payload),
+            stream=True,
+        )
+        response.raise_for_status()
+
+        content = ""
+        for line in response.iter_lines():
+            if not line:
+                continue
+            decoded = line.decode("utf-8")
+            if not decoded.startswith("data: "):
+                continue
+            data_str = decoded[6:]
+            if data_str.strip() == "[DONE]":
+                break
+            try:
+                data = json.loads(data_str)
+            except json.JSONDecodeError:
+                continue
+            if "choices" not in data or not data["choices"]:
+                continue
+            delta = data["choices"][0].get("delta", {})
+            piece = delta.get("content")
+            if not piece:
+                continue
+            content += piece
+            if on_delta:
+                try:
+                    on_delta(piece)
+                except Exception:
+                    pass
+
+        tool_calls = []
+        if self._tools and content:
+            try:
+                json_start = content.find("{")
+                json_end = content.rfind("}")
+                if json_start >= 0 and json_end >= 0:
+                    parse_candidate = content[json_start : json_end + 1]
+                    parsed = json.loads(parse_candidate)
+                    if isinstance(parsed, dict):
+                        calls = parsed.get("tool_calls") or []
+                        if isinstance(calls, list):
+                            for idx, call in enumerate(calls):
+                                name = call.get("name")
+                                if not name:
+                                    continue
+                                args = call.get("args") or {}
+                                tool_calls.append(
+                                    {
+                                        "id": f"call_{idx}",
+                                        "type": "tool_call",
+                                        "name": name,
+                                        "args": args,
+                                    }
+                                )
+                        final_answer = str(parsed.get("final_answer", ""))
+                        if tool_calls:
+                            content = final_answer if final_answer else ""
+                        elif final_answer:
+                            content = final_answer
+            except Exception:
+                pass
+
+        return AIMessage(content=content, tool_calls=tool_calls)
 

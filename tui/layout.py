@@ -9,10 +9,21 @@ from prompt_toolkit.filters import Condition
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.layout.containers import ConditionalContainer, HSplit, VSplit, Window
 from prompt_toolkit.layout.controls import BufferControl, FormattedTextControl
+from prompt_toolkit.formatted_text import AnyFormattedText
 from prompt_toolkit.layout.dimension import Dimension
 from prompt_toolkit.layout.layout import Layout
 from prompt_toolkit.styles import BaseStyle
 from prompt_toolkit.widgets import Frame
+
+_app_state = {"instance": None}
+
+def force_ui_update():
+    app = _app_state.get("instance")
+    if app:
+        try:
+            app.invalidate()
+        except Exception:
+            pass
 
 
 def build_app(
@@ -53,7 +64,10 @@ def build_app(
         ]
     )
 
-    status_window = Window(FormattedTextControl(get_status), height=1, style="class:status")
+    def get_status_text() -> AnyFormattedText:
+        return get_status()
+
+    status_window = Window(FormattedTextControl(get_status_text), height=1, style="class:status")
 
     main_body = HSplit(
         [
@@ -68,7 +82,7 @@ def build_app(
                             style="class:frame.border",
                             width=Dimension(min=40, max=55),
                         ),
-                        filter=~show_menu,
+                        filter=Condition(lambda: not show_menu()),
                     ),
                     ConditionalContainer(
                         Frame(
@@ -86,4 +100,9 @@ def build_app(
         ]
     )
 
-    return Application(layout=Layout(main_body), key_bindings=kb, full_screen=True, style=style)
+    app = Application(layout=Layout(main_body), key_bindings=kb, full_screen=True, style=style)
+    
+    # Store global reference for UI updates
+    _app_state["instance"] = app
+    
+    return app

@@ -110,6 +110,19 @@ agent_session = AgentSession()
 agent_chat_mode: bool = True
 
 
+def _log_replace_last(text: str, category: str = "info") -> None:
+    style_map = {
+        "info": "class:log.info",
+        "user": "class:log.user",
+        "action": "class:log.action",
+        "error": "class:log.error",
+    }
+    if not state.logs:
+        state.logs.append((style_map.get(category, "class:log.info"), f"{text}\n"))
+        return
+    state.logs[-1] = (style_map.get(category, "class:log.info"), f"{text}\n")
+
+
 def _env_bool(value: Any) -> Optional[bool]:
     if value is None:
         return None
@@ -989,6 +1002,11 @@ def _tool_open_app(args: Dict[str, Any]) -> Dict[str, Any]:
         return {"ok": False, "error": str(e)}
 
 
+def _tool_run_shell_wrapper(args: Dict[str, Any]) -> Dict[str, Any]:
+    allow_shell = bool(getattr(state, "ui_unsafe_mode", False)) or bool(getattr(_agent_last_permissions, "allow_shell", False))
+    return _tool_run_shell(args, allow_shell)
+
+
 def _tool_run_shell(args: Dict[str, Any], allow_shell: bool) -> Dict[str, Any]:
     command = str(args.get("command", "")).strip()
     if not command:
@@ -1169,7 +1187,7 @@ def _init_agent_tools() -> None:
         AgentTool(name="open_app", description="Open a macOS app by name. args: {name}", handler=_tool_open_app),
         AgentTool(name="open_url", description="Open a URL (or file) using macOS open. args: {url}", handler=_tool_open_url),
         AgentTool(name="take_screenshot", description="Take screenshot of focused window or target app. args: {app_name?}", handler=_tool_take_screenshot),
-        AgentTool(name="run_shell", description="Run a shell command (requires CONFIRM_SHELL). args: {command}", handler=_tool_run_shell),
+        AgentTool(name="run_shell", description="Run a shell command (requires CONFIRM_SHELL). args: {command}", handler=_tool_run_shell_wrapper),
         AgentTool(name="run_shortcut", description="Run a macOS Shortcut by name (requires CONFIRM_SHELL). args: {name}", handler=_tool_run_shortcut),
         AgentTool(name="run_automator", description="Run an Automator workflow (requires CONFIRM_SHELL). args: {workflow_path}", handler=_tool_run_automator),
         AgentTool(name="run_applescript", description="Run AppleScript (requires CONFIRM_APPLESCRIPT). args: {script}", handler=_tool_run_applescript),
@@ -1312,25 +1330,43 @@ def _agent_send_with_stream(user_text: str) -> Tuple[bool, str]:
     
     # Start streaming response
     try:
-        # Use regular invoke for now - CopilotLLM streaming needs proper implementation
-        resp = llm.invoke(agent_session.messages)
-        accumulated_content = str(getattr(resp, "content", "") or "")
-        
-        # Show streaming simulation in TUI main window
-        words = accumulated_content.split()
-        current_text = ""
-        for word in words:
-            current_text += word + " "
-            log(f"[STREAMING] {current_text[-50:]}", "action")
-            import time
-            time.sleep(0.05)  # Simulate streaming delay
-        
-        # Create final response message
-        final_message = AIMessage(content=accumulated_content)
+        state.agent_processing = True
+        try:
+            from tui.layout import force_ui_update
+            force_ui_update()
+        except ImportError:
+            pass
+
+        accumulated_content = ""
+
+        # Reserve a line for assistant streaming output
+        log("", "action")
+
+        def _on_delta(piece: str) -> None:
+            nonlocal accumulated_content
+            accumulated_content += piece
+            _log_replace_last(accumulated_content, "action")
+            try:
+                from tui.layout import force_ui_update
+                force_ui_update()
+            except Exception:
+                pass
+
+        if hasattr(llm, "invoke_with_stream"):
+            resp = llm.invoke_with_stream(agent_session.messages, on_delta=_on_delta)
+        else:
+            resp = llm.invoke(agent_session.messages)
+            accumulated_content = str(getattr(resp, "content", "") or "")
+            _log_replace_last(accumulated_content, "action")
+
+        final_message = resp if isinstance(resp, AIMessage) else AIMessage(content=str(getattr(resp, "content", "") or ""))
+        if not accumulated_content:
+            accumulated_content = str(getattr(final_message, "content", "") or "")
+            _log_replace_last(accumulated_content, "action")
+
         agent_session.messages.append(final_message)
-        
-        # Execute tool calls automatically if present
-        tool_calls = getattr(resp, "tool_calls", None)
+
+        tool_calls = getattr(final_message, "tool_calls", None)
         if tool_calls:
             log(f"[EXECUTING] Found {len(tool_calls)} tool calls to execute", "action")
             results: List[Dict[str, Any]] = []
@@ -1383,10 +1419,33 @@ def _agent_send_with_stream(user_text: str) -> Tuple[bool, str]:
             if results:
                 log(f"[EXECUTING] All tools executed. Getting final response...", "action")
                 try:
-                    final_resp = llm.invoke(agent_session.messages)
-                    final_content = str(getattr(final_resp, "content", "") or "")
+                    if hasattr(llm, "invoke_with_stream"):
+                        final_acc = ""
+                        log("", "action")
+
+                        def _on_final_delta(piece: str) -> None:
+                            nonlocal final_acc
+                            final_acc += piece
+                            _log_replace_last(final_acc, "action")
+                            try:
+                                from tui.layout import force_ui_update
+                                force_ui_update()
+                            except Exception:
+                                pass
+
+                        final_resp = llm.invoke_with_stream(agent_session.messages, on_delta=_on_final_delta)
+                        final_content = str(getattr(final_resp, "content", "") or "") or final_acc
+                    else:
+                        final_resp = llm.invoke(agent_session.messages)
+                        final_content = str(getattr(final_resp, "content", "") or "")
                     log(f"[FINAL] {final_content}", "info")
                     state.agent_processing = False
+                    # Force UI update to show processing is done
+                    try:
+                        from tui.layout import force_ui_update
+                        force_ui_update()
+                    except ImportError:
+                        pass
                     return True, final_content
                 except Exception as e:
                     log(f"[ERROR] Final response failed: {e}", "error")
@@ -1394,6 +1453,12 @@ def _agent_send_with_stream(user_text: str) -> Tuple[bool, str]:
                     return True, accumulated_content
         
         state.agent_processing = False
+        # Force UI update to show processing is done
+        try:
+            from tui.layout import force_ui_update
+            force_ui_update()
+        except ImportError:
+            pass
         return True, accumulated_content
 
     except Exception as e:
@@ -1495,7 +1560,7 @@ def _agent_send(user_text: str) -> Tuple[bool, str]:
                 continue
 
             if name == "run_shell":
-                out = _tool_run_shell(args, allow_shell=allow_shell)
+                out = _tool_run_shell_wrapper(args)
                 results.append({"name": name, "args": args, "result": out})
                 continue
 
@@ -1538,23 +1603,6 @@ def get_prompt_width() -> int:
     return 55 if state.menu_level != MenuLevel.NONE else 3
 
 
-def get_status():
-    if state.menu_level != MenuLevel.NONE:
-        mode_indicator = [("class:status.menu", " MENU "), ("class:status", " ")]
-    else:
-        mode_indicator = [("class:status.chat", " INPUT "), ("class:status", " ")]
-
-    monitor_tag = f"MON:{'ON' if state.monitor_active else 'OFF'}:{state.monitor_source}"
-
-    return mode_indicator + [
-        ("class:status.ready", f" {state.status} "),
-        ("class:status", " "),
-        ("class:status.key", monitor_tag),
-        ("class:status", " | "),
-        ("class:status.key", "F2: Menu"),
-        ("class:status", " | "),
-        ("class:status.key", "Ctrl+C: Quit"),
-    ]
 
 
 @dataclass
@@ -2254,10 +2302,38 @@ def _handle_input(buff: Buffer) -> None:
     # інакше – агентний чат (за замовчуванням)
     if agent_chat_mode and agent_session.enabled:
         log(text, "user")
-        state.agent_processing = True
-        ok, answer = _agent_send(text)
-        state.agent_processing = False
-        log(answer, "action" if ok else "error")
+        # Force UI update to show user message immediately
+        try:
+            from tui.layout import force_ui_update
+            force_ui_update()
+        except ImportError:
+            pass
+        except Exception:
+            pass
+        def _run_agent() -> None:
+            use_stream = bool(getattr(state, "ui_streaming", True))
+            state.agent_processing = True
+            try:
+                try:
+                    from tui.layout import force_ui_update
+                    force_ui_update()
+                except Exception:
+                    pass
+
+                ok, answer = _agent_send(text)
+
+                # When streaming is enabled, `_agent_send_with_stream` already renders the assistant output.
+                if (not use_stream) and answer:
+                    log(answer, "action" if ok else "error")
+            finally:
+                state.agent_processing = False
+                try:
+                    from tui.layout import force_ui_update
+                    force_ui_update()
+                except Exception:
+                    pass
+
+        threading.Thread(target=_run_agent, daemon=True).start()
     elif not agent_chat_mode:
         log("Agent mode OFF. Увімкни через /agent-mode on або введи /help.", "error")
     else:
