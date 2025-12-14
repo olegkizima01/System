@@ -11,6 +11,8 @@ from providers.copilot import CopilotLLM
 # Import Tools
 from system_ai.tools.executor import run_shell, open_app, run_applescript
 from system_ai.tools.screenshot import take_screenshot
+from system_ai.tools.filesystem import read_file, write_file, list_files
+from system_ai.tools.windsurf import send_to_windsurf, open_file_in_windsurf
 
 # Define the state of the Trinity system
 class TrinityState(TypedDict):
@@ -101,6 +103,21 @@ class TrinityRuntime:
                          results.append(f"Result for {name}: {res}")
                      elif name == "open_app":
                          res = open_app(args.get("name"))
+                         results.append(f"Result for {name}: {res}")
+                     elif name == "read_file":
+                         res = read_file(args.get("path"))
+                         results.append(f"Result for {name}: {res}")
+                     elif name == "write_file":
+                         res = write_file(args.get("path"), args.get("content"), args.get("mode", "w"))
+                         results.append(f"Result for {name}: {res}")
+                     elif name == "list_files":
+                         res = list_files(args.get("path"))
+                         results.append(f"Result for {name}: {res}")
+                     elif name == "send_to_windsurf":
+                         res = send_to_windsurf(args.get("message"))
+                         results.append(f"Result for {name}: {res}")
+                     elif name == "open_file_in_windsurf":
+                         res = open_file_in_windsurf(args.get("path"), args.get("line", 0))
                          results.append(f"Result for {name}: {res}")
                      # Add other mappings
             
