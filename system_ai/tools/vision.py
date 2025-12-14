@@ -82,3 +82,41 @@ def load_image_png_b64(image_path: str) -> Optional[str]:
         return None
 
     return None
+
+def analyze_with_copilot(image_path: str, prompt: str = "Describe the user interface state in detail.") -> Dict[str, Any]:
+    """
+    Uses CopilotLLM (GPT-4-Vision) to analyze a local image file.
+    """
+    if not image_path or not os.path.exists(image_path):
+        return {"status": "error", "error": f"Image not found: {image_path}"}
+        
+    try:
+        from providers.copilot import CopilotLLM
+        from langchain_core.messages import HumanMessage
+        
+        # Initialize specialized Vision LLM
+        # We assume CopilotLLM handles the image_url payload format for its API
+        llm = CopilotLLM(vision_model_name="gpt-4.1") 
+        
+        # Encode image
+        b64 = load_image_png_b64(image_path)
+        if not b64:
+             return {"status": "error", "error": "Failed to encode image"}
+             
+        # Construct Message
+        message = HumanMessage(
+            content=[
+                {"type": "text", "text": prompt},
+                {
+                    "type": "image_url",
+                    "image_url": {"url": f"data:image/png;base64,{b64}"},
+                },
+            ]
+        )
+        
+        # Invoke
+        response = llm.invoke([message])
+        return {"status": "success", "analysis": response.content}
+        
+    except Exception as e:
+        return {"status": "error", "error": str(e)}

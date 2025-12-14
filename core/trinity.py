@@ -160,15 +160,51 @@ class TrinityRuntime:
         context = state.get("messages", [])
         last_msg = context[-1].content
         
-        prompt = get_grisha_prompt(last_msg)
+        # Inject available tools (Vision priority)
+        tools_list = self.registry.list_tools()
+        prompt = get_grisha_prompt(last_msg, tools_desc=tools_list)
+        
         try:
             response = self.llm.invoke(prompt.format_messages())
             content = response.content
+            tool_calls = response.tool_calls if hasattr(response, 'tool_calls') else []
+            
+            # Execute Tools
+            results = []
+            if tool_calls:
+                 for tool in tool_calls:
+                     name = tool.get("name")
+                     args = tool.get("args") or {}
+                     
+                     # Provide helpful default for capture_screen if args empty
+                     if name == "capture_screen" and not args:
+                         args = {"app_name": None}
+
+                     # Execute via MCP Registry
+                     res = self.registry.execute(name, args)
+                     results.append(f"Result for {name}: {res}")
+            
+            if results:
+                content += "\n\nVerification Tools Results:\n" + "\n".join(results)
+
         except Exception as e:
             content = f"Error invoking Grisha: {e}"
 
         # If Grisha says "CONFIRMED" or "VERIFIED", we end. Else Atlas replans.
-        next_agent = "end" if "verified" in content.lower() or "confirmed" in content.lower() else "atlas"
+        # Note: If Grisha just ran a tool (capture_screen), we probably want to LOOP back to Grisha 
+        # so he can analyze the result. For now, simple logic:
+        
+        if "Tool Results" in content or tool_calls:
+            # If tools were used, Grisha likely needs to see the result. 
+            # Ideally we'd loop back to Grisha, but our graph edges go to Router. 
+            # We'll set current_agent back to 'grisha' to allow a follow-up analysis step?
+            # Or reliance on Atlas to re-dispatch.
+            # USE CASE: Grisha (Capture) -> Grisha (Analyze) -> Grisha (Verdict).
+            # The current graph: Grisha -> Atlas. 
+            # Let's trust Atlas to see the screenshot result in history and ask Grisha for verdict.
+            next_agent = "atlas" 
+        else:
+             next_agent = "end" if "verified" in content.lower() or "confirmed" in content.lower() else "atlas"
 
         return {
             "current_agent": next_agent, 

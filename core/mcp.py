@@ -7,6 +7,7 @@ from system_ai.tools.screenshot import take_screenshot
 from system_ai.tools.filesystem import read_file, write_file, list_files
 from system_ai.tools.windsurf import send_to_windsurf, open_file_in_windsurf
 from system_ai.tools.input import click, type_text, press_key
+from system_ai.tools.vision import analyze_with_copilot
 
 class MCPToolRegistry:
     """
@@ -35,7 +36,8 @@ class MCPToolRegistry:
         self.register_tool("open_file_in_windsurf", open_file_in_windsurf, "Open file in Windsurf. Args: path (str), line (int)")
         
         # Vision/Input
-        self.register_tool("capture_screen", take_screenshot, "Take screenshot. Args: app_name (optional)")
+        self.register_tool("capture_screen", take_screenshot, "Take screenshot of app or screen. Args: app_name (optional)")
+        self.register_tool("analyze_screen", analyze_with_copilot, "Analyze screen image with AI. Args: image_path (str), prompt (str)")
         self.register_tool("click", click, "Mouse click. Args: x (int), y (int)")
         self.register_tool("type_text", type_text, "Type text. Args: text (str)")
         self.register_tool("press_key", press_key, "Press key. Args: key (str), command(bool), shift(bool)...")
