@@ -56,6 +56,13 @@
           "script": "./cleanup_scripts/check_identifier_cleanup.sh",
           "enabled": true,
           "description": "Фінальна перевірка якості очистки"
+        },
+        {
+          "id": "windsurf_cache_local_cleanup",
+          "name": "Windsurf Cache and Local Storage Cleanup",
+          "script": "./cleanup_scripts/windsurf_cache_local_cleanup.sh",
+          "enabled": true,
+          "description": "Очищення кешів, локального сховища та індексів Windsurf"
         }
       ]
     },
@@ -123,7 +130,7 @@
           "id": "antigravity_deep_vscode",
           "name": "Deep VS Code Cleanup (Side Effects)",
           "script": "./cleanup_scripts/deep_vscode_cleanup.sh",
-          "enabled": false,
+          "enabled": true,
           "description": "VS Code cleanup якщо Antigravity працював поверх VS Code"
         }
       ]

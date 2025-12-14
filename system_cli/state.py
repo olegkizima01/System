@@ -40,6 +40,8 @@ class AppState:
     ui_lang: str = "uk"
     chat_lang: str = "uk"
     ui_unsafe_mode: bool = False
+    ui_streaming: bool = True
+    agent_processing: bool = False
 
 
 state = AppState()

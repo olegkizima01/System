@@ -96,12 +96,24 @@ class AutopilotAgent:
 
         _load_env()
 
-        self.llm = CopilotLLM()
+        from system_ai.autopilot.runtime import AutopilotPermissions, AutopilotRuntime
+
         self.allow_autopilot = allow_autopilot
         self.allow_shell = allow_shell
         self.allow_applescript = allow_applescript
-        self.memory = SummaryMemory()
-        self.rag = RagPipeline(persist_dir=persist_dir)
+
+        self.runtime = AutopilotRuntime(
+            permissions=AutopilotPermissions(
+                allow_autopilot=bool(allow_autopilot),
+                allow_shell=bool(allow_shell),
+                allow_applescript=bool(allow_applescript),
+            ),
+            persist_dir=persist_dir,
+        )
+
+        self.llm = self.runtime.llm
+        self.memory = self.runtime.memory
+        self.rag = self.runtime.rag
 
     def _parse_plan(self, ai_message: Any) -> StepPlan:
         text = str(getattr(ai_message, "content", "") or "")
@@ -153,78 +165,10 @@ class AutopilotAgent:
         return results
 
     def run_task(self, task: str, *, max_steps: int = 30) -> Generator[Dict[str, Any], None, None]:
-        if not self.allow_autopilot:
-            raise RuntimeError("Autopilot not confirmed")
-
-        history: List[str] = []
-        last_results: List[Dict[str, Any]] = []
-
-        for step in range(1, max_steps + 1):
-            retrieved = self.rag.retrieve(task, k=5)
-
-            user_text = json.dumps(
-                {
-                    "task": task,
-                    "summary_memory": self.memory.summary,
-                    "history_tail": history[-5:],
-                    "rag": retrieved,
-                    "last_results": last_results[-8:],
-                },
-                ensure_ascii=False,
-            )
-
-            # Add last screenshot observation as TEXT (Copilot multimodal is not reliable here)
-            last_shot = next((r for r in reversed(last_results) if r.get("tool") == "take_screenshot" and r.get("status") == "success"), None)
-            if last_shot:
-                path = str(last_shot.get("path") or "")
-                if path:
-                    user_text = user_text + "\n\n" + summarize_image_for_prompt(path)
-
-            messages: List[Any] = [SystemMessage(content=SYSTEM_PROMPT), HumanMessage(content=user_text)]
-
-            ai_msg = self.llm.invoke(messages)
-            plan = self._parse_plan(ai_msg)
-
-            if plan.summary:
-                self.memory.update(plan.summary)
-
-            action_results = self._execute(plan.actions)
-
-            # OBSERVE: always capture a screenshot after actions unless already captured in this step
-            if not any(r.get("tool") == "take_screenshot" for r in action_results):
-                try:
-                    action_results.append(take_screenshot(None))
-                except Exception:
-                    pass
-
-            # Store a compact trace in RAG (best-effort)
-            try:
-                self.rag.ingest_text(
-                    json.dumps(
-                        {
-                            "step": step,
-                            "task": task,
-                            "thought": plan.thought,
-                            "result_message": plan.result_message,
-                            "actions": [a.__dict__ for a in plan.actions],
-                            "tool_results": action_results,
-                        },
-                        ensure_ascii=False,
-                    ),
-                    metadata={"type": "autopilot_step", "step": step},
-                )
-            except Exception:
-                pass
-
-            history.append(f"Step {step}: {plan.thought} | {plan.result_message}")
-            last_results.extend(action_results)
-
+        for event in self.runtime.run_goal(task, max_steps=max_steps):
             yield {
-                "step": step,
-                "plan": plan,
-                "actions_results": action_results,
-                "done": plan.done,
+                "step": event.get("step"),
+                "plan": event.get("plan"),
+                "actions_results": event.get("actions_results"),
+                "done": event.get("done"),
             }
-
-            if plan.done:
-                break

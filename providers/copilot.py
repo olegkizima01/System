@@ -180,7 +180,7 @@ class CopilotLLM(BaseChatModel):
             raise RuntimeError("Copilot token response missing 'token' field.")
         return token, api_endpoint
 
-    def _build_payload(self, messages: List[BaseMessage]) -> dict:
+    def _build_payload(self, messages: List[BaseMessage], stream: Optional[bool] = None) -> dict:
         formatted_messages = []
         
         # Extract system prompt if present, or use default
@@ -237,7 +237,7 @@ class CopilotLLM(BaseChatModel):
             "messages": final_messages,
             "temperature": 0.1, # Slightly higher than 0 for creativity but still focused
             "max_tokens": 2048,
-            "stream": False,
+            "stream": stream if stream is not None else False,
         }
 
     def _generate(
@@ -245,6 +245,7 @@ class CopilotLLM(BaseChatModel):
         messages: List[BaseMessage],
         stop: Optional[List[str]] = None,
         run_manager: Optional[Any] = None,
+        stream: Optional[bool] = None,
         **kwargs: Any,
     ) -> ChatResult:
         try:
@@ -258,17 +259,20 @@ class CopilotLLM(BaseChatModel):
                 "Editor-Version": "vscode/1.85.0",
                 "Copilot-Vision-Request": "true"
             }
-            payload = self._build_payload(messages)
+            payload = self._build_payload(messages, stream=stream)
             
+            stream_mode = stream if stream is not None else False
             response = requests.post(
                 f"{api_endpoint}/chat/completions",
                 headers=headers,
                 data=json.dumps(payload),
-                stream=False
+                stream=stream_mode
             )
-            response.raise_for_status()
-            
-            data = response.json()
+            if stream_mode:
+                return self._stream_response(response, messages)
+            else:
+                response.raise_for_status()
+                data = response.json()
             # Handle empty choices gracefully
             if not data.get("choices"):
                 return ChatResult(generations=[ChatGeneration(message=AIMessage(content="[COPILOT] No response from model."))])
@@ -314,12 +318,8 @@ class CopilotLLM(BaseChatModel):
                 # Якщо це не JSON — трактуємо як звичайну відповідь
                 return ChatResult(generations=[ChatGeneration(message=AIMessage(content=content))])
 
-            if tool_calls:
-                 return ChatResult(generations=[ChatGeneration(message=AIMessage(content=final_answer or "", tool_calls=tool_calls))])
+            return ChatResult(generations=[ChatGeneration(message=AIMessage(content=content, tool_calls=tool_calls))])
 
-            # JSON без tool_calls: вважаємо це звичайною відповіддю
-            return ChatResult(generations=[ChatGeneration(message=AIMessage(content=final_answer or content))])
-            
         except requests.exceptions.HTTPError as e:
             # Check for Vision error (400) and try fallback
             if e.response.status_code == 400:
@@ -332,4 +332,55 @@ class CopilotLLM(BaseChatModel):
             return ChatResult(generations=[ChatGeneration(message=AIMessage(content=error_msg))])
         except Exception as e:
              return ChatResult(generations=[ChatGeneration(message=AIMessage(content=f"[COPILOT ERROR] {e}"))])
+
+    def _stream_response(self, response: requests.Response, messages: List[BaseMessage]) -> ChatResult:
+        """Handle streaming response from Copilot API."""
+        content = ""
+        tool_calls = []
+        
+        for line in response.iter_lines():
+            if line:
+                line = line.decode('utf-8')
+                if line.startswith('data: '):
+                    data_str = line[6:]  # Remove 'data: ' prefix
+                    if data_str.strip() == '[DONE]':
+                        break
+                    try:
+                        data = json.loads(data_str)
+                        if 'choices' in data and len(data['choices']) > 0:
+                            delta = data['choices'][0].get('delta', {})
+                            if 'content' in delta:
+                                content += delta['content']
+                    except json.JSONDecodeError:
+                        continue
+        
+        # Parse tool calls from accumulated content if tools are enabled
+        if self._tools and content:
+            try:
+                json_start = content.find('{')
+                json_end = content.rfind('}')
+                if json_start >= 0 and json_end >= 0:
+                    parse_candidate = content[json_start:json_end+1]
+                    parsed = json.loads(parse_candidate)
+                    if isinstance(parsed, dict):
+                        calls = parsed.get("tool_calls") or []
+                        if isinstance(calls, list):
+                            for idx, call in enumerate(calls):
+                                name = call.get("name")
+                                if not name:
+                                    continue
+                                args = call.get("args") or {}
+                                tool_calls.append({
+                                    "id": f"call_{idx}",
+                                    "type": "tool_call", 
+                                    "name": name,
+                                    "args": args,
+                                })
+                        final_answer = str(parsed.get("final_answer", ""))
+                        if final_answer:
+                            content = final_answer
+            except json.JSONDecodeError:
+                pass  # Keep content as plain text if JSON parsing fails
+        
+        return ChatResult(generations=[ChatGeneration(message=AIMessage(content=content, tool_calls=tool_calls))])
 

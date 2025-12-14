@@ -11,7 +11,23 @@ fi
 
 # Завантажуємо .env, якщо є (включаючи SUDO_PASSWORD)
 if [ -f ".env" ]; then
-  export $(grep -v '^#' .env | xargs)
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    # Пропускаємо коментарі та порожні рядки
+    [[ "$line" =~ ^[[:space:]]*# ]] && continue
+    [[ -z "${line// }" ]] && continue
+    
+    # Видаляємо пробіли на початку/кінці
+    line=$(echo "$line" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+    
+    # Якщо є знак '=', розділяємо на ключ і значення
+    if [[ "$line" =~ ^[[:alpha:]_][[:alnum:]_]*= ]]; then
+      key="${line%%=*}"
+      value="${line#*=}"
+      # Видаляємо лапки з значення
+      value=$(echo "$value" | sed 's/^"//;s/"$//;s/^'\''//;s/'\''$//')
+      export "$key=$value"
+    fi
+  done < .env
 fi
 
 # Перевіряємо python3
