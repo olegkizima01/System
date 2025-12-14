@@ -76,27 +76,41 @@
 
 ⸻
 
-4. Підсистема Розробки (Dev Subsystem) - Інструмент Тетяни
+4. Підсистема Розробки (Dev Subsystem) — "Cascading Control"
+**Архітектурна Специфікація**
 
-Це "руки" Тетяни. Коли Тетяна вирішує писати код, вона активує цю підсистему.
+4.1 Мета та Принцип Каскаду
+Реалізовано каскадну агентну архітектуру, де **Copilot (GPT-4o)** виступає мета-контролером, що керує **Windsurf IDE (GPT-5.2)** через шину **Continue CLI**.
 
-83: 4.1 Архітектура Підсистеми (Nested Cascade)
-84: Тетяна керує ланцюжком: **Copilot (Brain) → Continue CLI (Bridge) → Windsurf IDE (Primary)**.
-85: 
-86: System CLI (Continue) виконує подвійну роль:
-87: 
-88: *   **Роль 1: Посередник (Intermediary / Driver)**
-89:     *   У штатному режимі Continue CLI працює як "драйвер": він не пише код сам, а транслює команди Тетяни у GUI Windsurf.
-90: *   **Роль 2: Резервний Виконавець (Fallback Executor)**
-91:     *   Якщо Windsurf недоступний, Continue CLI бере керування на себе і редагує файли напряму.
+**Компоненти Каскаду:**
+1.  **Copilot LLM (Meta-Controller):**
+    *   Роль: Контроль, аналіз, прийняття рішень (Stop-умови).
+    *   Реалізація: `providers/copilot.py` (Atlas/Tetyana Personas).
+    *   Принцип: Єдиний носій "волі" системи.
+2.  **Continue CLI (Instrumental Bus):**
+    *   Роль: Маршрутизатор та виконавець.
+    *   Функція: Передає запити у Windsurf, повертає відповіді, не має власного reasoning.
+3.  **Windsurf IDE (Execution Engine):**
+    *   Роль: Глибокий аналіз коду та генерація рішень.
+    *   Модель: GPT-5.2 Medium Reasoning.
+    *   Статус: Працює у стандартному режимі, вважаючи, що спілкується з користувачем.
 
-4.2 Провайдер (Provider Specs)
-*   **Провайдер:** Copilot.
-*   **Реалізація:** `providers/copilot.py`.
-*   **Модель:** GPT-4o.
-*   **Роль:** Єдиний інтелектуальний бекенд для Continue/Dev Subsystem.
+4.2 Оркестрація (LangGraph & TaskGraph)
+Система керується двома графами:
+*   **LangGraph (Conversation Flow):** Керує станом діалогу між персонами (Atlas -> Tetyana -> Grisha) та циклами перевірки.
+*   **TaskGraph (Execution State):** Відстежує прогрес виконання задачі (Task ID, Status, Artifacts) через `task.md` та пам'ять агента.
 
-⸻
+4.3 Потік Взаємодії (Interaction Flow)
+1.  **Copilot (Tetyana)** формує запит (людською мовою).
+2.  **Continue CLI** передає запит у Windsurf (Tool: `send_to_windsurf`).
+3.  **Windsurf** генерує код/відповідь.
+4.  **Continue CLI** повертає результат Tetyana.
+5.  **Copilot (Tetyana/Grisha)** аналізує:
+    *   Достатність відповіді? -> *Stop* або *Continue*.
+    *   Помилки? -> *Re-prompt*.
+
+4.4 Критерій Успіху
+Система успішна, якщо взаємодія "Copilot ↔ Windsurf" дає той самий стиль та глибину контролю, що й ручна робота користувача.
 
 5. Потік Виконання Задачі (End-to-End Flow)
 
