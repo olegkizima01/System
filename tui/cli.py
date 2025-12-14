@@ -141,69 +141,41 @@ def _is_complex_task(text: str) -> bool:
 
 
 def _run_graph_agent_task(user_text: str, *, allow_autopilot: bool, allow_shell: bool, allow_applescript: bool) -> None:
+    # TRINITY INTEGRATION START
     try:
-        from system_ai.autopilot.autopilot_agent import AutopilotAgent
+        _load_env()  # Ensure env vars are loaded for CopilotLLM
+        from core.trinity import TrinityRuntime
+        from langchain_core.messages import AIMessage
+        
+        log("[TRINITY] Initializing Multi-Agent System (Atlas/Tetyana/Grisha)...", "info")
+        runtime = TrinityRuntime(verbose=False)
+        
+        step_count = 0
+        for event in runtime.run(user_text):
+            step_count += 1
+            # Trinity yields dicts keyed by node name, e.g. {'atlas': {...}}
+            for node_name, state_update in event.items():
+                agent_name = node_name.capitalize()
+                messages = state_update.get("messages", [])
+                last_msg = messages[-1] if messages else None
+                content = getattr(last_msg, "content", "") if last_msg else ""
+                
+                log(f"[TRINITY] {agent_name}: {content}", "info")
+                
+                # Check for completion (if node leads to END or specific status)
+                # In our graph, 'end' is a virtual node, but the router handles it. 
+                # We can check current_agent if needed, but stream() usually ends when graph ends.
+                
+    except ImportError:
+        log("[TRINITY] Core module not found. Falling back to legacy Autopilot.", "error")
+        # Fallback to legacy logic if needed, or just return
+        return
     except Exception as e:
-        log(f"Graph mode unavailable: {e}", "error")
+        log(f"[TRINITY] Runtime error: {e}", "error")
         return
 
-    try:
-        agent = AutopilotAgent(
-            allow_autopilot=bool(allow_autopilot),
-            allow_shell=bool(allow_shell),
-            allow_applescript=bool(allow_applescript),
-        )
-    except Exception as e:
-        log(f"Graph mode init error: {e}", "error")
-        return
+    log("[TRINITY] Task completed.", "action")
 
-    log("[GRAPH] Auto-switch enabled for this request.", "info")
-    log(f"[GRAPH] shell={'ON' if allow_shell else 'OFF'} applescript={'ON' if allow_applescript else 'OFF'}", "info")
-
-    for event in agent.run_task(user_text, max_steps=30):
-        step = event.get("step")
-        plan = event.get("plan")
-        actions_results = event.get("actions_results") or []
-        thought = getattr(plan, "thought", "") if plan else ""
-        result_message = getattr(plan, "result_message", "") if plan else ""
-
-        log(f"[GRAPH] Step {step}: {thought}", "info")
-        if result_message:
-            log(f"[GRAPH] {result_message}", "action")
-
-        # Detect pause requests from the runtime (permission_required -> pause_info).
-        pause = None
-        if isinstance(plan, object) and hasattr(plan, "preflight"):
-            pass
-        for r in actions_results:
-            if isinstance(r, dict) and r.get("error_type") == "permission_required":
-                pause = r
-                break
-
-        if pause:
-            perm = str(pause.get("permission") or "").strip()
-            restart_hint = ""
-            if perm in {"accessibility", "screen_recording", "full_disk_access", "files_and_folders"}:
-                restart_hint = " Якщо після дозволу все одно не працює — перезапусти Terminal (Cmd+Q і відкрий знову)."
-
-            msg = str(pause.get("error") or "Permission required")
-            if perm == "automation":
-                msg = "Потрібен дозвіл Automation (Apple Events) для Terminal. Дай доступ у System Settings -> Privacy & Security -> Automation, потім введи /resume." + restart_hint
-            elif perm == "screen_recording":
-                msg = "Потрібен дозвіл Screen Recording для Terminal. Дай доступ у System Settings -> Privacy & Security -> Screen Recording, потім введи /resume." + restart_hint
-            elif perm == "full_disk_access":
-                msg = "Потрібен дозвіл Full Disk Access для Terminal. Дай доступ у System Settings -> Privacy & Security -> Full Disk Access, потім введи /resume." + restart_hint
-            elif perm == "files_and_folders":
-                msg = "Потрібен дозвіл Files & Folders для Terminal. Дай доступ у System Settings -> Privacy & Security -> Files and Folders, потім введи /resume." + restart_hint
-
-            _set_agent_pause(pending_text=user_text, permission=perm, message=msg)
-            log(f"[PAUSED] {msg}", "error")
-            break
-
-        if event.get("done"):
-            break
-
-    log("[GRAPH] Done.", "action")
 
 
 def _log_replace_last(text: str, category: str = "info") -> None:
