@@ -1,13 +1,5 @@
-from typing import Annotated, TypedDict, Literal, List
-from langgraph.graph import StateGraph, END
-from langchain_core.messages import BaseMessage
-
-# Import Agent Definitions
-from core.agents.atlas import get_atlas_prompt
-from core.agents.tetyana import get_tetyana_prompt
-from core.agents.grisha import get_grisha_prompt
-
 from typing import Annotated, TypedDict, Literal, List, Dict, Any, Optional
+import json
 from langgraph.graph import StateGraph, END
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage
 
@@ -15,6 +7,10 @@ from core.agents.atlas import get_atlas_prompt
 from core.agents.tetyana import get_tetyana_prompt
 from core.agents.grisha import get_grisha_prompt
 from providers.copilot import CopilotLLM
+
+# Import Tools
+from system_ai.tools.executor import run_shell, open_app, run_applescript
+from system_ai.tools.screenshot import take_screenshot
 
 # Define the state of the Trinity system
 class TrinityState(TypedDict):
@@ -87,7 +83,31 @@ class TrinityRuntime:
         prompt = get_tetyana_prompt(last_msg)
         try:
             response = self.llm.invoke(prompt.format_messages())
+            # For now, we assume direct text or basic JSON. 
+            # In a full impl, we'd use tool usage parsing as seen in CopilotLLM.
             content = response.content
+            tool_calls = response.tool_calls if hasattr(response, 'tool_calls') else []
+            
+            # If no structured tool calls, try to parse JSON manually or via simple heuristics
+            # (Assuming CopilotLLM returns tool_calls formatted)
+            
+            results = []
+            if tool_calls:
+                 for tool in tool_calls:
+                     name = tool.get("name")
+                     args = tool.get("args") or {}
+                     if name == "run_shell":
+                         res = run_shell(args.get("command"), allow=True)
+                         results.append(f"Result for {name}: {res}")
+                     elif name == "open_app":
+                         res = open_app(args.get("name"))
+                         results.append(f"Result for {name}: {res}")
+                     # Add other mappings
+            
+            # If we executed tools, append results to content
+            if results:
+                content += "\n\nTool Results:\n" + "\n".join(results)
+                
         except Exception as e:
             content = f"Error invoking Tetyana: {e}"
         
