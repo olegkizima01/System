@@ -127,6 +127,13 @@
           "description": "Розширене очищення ідентифікаторів Antigravity"
         },
         {
+          "id": "antigravity_fresh_install",
+          "name": "Antigravity Fresh Install Reset",
+          "script": "./cleanup_scripts/antigravity_fresh_install.sh",
+          "enabled": true,
+          "description": "Скидає локальний стан Antigravity (onboarding/користувач/сховище), щоб наступний запуск виглядав як перша установка"
+        },
+        {
           "id": "antigravity_deep_vscode",
           "name": "Deep VS Code Cleanup (Side Effects)",
           "script": "./cleanup_scripts/deep_vscode_cleanup.sh",
