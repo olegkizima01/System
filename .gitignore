@@ -65,6 +65,12 @@ __pycache__/
 # Virtual environments
 .venv/
 
+# Cleanup modules JSON (should be committed)
+# cleanup_modules.json - потрібен для комітів
+
+# Cleanup scripts (individual scripts can be committed as needed)
+# cleanup_scripts/antigravity_fresh_install.sh - приклад скрипту
+
 # Великі інсталяційні файли
 *.dmg
 *.zip
