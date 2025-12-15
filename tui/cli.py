@@ -144,16 +144,22 @@ def _run_graph_agent_task(user_text: str, *, allow_autopilot: bool, allow_shell:
     # TRINITY INTEGRATION START
     try:
         _load_env()  # Ensure env vars are loaded for CopilotLLM
-        from core.trinity import TrinityRuntime
+        from core.trinity import TrinityRuntime, TrinityPermissions
         from langchain_core.messages import AIMessage
         
+        # Create permissions from TUI flags
+        permissions = TrinityPermissions(
+            allow_shell=allow_shell,
+            allow_applescript=allow_applescript,
+            allow_file_write=allow_autopilot
+        )
+        
         log("[ATLAS] Initializing NeuroMac System (Atlas/Tetyana/Grisha)...", "info")
-        runtime = TrinityRuntime(verbose=False)
+        runtime = TrinityRuntime(verbose=False, permissions=permissions)
         
         step_count = 0
         for event in runtime.run(user_text):
             step_count += 1
-            # Trinity yields dicts keyed by node name, e.g. {'atlas': {...}}
             for node_name, state_update in event.items():
                 agent_name = node_name.capitalize()
                 messages = state_update.get("messages", [])
@@ -162,13 +168,17 @@ def _run_graph_agent_task(user_text: str, *, allow_autopilot: bool, allow_shell:
                 
                 log(f"[ATLAS] {agent_name}: {content}", "info")
                 
-                # Check for completion (if node leads to END or specific status)
-                # In our graph, 'end' is a virtual node, but the router handles it. 
-                # We can check current_agent if needed, but stream() usually ends when graph ends.
+                # Check for pause_info (permission required)
+                pause_info = state_update.get("pause_info")
+                if pause_info:
+                    perm = pause_info.get("permission", "unknown")
+                    msg = pause_info.get("message", "Permission required")
+                    _set_agent_pause(pending_text=user_text, permission=perm, message=msg)
+                    log(f"[ATLAS] ⚠️ PAUSED: {msg}", "error")
+                    return
                 
     except ImportError:
         log("[TRINITY] Core module not found. Falling back to legacy Autopilot.", "error")
-        # Fallback to legacy logic if needed, or just return
         return
     except Exception as e:
         log(f"[TRINITY] Runtime error: {e}", "error")
