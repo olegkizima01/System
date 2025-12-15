@@ -41,18 +41,18 @@ class TrinityRuntime:
             self._router, 
             {"tetyana": "tetyana", "grisha": "grisha", "end": END}
         )
-        workflow.add_conditional_edges(
+        builder.add_conditional_edges(
             "tetyana", 
             self._router, 
             {"grisha": "grisha", "atlas": "atlas", "end": END}
         )
-        workflow.add_conditional_edges(
+        builder.add_conditional_edges(
             "grisha", 
             self._router, 
             {"atlas": "atlas", "end": END}
         )
 
-        return workflow.compile()
+        return builder.compile()
 
     def _atlas_node(self, state: TrinityState):
         if self.verbose: print("🌐 [Atlas] Strategizing...")
@@ -123,8 +123,18 @@ class TrinityRuntime:
         # Inject available tools into Tetyana's prompt
         tools_list = self.registry.list_tools()
         prompt = get_tetyana_prompt(last_msg, tools_desc=tools_list)
+        
+        # Bind tools to LLM for structured tool_calls output
+        # We pass tool descriptions as simple dicts for the bind_tools method
+        tool_defs = []
+        for name, func in self.registry._tools.items():
+            desc = self.registry._descriptions.get(name, "")
+            tool_defs.append({"name": name, "description": desc})
+        
+        bound_llm = self.llm.bind_tools(tool_defs)
+        
         try:
-            response = self.llm.invoke(prompt.format_messages())
+            response = bound_llm.invoke(prompt.format_messages())
             # For now, we assume direct text or basic JSON. 
             # In a full impl, we'd use tool usage parsing as seen in CopilotLLM.
             content = response.content
