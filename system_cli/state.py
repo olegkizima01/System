@@ -41,6 +41,7 @@ class AppState:
     chat_lang: str = "uk"
     ui_unsafe_mode: bool = False
     ui_streaming: bool = True
+    ui_gui_mode: str = "auto"
     agent_processing: bool = False
     agent_paused: bool = False
     agent_pause_permission: Optional[str] = None

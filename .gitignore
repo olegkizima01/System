@@ -4,6 +4,7 @@
 configs/*
 !configs/.gitkeep
 !configs/README.md
+configs_vscode/
 
 # Тимчасові файли
 *.tmp

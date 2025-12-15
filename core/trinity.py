@@ -19,6 +19,7 @@ class TrinityPermissions:
     allow_shell: bool = False
     allow_applescript: bool = False
     allow_file_write: bool = False
+    allow_gui: bool = False
 
 # Define the state of the Trinity system
 class TrinityState(TypedDict):
@@ -31,6 +32,9 @@ class TrinityState(TypedDict):
     step_count: int
     replan_count: int
     pause_info: Optional[Dict[str, Any]]  # Permission pause info
+    gui_mode: Optional[str]  # off|on|auto
+    execution_mode: Optional[str]  # native|gui
+    gui_fallback_attempted: Optional[bool]
 
 class TrinityRuntime:
     MAX_REPLANS = 5
@@ -229,13 +233,18 @@ class TrinityRuntime:
         if self.verbose: print("💻 [Tetyana] Developing...")
         context = state.get("messages", [])
         last_msg = context[-1].content
+
+        gui_mode = str(state.get("gui_mode") or "auto").strip().lower()
+        execution_mode = str(state.get("execution_mode") or "native").strip().lower()
+        gui_fallback_attempted = bool(state.get("gui_fallback_attempted") or False)
         
         
-        # Inject available tools into Tetyana's prompt
+        # Inject available tools into Tetyana's prompt.
+        # If we are in GUI mode, we still list all tools, but the prompt instructs to prefer GUI primitives.
         tools_list = self.registry.list_tools()
         prompt = get_tetyana_prompt(last_msg, tools_desc=tools_list)
         
-        # Bind tools to LLM for structured tool_calls output
+        # Bind tools to LLM for structured tool_calls output.
         tool_defs = []
         for name, func in self.registry._tools.items():
             desc = self.registry._descriptions.get(name, "")
@@ -253,6 +262,15 @@ class TrinityRuntime:
             tool_calls = response.tool_calls if hasattr(response, 'tool_calls') else []
             
             results = []
+            had_failure = False
+            gui_tools = {
+                "move_mouse",
+                "click_mouse",
+                "click",
+                "type_text",
+                "press_key",
+                "find_image_on_screen",
+            }
             if tool_calls:
                 for tool in tool_calls:
                     name = tool.get("name")
@@ -268,6 +286,16 @@ class TrinityRuntime:
                         }
                         results.append(f"[BLOCKED] {name}: permission required")
                         continue
+
+                    if name == "run_shortcut" and not self.permissions.allow_shell:
+                        pause_info = {
+                            "permission": "shell",
+                            "message": "Потрібен дозвіл на запуск Shortcuts. Введіть /allow shell",
+                            "blocked_tool": name,
+                            "blocked_args": args,
+                        }
+                        results.append(f"[BLOCKED] {name}: permission required")
+                        continue
                         
                     if name == "run_applescript" and not self.permissions.allow_applescript:
                         pause_info = {
@@ -278,10 +306,29 @@ class TrinityRuntime:
                         }
                         results.append(f"[BLOCKED] {name}: permission required")
                         continue
+                    if name in gui_tools and not self.permissions.allow_gui:
+                        pause_info = {
+                            "permission": "gui",
+                            "message": "Потрібен дозвіл на GUI automation (mouse/keyboard). Увімкніть unsafe/gui mode.",
+                            "blocked_tool": name,
+                            "blocked_args": args,
+                        }
+                        results.append(f"[BLOCKED] {name}: permission required")
+                        continue
+
                     
                     # Execute via MCP Registry
                     res_str = self.registry.execute(name, args)
                     results.append(f"Result for {name}: {res_str}")
+
+                    # Track failures for fallback decision
+                    try:
+                        res_dict = json.loads(res_str)
+                        if isinstance(res_dict, dict):
+                            if str(res_dict.get("status", "")).lower() == "error":
+                                had_failure = True
+                    except Exception:
+                        pass
                     
                     # Check for permission_required errors in result
                     try:
@@ -298,6 +345,22 @@ class TrinityRuntime:
             # If we executed tools, append results to content
             if results:
                 content += "\n\nTool Results:\n" + "\n".join(results)
+
+            # Hybrid fallback: if native attempt failed and GUI fallback is allowed, switch execution_mode
+            if (
+                (not pause_info)
+                and had_failure
+                and (execution_mode != "gui")
+                and (gui_mode in {"auto", "on"})
+                and (not gui_fallback_attempted)
+            ):
+                # Tell the graph to retry this step in GUI mode.
+                return {
+                    "current_agent": "tetyana",
+                    "messages": [AIMessage(content=f"[Tetyana] Native execution had failures. Switching to GUI fallback mode.")],
+                    "execution_mode": "gui",
+                    "gui_fallback_attempted": True,
+                }
                 
                 # Save successful action to RAG memory (only if no pause)
                 if not pause_info:
@@ -320,13 +383,19 @@ class TrinityRuntime:
         
         return {
             "current_agent": "grisha", 
-            "messages": [AIMessage(content=content)]
+            "messages": [AIMessage(content=content)],
+            "execution_mode": execution_mode,
+            "gui_mode": gui_mode,
+            "gui_fallback_attempted": gui_fallback_attempted,
         }
 
     def _grisha_node(self, state: TrinityState):
         if self.verbose: print("👁️ [Grisha] Verifying...")
         context = state.get("messages", [])
         last_msg = context[-1].content
+
+        gui_mode = str(state.get("gui_mode") or "auto").strip().lower()
+        execution_mode = str(state.get("execution_mode") or "native").strip().lower()
         
         # Inject available tools (Vision priority)
         tools_list = self.registry.list_tools()
@@ -356,6 +425,22 @@ class TrinityRuntime:
             
             if results:
                 content += "\n\nVerification Tools Results:\n" + "\n".join(results)
+
+            # Deterministic verification hook for GUI mode: always capture + analyze.
+            if gui_mode in {"auto", "on"} and execution_mode == "gui":
+                snap = self.registry.execute("capture_screen", {"app_name": None})
+                content += "\n\n[GUI_VERIFY] capture_screen:\n" + str(snap)
+                try:
+                    snap_dict = json.loads(snap)
+                    img_path = snap_dict.get("path") if isinstance(snap_dict, dict) else None
+                except Exception:
+                    img_path = None
+                if img_path:
+                    analysis = self.registry.execute(
+                        "analyze_screen",
+                        {"image_path": img_path, "prompt": "Verify the UI state. Describe what changed and whether the goal seems achieved."},
+                    )
+                    content += "\n\n[GUI_VERIFY] analyze_screen:\n" + str(analysis)
 
         except Exception as e:
             content = f"Error invoking Grisha: {e}"
@@ -402,7 +487,11 @@ class TrinityRuntime:
     def _router(self, state: TrinityState):
         return state["current_agent"]
 
-    def run(self, input_text: str):
+    def run(self, input_text: str, *, gui_mode: Optional[str] = None):
+        gm = str(gui_mode or "auto").strip().lower() or "auto"
+        if gm not in {"off", "on", "auto"}:
+            gm = "auto"
+
         initial_state = {
             "messages": [HumanMessage(content=input_text)],
             "current_agent": "atlas",
@@ -411,7 +500,10 @@ class TrinityRuntime:
             "step_count": 0,
             "replan_count": 0,
             "summary": None,
-            "pause_info": None
+            "pause_info": None,
+            "gui_mode": gm,
+            "execution_mode": "native",
+            "gui_fallback_attempted": False,
         }
         
         for event in self.workflow.stream(initial_state):

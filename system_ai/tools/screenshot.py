@@ -174,6 +174,45 @@ def take_screenshot(app_name: Optional[str] = None) -> Dict[str, Any]:
         # Fallback to legacy
         return _legacy_screencapture_full()
 
+
+def capture_screen_region(x: int, y: int, width: int, height: int) -> Dict[str, Any]:
+    try:
+        x_i = int(x)
+        y_i = int(y)
+        w_i = int(width)
+        h_i = int(height)
+        if w_i <= 0 or h_i <= 0:
+            return {"tool": "capture_screen_region", "status": "error", "error": "Invalid region size"}
+
+        region = {"top": y_i, "left": x_i, "width": w_i, "height": h_i}
+        output_dir = os.path.expanduser("~/.antigravity/vision_cache")
+        os.makedirs(output_dir, exist_ok=True)
+        timestamp = int(time.time())
+        path = os.path.join(output_dir, f"region_{timestamp}.png")
+
+        with mss.mss() as sct:
+            sct_img = sct.grab(region)
+            img = Image.frombytes("RGB", sct_img.size, sct_img.bgra, "raw", "BGRX")
+            img.save(path, format="PNG")
+
+        return {
+            "tool": "capture_screen_region",
+            "status": "success",
+            "path": path,
+            "region": {"x": x_i, "y": y_i, "width": w_i, "height": h_i},
+        }
+    except Exception as e:
+        err_str = str(e).lower()
+        if "screen recording" in err_str or "access" in err_str:
+            return {
+                "tool": "capture_screen_region",
+                "status": "error",
+                "error_type": "permission_required",
+                "permission": "screen_recording",
+                "error": "Permission denied. Please allow Screen Recording in System Settings.",
+            }
+        return {"tool": "capture_screen_region", "status": "error", "error": str(e)}
+
 def _legacy_screencapture_full():
     output_path = os.path.expanduser(f"~/Desktop/fallback_{int(time.time())}.jpg")
     try:

@@ -114,6 +114,39 @@ _logs_lock = threading.RLock()
 _logs_need_trim: bool = False
 _thread_log_override = threading.local()
 
+_render_log_cache: Dict[str, Any] = {"ts": 0.0, "logs": [], "cursor": Point(x=0, y=0)}
+_render_log_cache_ttl_s: float = 0.05
+
+
+def _get_render_log_snapshot() -> Tuple[List[Tuple[str, str]], Point]:
+    now = time.monotonic()
+    try:
+        ts = float(_render_log_cache.get("ts", 0.0))
+        if (now - ts) < _render_log_cache_ttl_s:
+            return (
+                list(_render_log_cache.get("logs") or []),
+                _render_log_cache.get("cursor") or Point(x=0, y=0),
+            )
+    except Exception:
+        pass
+
+    with _logs_lock:
+        logs_snapshot: List[Tuple[str, str]] = list(state.logs)
+
+    line_count = 0
+    for _, text in logs_snapshot:
+        try:
+            line_count += str(text).count("\n")
+        except Exception:
+            continue
+
+    cursor = Point(x=0, y=max(0, line_count - 1) if line_count > 0 else 0)
+
+    _render_log_cache["ts"] = now
+    _render_log_cache["logs"] = logs_snapshot
+    _render_log_cache["cursor"] = cursor
+    return logs_snapshot, cursor
+
 
 def _trim_logs_if_needed() -> None:
     global _logs_need_trim
@@ -179,7 +212,15 @@ def _is_greeting(text: str) -> bool:
     return t in greetings
 
 
-def _run_graph_agent_task(user_text: str, *, allow_autopilot: bool, allow_shell: bool, allow_applescript: bool) -> None:
+def _run_graph_agent_task(
+    user_text: str,
+    *,
+    allow_autopilot: bool,
+    allow_shell: bool,
+    allow_applescript: bool,
+    allow_gui: bool,
+    gui_mode: str = "auto",
+) -> None:
     # TRINITY INTEGRATION START
     try:
         _load_env()  # Ensure env vars are loaded for CopilotLLM
@@ -190,7 +231,8 @@ def _run_graph_agent_task(user_text: str, *, allow_autopilot: bool, allow_shell:
         permissions = TrinityPermissions(
             allow_shell=allow_shell,
             allow_applescript=allow_applescript,
-            allow_file_write=allow_autopilot
+            allow_file_write=allow_autopilot,
+            allow_gui=allow_gui,
         )
         
         log("[ATLAS] Initializing NeuroMac System (Atlas/Tetyana/Grisha)...", "info")
@@ -222,10 +264,11 @@ def _run_graph_agent_task(user_text: str, *, allow_autopilot: bool, allow_shell:
 
         # Pass streaming callback only if enabled
         on_stream_callback = _on_stream_delta if use_stream else None
+        gui_mode = str(gui_mode or "auto").strip().lower() or "auto"
         runtime = TrinityRuntime(verbose=False, permissions=permissions, on_stream=on_stream_callback)
         
         step_count = 0
-        for event in runtime.run(user_text):
+        for event in runtime.run(user_text, gui_mode=gui_mode):
             step_count += 1
             for node_name, state_update in event.items():
                 agent_name = node_name.capitalize()
@@ -373,6 +416,11 @@ def _list_editors(cfg: Dict[str, Any]) -> List[Tuple[str, str]]:
             continue
         result.append((key, str(meta.get("label", key))))
     return result
+
+
+def get_logs() -> List[Tuple[str, str]]:
+    logs_snapshot, _ = _get_render_log_snapshot()
+    return logs_snapshot
 
 
 def _find_module(cfg: Dict[str, Any], editor: str, module_id: str) -> Optional[ModuleRef]:
@@ -869,6 +917,9 @@ def _load_ui_settings() -> None:
         streaming = data.get("streaming")
         if isinstance(streaming, bool):
             state.ui_streaming = streaming
+        gui_mode = str(data.get("gui_mode") or "").strip().lower()
+        if gui_mode in {"off", "on", "auto"}:
+            state.ui_gui_mode = gui_mode
         unsafe_mode = data.get("unsafe_mode")
         if isinstance(unsafe_mode, bool):
             state.ui_unsafe_mode = unsafe_mode
@@ -890,6 +941,7 @@ def _save_ui_settings() -> bool:
             "ui_lang": normalize_lang(state.ui_lang),
             "chat_lang": normalize_lang(state.chat_lang),
             "streaming": bool(getattr(state, "ui_streaming", True)),
+            "gui_mode": str(getattr(state, "ui_gui_mode", "auto") or "auto").strip().lower() or "auto",
             "unsafe_mode": bool(state.ui_unsafe_mode),
         }
         with open(UI_SETTINGS_PATH, "w", encoding="utf-8") as f:
@@ -1041,12 +1093,17 @@ def _is_confirmed_applescript(text: str) -> bool:
     return "confirm_applescript" in text.lower()
 
 
+def _is_confirmed_gui(text: str) -> bool:
+    return "confirm_gui" in text.lower()
+
+
 @dataclass
 class CommandPermissions:
     allow_run: bool = False
     allow_autopilot: bool = False
     allow_shell: bool = False
     allow_applescript: bool = False
+    allow_gui: bool = False
 
 
 def _permissions_from_text(text: str) -> CommandPermissions:
@@ -1055,6 +1112,7 @@ def _permissions_from_text(text: str) -> CommandPermissions:
         allow_autopilot=_is_confirmed_autopilot(text),
         allow_shell=_is_confirmed_shell(text),
         allow_applescript=_is_confirmed_applescript(text),
+        allow_gui=_is_confirmed_gui(text),
     )
 
 
@@ -1164,6 +1222,60 @@ def _tool_list_dir(args: Dict[str, Any]) -> Dict[str, Any]:
     try:
         items = sorted(os.listdir(path))
         return {"ok": True, "path": path, "count": len(items), "items": items[:200]}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+
+def _tool_chrome_open_url(args: Dict[str, Any]) -> Dict[str, Any]:
+    url = str(args.get("url", "")).strip()
+    if not url:
+        return {"ok": False, "error": "Missing url"}
+    allow_applescript = bool(getattr(state, "ui_unsafe_mode", False)) or bool(
+        getattr(_agent_last_permissions, "allow_applescript", False)
+    )
+    safe_url = url.replace("\\", "\\\\").replace('"', "\\\"")
+    script = (
+        'tell application "Google Chrome"\n'
+        '  activate\n'
+        f'  open location "{safe_url}"\n'
+        'end tell'
+    )
+    try:
+        from system_ai.tools.executor import run_applescript
+
+        out = run_applescript(script, allow=allow_applescript)
+        ok = out.get("status") == "success"
+        return {"ok": ok, "result": out}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+
+def _tool_chrome_active_tab(_args: Dict[str, Any]) -> Dict[str, Any]:
+    allow_applescript = bool(getattr(state, "ui_unsafe_mode", False)) or bool(
+        getattr(_agent_last_permissions, "allow_applescript", False)
+    )
+    script = (
+        'tell application "Google Chrome"\n'
+        '  if not (exists front window) then\n'
+        '    return ""\n'
+        '  end if\n'
+        '  set t to active tab of front window\n'
+        '  return (title of t) & "\\n" & (URL of t)\n'
+        'end tell'
+    )
+    try:
+        from system_ai.tools.executor import run_applescript
+
+        out = run_applescript(script, allow=allow_applescript)
+        ok = out.get("status") == "success"
+        raw = str(out.get("output") or "")
+        title = ""
+        url = ""
+        if raw:
+            parts = raw.split("\n", 1)
+            title = parts[0].strip()
+            url = parts[1].strip() if len(parts) > 1 else ""
+        return {"ok": ok, "result": out, "title": title, "url": url}
     except Exception as e:
         return {"ok": False, "error": str(e)}
 
@@ -1393,6 +1505,8 @@ def _init_agent_tools() -> None:
         AgentTool(name="grep", description="Grep by regex under root. args: {root, query, max_files?, max_hits?}", handler=_tool_grep),
         AgentTool(name="open_app", description="Open a macOS app by name. args: {name}", handler=_tool_open_app),
         AgentTool(name="open_url", description="Open a URL (or file) using macOS open. args: {url}", handler=_tool_open_url),
+        AgentTool(name="chrome_open_url", description="Open a URL specifically in Google Chrome. args: {url}", handler=_tool_chrome_open_url),
+        AgentTool(name="chrome_active_tab", description="Get Google Chrome active tab (title + url). args: {}", handler=_tool_chrome_active_tab),
         AgentTool(name="take_screenshot", description="Take screenshot of focused window or target app. args: {app_name?}", handler=_tool_take_screenshot),
         AgentTool(name="run_shell", description="Run a shell command (requires CONFIRM_SHELL). args: {command}", handler=_tool_run_shell_wrapper),
         AgentTool(name="run_shortcut", description="Run a macOS Shortcut by name (requires CONFIRM_SHELL). args: {name}", handler=_tool_run_shortcut),
@@ -1490,6 +1604,7 @@ def _agent_send_with_stream(user_text: str) -> Tuple[bool, str]:
     allow_autopilot = unsafe_mode or _is_confirmed_autopilot(user_text)
     allow_shell = unsafe_mode or _is_confirmed_shell(user_text)
     allow_applescript = unsafe_mode or _is_confirmed_applescript(user_text)
+    allow_gui = unsafe_mode or _is_confirmed_gui(user_text)
     
     global _agent_last_permissions
     _agent_last_permissions = CommandPermissions(
@@ -1497,6 +1612,7 @@ def _agent_send_with_stream(user_text: str) -> Tuple[bool, str]:
         allow_autopilot=allow_autopilot,
         allow_shell=allow_shell,
         allow_applescript=allow_applescript,
+        allow_gui=allow_gui,
     )
 
     # Set processing state
@@ -1510,6 +1626,9 @@ def _agent_send_with_stream(user_text: str) -> Tuple[bool, str]:
         "IMPORTANT: When user asks to perform actions, YOU MUST execute them automatically using tools.\n"
         "Do NOT ask the user to do things manually - use the available tools to complete the task.\n"
         "For calculator tasks: use open_app, then use run_shell with osascript to perform calculations.\n\n"
+        "IMPORTANT: Do not claim that a browser task succeeded (e.g. a video/movie is playing or fullscreen) unless you verified it using tools.\n"
+        "- For Google Chrome, verify the current page using chrome_active_tab and/or take_screenshot.\n"
+        "- If you only opened a search page, say so explicitly; do not say the movie is playing.\n\n"
         "Safety rules:\n"
         "- If Unsafe mode is OFF: require CONFIRM_RUN / CONFIRM_SHELL / CONFIRM_APPLESCRIPT for execution.\n"
         "- If Unsafe mode is ON: confirmations are bypassed (dangerous). Do not ask the user to confirm; proceed.\n\n"
@@ -1518,6 +1637,12 @@ def _agent_send_with_stream(user_text: str) -> Tuple[bool, str]:
 
     if not agent_session.messages:
         agent_session.messages = [SystemMessage(content=system_prompt)]
+    else:
+        try:
+            if SystemMessage and isinstance(agent_session.messages[0], SystemMessage):
+                agent_session.messages[0] = SystemMessage(content=system_prompt)
+        except Exception:
+            pass
 
     cfg_snapshot = _load_cleanup_config()
     agent_session.messages.append(
@@ -1712,6 +1837,7 @@ def _agent_send_no_stream(user_text: str) -> Tuple[bool, str]:
     allow_autopilot = unsafe_mode or _is_confirmed_autopilot(user_text)
     allow_shell = unsafe_mode or _is_confirmed_shell(user_text)
     allow_applescript = unsafe_mode or _is_confirmed_applescript(user_text)
+    allow_gui = unsafe_mode or _is_confirmed_gui(user_text)
 
     global _agent_last_permissions
     _agent_last_permissions = CommandPermissions(
@@ -1719,6 +1845,7 @@ def _agent_send_no_stream(user_text: str) -> Tuple[bool, str]:
         allow_autopilot=allow_autopilot,
         allow_shell=allow_shell,
         allow_applescript=allow_applescript,
+        allow_gui=allow_gui,
     )
 
     state.agent_processing = True
@@ -1726,19 +1853,33 @@ def _agent_send_no_stream(user_text: str) -> Tuple[bool, str]:
     system_prompt = (
         "You are an interactive assistant for a macOS cleanup/monitoring CLI.\n"
         "You can use tools to inspect files, create cleanup modules, control monitoring, and change settings.\n\n"
+
         "You may execute any in-app command via app_command (equivalent to typing in the TUI).\n"
         "You may also control UI theme via ui_theme_status/ui_theme_set (or /theme).\n\n"
+
         "IMPORTANT: When user asks to perform actions, YOU MUST execute them automatically using tools.\n"
         "Do NOT ask the user to do things manually - use the available tools to complete the task.\n"
         "For calculator tasks: use open_app, then use run_shell with osascript to perform calculations.\n\n"
+
+        "IMPORTANT: Do not claim that a browser task succeeded (e.g. a video/movie is playing or fullscreen) unless you verified it using tools.\n"
+        "- For Google Chrome, verify the current page using chrome_active_tab and/or take_screenshot.\n"
+        "- If you only opened a search page, say so explicitly; do not say the movie is playing.\n\n"
+
         "Safety rules:\n"
         "- If Unsafe mode is OFF: require CONFIRM_RUN / CONFIRM_SHELL / CONFIRM_APPLESCRIPT for execution.\n"
         "- If Unsafe mode is ON: confirmations are bypassed (dangerous). Do not ask the user to confirm; proceed.\n\n"
+
         f"Reply in {lang_name(state.chat_lang)}. Be concise and practical.\n"
     )
 
     if not agent_session.messages:
         agent_session.messages = [SystemMessage(content=system_prompt)]
+    else:
+        try:
+            if SystemMessage and isinstance(agent_session.messages[0], SystemMessage):
+                agent_session.messages[0] = SystemMessage(content=system_prompt)
+        except Exception:
+            pass
 
     cfg_snapshot = _load_cleanup_config()
     agent_session.messages.append(
@@ -2073,7 +2214,7 @@ def run_tui() -> None:
     app = build_app(
         get_header=get_header,
         get_context=get_context,
-        get_logs=lambda: state.logs,
+        get_logs=get_logs,
         get_log_cursor_position=get_log_cursor_position,
         get_menu_content=get_menu_content,
         get_input_prompt=get_input_prompt,
@@ -2111,6 +2252,8 @@ def _tool_app_command(args: Dict[str, Any]) -> Dict[str, Any]:
         cmd_to_run = cmd_to_run + " CONFIRM_SHELL"
     if cmd_to_run.lower().startswith("/autopilot") and perms.allow_applescript and "confirm_applescript" not in cmd_to_run.lower():
         cmd_to_run = cmd_to_run + " CONFIRM_APPLESCRIPT"
+    if cmd_to_run.lower().startswith("/autopilot") and perms.allow_gui and "confirm_gui" not in cmd_to_run.lower():
+        cmd_to_run = cmd_to_run + " CONFIRM_GUI"
 
     captured: List[Tuple[str, str]] = []
 
@@ -2512,18 +2655,14 @@ def get_context():
     result.append(("class:context.label", " /theme status|set <monaco|dracula|nord|gruvbox>\n"))
     result.append(("class:context.label", " /lang status|set ui <code>|set chat <code>\n"))
     result.append(("class:context.label", " /streaming status|on|off\n"))
+    result.append(("class:context.label", " /gui_mode status|on|off|auto\n"))
 
     return result
 
 
 def get_log_cursor_position():
-    if not state.logs:
-        return Point(x=0, y=0)
-    r = 0
-    for _, text in state.logs:
-        r += text.count("\n")
-    # Ensure we don't go negative or exceed bounds
-    return Point(x=0, y=max(0, r - 1) if r > 0 else 0)
+    _, cursor = _get_render_log_snapshot()
+    return cursor
 
 
 # ================== MENU CONTENT ==================
@@ -2595,7 +2734,32 @@ def _handle_command(cmd: str) -> None:
         log("/theme status|set <monaco|dracula|nord|gruvbox>", "info")
         log("/lang status|set ui <code>|set chat <code>", "info")
         log("/streaming status|on|off", "info")
+        log("/gui_mode status|on|off|auto", "info")
         log("/agent-reset | /agent-on | /agent-off | /agent-mode [on|off|toggle]", "info")
+        return
+
+    if command in {"/gui_mode", "/gui"}:
+        sub = (args[0].lower() if args else "status").strip()
+        if sub in {"status", ""}:
+            mode = str(getattr(state, "ui_gui_mode", "auto") or "auto").strip().lower() or "auto"
+            log(f"GUI mode: {mode}", "info")
+            return
+        if sub in {"on", "enable", "enabled", "true", "1"}:
+            state.ui_gui_mode = "on"
+            _save_ui_settings()
+            log("GUI mode: on", "action")
+            return
+        if sub in {"off", "disable", "disabled", "false", "0"}:
+            state.ui_gui_mode = "off"
+            _save_ui_settings()
+            log("GUI mode: off", "action")
+            return
+        if sub in {"auto"}:
+            state.ui_gui_mode = "auto"
+            _save_ui_settings()
+            log("GUI mode: auto", "action")
+            return
+        log("Usage: /gui_mode status|on|off|auto", "error")
         return
 
     if command == "/resume":
@@ -2896,6 +3060,7 @@ def _handle_command(cmd: str) -> None:
         allow_autopilot = "confirm_autopilot" in cmd.lower()
         allow_shell = "confirm_shell" in cmd.lower() or bool(getattr(state, "ui_unsafe_mode", False))
         allow_applescript = "confirm_applescript" in cmd.lower() or bool(getattr(state, "ui_unsafe_mode", False))
+        allow_gui = "confirm_gui" in cmd.lower() or bool(getattr(state, "ui_unsafe_mode", False))
         if not allow_autopilot and not bool(getattr(state, "ui_unsafe_mode", False)):
             log("Autopilot confirmation required. Add CONFIRM_AUTOPILOT to the same line.", "error")
             return
@@ -2985,6 +3150,8 @@ def _handle_input(buff: Buffer) -> None:
                         allow_autopilot=True,
                         allow_shell=bool(getattr(state, "ui_unsafe_mode", False)) or _is_confirmed_shell(text),
                         allow_applescript=bool(getattr(state, "ui_unsafe_mode", False)) or _is_confirmed_applescript(text),
+                        allow_gui=bool(getattr(state, "ui_unsafe_mode", False)) or _is_confirmed_gui(text),
+                        gui_mode=getattr(state, "ui_gui_mode", "auto"),
                     )
                     ok, answer = True, ""
                 else:

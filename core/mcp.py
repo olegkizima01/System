@@ -6,8 +6,9 @@ from system_ai.tools.executor import run_shell, open_app, run_applescript, run_s
 from system_ai.tools.screenshot import take_screenshot
 from system_ai.tools.filesystem import read_file, write_file, list_files
 from system_ai.tools.windsurf import send_to_windsurf, open_file_in_windsurf
-from system_ai.tools.input import click, type_text, press_key
-from system_ai.tools.vision import analyze_with_copilot
+from system_ai.tools.input import click, type_text, press_key, move_mouse, click_mouse
+from system_ai.tools.screenshot import capture_screen_region
+from system_ai.tools.vision import analyze_with_copilot, ocr_region, find_image_on_screen
 from core.memory import save_memory_tool, query_memory_tool
 
 class MCPToolRegistry:
@@ -26,6 +27,7 @@ class MCPToolRegistry:
         self.register_tool("run_shell", run_shell, "Execute shell command. Args: command (str), allow=True")
         self.register_tool("open_app", open_app, "Open MacOS Application. Args: name (str)")
         self.register_tool("run_applescript", run_applescript, "Run AppleScript. Args: script (str)")
+        self.register_tool("run_shortcut", run_shortcut, "Run Shortcuts automation. Args: name (str), allow=True")
         
         # Filesystem
         self.register_tool("read_file", read_file, "Read file content. Args: path (str)")
@@ -38,7 +40,13 @@ class MCPToolRegistry:
         
         # Vision/Input
         self.register_tool("capture_screen", take_screenshot, "Take screenshot of app or screen. Args: app_name (optional)")
+        self.register_tool("capture_screen_region", capture_screen_region, "Capture screenshot of screen region. Args: x,y,width,height")
         self.register_tool("analyze_screen", analyze_with_copilot, "Analyze screen image with AI. Args: image_path (str), prompt (str)")
+        self.register_tool("ocr_region", ocr_region, "OCR a screen region using vision. Args: x,y,width,height")
+        self.register_tool("find_image_on_screen", find_image_on_screen, "Find an image template on screen (may be unimplemented). Args: template_path (str), tolerance (float)")
+
+        self.register_tool("move_mouse", move_mouse, "Move mouse to absolute coordinates. Args: x (int), y (int)")
+        self.register_tool("click_mouse", click_mouse, "Click mouse (left/right/double) optionally at x,y. Args: button(str), x?(int), y?(int)")
         self.register_tool("click", click, "Mouse click. Args: x (int), y (int)")
         self.register_tool("type_text", type_text, "Type text. Args: text (str)")
         self.register_tool("press_key", press_key, "Press key. Args: key (str), command(bool), shift(bool)...")

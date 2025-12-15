@@ -11,6 +11,38 @@ try:
 except ImportError:
     PYAUTOGUI_AVAILABLE = False
 
+
+def move_mouse(x: int, y: int) -> Dict[str, Any]:
+    if not PYAUTOGUI_AVAILABLE:
+        return {"tool": "move_mouse", "status": "error", "error": "pyautogui not installed"}
+    try:
+        pyautogui.moveTo(x=x, y=y)
+        return {"tool": "move_mouse", "status": "success", "x": x, "y": y}
+    except Exception as e:
+        return {"tool": "move_mouse", "status": "error", "error": str(e)}
+
+
+def click_mouse(button: str = "left", x: Optional[int] = None, y: Optional[int] = None) -> Dict[str, Any]:
+    if not PYAUTOGUI_AVAILABLE:
+        return {"tool": "click_mouse", "status": "error", "error": "pyautogui not installed"}
+
+    btn = str(button or "left").strip().lower()
+    if btn not in {"left", "right", "double"}:
+        return {"tool": "click_mouse", "status": "error", "error": "Invalid button"}
+
+    try:
+        if x is not None and y is not None:
+            pyautogui.moveTo(x=x, y=y)
+
+        if btn == "double":
+            pyautogui.click(button="left", clicks=2)
+        else:
+            pyautogui.click(button=btn)
+
+        return {"tool": "click_mouse", "status": "success", "button": btn, "x": x, "y": y}
+    except Exception as e:
+        return {"tool": "click_mouse", "status": "error", "error": str(e)}
+
 def click(x: int, y: int) -> Dict[str, Any]:
     """Clicks at the specified coordinates (x, y)."""
     if not PYAUTOGUI_AVAILABLE:
