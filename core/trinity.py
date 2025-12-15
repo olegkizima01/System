@@ -11,6 +11,14 @@ from providers.copilot import CopilotLLM
 from core.mcp import MCPToolRegistry
 from core.verification import AdaptiveVerifier
 from core.memory import get_memory
+from dataclasses import dataclass
+
+@dataclass
+class TrinityPermissions:
+    """Permission flags for Trinity system actions."""
+    allow_shell: bool = False
+    allow_applescript: bool = False
+    allow_file_write: bool = False
 
 # Define the state of the Trinity system
 class TrinityState(TypedDict):
@@ -18,21 +26,23 @@ class TrinityState(TypedDict):
     current_agent: str
     task_status: str
     final_response: Optional[str]
-    plan: Optional[List[Dict[str, Any]]] # List of steps including verification checkpoints
-    summary: Optional[str]  # Short summary of current state (Memory)
-    step_count: int  # Current step number
-    replan_count: int  # Number of replans (limit to prevent loops)
+    plan: Optional[List[Dict[str, Any]]]
+    summary: Optional[str]
+    step_count: int
+    replan_count: int
+    pause_info: Optional[Dict[str, Any]]  # Permission pause info
 
 class TrinityRuntime:
     MAX_REPLANS = 5
     MAX_STEPS = 30
     
-    def __init__(self, verbose: bool = True):
+    def __init__(self, verbose: bool = True, permissions: TrinityPermissions = None):
         self.llm = CopilotLLM()
         self.verbose = verbose
         self.registry = MCPToolRegistry()
         self.verifier = AdaptiveVerifier(self.llm)
         self.memory = get_memory()
+        self.permissions = permissions or TrinityPermissions()
         self.workflow = self._build_graph()
 
     def _build_graph(self):
@@ -76,6 +86,19 @@ class TrinityRuntime:
         
         if replan_count > self.MAX_REPLANS:
             return {"current_agent": "end", "messages": [AIMessage(content=f"[Atlas] Ліміт перепланувань ({self.MAX_REPLANS}) досягнуто. Потрібна допомога користувача.")]}
+        
+        # Check for pause (permission required)
+        pause_info = state.get("pause_info")
+        if pause_info:
+            msg = pause_info.get("message", "Permission required")
+            if self.verbose:
+                print(f"⚠️ [Atlas] PAUSED: {msg}")
+            return {
+                "current_agent": "end",
+                "task_status": "paused",
+                "messages": [AIMessage(content=f"[ПАУЗА] {msg}")],
+                "pause_info": pause_info
+            }
         
         # 1. Query RAG for relevant past experiences
         rag_context = ""
@@ -148,7 +171,6 @@ class TrinityRuntime:
         prompt = get_tetyana_prompt(last_msg, tools_desc=tools_list)
         
         # Bind tools to LLM for structured tool_calls output
-        # We pass tool descriptions as simple dicts for the bind_tools method
         tool_defs = []
         for name, func in self.registry._tools.items():
             desc = self.registry._descriptions.get(name, "")
@@ -156,39 +178,78 @@ class TrinityRuntime:
         
         bound_llm = self.llm.bind_tools(tool_defs)
         
+        pause_info = None
+        
         try:
             response = bound_llm.invoke(prompt.format_messages())
-            # For now, we assume direct text or basic JSON. 
-            # In a full impl, we'd use tool usage parsing as seen in CopilotLLM.
             content = response.content
             tool_calls = response.tool_calls if hasattr(response, 'tool_calls') else []
             
-            # If no structured tool calls, try to parse JSON manually or via simple heuristics
-            # (Assuming CopilotLLM returns tool_calls formatted)
-            
             results = []
             if tool_calls:
-                 for tool in tool_calls:
-                     name = tool.get("name")
-                     args = tool.get("args") or {}
-                     
-                     # Execute via MCP Registry
-                     res = self.registry.execute(name, args)
-                     results.append(f"Result for {name}: {res}")
+                for tool in tool_calls:
+                    name = tool.get("name")
+                    args = tool.get("args") or {}
+                    
+                    # Permission check for dangerous tools
+                    if name == "run_shell" and not self.permissions.allow_shell:
+                        pause_info = {
+                            "permission": "shell",
+                            "message": "Потрібен дозвіл на виконання shell команд. Введіть /allow shell",
+                            "blocked_tool": name,
+                            "blocked_args": args
+                        }
+                        results.append(f"[BLOCKED] {name}: permission required")
+                        continue
+                        
+                    if name == "run_applescript" and not self.permissions.allow_applescript:
+                        pause_info = {
+                            "permission": "applescript",
+                            "message": "Потрібен дозвіл на виконання AppleScript. Введіть /allow applescript",
+                            "blocked_tool": name,
+                            "blocked_args": args
+                        }
+                        results.append(f"[BLOCKED] {name}: permission required")
+                        continue
+                    
+                    # Execute via MCP Registry
+                    res_str = self.registry.execute(name, args)
+                    results.append(f"Result for {name}: {res_str}")
+                    
+                    # Check for permission_required errors in result
+                    try:
+                        res_dict = json.loads(res_str)
+                        if isinstance(res_dict, dict) and res_dict.get("error_type") == "permission_required":
+                            pause_info = {
+                                "permission": res_dict.get("permission", "unknown"),
+                                "message": res_dict.get("error", "Permission required"),
+                                "settings_url": res_dict.get("settings_url", "")
+                            }
+                    except (json.JSONDecodeError, TypeError):
+                        pass
             
             # If we executed tools, append results to content
             if results:
                 content += "\n\nTool Results:\n" + "\n".join(results)
                 
-                # Save successful action to RAG memory
-                try:
-                    action_summary = f"Task: {last_msg[:100]}\nTools used: {[t.get('name') for t in tool_calls]}\nResult: Success"
-                    self.memory.add_memory("strategies", action_summary, {"type": "tetyana_action"})
-                except Exception:
-                    pass
+                # Save successful action to RAG memory (only if no pause)
+                if not pause_info:
+                    try:
+                        action_summary = f"Task: {last_msg[:100]}\nTools used: {[t.get('name') for t in tool_calls]}\nResult: Success"
+                        self.memory.add_memory("strategies", action_summary, {"type": "tetyana_action"})
+                    except Exception:
+                        pass
                 
         except Exception as e:
             content = f"Error invoking Tetyana: {e}"
+        
+        # If paused, return to atlas with pause_info
+        if pause_info:
+            return {
+                "current_agent": "atlas",
+                "messages": [AIMessage(content=f"[ПАУЗОВАНО] {pause_info['message']}")],
+                "pause_info": pause_info
+            }
         
         return {
             "current_agent": "grisha", 
@@ -280,7 +341,8 @@ class TrinityRuntime:
             "final_response": None,
             "step_count": 0,
             "replan_count": 0,
-            "summary": None
+            "summary": None,
+            "pause_info": None
         }
         
         for event in self.workflow.stream(initial_state):
