@@ -2419,10 +2419,13 @@ def get_context():
 
 
 def get_log_cursor_position():
+    if not state.logs:
+        return Point(x=0, y=0)
     r = 0
     for _, text in state.logs:
         r += text.count("\n")
-    return Point(x=0, y=r)
+    # Ensure we don't go negative or exceed bounds
+    return Point(x=0, y=max(0, r - 1) if r > 0 else 0)
 
 
 # ================== MENU CONTENT ==================
