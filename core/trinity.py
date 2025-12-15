@@ -10,6 +10,7 @@ from providers.copilot import CopilotLLM
 
 from core.mcp import MCPToolRegistry
 from core.verification import AdaptiveVerifier
+from core.memory import get_memory
 
 # Define the state of the Trinity system
 class TrinityState(TypedDict):
@@ -18,13 +19,20 @@ class TrinityState(TypedDict):
     task_status: str
     final_response: Optional[str]
     plan: Optional[List[Dict[str, Any]]] # List of steps including verification checkpoints
+    summary: Optional[str]  # Short summary of current state (Memory)
+    step_count: int  # Current step number
+    replan_count: int  # Number of replans (limit to prevent loops)
 
 class TrinityRuntime:
+    MAX_REPLANS = 5
+    MAX_STEPS = 30
+    
     def __init__(self, verbose: bool = True):
         self.llm = CopilotLLM()
         self.verbose = verbose
         self.registry = MCPToolRegistry()
         self.verifier = AdaptiveVerifier(self.llm)
+        self.memory = get_memory()
         self.workflow = self._build_graph()
 
     def _build_graph(self):
@@ -59,11 +67,29 @@ class TrinityRuntime:
         context = state.get("messages", [])
         last_msg = context[-1].content if context else "Start"
         
-        # 1. Check if we have a plan. If not, generate one.
+        # Check step/replan limits
+        step_count = state.get("step_count", 0) + 1
+        replan_count = state.get("replan_count", 0)
+        
+        if step_count > self.MAX_STEPS:
+            return {"current_agent": "end", "messages": [AIMessage(content=f"[Atlas] Ліміт кроків ({self.MAX_STEPS}) досягнуто. Завершую.")]}
+        
+        if replan_count > self.MAX_REPLANS:
+            return {"current_agent": "end", "messages": [AIMessage(content=f"[Atlas] Ліміт перепланувань ({self.MAX_REPLANS}) досягнуто. Потрібна допомога користувача.")]}
+        
+        # 1. Query RAG for relevant past experiences
+        rag_context = ""
+        try:
+            strategies = self.memory.query_memory("strategies", last_msg, n_results=2)
+            if strategies:
+                rag_context = "Relevante минулі стратегії:\n" + "\n".join([s["content"][:200] for s in strategies])
+                if self.verbose: print(f"🌐 [Atlas] RAG found {len(strategies)} relevant strategies.")
+        except Exception:
+            pass
+        
+        # 2. Check if we have a plan. If not, generate one.
         plan = state.get("plan")
         if not plan:
-            # TODO: Use LLM to generate structured plan. 
-            # For now, we wrap the user request as a single execution step.
             raw_plan = [{
                 "id": 1, 
                 "type": "execute", 
@@ -71,8 +97,7 @@ class TrinityRuntime:
                 "agent": "tetyana"
             }]
             
-            # 2. Optimize Plan (Adaptive Verification)
-            # This inserts Grisha 'verify' steps at critical points
+            # Optimize Plan (Adaptive Verification)
             plan = self.verifier.optimize_plan(raw_plan)
             
             if self.verbose:
@@ -80,19 +105,15 @@ class TrinityRuntime:
                 for step in plan:
                     print(f"   - {step['type'].upper()}: {step['description']}")
 
-        # 3. Dispatch Logic (Simple First-Step approach for now)
-        # We look at the first incomplete step. 
-        # Since we don't have a 'completed' flag tracker in this simple dict yet,
-        # we assume for this iteration we just trigger the next agent based on the *first* step type.
-        
+        # 3. Dispatch Logic
         current_step = plan[0] if plan else None
         
         if not current_step:
             return {"current_agent": "end", "messages": [AIMessage(content="No plan generated.")]}
 
-        # Invoke Atlas Persona to announce strategy
-        # (We keep this specifically to maintain the chat persona)
-        prompt = get_atlas_prompt(f"The plan is: {current_step['description']}. Announce it.")
+        # Invoke Atlas Persona with RAG context
+        rag_hint = f"\n\n{rag_context}" if rag_context else ""
+        prompt = get_atlas_prompt(f"The plan is: {current_step['description']}. Announce it.{rag_hint}")
         try:
             response = self.llm.invoke(prompt.format_messages())
             content = response.content
@@ -107,11 +128,13 @@ class TrinityRuntime:
         else:
             next_agent = "tetyana"
             
-        # Update state with the plan
+        # Update state with the plan and counters
         return {
             "current_agent": next_agent, 
             "messages": [AIMessage(content=content)],
-            "plan": plan
+            "plan": plan,
+            "step_count": step_count,
+            "replan_count": replan_count
         }
 
     def _tetyana_node(self, state: TrinityState):
@@ -156,6 +179,13 @@ class TrinityRuntime:
             # If we executed tools, append results to content
             if results:
                 content += "\n\nTool Results:\n" + "\n".join(results)
+                
+                # Save successful action to RAG memory
+                try:
+                    action_summary = f"Task: {last_msg[:100]}\nTools used: {[t.get('name') for t in tool_calls]}\nResult: Success"
+                    self.memory.add_memory("strategies", action_summary, {"type": "tetyana_action"})
+                except Exception:
+                    pass
                 
         except Exception as e:
             content = f"Error invoking Tetyana: {e}"
@@ -247,7 +277,10 @@ class TrinityRuntime:
             "messages": [HumanMessage(content=input_text)],
             "current_agent": "atlas",
             "task_status": "started",
-            "final_response": None
+            "final_response": None,
+            "step_count": 0,
+            "replan_count": 0,
+            "summary": None
         }
         
         for event in self.workflow.stream(initial_state):
