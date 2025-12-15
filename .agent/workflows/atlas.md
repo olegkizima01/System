@@ -46,6 +46,9 @@ Important: there are *two* execution engines in the repo:
   - `agent_processing`
   - `agent_paused` + pause metadata
 
+- `ui_streaming` can be toggled at runtime via `/streaming status|on|off`.
+- The setting is persisted via `UI_SETTINGS_PATH` (so it survives new CLI/TUI runs).
+
 ### 2.2 Log rendering & streaming rules
 
 - Logs are stored in `state.logs`.
@@ -69,6 +72,10 @@ Important: there are *two* execution engines in the repo:
 - `_agent_send()` is the unified entry.
   - **Greeting fast-path:** for `Привіт/Hello/Hi/...` returns a stable short response.
   - Otherwise routes to `_agent_send_with_stream()` when `ui_streaming` is ON.
+
+- `agent-chat` additional rules:
+  - If the message contains an in-app slash command (e.g. `/help`, `/streaming off`), it is executed deterministically via the in-app command handler.
+  - Otherwise it runs the agent in non-stream mode and prints a single final answer to stdout.
 
 - `_agent_send_with_stream()`:
   - Streams assistant output into a reserved log line.
