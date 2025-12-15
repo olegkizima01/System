@@ -109,6 +109,21 @@ class TrinityRuntime:
                 if self.verbose: print(f"🌐 [Atlas] RAG found {len(strategies)} relevant strategies.")
         except Exception:
             pass
+
+        # Update Summary Memory if context is getting long
+        summary = state.get("summary", "")
+        if len(context) > 6 and step_count % 3 == 0:
+             try:
+                # Simple summarization using LLM
+                summary_prompt = [
+                    SystemMessage(content="Ти — архіваріус. Створи стислий підсумок (2-3 речення) поточного стану виконання задачі на основі історії повідомлень. Збережи ключові деталі (що зроблено, що залишилось)."),
+                    HumanMessage(content=f"Поточний підсумок: {summary}\n\nОстанні повідомлення:\n" + "\n".join([m.content[:500] for m in context[-4:]]))
+                ]
+                sum_resp = self.llm.invoke(summary_prompt)
+                summary = sum_resp.content
+                if self.verbose: print(f"🌐 [Atlas] Memory Updated: {summary[:50]}...")
+             except Exception:
+                pass
         
         # 2. Check if we have a plan. If not, generate one.
         plan = state.get("plan")
@@ -157,7 +172,8 @@ class TrinityRuntime:
             "messages": [AIMessage(content=content)],
             "plan": plan,
             "step_count": step_count,
-            "replan_count": replan_count
+            "replan_count": replan_count,
+            "summary": summary
         }
 
     def _tetyana_node(self, state: TrinityState):
