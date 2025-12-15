@@ -1599,155 +1599,25 @@ def _tool_ui_streaming_set(args: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _agent_send(user_text: str) -> Tuple[bool, str]:
-    ok, msg = _ensure_agent_ready()
-    if not ok:
-        return False, msg
-
-    _init_agent_tools()
-
+    """
+    Unified Entry Point: All user input now goes through Trinity (Smart Agent).
+    """
     _load_ui_settings()
     unsafe_mode = bool(getattr(state, "ui_unsafe_mode", False))
-
-    allow_run = unsafe_mode or _is_confirmed_run(user_text)
-    allow_autopilot = unsafe_mode or _is_confirmed_autopilot(user_text)
-    allow_shell = unsafe_mode or _is_confirmed_shell(user_text)
-    allow_applescript = unsafe_mode or _is_confirmed_applescript(user_text)
-    global _agent_last_permissions
-    _agent_last_permissions = CommandPermissions(
-        allow_run=allow_run,
-        allow_autopilot=allow_autopilot,
-        allow_shell=allow_shell,
-        allow_applescript=allow_applescript,
-    )
-
-    system_prompt = (
-        "You are an interactive assistant for a macOS cleanup/monitoring CLI.\n"
-        "You can use tools to inspect files, create cleanup modules, control monitoring, and change settings.\n\n"
-        "You may execute any in-app command via app_command (equivalent to typing in the TUI).\n"
-        "You may also control UI theme via ui_theme_status/ui_theme_set (or /theme).\n\n"
-        "Safety rules:\n"
-        "- If Unsafe mode is OFF: require CONFIRM_RUN / CONFIRM_SHELL / CONFIRM_APPLESCRIPT for execution.\n"
-        "- If Unsafe mode is ON: confirmations are bypassed (dangerous). Do not ask the user to confirm; proceed.\n\n"
-        f"Reply in {lang_name(state.chat_lang)}. Be concise and practical.\n"
-    )
-
-    if not agent_session.messages:
-        agent_session.messages = [SystemMessage(content=system_prompt)]
-
-    # Refresh config snapshot for context
-    cfg_snapshot = _load_cleanup_config()
-    agent_session.messages.append(
-        HumanMessage(
-            content=json.dumps(
-                {
-                    "user": user_text,
-                    "cleanup_config": cfg_snapshot,
-                    "hint": "Якщо потрібно виконати пошук/аналіз — викликай tools.",
-                },
-                ensure_ascii=False,
-            )
-        )
-    )
-
-    # Bind tools to CopilotLLM (JSON tool_calls protocol)
-    llm = agent_session.llm.bind_tools(agent_session.tools)
-
-    last_answer = ""
-    use_stream = getattr(state, 'ui_streaming', True)  # Check if streaming is enabled (default True)
     
-    if use_stream:
-        # Use streaming version
-        return _agent_send_with_stream(user_text)
+    # Auto-detect permissions based on request context or unsafe mode
+    # For now, we are generous if unsafe_mode is on.
+    # If off, permissions will be requested dynamically via pause mechanism.
     
-    for _ in range(5):
-        resp = llm.invoke(agent_session.messages)
-        content = str(getattr(resp, "content", "") or "")
-        last_answer = content
-        agent_session.messages.append(resp)
+    _run_graph_agent_task(
+        user_text, 
+        allow_autopilot=unsafe_mode,
+        allow_shell=unsafe_mode,
+        allow_applescript=unsafe_mode
+    )
+    return True, ""
 
-        tool_calls = getattr(resp, "tool_calls", None)
-        if not tool_calls:
-            break
 
-        results: List[Dict[str, Any]] = []
-        for call in tool_calls:
-            name = call.get("name")
-            args = call.get("args") or {}
-
-            if name == "run_module":
-                out = _tool_run_module(args, allow_run=allow_run)
-                results.append({"name": name, "args": args, "result": out})
-                continue
-
-            if name == "run_shell":
-                out = _tool_run_shell_wrapper(args)
-                results.append({"name": name, "args": args, "result": out})
-                inner = out.get("result") if isinstance(out, dict) and isinstance(out.get("result"), dict) else out
-                if isinstance(inner, dict) and inner.get("error_type") == "permission_required":
-                    perm = str(inner.get("permission") or "").strip()
-                    try:
-                        from system_ai.tools import executor as _exec
-
-                        _exec.open_system_settings_privacy(perm)
-                    except Exception:
-                        pass
-                    msg = "Потрібен дозвіл для Terminal у System Settings -> Privacy & Security. Дай доступ і введи /resume. Якщо не допомогло — перезапусти Terminal (Cmd+Q)."
-                    _set_agent_pause(pending_text=user_text, permission=perm, message=msg)
-                    return True, msg
-                continue
-
-            if name == "run_shortcut":
-                out = _tool_run_shortcut(args, allow_shell=allow_shell)
-                results.append({"name": name, "args": args, "result": out})
-                continue
-
-            if name == "run_automator":
-                out = _tool_run_automator(args, allow_shell=allow_shell)
-                results.append({"name": name, "args": args, "result": out})
-                continue
-
-            if name == "run_applescript":
-                out = _tool_run_applescript(args, allow_applescript=allow_applescript)
-                results.append({"name": name, "args": args, "result": out})
-                inner = out.get("result") if isinstance(out, dict) and isinstance(out.get("result"), dict) else out
-                if isinstance(inner, dict) and inner.get("error_type") == "permission_required":
-                    perm = str(inner.get("permission") or "").strip()
-                    try:
-                        from system_ai.tools import executor as _exec
-
-                        _exec.open_system_settings_privacy(perm)
-                    except Exception:
-                        pass
-                    restart_hint = ""
-                    if perm in {"accessibility", "screen_recording", "full_disk_access", "files_and_folders"}:
-                        restart_hint = " Якщо після дозволу все одно не працює — перезапусти Terminal (Cmd+Q і відкрий знову)."
-
-                    if perm == "automation":
-                        msg = "Потрібен дозвіл Automation (Apple Events) для Terminal. Дай доступ у System Settings -> Privacy & Security -> Automation, потім введи /resume." + restart_hint
-                    else:
-                        msg = "Потрібен дозвіл Accessibility (Assistive Access) для Terminal. Дай доступ у System Settings -> Privacy & Security -> Accessibility, потім введи /resume." + restart_hint
-                    _set_agent_pause(pending_text=user_text, permission=perm, message=msg)
-                    return True, msg
-                continue
-
-            tool = next((t for t in agent_session.tools if t.name == name), None)
-            if not tool or not tool.handler:
-                results.append({"name": name, "args": args, "result": {"ok": False, "error": "Unknown tool"}})
-                continue
-
-            try:
-                out = tool.handler(args)
-            except Exception as e:
-                out = {"ok": False, "error": str(e)}
-            results.append({"name": name, "args": args, "result": out})
-
-        agent_session.messages.append(
-            HumanMessage(content=json.dumps({"tool_results": results}, ensure_ascii=False, indent=2))
-        )
-
-    if not last_answer:
-        last_answer = "(без текстової відповіді)"
-    return True, last_answer
 
 
 def get_prompt_width() -> int:

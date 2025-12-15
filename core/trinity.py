@@ -3,7 +3,7 @@ import json
 from langgraph.graph import StateGraph, END
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage
 
-from core.agents.atlas import get_atlas_prompt
+from core.agents.atlas import get_atlas_prompt, get_atlas_plan_prompt
 from core.agents.tetyana import get_tetyana_prompt
 from core.agents.grisha import get_grisha_prompt
 from providers.copilot import CopilotLLM
@@ -125,15 +125,45 @@ class TrinityRuntime:
              except Exception:
                 pass
         
-        # 2. Check if we have a plan. If not, generate one.
+        # 2. Manage Plan State (Consumption)
         plan = state.get("plan")
+        if plan and step_count > 1:
+            # We returned to Atlas inside the loop.
+            # Remove the step we just attempted/completed.
+            if len(plan) > 0:
+                plan.pop(0)
+                # If plan is now empty, we are done!
+                if not plan:
+                    return {"current_agent": "end", "messages": [AIMessage(content="[Atlas] Всі кроки плану виконано успішно.")]}
+
+        # 3. Generate New Plan if empty
         if not plan:
-            raw_plan = [{
-                "id": 1, 
-                "type": "execute", 
-                "description": last_msg,
-                "agent": "tetyana"
-            }]
+            if self.verbose: print("🌐 [Atlas] Generating new plan...")
+            
+            # Use LLM to generate structured plan
+            plan_resp = None
+            try:
+                plan_prompt = get_atlas_plan_prompt(last_msg, context=rag_context)
+                plan_resp = self.llm.invoke(plan_prompt.format_messages())
+                
+                import re
+                json_str = plan_resp.content
+                match = re.search(r"\[.*\]", json_str, re.DOTALL)
+                if match:
+                    json_str = match.group(0)
+                
+                raw_plan = json.loads(json_str)
+                if not isinstance(raw_plan, list):
+                    raise ValueError("Plan is not a list")
+                    
+            except Exception as e:
+                if self.verbose: print(f"⚠️ [Atlas] Smart Planning failed ({e}). Fallback to 1-step.")
+                raw_plan = [{
+                    "id": 1, 
+                    "type": "execute", 
+                    "description": last_msg,
+                    "agent": "tetyana"
+                }]
             
             # Optimize Plan (Adaptive Verification)
             plan = self.verifier.optimize_plan(raw_plan)
@@ -152,6 +182,7 @@ class TrinityRuntime:
         # Invoke Atlas Persona with RAG context
         rag_hint = f"\n\n{rag_context}" if rag_context else ""
         prompt = get_atlas_prompt(f"The plan is: {current_step['description']}. Announce it.{rag_hint}")
+        content = ""  # Initialize content variable
         try:
             response = self.llm.invoke(prompt.format_messages())
             content = response.content
@@ -195,6 +226,7 @@ class TrinityRuntime:
         bound_llm = self.llm.bind_tools(tool_defs)
         
         pause_info = None
+        content = ""  # Initialize content variable
         
         try:
             response = bound_llm.invoke(prompt.format_messages())
@@ -281,6 +313,7 @@ class TrinityRuntime:
         tools_list = self.registry.list_tools()
         prompt = get_grisha_prompt(last_msg, tools_desc=tools_list)
         
+        content = ""  # Initialize content variable
         try:
             response = self.llm.invoke(prompt.format_messages())
             content = response.content

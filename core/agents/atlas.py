@@ -28,6 +28,34 @@ def get_atlas_prompt(task_description: str):
         HumanMessage(content=task_description),
     ])
 
+
+ATLAS_PLANNING_PROMPT = """Ти — Atlas, стратегічний планувальник.
+Твоє завдання: Розбити запит користувача на послідовні, логічні кроки для виконання агентом Tetyana.
+
+Правила планування:
+1. Кроки мають бути атомними (одна конкретна дія).
+2. Описуй ЩО зробити, а не ЯК (Тетяна сама вибере інструмент).
+3. Формат виводу — строго JSON список об'єктів.
+
+Приклад: "Відкрий YouTube і знайди музику"
+[
+  {"description": "Відкрити браузер і перейти на youtube.com", "type": "execute"},
+  {"description": "Ввести в пошук 'music' і натиснути Enter", "type": "execute"},
+  {"description": "Вибрати перше відео", "type": "execute"}
+]
+
+Твоя відповідь має містити ТІЛЬКИ JSON.
+"""
+
+def get_atlas_plan_prompt(task_description: str, context: str = ""):
+    msg = f"Завдання: {task_description}"
+    if context:
+        msg += f"\n\nКонтекст/RAG: {context}"
+    return ChatPromptTemplate.from_messages([
+        SystemMessage(content=ATLAS_PLANNING_PROMPT),
+        HumanMessage(content=msg),
+    ])
+
 # Placeholder for actual LLM call logic if needed separately
 def run_atlas(llm, state):
     # This would invoke the LLM with the prompt and state
