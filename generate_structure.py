@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
 import fnmatch
+import subprocess
+from datetime import datetime
 
 class IgnoreParser:
     def __init__(self, root: Path):
@@ -116,7 +118,45 @@ def build_tree(root: Path, parser: IgnoreParser, prefix: str = "") -> list:
             lines.extend(build_tree(item, parser, prefix + extension))
     return lines
 
-def main(project_root: str = ".", output_file: str = "project_structure_final.txt"):
+def get_git_diff(root: Path) -> str:
+    """Get git diff output."""
+    try:
+        result = subprocess.run(
+            ["git", "diff", "--stat"],
+            cwd=root,
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+        return result.stdout if result.returncode == 0 else "[Git diff unavailable]"
+    except Exception as e:
+        return f"[Error getting git diff: {e}]"
+
+def get_git_log(root: Path, n: int = 5) -> str:
+    """Get last n git commits."""
+    try:
+        result = subprocess.run(
+            ["git", "log", "--oneline", f"-{n}"],
+            cwd=root,
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+        return result.stdout if result.returncode == 0 else "[Git log unavailable]"
+    except Exception as e:
+        return f"[Error getting git log: {e}]"
+
+def get_last_response(response_file: str = ".last_response.txt") -> str:
+    """Get last response from file."""
+    try:
+        if os.path.exists(response_file):
+            with open(response_file, 'r', encoding='utf-8') as f:
+                return f.read()
+    except Exception as e:
+        return f"[Error reading last response: {e}]"
+    return "[No last response available]"
+
+def main(project_root: str = ".", output_file: str = "project_structure_final.txt", last_response: str = None):
     root = Path(project_root).resolve()
     print(f"Сканую проєкт: {root}")
 
@@ -157,7 +197,28 @@ def main(project_root: str = ".", output_file: str = "project_structure_final.tx
         f.write(f"- **Project Root**: `{root}`\n")
         f.write(f"- **Files Included**: {file_count}\n")
         f.write(f"- **Files Skipped**: {skipped}\n")
-        f.write(f"- **Max File Size**: {MAX_FILE_SIZE / (1024*1024):.1f} MB\n\n")
+        f.write(f"- **Max File Size**: {MAX_FILE_SIZE / (1024*1024):.1f} MB\n")
+        f.write(f"- **Generated**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
+
+        f.write("---\n\n")
+
+        # Add last response if provided
+        if last_response:
+            f.write("## Last Response\n\n")
+            f.write(last_response)
+            f.write("\n\n---\n\n")
+
+        # Add git diff
+        f.write("## Git Diff (Recent Changes)\n\n")
+        f.write("```\n")
+        f.write(get_git_diff(root))
+        f.write("```\n\n")
+
+        # Add git log
+        f.write("## Git Log (Last 5 Commits)\n\n")
+        f.write("```\n")
+        f.write(get_git_log(root, n=5))
+        f.write("```\n\n")
 
         f.write("---\n\n")
 
@@ -197,4 +258,9 @@ def main(project_root: str = ".", output_file: str = "project_structure_final.tx
     print(f"Готово! Збережено {file_count} файлів у {output_file} ({size_kb:.1f} KB)")
 
 if __name__ == "__main__":
-    main(project_root=".", output_file="project_structure_final.txt")
+    # Read last response if available
+    last_response = get_last_response(".last_response.txt")
+    if last_response == "[No last response available]":
+        last_response = None
+    
+    main(project_root=".", output_file="project_structure_final.txt", last_response=last_response)
