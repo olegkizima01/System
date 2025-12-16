@@ -123,6 +123,12 @@ class TrinityRuntime:
                 if self.verbose: print(f"🌐 [Atlas] RAG found {len(strategies)} relevant strategies.")
         except Exception:
             pass
+        
+        # 1b. Read project structure context for continual development
+        structure_context = self._get_project_structure_context()
+        if structure_context:
+            rag_context += f"\n\n## Контекст репозиторію (Last Response, Git Log, Recent Changes):\n{structure_context}"
+            if self.verbose: print(f"🌐 [Atlas] Loaded project structure context ({len(structure_context)} chars)")
 
         # Update Summary Memory if context is getting long
         summary = state.get("summary", "")
@@ -558,6 +564,99 @@ class TrinityRuntime:
         except Exception:
             return None
 
+    def _get_project_structure_context(self) -> str:
+        """Read project_structure_final.txt for Atlas context."""
+        try:
+            git_root = self._get_git_root()
+            if not git_root:
+                return ""
+            
+            structure_file = os.path.join(git_root, "project_structure_final.txt")
+            if not os.path.exists(structure_file):
+                return ""
+            
+            with open(structure_file, 'r', encoding='utf-8') as f:
+                content = f.read()
+            
+            # Extract key sections for context (Last Response, Git Log, Recent Changes)
+            lines = content.split('\n')
+            context_lines = []
+            current_section = None
+            section_count = 0
+            
+            for line in lines:
+                # Extract Last Response section
+                if '## Last Response' in line:
+                    current_section = 'last_response'
+                    section_count = 0
+                    continue
+                elif '## Git Diff' in line:
+                    current_section = 'git_diff'
+                    section_count = 0
+                    continue
+                elif '## Git Log' in line:
+                    current_section = 'git_log'
+                    section_count = 0
+                    continue
+                elif line.startswith('## ') and current_section:
+                    current_section = None
+                
+                # Collect lines from key sections (limit to 50 lines per section)
+                if current_section and section_count < 50:
+                    if line.strip() and not line.startswith('```'):
+                        context_lines.append(line)
+                        section_count += 1
+            
+            return '\n'.join(context_lines[:100])  # Limit to 100 lines total
+            
+        except Exception as e:
+            if self.verbose:
+                print(f"⚠️ [Trinity] Error reading project structure: {e}")
+            return ""
+
+    def _regenerate_project_structure(self, response_text: str) -> bool:
+        """Regenerate project_structure_final.txt with last response."""
+        try:
+            git_root = self._get_git_root()
+            if not git_root:
+                if self.verbose:
+                    print("⚠️ [Trinity] Not a git repo, skipping structure regeneration")
+                return False
+            
+            # Save response to .last_response.txt
+            response_file = os.path.join(git_root, ".last_response.txt")
+            with open(response_file, 'w', encoding='utf-8') as f:
+                f.write(response_text)
+            
+            # Run regenerate_structure.sh
+            regenerate_script = os.path.join(git_root, "regenerate_structure.sh")
+            if not os.path.exists(regenerate_script):
+                if self.verbose:
+                    print("⚠️ [Trinity] regenerate_structure.sh not found")
+                return False
+            
+            result = subprocess.run(
+                ["bash", regenerate_script],
+                cwd=git_root,
+                capture_output=True,
+                text=True,
+                timeout=60
+            )
+            
+            if result.returncode == 0:
+                if self.verbose:
+                    print("✓ [Trinity] Project structure regenerated")
+                return True
+            else:
+                if self.verbose:
+                    print(f"⚠️ [Trinity] Structure regeneration failed: {result.stderr}")
+                return False
+                
+        except Exception as e:
+            if self.verbose:
+                print(f"⚠️ [Trinity] Error regenerating structure: {e}")
+            return False
+
     def _get_repo_changes(self) -> Dict[str, Any]:
         root = self._get_git_root()
         if not root:
@@ -753,6 +852,12 @@ class TrinityRuntime:
             last_agent=last_agent_label or last_node_name or "unknown",
             last_message=last_agent_message,
         )
+
+        # Regenerate project structure with final report if task completed successfully
+        if outcome in {"completed", "success"}:
+            if self.verbose:
+                print("🔄 [Trinity] Regenerating project structure with final report...")
+            self._regenerate_project_structure(report)
 
         final_messages = [HumanMessage(content=input_text), AIMessage(content=report)]
         yield {"atlas": {"messages": final_messages, "current_agent": "end", "task_status": outcome}}
