@@ -44,6 +44,29 @@ class TrinityRuntime:
     MAX_REPLANS = 5
     MAX_STEPS = 30
     
+    # Dev task keywords (allow execution)
+    DEV_KEYWORDS = {
+        "код", "code", "python", "javascript", "typescript", "script", "function",
+        "рефакторинг", "refactor", "тест", "test", "git", "commit", "branch",
+        "архітектура", "architecture", "api", "database", "db", "sql",
+        "windsurf", "editor", "ide", "файл", "file", "write", "create",
+        "bug", "fix", "error", "debug", "patch", "merge", "pull request",
+        "deploy", "build", "compile", "run", "execute", "shell", "command",
+        "npm", "pip", "package", "dependency", "import", "module", "library"
+    }
+    
+    # Non-dev keywords (block execution)
+    NON_DEV_KEYWORDS = {
+        "фільм", "movie", "video", "youtube", "netflix", "браузер", "browser",
+        "музика", "music", "spotify", "apple music", "відкрий", "open",
+        "переглянь", "watch", "слухай", "listen", "грай", "play",
+        "скачай", "download", "завантаж", "upload", "фото", "photo",
+        "картинка", "image", "розташування", "location", "карта", "map",
+        "погода", "weather", "новини", "news", "соціальна мережа", "social",
+        "facebook", "instagram", "twitter", "whatsapp", "telegram",
+        "email", "mail", "повідомлення", "message", "чат", "chat"
+    }
+    
     def __init__(
         self,
         verbose: bool = True,
@@ -60,6 +83,26 @@ class TrinityRuntime:
         self.on_stream = on_stream
         self.workflow = self._build_graph()
 
+    def _classify_task(self, task: str) -> tuple[str, bool]:
+        """
+        Classify task as DEV or GENERAL.
+        Returns: (task_type, is_dev)
+        """
+        task_lower = task.lower()
+        
+        # Check for non-dev keywords first (higher priority)
+        for keyword in self.NON_DEV_KEYWORDS:
+            if keyword in task_lower:
+                return ("GENERAL", False)
+        
+        # Check for dev keywords
+        for keyword in self.DEV_KEYWORDS:
+            if keyword in task_lower:
+                return ("DEV", True)
+        
+        # Default: assume DEV if ambiguous (safer for code-focused system)
+        return ("UNKNOWN", True)
+    
     def _build_graph(self):
         builder = StateGraph(TrinityState)
 
@@ -969,6 +1012,36 @@ class TrinityRuntime:
         execution_mode: Optional[str] = None,
         recursion_limit: Optional[int] = None,
     ):
+        # Step 1: Classify task (DEV vs GENERAL)
+        task_type, is_dev = self._classify_task(input_text)
+        
+        if not is_dev:
+            # Block non-dev tasks
+            blocked_message = (
+                f"❌ **Trinity блокує це завдання**\n\n"
+                f"Тип: {task_type}\n\n"
+                f"Trinity працює **ТІЛЬКИ для dev-завдань** (код, рефакторинг, тести, git, архітектура).\n\n"
+                f"Ваше завдання стосується: {input_text[:100]}...\n\n"
+                f"Це **не dev-завдання**, тому Trinity не буде його виконувати.\n\n"
+                f"💡 **Приклади dev-завдань, які Trinity МОЖЕ виконувати:**\n"
+                f"- Напиши скрипт на Python\n"
+                f"- Виправи баг у файлі core/trinity.py\n"
+                f"- Додай нову функцію до API\n"
+                f"- Запусти тести\n"
+                f"- Зроби комміт з описом змін"
+            )
+            
+            if self.verbose:
+                print(blocked_message)
+            
+            # Yield blocked response
+            final_messages = [HumanMessage(content=input_text), AIMessage(content=blocked_message)]
+            yield {"atlas": {"messages": final_messages, "current_agent": "end", "task_status": "blocked"}}
+            return
+        
+        if self.verbose:
+            print(f"✅ [Trinity] Task classified as: {task_type} (DEV mode)")
+        
         gm = str(gui_mode or "auto").strip().lower() or "auto"
         if gm not in {"off", "on", "auto"}:
             gm = "auto"
