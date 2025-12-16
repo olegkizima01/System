@@ -20,6 +20,7 @@ class TrinityPermissions:
     allow_applescript: bool = False
     allow_file_write: bool = False
     allow_gui: bool = False
+    allow_shortcuts: bool = False
 
 # Define the state of the Trinity system
 class TrinityState(TypedDict):
@@ -287,10 +288,10 @@ class TrinityRuntime:
                         results.append(f"[BLOCKED] {name}: permission required")
                         continue
 
-                    if name == "run_shortcut" and not self.permissions.allow_shell:
+                    if name == "run_shortcut" and not self.permissions.allow_shortcuts:
                         pause_info = {
-                            "permission": "shell",
-                            "message": "Потрібен дозвіл на запуск Shortcuts. Введіть /allow shell",
+                            "permission": "shortcuts",
+                            "message": "Потрібен дозвіл на запуск Shortcuts. Введіть /allow shortcuts",
                             "blocked_tool": name,
                             "blocked_args": args,
                         }
@@ -487,10 +488,14 @@ class TrinityRuntime:
     def _router(self, state: TrinityState):
         return state["current_agent"]
 
-    def run(self, input_text: str, *, gui_mode: Optional[str] = None):
+    def run(self, input_text: str, *, gui_mode: Optional[str] = None, execution_mode: Optional[str] = None):
         gm = str(gui_mode or "auto").strip().lower() or "auto"
         if gm not in {"off", "on", "auto"}:
             gm = "auto"
+
+        em = str(execution_mode or "native").strip().lower() or "native"
+        if em not in {"native", "gui"}:
+            em = "native"
 
         initial_state = {
             "messages": [HumanMessage(content=input_text)],
@@ -502,7 +507,7 @@ class TrinityRuntime:
             "summary": None,
             "pause_info": None,
             "gui_mode": gm,
-            "execution_mode": "native",
+            "execution_mode": em,
             "gui_fallback_attempted": False,
         }
         
