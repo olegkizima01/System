@@ -1062,26 +1062,57 @@ class TrinityRuntime:
         )
 
         # Save report to .last_response.txt for generate_structure.py to pick up
-        # Preserve previous response (my analysis) and append new Trinity report
+        # Sequence: My Last Response (if exists) → Trinity Reports
         try:
             existing_content = ""
+            my_response_section = ""
+            trinity_reports_section = ""
+            
             try:
                 with open(".last_response.txt", "r", encoding="utf-8") as f:
                     existing_content = f.read().strip()
             except FileNotFoundError:
                 pass
             
-            # Build new content: keep my analysis, add new Trinity report
-            new_content = ""
+            # Parse existing content to separate my response from Trinity reports
             if existing_content:
-                # If file exists, preserve it and add separator + new report
-                new_content = existing_content + "\n\n---\n\n## Trinity Report\n\n" + report
-            else:
-                # First time: just the report
-                new_content = report
+                if "## My Last Response" in existing_content:
+                    # Extract my response section (everything before first Trinity Report or end)
+                    parts = existing_content.split("## Trinity Report")
+                    my_response_section = parts[0].strip()
+                    if len(parts) > 1:
+                        # Preserve existing Trinity reports
+                        trinity_reports_section = "## Trinity Report" + "## Trinity Report".join(parts[1:])
+                else:
+                    # Old format: treat entire content as Trinity reports
+                    trinity_reports_section = existing_content
+            
+            # Build new content: my response first, then Trinity reports, then new report
+            new_content = ""
+            if my_response_section:
+                new_content = my_response_section
+            
+            if trinity_reports_section:
+                new_content += "\n\n---\n\n" + trinity_reports_section
+            
+            # Add new Trinity report
+            new_content += "\n\n---\n\n## Trinity Report\n\n" + report
             
             with open(".last_response.txt", "w", encoding="utf-8") as f:
                 f.write(new_content)
+            
+            # Step 2: Regenerate project structure with updated .last_response.txt
+            try:
+                subprocess.run(
+                    ["python3", "generate_structure.py"],
+                    capture_output=True,
+                    text=True,
+                    timeout=60,
+                    cwd=self._get_git_root() or "."
+                )
+            except Exception:
+                pass  # Silently fail if structure generation doesn't work
+                
         except Exception:
             pass
 
