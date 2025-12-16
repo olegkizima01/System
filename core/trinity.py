@@ -225,6 +225,9 @@ class TrinityRuntime:
         step_type = current_step.get("type", "execute")
         if step_type == "verify":
             next_agent = "grisha"
+        elif step_type == "bootstrap":
+            # Bootstrap steps are executed by Tetyana with special handling
+            next_agent = "tetyana"
         else:
             next_agent = "tetyana"
             
