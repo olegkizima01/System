@@ -7,7 +7,7 @@ from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.data_structures import Point
 from prompt_toolkit.filters import Condition
 from prompt_toolkit.key_binding import KeyBindings
-from prompt_toolkit.layout.containers import ConditionalContainer, HSplit, VSplit, Window, ScrollablePane
+from prompt_toolkit.layout.containers import ConditionalContainer, HSplit, VSplit, Window
 from prompt_toolkit.layout.controls import BufferControl, FormattedTextControl
 from prompt_toolkit.formatted_text import AnyFormattedText
 from prompt_toolkit.layout.dimension import Dimension
@@ -44,28 +44,28 @@ def build_app(
 ) -> Application:
     header_window = Window(FormattedTextControl(get_header), height=1, style="class:header")
 
-    context_window = ScrollablePane(
-        Window(FormattedTextControl(get_context), style="class:context", wrap_lines=True)
+    context_window = Window(
+        FormattedTextControl(get_context), 
+        style="class:context", 
+        wrap_lines=True
     )
 
-    log_window = ScrollablePane(
-        Window(
-            FormattedTextControl(get_logs, get_cursor_position=get_log_cursor_position),
-            wrap_lines=True,
-        )
+    log_window = Window(
+        FormattedTextControl(get_logs, get_cursor_position=get_log_cursor_position),
+        wrap_lines=True,
     )
 
     # Agent messages panel (clean communication display)
-    agent_messages_window = ScrollablePane(
-        Window(
-            FormattedTextControl(get_agent_messages or (lambda: [])),
-            wrap_lines=True,
-            style="class:agent.panel",
-        )
+    agent_messages_window = Window(
+        FormattedTextControl(get_agent_messages or (lambda: [])),
+        wrap_lines=True,
+        style="class:agent.panel",
     ) if get_agent_messages else None
 
-    menu_window = ScrollablePane(
-        Window(FormattedTextControl(get_menu_content), style="class:menu", wrap_lines=True)
+    menu_window = Window(
+        FormattedTextControl(get_menu_content), 
+        style="class:menu", 
+        wrap_lines=True
     )
 
     input_area = VSplit(
