@@ -221,9 +221,11 @@ class TrinityRuntime:
             next_agent = "tetyana"
             
         # Update state with the plan and counters
+        # Preserve existing messages and add new one
+        updated_messages = list(context) + [AIMessage(content=content)]
         return {
             "current_agent": next_agent, 
-            "messages": [AIMessage(content=content)],
+            "messages": updated_messages,
             "plan": plan,
             "step_count": step_count,
             "replan_count": replan_count,
@@ -384,9 +386,11 @@ class TrinityRuntime:
                 "pause_info": pause_info
             }
         
+        # Preserve existing messages and add new one
+        updated_messages = list(context) + [AIMessage(content=content)]
         return {
             "current_agent": "grisha", 
-            "messages": [AIMessage(content=content)],
+            "messages": updated_messages,
             "execution_mode": execution_mode,
             "gui_mode": gui_mode,
             "gui_fallback_attempted": gui_fallback_attempted,
@@ -484,9 +488,11 @@ class TrinityRuntime:
             # Default fallback - continue to atlas for more instructions
             next_agent = "atlas"
 
+        # Preserve existing messages and add new one
+        updated_messages = list(context) + [AIMessage(content=content)]
         return {
             "current_agent": next_agent, 
-            "messages": [AIMessage(content=content)]
+            "messages": updated_messages
         }
 
     def _router(self, state: TrinityState):
