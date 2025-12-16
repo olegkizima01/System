@@ -92,9 +92,9 @@ class MCPToolRegistry:
             _record_automation_event("open_app", {"name": name}, res)
             return res
 
-        def _run_applescript_wrapped(script: str) -> Any:
-            res = run_applescript(script=script)
-            _record_automation_event("run_applescript", {"script": script}, res)
+        def _run_applescript_wrapped(script: str, allow: bool = True) -> Any:
+            res = run_applescript(script=script, allow=allow)
+            _record_automation_event("run_applescript", {"script": script, "allow": allow}, res)
             return res
 
         def _run_shell_wrapped(command: str, allow: bool = True) -> Any:

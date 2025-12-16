@@ -1473,6 +1473,108 @@ def _tool_list_dir(args: Dict[str, Any]) -> Dict[str, Any]:
         return {"ok": False, "error": str(e)}
 
 
+def _tool_organize_desktop_wrapper(args: Dict[str, Any]) -> Dict[str, Any]:
+    allow_shell = bool(getattr(state, "ui_unsafe_mode", False)) or bool(getattr(_agent_last_permissions, "allow_shell", False))
+    return _tool_organize_desktop(args, allow_shell)
+
+
+def _tool_organize_desktop(args: Dict[str, Any], allow_shell: bool) -> Dict[str, Any]:
+    if not allow_shell:
+        return {"ok": False, "error": "File operations require unsafe mode or CONFIRM_SHELL"}
+
+    desktop_path = str(args.get("desktop_path") or "~/Desktop")
+    target_folder_name = str(args.get("target_folder_name") or "Organized_Files")
+
+    desktop = _safe_abspath(desktop_path)
+    if not desktop or not os.path.exists(desktop):
+        return {"ok": False, "error": f"Path not found: {desktop}"}
+    if not os.path.isdir(desktop):
+        return {"ok": False, "error": f"Not a directory: {desktop}"}
+
+    target_dir = os.path.join(desktop, target_folder_name)
+    try:
+        os.makedirs(target_dir, exist_ok=True)
+    except Exception as e:
+        return {"ok": False, "error": f"Failed to create target dir: {target_dir}. {e}"}
+
+    screenshot_prefixes = (
+        "screenshot",
+        "screen shot",
+        "знімок екрана",
+        "знімок екрану",
+        "снимок экрана",
+    )
+    screenshot_exts = {".png", ".jpg", ".jpeg", ".heic", ".tif", ".tiff", ".bmp", ".gif"}
+
+    def _is_screenshot_file(filename: str) -> bool:
+        name = str(filename or "").strip()
+        if not name:
+            return False
+        base, ext = os.path.splitext(name)
+        if ext.lower() not in screenshot_exts:
+            return False
+        low = base.strip().lower()
+        return any(low.startswith(p) for p in screenshot_prefixes)
+
+    def _unique_dest_path(dest: str) -> str:
+        if not os.path.exists(dest):
+            return dest
+        root, ext = os.path.splitext(dest)
+        i = 2
+        while True:
+            cand = f"{root} ({i}){ext}"
+            if not os.path.exists(cand):
+                return cand
+            i += 1
+
+    deleted = 0
+    moved = 0
+    skipped_dirs = 0
+    errors: List[str] = []
+
+    try:
+        items = sorted(os.listdir(desktop))
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+    for name in items:
+        if name in {".", "..", target_folder_name, ".DS_Store"}:
+            continue
+        src = os.path.join(desktop, name)
+        try:
+            if os.path.isdir(src):
+                skipped_dirs += 1
+                continue
+            if not os.path.isfile(src):
+                continue
+
+            if _is_screenshot_file(name):
+                os.remove(src)
+                deleted += 1
+                continue
+
+            _base, ext = os.path.splitext(name)
+            ext_key = (ext.lower().lstrip(".") or "no_extension")
+            dest_dir = os.path.join(target_dir, ext_key)
+            os.makedirs(dest_dir, exist_ok=True)
+            dest = _unique_dest_path(os.path.join(dest_dir, name))
+            shutil.move(src, dest)
+            moved += 1
+        except Exception as e:
+            errors.append(f"{name}: {e}")
+
+    ok = len(errors) == 0
+    return {
+        "ok": ok,
+        "desktop": desktop,
+        "target_dir": target_dir,
+        "deleted_screenshots": deleted,
+        "moved_files": moved,
+        "skipped_directories": skipped_dirs,
+        "errors": errors[:50],
+    }
+
+
 def _tool_chrome_open_url(args: Dict[str, Any]) -> Dict[str, Any]:
     url = str(args.get("url", "")).strip()
     if not url:
@@ -1748,6 +1850,11 @@ def _init_agent_tools() -> None:
     agent_session.tools = [
         AgentTool(name="scan_traces", description="Scan typical macOS paths for traces of an editor. args: {editor}", handler=_tool_scan_traces),
         AgentTool(name="list_dir", description="List directory entries. args: {path}", handler=_tool_list_dir),
+        AgentTool(
+            name="organize_desktop",
+            description="Delete Desktop screenshots + move remaining files into a target folder by extension (requires CONFIRM_SHELL). args: {desktop_path?, target_folder_name?}",
+            handler=_tool_organize_desktop_wrapper,
+        ),
         AgentTool(name="read_file", description="Read file lines. args: {path, limit?}", handler=_tool_read_file),
         AgentTool(name="grep", description="Grep by regex under root. args: {root, query, max_files?, max_hits?}", handler=_tool_grep),
         AgentTool(name="open_app", description="Open a macOS app by name. args: {name}", handler=_tool_open_app),
@@ -1870,6 +1977,7 @@ def _agent_send_with_stream(user_text: str) -> Tuple[bool, str]:
         "You may also control UI theme via ui_theme_status/ui_theme_set (or /theme).\n\n"
         "IMPORTANT: When user asks to perform actions, YOU MUST execute them automatically using tools.\n"
         "Do NOT ask the user to do things manually - use the available tools to complete the task.\n"
+        "For Desktop cleanup/organization requests, prefer the organize_desktop tool (no run_shell; requires unsafe mode/CONFIRM_SHELL).\n"
         "For calculator tasks: use open_app, then use run_shell with osascript to perform calculations.\n\n"
         "IMPORTANT: Do not claim that a browser task succeeded (e.g. a video/movie is playing or fullscreen) unless you verified it using tools.\n"
         "- For Google Chrome, verify the current page using chrome_active_tab and/or take_screenshot.\n"
@@ -1946,6 +2054,8 @@ def _agent_send_with_stream(user_text: str) -> Tuple[bool, str]:
         if tool_calls:
             log(f"[EXECUTING] Found {len(tool_calls)} tool calls to execute", "action")
             results: List[Dict[str, Any]] = []
+            had_failure = False
+            failures: List[str] = []
             for i, call in enumerate(tool_calls):
                 name = call.get("name")
                 args = call.get("args", {})
@@ -1960,11 +2070,17 @@ def _agent_send_with_stream(user_text: str) -> Tuple[bool, str]:
                 # Check permissions before execution
                 if name == "run_shell" and not allow_shell:
                     log(f"[PERMISSION] Shell access denied. Use /unsafe_mode to enable.", "error")
-                    results.append({"ok": False, "error": "Shell access requires unsafe mode"})
+                    out = {"ok": False, "error": "Shell access requires unsafe mode"}
+                    results.append(out)
+                    had_failure = True
+                    failures.append(f"{name}: {out.get('error')}")
                     continue
                 elif name == "run_app" and not allow_run:
                     log(f"[PERMISSION] App execution denied. Use /unsafe_mode to enable.", "error")
-                    results.append({"ok": False, "error": "App execution requires unsafe mode"})
+                    out = {"ok": False, "error": "App execution requires unsafe mode"}
+                    results.append(out)
+                    had_failure = True
+                    failures.append(f"{name}: {out.get('error')}")
                     continue
                 
                 tool = next((t for t in agent_session.tools if t.name == name), None)
@@ -1974,6 +2090,9 @@ def _agent_send_with_stream(user_text: str) -> Tuple[bool, str]:
                         log(f"[RESULT] Tool {name} executed successfully: {out.get('ok', False)}", "action")
                         if out.get('ok'):
                             log(f"[DETAIL] Result: {out}", "info")
+                        else:
+                            had_failure = True
+                            failures.append(f"{name}: {out.get('error') or out.get('result') or 'failed'}")
                         inner = out.get("result") if isinstance(out, dict) and isinstance(out.get("result"), dict) else out
                         if isinstance(inner, dict) and inner.get("error_type") == "permission_required":
                             perm = str(inner.get("permission") or "").strip()
@@ -2010,15 +2129,32 @@ def _agent_send_with_stream(user_text: str) -> Tuple[bool, str]:
                             ))
                     except Exception as e:
                         log(f"[ERROR] Tool {name} failed: {e}", "error")
-                        results.append({"ok": False, "error": str(e)})
+                        out = {"ok": False, "error": str(e)}
+                        results.append(out)
+                        had_failure = True
+                        failures.append(f"{name}: {out.get('error')}")
                 else:
                     log(f"[ERROR] Tool {name} not found", "error")
-                    results.append({"ok": False, "error": f"Tool {name} not found"})
+                    out = {"ok": False, "error": f"Tool {name} not found"}
+                    results.append(out)
+                    had_failure = True
+                    failures.append(f"{name}: {out.get('error')}")
             
             # Get final response after tool execution
             if results:
                 log(f"[EXECUTING] All tools executed. Getting final response...", "action")
                 try:
+                    if had_failure:
+                        msg = "Деякі дії не виконались:\n" + "\n".join(failures[:12])
+                        if not allow_shell:
+                            msg += "\n\nУвімкни /unsafe_mode або додай CONFIRM_SHELL у запит, щоб дозволити виконання небезпечних дій." 
+                        log(f"[FINAL] {msg}", "info")
+                        try:
+                            from tui.layout import force_ui_update
+                            force_ui_update()
+                        except ImportError:
+                            pass
+                        return True, msg
                     if hasattr(llm, "invoke_with_stream"):
                         final_acc = ""
                         final_stream_idx = _log_reserve_line("action")
@@ -2098,6 +2234,7 @@ def _agent_send_no_stream(user_text: str) -> Tuple[bool, str]:
 
         "IMPORTANT: When user asks to perform actions, YOU MUST execute them automatically using tools.\n"
         "Do NOT ask the user to do things manually - use the available tools to complete the task.\n"
+        "For Desktop cleanup/organization requests, prefer the organize_desktop tool (no run_shell; requires unsafe mode/CONFIRM_SHELL).\n"
         "For calculator tasks: use open_app, then use run_shell with osascript to perform calculations.\n\n"
 
         "IMPORTANT: Do not claim that a browser task succeeded (e.g. a video/movie is playing or fullscreen) unless you verified it using tools.\n"
@@ -2144,6 +2281,8 @@ def _agent_send_no_stream(user_text: str) -> Tuple[bool, str]:
         tool_calls = getattr(final_message, "tool_calls", None)
         if tool_calls:
             results: List[Dict[str, Any]] = []
+            had_failure = False
+            failures: List[str] = []
             for call in tool_calls:
                 name = call.get("name")
                 args = call.get("args", {})
@@ -2157,15 +2296,27 @@ def _agent_send_no_stream(user_text: str) -> Tuple[bool, str]:
 
                 tool = next((t for t in agent_session.tools if t.name == name), None)
                 if not tool:
-                    results.append({"ok": False, "error": f"Tool {name} not found"})
+                    out = {"ok": False, "error": f"Tool {name} not found"}
+                    results.append(out)
+                    had_failure = True
+                    failures.append(f"{name}: {out.get('error')}")
                     continue
 
                 out = tool.handler(args)
                 results.append(out)
+                if not bool(out.get("ok", False)):
+                    had_failure = True
+                    failures.append(f"{name}: {out.get('error') or out.get('result') or 'failed'}")
                 if ToolMessage:
                     agent_session.messages.append(
                         ToolMessage(content=str(out), tool_call_id=call.get("id", "unknown"))
                     )
+
+            if had_failure:
+                msg = "Деякі дії не виконались:\n" + "\n".join(failures[:12])
+                if not allow_shell:
+                    msg += "\n\nУвімкни /unsafe_mode або додай CONFIRM_SHELL у запит, щоб дозволити виконання небезпечних дій."
+                return True, msg
 
             # final response after tools
             final_resp = llm.invoke(agent_session.messages)

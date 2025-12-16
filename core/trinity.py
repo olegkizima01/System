@@ -351,6 +351,14 @@ class TrinityRuntime:
             if results:
                 content += "\n\nTool Results:\n" + "\n".join(results)
 
+            # Save successful action to RAG memory (only if no pause)
+            if not pause_info:
+                try:
+                    action_summary = f"Task: {last_msg[:100]}\nTools used: {[t.get('name') for t in tool_calls]}\nResult: Success"
+                    self.memory.add_memory("strategies", action_summary, {"type": "tetyana_action"})
+                except Exception:
+                    pass
+            
             # Hybrid fallback: if native attempt failed and GUI fallback is allowed, switch execution_mode
             if (
                 (not pause_info)
@@ -360,29 +368,26 @@ class TrinityRuntime:
                 and (not gui_fallback_attempted)
             ):
                 # Tell the graph to retry this step in GUI mode.
+                updated_messages = list(context) + [AIMessage(content=f"[Tetyana] Native execution had failures. Switching to GUI fallback mode.")]
                 return {
                     "current_agent": "tetyana",
-                    "messages": [AIMessage(content=f"[Tetyana] Native execution had failures. Switching to GUI fallback mode.")],
+                    "messages": updated_messages,
                     "execution_mode": "gui",
                     "gui_fallback_attempted": True,
+                    "gui_mode": gui_mode,
                 }
                 
-                # Save successful action to RAG memory (only if no pause)
-                if not pause_info:
-                    try:
-                        action_summary = f"Task: {last_msg[:100]}\nTools used: {[t.get('name') for t in tool_calls]}\nResult: Success"
-                        self.memory.add_memory("strategies", action_summary, {"type": "tetyana_action"})
-                    except Exception:
-                        pass
-                
         except Exception as e:
+            if self.verbose:
+                print(f"⚠️ [Tetyana] Exception: {e}")
             content = f"Error invoking Tetyana: {e}"
         
         # If paused, return to atlas with pause_info
         if pause_info:
+            updated_messages = list(context) + [AIMessage(content=f"[ПАУЗОВАНО] {pause_info['message']}")]
             return {
                 "current_agent": "atlas",
-                "messages": [AIMessage(content=f"[ПАУЗОВАНО] {pause_info['message']}")],
+                "messages": updated_messages,
                 "pause_info": pause_info
             }
         
