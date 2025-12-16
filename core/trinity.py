@@ -233,6 +233,8 @@ class TrinityRuntime:
     def _tetyana_node(self, state: TrinityState):
         if self.verbose: print("💻 [Tetyana] Developing...")
         context = state.get("messages", [])
+        if not context:
+            return {"current_agent": "end", "messages": [AIMessage(content="[Tetyana] No context available.")]}
         last_msg = context[-1].content
 
         gui_mode = str(state.get("gui_mode") or "auto").strip().lower()
@@ -393,6 +395,8 @@ class TrinityRuntime:
     def _grisha_node(self, state: TrinityState):
         if self.verbose: print("👁️ [Grisha] Verifying...")
         context = state.get("messages", [])
+        if not context:
+            return {"current_agent": "end", "messages": [AIMessage(content="[Grisha] No context available.")]}
         last_msg = context[-1].content
 
         gui_mode = str(state.get("gui_mode") or "auto").strip().lower()
