@@ -39,6 +39,11 @@ class TrinityState(TypedDict):
     gui_mode: Optional[str]  # off|on|auto
     execution_mode: Optional[str]  # native|gui
     gui_fallback_attempted: Optional[bool]
+    task_type: Optional[str]  # DEV|GENERAL|UNKNOWN
+    is_dev: Optional[bool]
+    requires_windsurf: Optional[bool]
+    dev_edit_mode: Optional[str]  # windsurf|cli
+    intent_reason: Optional[str]
 
 class TrinityRuntime:
     MAX_REPLANS = 5
@@ -57,6 +62,7 @@ class TrinityRuntime:
     
     # Non-dev keywords (block execution)
     NON_DEV_KEYWORDS = {
+        # Media & Entertainment
         "фільм", "movie", "video", "youtube", "netflix", "браузер", "browser",
         "музика", "music", "spotify", "apple music", "відкрий", "open",
         "переглянь", "watch", "слухай", "listen", "грай", "play",
@@ -64,7 +70,19 @@ class TrinityRuntime:
         "картинка", "image", "розташування", "location", "карта", "map",
         "погода", "weather", "новини", "news", "соціальна мережа", "social",
         "facebook", "instagram", "twitter", "whatsapp", "telegram",
-        "email", "mail", "повідомлення", "message", "чат", "chat"
+        "email", "mail", "повідомлення", "message", "чат", "chat",
+        
+        # Standard macOS folders (non-dev)
+        "documents", "документи", "desktop", "робочий стіл", "downloads", "завантаження",
+        "pictures", "фото", "movies", "фільми", "music", "музика",
+        "applications", "програми", "library", "бібліотека",
+        "~/", "$home", "~", "home", "users", "користувачі",
+        "finder", "фіндер", "trash", "кошик", "recycle bin",
+        
+        # System operations (non-dev)
+        "видалити", "delete", "видали", "remove", "очистити", "clean",
+        "перейменувати", "rename", "скопіювати", "copy", "перемістити", "move",
+        "архівувати", "archive", "zip", "unzip", "compress", "розпакувати"
     }
     
     def __init__(
@@ -83,25 +101,89 @@ class TrinityRuntime:
         self.on_stream = on_stream
         self.workflow = self._build_graph()
 
+    def _extract_json_object(self, text: str) -> Optional[Dict[str, Any]]:
+        try:
+            s = str(text or "").strip()
+            if not s:
+                return None
+            # Try direct JSON first.
+            if s.startswith("{") and s.endswith("}"):
+                obj = json.loads(s)
+                return obj if isinstance(obj, dict) else None
+            # Best-effort extraction of the first JSON object.
+            match = re.search(r"\{.*\}", s, re.DOTALL)
+            if not match:
+                return None
+            obj = json.loads(match.group(0))
+            return obj if isinstance(obj, dict) else None
+        except Exception:
+            return None
+
+    def _classify_task_llm(self, task: str) -> Optional[Dict[str, Any]]:
+        try:
+            disable = str(os.getenv("TRINITY_DISABLE_INTENT_LLM", "")).strip().lower()
+            if disable in {"1", "true", "yes", "on"}:
+                return None
+
+            sys = (
+                "You are a task router for a macOS developer assistant. "
+                "Classify the user request into one of: DEV, GENERAL. "
+                "DEV means software development work or dev-support operations (debugging, checking permissions/disk space/processes for dev tools, git, tests, repo files). "
+                "GENERAL means unrelated household/media/personal tasks. "
+                "Also decide whether the task requires using Windsurf IDE for code generation/editing. "
+                "Return STRICT JSON only with keys: task_type (DEV|GENERAL), requires_windsurf (bool), confidence (0..1), reason (string)."
+            )
+            msgs: List[BaseMessage] = [
+                SystemMessage(content=sys),
+                HumanMessage(content=str(task or "")),
+            ]
+            resp = self.llm.invoke(msgs)
+            data = self._extract_json_object(getattr(resp, "content", ""))
+            if not data:
+                return None
+            task_type = str(data.get("task_type") or "").strip().upper()
+            if task_type not in {"DEV", "GENERAL"}:
+                return None
+            requires_windsurf = bool(data.get("requires_windsurf"))
+            try:
+                confidence = float(data.get("confidence"))
+            except Exception:
+                confidence = 0.0
+            reason = str(data.get("reason") or "").strip()
+            return {
+                "task_type": task_type,
+                "requires_windsurf": requires_windsurf,
+                "confidence": confidence,
+                "reason": reason,
+            }
+        except Exception:
+            return None
+
+    def _classify_task_fallback(self, task: str) -> Dict[str, Any]:
+        task_lower = str(task or "").lower()
+
+        for keyword in self.NON_DEV_KEYWORDS:
+            if keyword in task_lower:
+                return {"task_type": "GENERAL", "requires_windsurf": False, "confidence": 0.2, "reason": "keyword_fallback: non_dev"}
+
+        for keyword in self.DEV_KEYWORDS:
+            if keyword in task_lower:
+                return {"task_type": "DEV", "requires_windsurf": True, "confidence": 0.2, "reason": "keyword_fallback: dev"}
+
+        return {"task_type": "UNKNOWN", "requires_windsurf": True, "confidence": 0.1, "reason": "keyword_fallback: unknown"}
+
     def _classify_task(self, task: str) -> tuple[str, bool]:
         """
         Classify task as DEV or GENERAL.
         Returns: (task_type, is_dev)
         """
-        task_lower = task.lower()
-        
-        # Check for non-dev keywords first (higher priority)
-        for keyword in self.NON_DEV_KEYWORDS:
-            if keyword in task_lower:
-                return ("GENERAL", False)
-        
-        # Check for dev keywords
-        for keyword in self.DEV_KEYWORDS:
-            if keyword in task_lower:
-                return ("DEV", True)
-        
-        # Default: assume DEV if ambiguous (safer for code-focused system)
-        return ("UNKNOWN", True)
+        llm_res = self._classify_task_llm(task)
+        if llm_res:
+            task_type = str(llm_res.get("task_type") or "").strip().upper()
+            return (task_type, task_type == "DEV")
+        fb = self._classify_task_fallback(task)
+        task_type = str(fb.get("task_type") or "").strip().upper()
+        return (task_type, task_type != "GENERAL")
     
     def _build_graph(self):
         builder = StateGraph(TrinityState)
@@ -207,7 +289,17 @@ class TrinityRuntime:
             # Use LLM to generate structured plan
             plan_resp = None
             try:
-                plan_prompt = get_atlas_plan_prompt(last_msg, context=rag_context)
+                routing_hint = ""
+                try:
+                    tt = str(state.get("task_type") or "").strip()
+                    rw = state.get("requires_windsurf")
+                    dem = str(state.get("dev_edit_mode") or "").strip()
+                    if tt or (rw is not None) or dem:
+                        routing_hint = f"\n\n[ROUTING] task_type={tt} requires_windsurf={rw} dev_edit_mode={dem}"
+                except Exception:
+                    routing_hint = ""
+
+                plan_prompt = get_atlas_plan_prompt(last_msg, context=(rag_context + routing_hint))
                 plan_resp = self.llm.invoke(plan_prompt.format_messages())
                 
                 import re
@@ -297,12 +389,21 @@ class TrinityRuntime:
         gui_mode = str(state.get("gui_mode") or "auto").strip().lower()
         execution_mode = str(state.get("execution_mode") or "native").strip().lower()
         gui_fallback_attempted = bool(state.get("gui_fallback_attempted") or False)
+        task_type = str(state.get("task_type") or "").strip().upper()
+        requires_windsurf = bool(state.get("requires_windsurf") or False)
+        dev_edit_mode = str(state.get("dev_edit_mode") or ("windsurf" if requires_windsurf else "cli")).strip().lower()
         
         
+        routing_hint = ""
+        try:
+            routing_hint = f"\n\n[ROUTING] task_type={task_type} requires_windsurf={requires_windsurf} dev_edit_mode={dev_edit_mode}"
+        except Exception:
+            routing_hint = ""
+
         # Inject available tools into Tetyana's prompt.
         # If we are in GUI mode, we still list all tools, but the prompt instructs to prefer GUI primitives.
         tools_list = self.registry.list_tools()
-        prompt = get_tetyana_prompt(last_msg, tools_desc=tools_list)
+        prompt = get_tetyana_prompt(str(last_msg or "") + routing_hint, tools_desc=tools_list)
         
         # Bind tools to LLM for structured tool_calls output.
         tool_defs = []
@@ -345,17 +446,61 @@ class TrinityRuntime:
                 "run_shell",
                 "open_file_in_windsurf",
                 "open_project_in_windsurf",
+                "is_windsurf_running",
+                "get_windsurf_current_project_path",
+            }
+            file_write_tools = {
+                "write_file",
+                "copy_file",
+            }
+            windsurf_tools = {
+                "send_to_windsurf",
+                "open_file_in_windsurf",
+                "open_project_in_windsurf",
+                "is_windsurf_running",
+                "get_windsurf_current_project_path",
             }
             if tool_calls:
                 for tool in tool_calls:
                     name = tool.get("name")
                     args = tool.get("args") or {}
+
+                    # Never use the dev subsystem for GENERAL tasks (prevents accidental Windsurf launches).
+                    if task_type == "GENERAL" and name in windsurf_tools:
+                        results.append(f"[BLOCKED] {name}: GENERAL task must not use Windsurf dev subsystem")
+                        continue
+                    if task_type == "GENERAL" and name in file_write_tools:
+                        results.append(f"[BLOCKED] {name}: GENERAL task must not write project files")
+                        continue
+
+                    # Enforce Windsurf-first coding: block direct file writes unless we are in CLI fallback mode.
+                    if (
+                        name in file_write_tools
+                        and task_type in {"DEV", "UNKNOWN"}
+                        and requires_windsurf
+                        and dev_edit_mode == "windsurf"
+                    ):
+                        results.append(
+                            f"[BLOCKED] {name}: DEV task requires Windsurf-first. Use send_to_windsurf/open_file_in_windsurf, or switch to CLI fallback if Windsurf is unavailable."
+                        )
+                        continue
+
+                    # Permission check for file writes
+                    if name in file_write_tools and not self.permissions.allow_file_write:
+                        pause_info = {
+                            "permission": "file_write",
+                            "message": "Потрібен дозвіл на запис у файли. Увімкніть Unsafe mode в TUI або перезапустіть задачу з allow_file_write.",
+                            "blocked_tool": name,
+                            "blocked_args": args,
+                        }
+                        results.append(f"[BLOCKED] {name}: permission required")
+                        continue
                     
                     # Permission check for dangerous tools
                     if name in shell_tools and not self.permissions.allow_shell:
                         pause_info = {
                             "permission": "shell",
-                            "message": "Потрібен дозвіл на виконання shell команд. Введіть /allow shell",
+                            "message": "Потрібен дозвіл на виконання shell команд. Увімкніть Unsafe mode або додайте CONFIRM_SHELL у запит.",
                             "blocked_tool": name,
                             "blocked_args": args
                         }
@@ -365,7 +510,7 @@ class TrinityRuntime:
                     if name == "run_shortcut" and not self.permissions.allow_shortcuts:
                         pause_info = {
                             "permission": "shortcuts",
-                            "message": "Потрібен дозвіл на запуск Shortcuts. Введіть /allow shortcuts",
+                            "message": "Потрібен дозвіл на запуск Shortcuts. Увімкніть Unsafe mode (або дозвольте shortcuts у налаштуваннях).",
                             "blocked_tool": name,
                             "blocked_args": args,
                         }
@@ -375,7 +520,7 @@ class TrinityRuntime:
                     if name in applescript_tools and not self.permissions.allow_applescript:
                         pause_info = {
                             "permission": "applescript",
-                            "message": "Потрібен дозвіл на виконання AppleScript. Введіть /allow applescript",
+                            "message": "Потрібен дозвіл на виконання AppleScript. Увімкніть Unsafe mode або додайте CONFIRM_APPLESCRIPT у запит.",
                             "blocked_tool": name,
                             "blocked_args": args
                         }
@@ -384,7 +529,7 @@ class TrinityRuntime:
                     if name in gui_tools and not self.permissions.allow_gui:
                         pause_info = {
                             "permission": "gui",
-                            "message": "Потрібен дозвіл на GUI automation (mouse/keyboard). Увімкніть unsafe/gui mode.",
+                            "message": "Потрібен дозвіл на GUI automation (mouse/keyboard). Увімкніть Unsafe mode або додайте CONFIRM_GUI у запит.",
                             "blocked_tool": name,
                             "blocked_args": args,
                         }
@@ -395,6 +540,28 @@ class TrinityRuntime:
                     # Execute via MCP Registry
                     res_str = self.registry.execute(name, args)
                     results.append(f"Result for {name}: {res_str}")
+
+                    # Detect Windsurf failures to enable CLI fallback on next loop.
+                    windsurf_failed = False
+                    if name in windsurf_tools:
+                        try:
+                            res_dict = json.loads(res_str)
+                            if isinstance(res_dict, dict) and str(res_dict.get("status", "")).lower() == "error":
+                                windsurf_failed = True
+                        except Exception:
+                            pass
+                        if windsurf_failed and not pause_info and dev_edit_mode == "windsurf":
+                            updated_messages = list(context) + [
+                                AIMessage(content="[Tetyana] Windsurf tool failed. Switching DEV editing fallback to CLI mode.")
+                            ]
+                            return {
+                                "current_agent": "atlas",
+                                "messages": updated_messages,
+                                "dev_edit_mode": "cli",
+                                "execution_mode": execution_mode,
+                                "gui_mode": gui_mode,
+                                "gui_fallback_attempted": gui_fallback_attempted,
+                            }
 
                     # Track failures for fallback decision
                     try:
@@ -469,6 +636,7 @@ class TrinityRuntime:
             "execution_mode": execution_mode,
             "gui_mode": gui_mode,
             "gui_fallback_attempted": gui_fallback_attempted,
+            "dev_edit_mode": dev_edit_mode,
         }
 
     def _grisha_node(self, state: TrinityState):
@@ -1012,11 +1180,27 @@ class TrinityRuntime:
         execution_mode: Optional[str] = None,
         recursion_limit: Optional[int] = None,
     ):
-        # Step 1: Classify task (DEV vs GENERAL)
-        task_type, is_dev = self._classify_task(input_text)
-        
-        if not is_dev:
-            # Block non-dev tasks
+        # Step 1: Classify task (LLM intent routing; keyword fallback)
+        llm_res = self._classify_task_llm(input_text)
+        if llm_res:
+            task_type = str(llm_res.get("task_type") or "").strip().upper()
+            requires_windsurf = bool(llm_res.get("requires_windsurf") or False)
+            intent_reason = str(llm_res.get("reason") or "").strip()
+        else:
+            fb = self._classify_task_fallback(input_text)
+            task_type = str(fb.get("task_type") or "").strip().upper()
+            requires_windsurf = bool(fb.get("requires_windsurf") or False)
+            intent_reason = str(fb.get("reason") or "").strip()
+
+        is_dev = task_type != "GENERAL"
+
+        routing_mode = str(os.getenv("TRINITY_ROUTING_MODE", "dev_only")).strip().lower() or "dev_only"
+        allow_general = (
+            routing_mode in {"hybrid", "all", "general"}
+            or str(os.getenv("TRINITY_ALLOW_GENERAL", "")).strip().lower() in {"1", "true", "yes", "on"}
+        )
+
+        if not is_dev and not allow_general:
             blocked_message = (
                 f"❌ **Trinity блокує це завдання**\n\n"
                 f"Тип: {task_type}\n\n"
@@ -1030,17 +1214,16 @@ class TrinityRuntime:
                 f"- Запусти тести\n"
                 f"- Зроби комміт з описом змін"
             )
-            
+
             if self.verbose:
                 print(blocked_message)
-            
-            # Yield blocked response
+
             final_messages = [HumanMessage(content=input_text), AIMessage(content=blocked_message)]
             yield {"atlas": {"messages": final_messages, "current_agent": "end", "task_status": "blocked"}}
             return
-        
+
         if self.verbose:
-            print(f"✅ [Trinity] Task classified as: {task_type} (DEV mode)")
+            print(f"✅ [Trinity] Task classified as: {task_type} (is_dev={is_dev}, requires_windsurf={requires_windsurf})")
         
         gm = str(gui_mode or "auto").strip().lower() or "auto"
         if gm not in {"off", "on", "auto"}:
@@ -1074,6 +1257,11 @@ class TrinityRuntime:
             "gui_mode": gm,
             "execution_mode": em,
             "gui_fallback_attempted": False,
+            "task_type": task_type,
+            "is_dev": bool(is_dev),
+            "requires_windsurf": bool(requires_windsurf),
+            "dev_edit_mode": "windsurf" if bool(requires_windsurf) else "cli",
+            "intent_reason": intent_reason,
         }
 
         last_node_name: str = ""
