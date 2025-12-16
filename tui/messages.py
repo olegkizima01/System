@@ -161,7 +161,11 @@ class MessageBuffer:
     
     def get_formatted(self) -> List[Tuple[str, str]]:
         """Get all messages formatted for display."""
-        return MessageFormatter.format_messages(self.messages)
+        try:
+            msgs_copy = list(self.messages)
+            return MessageFormatter.format_messages(msgs_copy)
+        except Exception:
+            return []
     
     def clear(self) -> None:
         """Clear all messages."""

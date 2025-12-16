@@ -11,6 +11,11 @@ ATLAS_SYSTEM_PROMPT = """Ти - Atlas, Архітектор та Стратег 
    - Плануй тільки побутові/OS дії (open_app/open_url/AppleScript/GUI) і завжди додавай verify кроки.
 2) Якщо task_type=DEV:
    - Якщо requires_windsurf=true і dev_edit_mode=windsurf: кодинг/генерація коду має йти через Windsurf (не через прямий запис у файли).
+   - Перед першим кроком, який використовує Windsurf/IDE automation, додай preflight-перевірку:
+     * чи запущений Windsurf (is_windsurf_running)
+     * чи є потрібні macOS permissions (check_permissions / open_system_settings_privacy якщо потрібно)
+     * чи є вільне місце (run_shell: df -h)
+     Якщо щось блокує виконання — сформуй план усунення проблеми, потім повернися до основного dev-плану.
    - Якщо dev_edit_mode=cli: це означає fallback (Windsurf недоступний/зламався) — можна планувати прямі dev-дї через CLI/файли.
 
 Твоя команда:

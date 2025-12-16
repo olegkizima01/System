@@ -330,15 +330,22 @@ def _get_render_log_snapshot() -> Tuple[List[Tuple[str, str]], Point]:
     try:
         ts = float(_render_log_cache.get("ts", 0.0))
         if (now - ts) < _render_log_cache_ttl_s:
-            return (
-                list(_render_log_cache.get("logs") or []),
-                _render_log_cache.get("cursor") or Point(x=0, y=0),
-            )
+            cached = _render_log_cache.get("logs") or []
+            try:
+                return (
+                    list(cached),
+                    _render_log_cache.get("cursor") or Point(x=0, y=0),
+                )
+            except Exception:
+                pass
     except Exception:
         pass
 
     with _logs_lock:
-        logs_snapshot: List[Tuple[str, str]] = list(state.logs)
+        try:
+            logs_snapshot: List[Tuple[str, str]] = list(state.logs)
+        except Exception:
+            logs_snapshot = []
 
     line_count = 0
     for _, text in logs_snapshot:
@@ -667,14 +674,21 @@ def _list_editors(cfg: Dict[str, Any]) -> List[Tuple[str, str]]:
 
 
 def get_logs() -> List[Tuple[str, str]]:
-    logs_snapshot, _ = _get_render_log_snapshot()
-    return logs_snapshot
+    try:
+        logs_snapshot, _ = _get_render_log_snapshot()
+        return logs_snapshot if logs_snapshot else []
+    except Exception:
+        return []
 
 
 def get_agent_messages() -> List[Tuple[str, str]]:
     """Get formatted agent messages for clean display panel."""
-    with _agent_messages_lock:
-        return _agent_messages_buffer.get_formatted()
+    try:
+        with _agent_messages_lock:
+            formatted = _agent_messages_buffer.get_formatted()
+            return formatted if formatted else []
+    except Exception:
+        return []
 
 
 def _find_module(cfg: Dict[str, Any], editor: str, module_id: str) -> Optional[ModuleRef]:

@@ -3,14 +3,20 @@
 ## Metadata
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
-- **Files Included**: 105
-- **Files Skipped**: 24788
+- **Files Included**: 106
+- **Files Skipped**: 24803
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-16 21:06:16
+- **Generated**: 2025-12-16 21:25:50
 
 ---
 
 ## Last Response
+
+
+
+---
+
+---
 
 [Atlas] Final report
 
@@ -52,22 +58,102 @@ Verification:
 Tests:
 - not executed by Trinity (no deterministic test runner in pipeline)
 
+---
+
+## Trinity Report
+
+[Atlas] Final report
+
+Task: Велике комплексне завдання: Створення автоматизованого звіту про систему
+1. Створи папку для звіту на робочому столі з назвою "System_Report_2025"
+2. Зроби скріншот всього екрану і збережи його в цю папку як "desktop_screenshot.png"
+3. Відкрий Safari, перейди на сайт apple.com, зроби скріншот вікна Safari, збережи як "safari_apple.png"
+4. Відкрой Finder і покажи вміст папки Downloads. Зроби скріншот Finder, збережи як "finder_downloads.png"
+    * Створи текстовий файл "system_info.txt" в папці звіту з такою інформацією:
+    * Дата і час створення звіту
+    * Ім'я користувача системи
+    * Версія macOS
+    * Кількість RAM (пам'яті)
+    * Інформація про процесор
+5. Відкрой Chrome в гостьовому режимі, перейди на google.com, знайди інформацію про "macOS automation", зроби скріншот, збережи як "chrome_search.png"
+6. Створи Shortcuts (якщо увімкнено), який автоматично відкриває Terminal і виконує команду "date", збережи як "auto_date_shortcut"
+7. Згенеруй звіт - створи файл "report_summary.md" з описом всіх виконаних дій, списком створених файлів та їх розмірами
+8. Архівуй всю папку System_Report_2025 в ZIP файл з назвою "System_Report_2025.zip"
+9. Надішлі сповіщення про завершення завдання з текстом "Звіт про систему успішно створено"
+10.  Надішлі сповіщення про завершення завдання з текстом "Звіт про систему успішно створено"
+Outcome: completed
+Зміни закомічені: 6cb2c896ad44f2f536e20c35e6d5318771e67e69
+Last agent: atlas
+
+Last message:
+[Atlas] Всі кроки плану виконано успішно.
+
+Changed files:
+- (no uncommitted changes detected)
+
+Verification:
+- status: passed (heuristic)
+
+Tests:
+- not executed by Trinity (no deterministic test runner in pipeline)
+
+---
+
+## Trinity Report (Final)
+
+[Atlas] Final report
+
+Task: Велике комплексне завдання: Створення автоматизованого звіту про систему
+1. Створи папку для звіту на робочому столі з назвою "System_Report_2025"
+2. Зроби скріншот всього екрану і збережи його в цю папку як "desktop_screenshot.png"
+3. Відкрий Safari, перейди на сайт apple.com, зроби скріншот вікна Safari, збережи як "safari_apple.png"
+4. Відкрой Finder і покажи вміст папки Downloads. Зроби скріншот Finder, збережи як "finder_downloads.png"
+    * Створи текстовий файл "system_info.txt" в папці звіту з такою інформацією:
+    * Дата і час створення звіту
+    * Ім'я користувача системи
+    * Версія macOS
+    * Кількість RAM (пам'яті)
+    * Інформація про процесор
+5. Відкрой Chrome в гостьовому режимі, перейди на google.com, знайди інформацію про "macOS automation", зроби скріншот, збережи як "chrome_search.png"
+6. Створи Shortcuts (якщо увімкнено), який автоматично відкриває Terminal і виконує команду "date", збережи як "auto_date_shortcut"
+7. Згенеруй звіт - створи файл "report_summary.md" з описом всіх виконаних дій, списком створених файлів та їх розмірами
+8. Архівуй всю папку System_Report_2025 в ZIP файл з назвою "System_Report_2025.zip"
+9. Надішлі сповіщення про завершення завдання з текстом "Звіт про систему успішно створено"
+10.  Надішлі сповіщення про завершення завдання з текстом "Звіт про систему успішно створено"
+Outcome: completed
+Зміни закомічені: 6cb2c896ad44f2f536e20c35e6d5318771e67e69
+Last agent: atlas
+
+Last message:
+[Atlas] Всі кроки плану виконано успішно.
+
+Changed files:
+- (no uncommitted changes detected)
+
+Verification:
+- status: passed (heuristic)
+
+Tests:
+- not executed by Trinity (no deterministic test runner in pipeline)
+
 
 ---
 
 ## Git Diff (Recent Changes)
 
 ```
+ project_structure_final.txt | 33127 ------------------------------------------
+ 1 file changed, 33127 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-0ddcb68 Trinity task completed: Велике комплексне завдання: Створення автоматизованого звіту про систем…
+b31e5cf Fix TUI race condition in log/message rendering and add intent routing tests
+6cb2c89 Trinity task completed: Велике комплексне завдання: Створення автоматизованого звіту про систем…
 535558e Fix Grisha routing, stabilize workflow, finalize dev cycle
 d85ee31 Add: save_response.sh script for manual response capture
 777a42d Тестовий пустий коміт
-def9ec4 Add: Task classifier to block non-dev tasks and enforce dev-only mode
 ```
 
 ---
@@ -165,6 +251,7 @@ System/
 │   ├── test_bootstrap_e2e.py
 │   ├── test_cli_parsing.py
 │   ├── test_grisha_routing.py
+│   ├── test_intent_routing.py
 │   ├── test_mcp_registry.py
 │   ├── test_trinity_autocommit.py
 │   └── test_vision_find_image.py
@@ -517,9 +604,15 @@ Windsurf*.app/
 kinotavr.md
 ```
 
-### `.last_response.txt` (2.6 KB)
+### `.last_response.txt` (7.6 KB)
 
 ```text
+
+
+---
+
+---
+
 [Atlas] Final report
 
 Task: Велике комплексне завдання: Створення автоматизованого звіту про систему
@@ -553,6 +646,84 @@ Diff stat:
 core/agents/atlas.py |  17 ++--
  core/trinity.py      | 250 ++++++++++++++++++++++++++++++++++++++++++++-------
  2 files changed, 230 insertions(+), 37 deletions(-)
+
+Verification:
+- status: passed (heuristic)
+
+Tests:
+- not executed by Trinity (no deterministic test runner in pipeline)
+
+---
+
+## Trinity Report
+
+[Atlas] Final report
+
+Task: Велике комплексне завдання: Створення автоматизованого звіту про систему
+1. Створи папку для звіту на робочому столі з назвою "System_Report_2025"
+2. Зроби скріншот всього екрану і збережи його в цю папку як "desktop_screenshot.png"
+3. Відкрий Safari, перейди на сайт apple.com, зроби скріншот вікна Safari, збережи як "safari_apple.png"
+4. Відкрой Finder і покажи вміст папки Downloads. Зроби скріншот Finder, збережи як "finder_downloads.png"
+    * Створи текстовий файл "system_info.txt" в папці звіту з такою інформацією:
+    * Дата і час створення звіту
+    * Ім'я користувача системи
+    * Версія macOS
+    * Кількість RAM (пам'яті)
+    * Інформація про процесор
+5. Відкрой Chrome в гостьовому режимі, перейди на google.com, знайди інформацію про "macOS automation", зроби скріншот, збережи як "chrome_search.png"
+6. Створи Shortcuts (якщо увімкнено), який автоматично відкриває Terminal і виконує команду "date", збережи як "auto_date_shortcut"
+7. Згенеруй звіт - створи файл "report_summary.md" з описом всіх виконаних дій, списком створених файлів та їх розмірами
+8. Архівуй всю папку System_Report_2025 в ZIP файл з назвою "System_Report_2025.zip"
+9. Надішлі сповіщення про завершення завдання з текстом "Звіт про систему успішно створено"
+10.  Надішлі сповіщення про завершення завдання з текстом "Звіт про систему успішно створено"
+Outcome: completed
+Зміни закомічені: 6cb2c896ad44f2f536e20c35e6d5318771e67e69
+Last agent: atlas
+
+Last message:
+[Atlas] Всі кроки плану виконано успішно.
+
+Changed files:
+- (no uncommitted changes detected)
+
+Verification:
+- status: passed (heuristic)
+
+Tests:
+- not executed by Trinity (no deterministic test runner in pipeline)
+
+---
+
+## Trinity Report (Final)
+
+[Atlas] Final report
+
+Task: Велике комплексне завдання: Створення автоматизованого звіту про систему
+1. Створи папку для звіту на робочому столі з назвою "System_Report_2025"
+2. Зроби скріншот всього екрану і збережи його в цю папку як "desktop_screenshot.png"
+3. Відкрий Safari, перейди на сайт apple.com, зроби скріншот вікна Safari, збережи як "safari_apple.png"
+4. Відкрой Finder і покажи вміст папки Downloads. Зроби скріншот Finder, збережи як "finder_downloads.png"
+    * Створи текстовий файл "system_info.txt" в папці звіту з такою інформацією:
+    * Дата і час створення звіту
+    * Ім'я користувача системи
+    * Версія macOS
+    * Кількість RAM (пам'яті)
+    * Інформація про процесор
+5. Відкрой Chrome в гостьовому режимі, перейди на google.com, знайди інформацію про "macOS automation", зроби скріншот, збережи як "chrome_search.png"
+6. Створи Shortcuts (якщо увімкнено), який автоматично відкриває Terminal і виконує команду "date", збережи як "auto_date_shortcut"
+7. Згенеруй звіт - створи файл "report_summary.md" з описом всіх виконаних дій, списком створених файлів та їх розмірами
+8. Архівуй всю папку System_Report_2025 в ZIP файл з назвою "System_Report_2025.zip"
+9. Надішлі сповіщення про завершення завдання з текстом "Звіт про систему успішно створено"
+10.  Надішлі сповіщення про завершення завдання з текстом "Звіт про систему успішно створено"
+Outcome: completed
+Зміни закомічені: 6cb2c896ad44f2f536e20c35e6d5318771e67e69
+Last agent: atlas
+
+Last message:
+[Atlas] Всі кроки плану виконано успішно.
+
+Changed files:
+- (no uncommitted changes detected)
 
 Verification:
 - status: passed (heuristic)
@@ -7390,7 +7561,7 @@ c0c61642-aff6-41cf-b182-10e49179bdf9
 {"name":"original","created":"2025-12-15 09:51:37","hostname":"Mini-Adam"}
 ```
 
-### `core/agents/atlas.py` (7.1 KB)
+### `core/agents/atlas.py` (7.7 KB)
 
 ```python
 from langchain_core.prompts import ChatPromptTemplate
@@ -7406,6 +7577,11 @@ ATLAS_SYSTEM_PROMPT = """Ти - Atlas, Архітектор та Стратег 
    - Плануй тільки побутові/OS дії (open_app/open_url/AppleScript/GUI) і завжди додавай verify кроки.
 2) Якщо task_type=DEV:
    - Якщо requires_windsurf=true і dev_edit_mode=windsurf: кодинг/генерація коду має йти через Windsurf (не через прямий запис у файли).
+   - Перед першим кроком, який використовує Windsurf/IDE automation, додай preflight-перевірку:
+     * чи запущений Windsurf (is_windsurf_running)
+     * чи є потрібні macOS permissions (check_permissions / open_system_settings_privacy якщо потрібно)
+     * чи є вільне місце (run_shell: df -h)
+     Якщо щось блокує виконання — сформуй план усунення проблеми, потім повернися до основного dev-плану.
    - Якщо dev_edit_mode=cli: це означає fallback (Windsurf недоступний/зламався) — можна планувати прямі dev-дї через CLI/файли.
 
 Твоя команда:
@@ -8024,7 +8200,7 @@ def query_memory_tool(category: str, query: str) -> Dict[str, Any]:
     return {"status": "success", "results": results}
 ```
 
-### `core/trinity.py` (60.8 KB)
+### `core/trinity.py` (58.4 KB)
 
 ```python
 from typing import Annotated, TypedDict, Literal, List, Dict, Any, Optional, Callable
@@ -8150,6 +8326,9 @@ class TrinityRuntime:
 
     def _classify_task_llm(self, task: str) -> Optional[Dict[str, Any]]:
         try:
+            if os.getenv("PYTEST_CURRENT_TEST"):
+                return None
+
             disable = str(os.getenv("TRINITY_DISABLE_INTENT_LLM", "")).strip().lower()
             if disable in {"1", "true", "yes", "on"}:
                 return None
@@ -8494,7 +8673,6 @@ class TrinityRuntime:
                     name = tool.get("name")
                     args = tool.get("args") or {}
 
-                    # Never use the dev subsystem for GENERAL tasks (prevents accidental Windsurf launches).
                     if task_type == "GENERAL" and name in windsurf_tools:
                         results.append(f"[BLOCKED] {name}: GENERAL task must not use Windsurf dev subsystem")
                         continue
@@ -8502,7 +8680,6 @@ class TrinityRuntime:
                         results.append(f"[BLOCKED] {name}: GENERAL task must not write project files")
                         continue
 
-                    # Enforce Windsurf-first coding: block direct file writes unless we are in CLI fallback mode.
                     if (
                         name in file_write_tools
                         and task_type in {"DEV", "UNKNOWN"}
@@ -8570,7 +8747,6 @@ class TrinityRuntime:
                     res_str = self.registry.execute(name, args)
                     results.append(f"Result for {name}: {res_str}")
 
-                    # Detect Windsurf failures to enable CLI fallback on next loop.
                     windsurf_failed = False
                     if name in windsurf_tools:
                         try:
@@ -9351,101 +9527,54 @@ class TrinityRuntime:
             commit_hash=commit_hash,
         )
 
-        # Save report to .last_response.txt for generate_structure.py to pick up
-        # Sequence: My Last Response (if exists) → Trinity Reports
-        try:
-            existing_content = ""
-            my_response_section = ""
-            trinity_reports_section = ""
-            
+        if commit_hash is None:
             try:
-                with open(".last_response.txt", "r", encoding="utf-8") as f:
-                    existing_content = f.read().strip()
-            except FileNotFoundError:
-                pass
-            
-            # Parse existing content to separate my response from Trinity reports
-            if existing_content:
-                if "## My Last Response" in existing_content:
-                    # Extract my response section (everything before first Trinity Report or end)
-                    parts = existing_content.split("## Trinity Report")
-                    my_response_section = parts[0].strip()
-                    if len(parts) > 1:
-                        # Preserve existing Trinity reports
-                        trinity_reports_section = "## Trinity Report" + "## Trinity Report".join(parts[1:])
-                else:
-                    # Old format: treat entire content as Trinity reports
-                    trinity_reports_section = existing_content
-            
-            # Build new content: my response first, then Trinity reports, then new report
-            new_content = ""
-            if my_response_section:
-                new_content = my_response_section
-            
-            if trinity_reports_section:
-                new_content += "\n\n---\n\n" + trinity_reports_section
-            
-            # Add new Trinity report
-            new_content += "\n\n---\n\n## Trinity Report\n\n" + report
-            
-            with open(".last_response.txt", "w", encoding="utf-8") as f:
-                f.write(new_content)
-            
-            # Step 2: Regenerate project structure with updated .last_response.txt
-            try:
-                subprocess.run(
-                    ["python3", "generate_structure.py"],
-                    capture_output=True,
-                    text=True,
-                    timeout=60,
-                    cwd=self._get_git_root() or "."
-                )
+                existing_content = ""
+                my_response_section = ""
+                trinity_reports_section = ""
+
+                try:
+                    with open(".last_response.txt", "r", encoding="utf-8") as f:
+                        existing_content = f.read().strip()
+                except FileNotFoundError:
+                    pass
+
+                if existing_content:
+                    if "## My Last Response" in existing_content:
+                        parts = existing_content.split("## Trinity Report")
+                        my_response_section = parts[0].strip()
+                        if len(parts) > 1:
+                            trinity_reports_section = "## Trinity Report" + "## Trinity Report".join(parts[1:])
+                    else:
+                        trinity_reports_section = existing_content
+
+                new_content = ""
+                if my_response_section:
+                    new_content = my_response_section
+
+                if trinity_reports_section:
+                    new_content += "\n\n---\n\n" + trinity_reports_section
+
+                new_content += "\n\n---\n\n## Trinity Report\n\n" + report
+
+                with open(".last_response.txt", "w", encoding="utf-8") as f:
+                    f.write(new_content)
+
+                try:
+                    subprocess.run(
+                        ["python3", "generate_structure.py"],
+                        capture_output=True,
+                        text=True,
+                        timeout=60,
+                        cwd=self._get_git_root() or ".",
+                    )
+                except Exception:
+                    pass
+
             except Exception:
-                pass  # Silently fail if structure generation doesn't work
-                
-        except Exception:
-            pass
+                pass
 
         final_messages = [HumanMessage(content=input_text), AIMessage(content=report)]
-        
-        # Auto-save final report to .last_response.txt for next cycle
-        try:
-            # Append final report as Trinity Report
-            existing_content = ""
-            try:
-                with open(".last_response.txt", "r", encoding="utf-8") as f:
-                    existing_content = f.read().strip()
-            except FileNotFoundError:
-                pass
-            
-            # Parse to separate my response from Trinity reports
-            my_response_section = ""
-            trinity_reports_section = ""
-            
-            if existing_content:
-                if "## My Last Response" in existing_content:
-                    parts = existing_content.split("## Trinity Report")
-                    my_response_section = parts[0].strip()
-                    if len(parts) > 1:
-                        trinity_reports_section = "## Trinity Report" + "## Trinity Report".join(parts[1:])
-                else:
-                    trinity_reports_section = existing_content
-            
-            # Build new content: preserve my response, add new Trinity report
-            new_content = ""
-            if my_response_section:
-                new_content = my_response_section
-            
-            if trinity_reports_section:
-                new_content += "\n\n---\n\n" + trinity_reports_section
-            
-            # Add final Trinity report
-            new_content += "\n\n---\n\n## Trinity Report (Final)\n\n" + report
-            
-            with open(".last_response.txt", "w", encoding="utf-8") as f:
-                f.write(new_content)
-        except Exception:
-            pass
         
         yield {"atlas": {"messages": final_messages, "current_agent": "end", "task_status": outcome}}
 ```
@@ -15654,6 +15783,117 @@ def test_grisha_explicit_verified_marker_ends(monkeypatch: pytest.MonkeyPatch, g
     assert out["current_agent"] == "end"
 ```
 
+### `tests/test_intent_routing.py` (3.1 KB)
+
+```python
+import json
+
+import pytest
+from langchain_core.messages import AIMessage
+
+from core.trinity import TrinityRuntime, TrinityPermissions
+
+
+class _DummyToolLLM:
+    def __init__(self, tool_calls):
+        self._tool_calls = tool_calls
+
+    def bind_tools(self, _tools):
+        return self
+
+    def invoke(self, _messages):
+        class _Resp:
+            def __init__(self, tool_calls):
+                self.content = ""
+                self.tool_calls = tool_calls
+
+        return _Resp(self._tool_calls)
+
+
+class _DummyRegistry:
+    def __init__(self):
+        self.executed = []
+        self._tools = {}
+        self._descriptions = {}
+
+    def list_tools(self):
+        return ""
+
+    def execute(self, name, args):
+        self.executed.append((name, args))
+        return json.dumps({"tool": name, "status": "success"}, ensure_ascii=False)
+
+
+def test_general_task_blocks_windsurf_tools(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("COPILOT_API_KEY", "dummy")
+
+    rt = TrinityRuntime(verbose=False, permissions=TrinityPermissions(allow_applescript=True))
+    rt.registry = _DummyRegistry()
+    rt.llm = _DummyToolLLM([{"name": "send_to_windsurf", "args": {"message": "hi"}}])
+
+    state = {
+        "messages": [AIMessage(content="do something")],
+        "gui_mode": "off",
+        "execution_mode": "native",
+        "task_type": "GENERAL",
+        "requires_windsurf": False,
+        "dev_edit_mode": "cli",
+    }
+    out = rt._tetyana_node(state)
+
+    assert rt.registry.executed == []
+    msg = out["messages"][-1].content
+    assert "GENERAL task must not use Windsurf dev subsystem" in msg
+
+
+def test_dev_windsurf_mode_blocks_direct_file_writes(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("COPILOT_API_KEY", "dummy")
+
+    rt = TrinityRuntime(verbose=False, permissions=TrinityPermissions(allow_file_write=True))
+    rt.registry = _DummyRegistry()
+    rt.llm = _DummyToolLLM(
+        [{"name": "write_file", "args": {"path": "x.txt", "content": "x"}}]
+    )
+
+    state = {
+        "messages": [AIMessage(content="change code")],
+        "gui_mode": "off",
+        "execution_mode": "native",
+        "task_type": "DEV",
+        "requires_windsurf": True,
+        "dev_edit_mode": "windsurf",
+    }
+    out = rt._tetyana_node(state)
+
+    assert rt.registry.executed == []
+    msg = out["messages"][-1].content
+    assert "DEV task requires Windsurf-first" in msg
+
+
+def test_dev_cli_fallback_allows_file_writes(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("COPILOT_API_KEY", "dummy")
+
+    rt = TrinityRuntime(verbose=False, permissions=TrinityPermissions(allow_file_write=True))
+    rt.registry = _DummyRegistry()
+    rt.llm = _DummyToolLLM(
+        [{"name": "write_file", "args": {"path": "x.txt", "content": "x"}}]
+    )
+
+    state = {
+        "messages": [AIMessage(content="change code")],
+        "gui_mode": "off",
+        "execution_mode": "native",
+        "task_type": "DEV",
+        "requires_windsurf": True,
+        "dev_edit_mode": "cli",
+    }
+    out = rt._tetyana_node(state)
+
+    assert rt.registry.executed and rt.registry.executed[0][0] == "write_file"
+    msg = out["messages"][-1].content
+    assert "Tool Results" in msg
+```
+
 ### `tests/test_mcp_registry.py` (0.7 KB)
 
 ```python
@@ -15850,7 +16090,7 @@ def run_tui(runtime: TuiRuntime) -> None:
     runtime.app.run()
 ```
 
-### `tui/cli.py` (178.7 KB)
+### `tui/cli.py` (179.1 KB)
 
 ```python
 #!/usr/bin/env python3
@@ -16185,15 +16425,22 @@ def _get_render_log_snapshot() -> Tuple[List[Tuple[str, str]], Point]:
     try:
         ts = float(_render_log_cache.get("ts", 0.0))
         if (now - ts) < _render_log_cache_ttl_s:
-            return (
-                list(_render_log_cache.get("logs") or []),
-                _render_log_cache.get("cursor") or Point(x=0, y=0),
-            )
+            cached = _render_log_cache.get("logs") or []
+            try:
+                return (
+                    list(cached),
+                    _render_log_cache.get("cursor") or Point(x=0, y=0),
+                )
+            except Exception:
+                pass
     except Exception:
         pass
 
     with _logs_lock:
-        logs_snapshot: List[Tuple[str, str]] = list(state.logs)
+        try:
+            logs_snapshot: List[Tuple[str, str]] = list(state.logs)
+        except Exception:
+            logs_snapshot = []
 
     line_count = 0
     for _, text in logs_snapshot:
@@ -16522,14 +16769,21 @@ def _list_editors(cfg: Dict[str, Any]) -> List[Tuple[str, str]]:
 
 
 def get_logs() -> List[Tuple[str, str]]:
-    logs_snapshot, _ = _get_render_log_snapshot()
-    return logs_snapshot
+    try:
+        logs_snapshot, _ = _get_render_log_snapshot()
+        return logs_snapshot if logs_snapshot else []
+    except Exception:
+        return []
 
 
 def get_agent_messages() -> List[Tuple[str, str]]:
     """Get formatted agent messages for clean display panel."""
-    with _agent_messages_lock:
-        return _agent_messages_buffer.get_formatted()
+    try:
+        with _agent_messages_lock:
+            formatted = _agent_messages_buffer.get_formatted()
+            return formatted if formatted else []
+    except Exception:
+        return []
 
 
 def _find_module(cfg: Dict[str, Any], editor: str, module_id: str) -> Optional[ModuleRef]:
@@ -21739,7 +21993,7 @@ def build_menu(
     return show_menu, get_menu_content
 ```
 
-### `tui/messages.py` (5.3 KB)
+### `tui/messages.py` (5.4 KB)
 
 ```python
 """Clean agent messages display component.
@@ -21905,7 +22159,11 @@ class MessageBuffer:
     
     def get_formatted(self) -> List[Tuple[str, str]]:
         """Get all messages formatted for display."""
-        return MessageFormatter.format_messages(self.messages)
+        try:
+            msgs_copy = list(self.messages)
+            return MessageFormatter.format_messages(msgs_copy)
+        except Exception:
+            return []
     
     def clear(self) -> None:
         """Clear all messages."""
@@ -22361,5 +22619,5 @@ graph TD
 
 ## Summary
 
-- **Total Files**: 105
-- **Skipped**: 24788
+- **Total Files**: 106
+- **Skipped**: 24803

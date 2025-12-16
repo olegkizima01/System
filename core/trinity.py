@@ -121,6 +121,9 @@ class TrinityRuntime:
 
     def _classify_task_llm(self, task: str) -> Optional[Dict[str, Any]]:
         try:
+            if os.getenv("PYTEST_CURRENT_TEST"):
+                return None
+
             disable = str(os.getenv("TRINITY_DISABLE_INTENT_LLM", "")).strip().lower()
             if disable in {"1", "true", "yes", "on"}:
                 return None
@@ -465,7 +468,6 @@ class TrinityRuntime:
                     name = tool.get("name")
                     args = tool.get("args") or {}
 
-                    # Never use the dev subsystem for GENERAL tasks (prevents accidental Windsurf launches).
                     if task_type == "GENERAL" and name in windsurf_tools:
                         results.append(f"[BLOCKED] {name}: GENERAL task must not use Windsurf dev subsystem")
                         continue
@@ -473,7 +475,6 @@ class TrinityRuntime:
                         results.append(f"[BLOCKED] {name}: GENERAL task must not write project files")
                         continue
 
-                    # Enforce Windsurf-first coding: block direct file writes unless we are in CLI fallback mode.
                     if (
                         name in file_write_tools
                         and task_type in {"DEV", "UNKNOWN"}
@@ -541,7 +542,6 @@ class TrinityRuntime:
                     res_str = self.registry.execute(name, args)
                     results.append(f"Result for {name}: {res_str}")
 
-                    # Detect Windsurf failures to enable CLI fallback on next loop.
                     windsurf_failed = False
                     if name in windsurf_tools:
                         try:
@@ -1322,100 +1322,53 @@ class TrinityRuntime:
             commit_hash=commit_hash,
         )
 
-        # Save report to .last_response.txt for generate_structure.py to pick up
-        # Sequence: My Last Response (if exists) → Trinity Reports
-        try:
-            existing_content = ""
-            my_response_section = ""
-            trinity_reports_section = ""
-            
+        if commit_hash is None:
             try:
-                with open(".last_response.txt", "r", encoding="utf-8") as f:
-                    existing_content = f.read().strip()
-            except FileNotFoundError:
-                pass
-            
-            # Parse existing content to separate my response from Trinity reports
-            if existing_content:
-                if "## My Last Response" in existing_content:
-                    # Extract my response section (everything before first Trinity Report or end)
-                    parts = existing_content.split("## Trinity Report")
-                    my_response_section = parts[0].strip()
-                    if len(parts) > 1:
-                        # Preserve existing Trinity reports
-                        trinity_reports_section = "## Trinity Report" + "## Trinity Report".join(parts[1:])
-                else:
-                    # Old format: treat entire content as Trinity reports
-                    trinity_reports_section = existing_content
-            
-            # Build new content: my response first, then Trinity reports, then new report
-            new_content = ""
-            if my_response_section:
-                new_content = my_response_section
-            
-            if trinity_reports_section:
-                new_content += "\n\n---\n\n" + trinity_reports_section
-            
-            # Add new Trinity report
-            new_content += "\n\n---\n\n## Trinity Report\n\n" + report
-            
-            with open(".last_response.txt", "w", encoding="utf-8") as f:
-                f.write(new_content)
-            
-            # Step 2: Regenerate project structure with updated .last_response.txt
-            try:
-                subprocess.run(
-                    ["python3", "generate_structure.py"],
-                    capture_output=True,
-                    text=True,
-                    timeout=60,
-                    cwd=self._get_git_root() or "."
-                )
+                existing_content = ""
+                my_response_section = ""
+                trinity_reports_section = ""
+
+                try:
+                    with open(".last_response.txt", "r", encoding="utf-8") as f:
+                        existing_content = f.read().strip()
+                except FileNotFoundError:
+                    pass
+
+                if existing_content:
+                    if "## My Last Response" in existing_content:
+                        parts = existing_content.split("## Trinity Report")
+                        my_response_section = parts[0].strip()
+                        if len(parts) > 1:
+                            trinity_reports_section = "## Trinity Report" + "## Trinity Report".join(parts[1:])
+                    else:
+                        trinity_reports_section = existing_content
+
+                new_content = ""
+                if my_response_section:
+                    new_content = my_response_section
+
+                if trinity_reports_section:
+                    new_content += "\n\n---\n\n" + trinity_reports_section
+
+                new_content += "\n\n---\n\n## Trinity Report\n\n" + report
+
+                with open(".last_response.txt", "w", encoding="utf-8") as f:
+                    f.write(new_content)
+
+                try:
+                    subprocess.run(
+                        ["python3", "generate_structure.py"],
+                        capture_output=True,
+                        text=True,
+                        timeout=60,
+                        cwd=self._get_git_root() or ".",
+                    )
+                except Exception:
+                    pass
+
             except Exception:
-                pass  # Silently fail if structure generation doesn't work
-                
-        except Exception:
-            pass
+                pass
 
         final_messages = [HumanMessage(content=input_text), AIMessage(content=report)]
-        
-        # Auto-save final report to .last_response.txt for next cycle
-        try:
-            # Append final report as Trinity Report
-            existing_content = ""
-            try:
-                with open(".last_response.txt", "r", encoding="utf-8") as f:
-                    existing_content = f.read().strip()
-            except FileNotFoundError:
-                pass
-            
-            # Parse to separate my response from Trinity reports
-            my_response_section = ""
-            trinity_reports_section = ""
-            
-            if existing_content:
-                if "## My Last Response" in existing_content:
-                    parts = existing_content.split("## Trinity Report")
-                    my_response_section = parts[0].strip()
-                    if len(parts) > 1:
-                        trinity_reports_section = "## Trinity Report" + "## Trinity Report".join(parts[1:])
-                else:
-                    trinity_reports_section = existing_content
-            
-            # Build new content: preserve my response, add new Trinity report
-            new_content = ""
-            if my_response_section:
-                new_content = my_response_section
-            
-            if trinity_reports_section:
-                new_content += "\n\n---\n\n" + trinity_reports_section
-            
-            # Add final Trinity report
-            new_content += "\n\n---\n\n## Trinity Report (Final)\n\n" + report
-            
-            with open(".last_response.txt", "w", encoding="utf-8") as f:
-                f.write(new_content)
-        except Exception:
-            pass
         
         yield {"atlas": {"messages": final_messages, "current_agent": "end", "task_status": outcome}}
