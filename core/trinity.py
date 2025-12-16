@@ -1,5 +1,7 @@
 from typing import Annotated, TypedDict, Literal, List, Dict, Any, Optional, Callable
 import json
+import os
+import subprocess
 from langgraph.graph import StateGraph, END
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage
 
@@ -503,7 +505,140 @@ class TrinityRuntime:
     def _router(self, state: TrinityState):
         return state["current_agent"]
 
-    def run(self, input_text: str, *, gui_mode: Optional[str] = None, execution_mode: Optional[str] = None):
+    def _get_git_root(self) -> Optional[str]:
+        try:
+            proc = subprocess.run(
+                ["git", "rev-parse", "--show-toplevel"],
+                capture_output=True,
+                text=True,
+            )
+            if proc.returncode != 0:
+                return None
+            root = (proc.stdout or "").strip()
+            return root or None
+        except Exception:
+            return None
+
+    def _get_repo_changes(self) -> Dict[str, Any]:
+        root = self._get_git_root()
+        if not root:
+            return {"ok": False, "error": "not_a_git_repo"}
+
+        try:
+            diff_name = subprocess.run(
+                ["git", "diff", "--name-only"],
+                cwd=root,
+                capture_output=True,
+                text=True,
+            )
+            status = subprocess.run(
+                ["git", "status", "--porcelain"],
+                cwd=root,
+                capture_output=True,
+                text=True,
+            )
+            diff_stat = subprocess.run(
+                ["git", "diff", "--stat"],
+                cwd=root,
+                capture_output=True,
+                text=True,
+            )
+
+            changed_files: List[str] = []
+            if diff_name.returncode == 0:
+                changed_files.extend([l.strip() for l in (diff_name.stdout or "").splitlines() if l.strip()])
+
+            if status.returncode == 0:
+                for line in (status.stdout or "").splitlines():
+                    s = line.strip()
+                    if not s:
+                        continue
+                    parts = s.split(maxsplit=1)
+                    if len(parts) == 2:
+                        changed_files.append(parts[1].strip())
+
+            # de-dup while preserving order
+            seen = set()
+            deduped: List[str] = []
+            for f in changed_files:
+                if f in seen:
+                    continue
+                seen.add(f)
+                deduped.append(f)
+
+            return {
+                "ok": True,
+                "git_root": root,
+                "changed_files": deduped,
+                "diff_stat": (diff_stat.stdout or "").strip() if diff_stat.returncode == 0 else "",
+                "status_porcelain": (status.stdout or "").strip() if status.returncode == 0 else "",
+            }
+        except Exception as e:
+            return {"ok": False, "error": str(e)}
+
+    def _format_final_report(
+        self,
+        *,
+        task: str,
+        outcome: str,
+        repo_changes: Dict[str, Any],
+        last_agent: str,
+        last_message: str,
+    ) -> str:
+        lines: List[str] = []
+        lines.append("[Atlas] Final report")
+        lines.append("")
+        lines.append(f"Task: {str(task or '').strip()}")
+        lines.append(f"Outcome: {outcome}")
+        lines.append(f"Last agent: {last_agent}")
+        if last_message:
+            lines.append("")
+            lines.append("Last message:")
+            lines.append(str(last_message).strip())
+
+        lines.append("")
+        if repo_changes.get("ok") is True:
+            files = repo_changes.get("changed_files") or []
+            lines.append("Changed files:")
+            if files:
+                for f in files:
+                    lines.append(f"- {f}")
+            else:
+                lines.append("- (no uncommitted changes detected)")
+
+            stat = str(repo_changes.get("diff_stat") or "").strip()
+            if stat:
+                lines.append("")
+                lines.append("Diff stat:")
+                lines.append(stat)
+        else:
+            lines.append("Changed files:")
+            lines.append(f"- (unavailable: {repo_changes.get('error')})")
+
+        lines.append("")
+        lines.append("Verification:")
+        # Best-effort heuristic based on last message content.
+        msg_l = (last_message or "").lower()
+        if any(k in msg_l for k in ["verified", "confirmed", "успішно", "готово", "success"]):
+            lines.append("- status: passed (heuristic)")
+        elif any(k in msg_l for k in ["failed", "error", "помилка", "не вдалося"]):
+            lines.append("- status: failed (heuristic)")
+        else:
+            lines.append("- status: unknown (no explicit signal)")
+
+        lines.append("")
+        lines.append("Tests:")
+        lines.append("- not executed by Trinity (no deterministic test runner in pipeline)")
+        return "\n".join(lines).strip() + "\n"
+
+    def run(
+        self,
+        input_text: str,
+        *,
+        gui_mode: Optional[str] = None,
+        execution_mode: Optional[str] = None,
+        recursion_limit: Optional[int] = None,
+    ):
         gm = str(gui_mode or "auto").strip().lower() or "auto"
         if gm not in {"off", "on", "auto"}:
             gm = "auto"
@@ -511,6 +646,18 @@ class TrinityRuntime:
         em = str(execution_mode or "native").strip().lower() or "native"
         if em not in {"native", "gui"}:
             em = "native"
+
+        if recursion_limit is None:
+            try:
+                recursion_limit = int(os.getenv("TRINITY_RECURSION_LIMIT", "100"))
+            except Exception:
+                recursion_limit = 100
+        try:
+            recursion_limit = int(recursion_limit)
+        except Exception:
+            recursion_limit = 100
+        if recursion_limit < 25:
+            recursion_limit = 25
 
         initial_state = {
             "messages": [HumanMessage(content=input_text)],
@@ -525,9 +672,48 @@ class TrinityRuntime:
             "execution_mode": em,
             "gui_fallback_attempted": False,
         }
-        
-        for event in self.workflow.stream(initial_state):
+
+        last_node_name: str = ""
+        last_state_update: Dict[str, Any] = {}
+        last_agent_message: str = ""
+        last_agent_label: str = ""
+
+        for event in self.workflow.stream(initial_state, config={"recursion_limit": recursion_limit}):
+            try:
+                # Keep track of the last emitted node/message for the final report.
+                for node_name, state_update in (event or {}).items():
+                    last_node_name = str(node_name or "")
+                    last_state_update = state_update if isinstance(state_update, dict) else {}
+                    msgs = last_state_update.get("messages", []) if isinstance(last_state_update, dict) else []
+                    if msgs:
+                        m = msgs[-1]
+                        last_agent_message = str(getattr(m, "content", "") or "")
+                    last_agent_label = str(node_name or "")
+            except Exception:
+                pass
             yield event
 
+        # Emit final Atlas report as the last message.
+        outcome = "completed"
+        try:
+            task_status = str((last_state_update or {}).get("task_status") or "").strip().lower()
+            if task_status:
+                outcome = task_status
+            if "limit" in (last_agent_message or "").lower():
+                outcome = "limit_reached"
+            if "paused" in (last_agent_message or "").lower() or "пауза" in (last_agent_message or "").lower():
+                outcome = "paused"
+        except Exception:
+            pass
 
+        repo_changes = self._get_repo_changes()
+        report = self._format_final_report(
+            task=input_text,
+            outcome=outcome,
+            repo_changes=repo_changes,
+            last_agent=last_agent_label or last_node_name or "unknown",
+            last_message=last_agent_message,
+        )
 
+        final_messages = [HumanMessage(content=input_text), AIMessage(content=report)]
+        yield {"atlas": {"messages": final_messages, "current_agent": "end", "task_status": outcome}}
