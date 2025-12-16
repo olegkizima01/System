@@ -2,6 +2,7 @@ from typing import Annotated, TypedDict, Literal, List, Dict, Any, Optional, Cal
 import json
 import os
 import subprocess
+import re
 from langgraph.graph import StateGraph, END
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage
 
@@ -732,6 +733,149 @@ class TrinityRuntime:
         except Exception as e:
             return {"ok": False, "error": str(e)}
 
+    def _short_task_for_commit(self, task: str, max_len: int = 72) -> str:
+        t = re.sub(r"\s+", " ", str(task or "").strip())
+        if not t:
+            return "(no task)"
+        if len(t) <= max_len:
+            return t
+        cut = t[: max_len - 1].rstrip()
+        return cut + "…"
+
+    def _auto_commit_on_success(self, *, task: str, report: str, repo_changes: Dict[str, Any]) -> Dict[str, Any]:
+        root = self._get_git_root()
+        if not root:
+            return {"ok": False, "error": "not_a_git_repo"}
+
+        try:
+            env = os.environ.copy()
+            env.setdefault("GIT_AUTHOR_NAME", "Trinity")
+            env.setdefault("GIT_AUTHOR_EMAIL", "trinity@local")
+            env.setdefault("GIT_COMMITTER_NAME", env["GIT_AUTHOR_NAME"])
+            env.setdefault("GIT_COMMITTER_EMAIL", env["GIT_AUTHOR_EMAIL"])
+
+            status = subprocess.run(
+                ["git", "status", "--porcelain"],
+                cwd=root,
+                capture_output=True,
+                text=True,
+                env=env,
+            )
+            if status.returncode != 0:
+                return {"ok": False, "error": (status.stderr or "").strip() or "git status failed"}
+
+            has_changes = bool((status.stdout or "").strip())
+
+            short_task = self._short_task_for_commit(task)
+            subject = f"Trinity task completed: {short_task}"
+
+            diff_stat = str(repo_changes.get("diff_stat") or "").strip() if isinstance(repo_changes, dict) else ""
+            body_lines: List[str] = []
+            if diff_stat:
+                body_lines.append("Diff stat:")
+                body_lines.append(diff_stat)
+            body = "\n".join(body_lines).strip()
+
+            add = subprocess.run(
+                ["git", "add", "."],
+                cwd=root,
+                capture_output=True,
+                text=True,
+                env=env,
+            )
+            if add.returncode != 0:
+                return {"ok": False, "error": (add.stderr or "").strip() or "git add failed"}
+
+            commit_cmd: List[str] = [
+                "git",
+                "-c",
+                "user.name=Trinity",
+                "-c",
+                "user.email=trinity@local",
+                "commit",
+                "--allow-empty",
+                "-m",
+                subject,
+            ]
+            if body:
+                commit_cmd.extend(["-m", body])
+
+            env_commit = env.copy()
+            env_commit["TRINITY_POST_COMMIT_RUNNING"] = "1"
+            commit = subprocess.run(
+                commit_cmd,
+                cwd=root,
+                capture_output=True,
+                text=True,
+                env=env_commit,
+            )
+            if commit.returncode != 0:
+                combined = (commit.stdout or "") + "\n" + (commit.stderr or "")
+                if "nothing to commit" in combined.lower():
+                    if not has_changes:
+                        return {"ok": True, "skipped": True, "reason": "nothing_to_commit"}
+                return {"ok": False, "error": (commit.stderr or "").strip() or "git commit failed"}
+
+            structure_ok = self._regenerate_project_structure(report)
+            amended = False
+            response_path = os.path.join(root, ".last_response.txt")
+
+            if os.path.exists(response_path):
+                subprocess.run(
+                    ["git", "add", ".last_response.txt"],
+                    cwd=root,
+                    capture_output=True,
+                    text=True,
+                    env=env,
+                )
+
+            if structure_ok and os.path.exists(os.path.join(root, "project_structure_final.txt")):
+                subprocess.run(
+                    ["git", "add", "-f", "project_structure_final.txt"],
+                    cwd=root,
+                    capture_output=True,
+                    text=True,
+                    env=env,
+                )
+
+            cached = subprocess.run(
+                ["git", "diff", "--cached", "--quiet"],
+                cwd=root,
+                capture_output=True,
+                text=True,
+                env=env,
+            )
+            if cached.returncode != 0:
+                env_amend = env.copy()
+                env_amend["TRINITY_POST_COMMIT_RUNNING"] = "1"
+                amend = subprocess.run(
+                    ["git", "commit", "--amend", "--no-edit"],
+                    cwd=root,
+                    capture_output=True,
+                    text=True,
+                    env=env_amend,
+                )
+                if amend.returncode == 0:
+                    amended = True
+
+            head = subprocess.run(
+                ["git", "rev-parse", "HEAD"],
+                cwd=root,
+                capture_output=True,
+                text=True,
+                env=env,
+            )
+            commit_hash = (head.stdout or "").strip() if head.returncode == 0 else ""
+            return {
+                "ok": True,
+                "skipped": False,
+                "commit": commit_hash,
+                "structure_ok": bool(structure_ok),
+                "amended": bool(amended),
+            }
+        except Exception as e:
+            return {"ok": False, "error": str(e)}
+
     def _format_final_report(
         self,
         *,
@@ -740,12 +884,15 @@ class TrinityRuntime:
         repo_changes: Dict[str, Any],
         last_agent: str,
         last_message: str,
+        commit_hash: Optional[str] = None,
     ) -> str:
         lines: List[str] = []
         lines.append("[Atlas] Final report")
         lines.append("")
         lines.append(f"Task: {str(task or '').strip()}")
         lines.append(f"Outcome: {outcome}")
+        if commit_hash:
+            lines.append(f"Зміни закомічені: {commit_hash}")
         lines.append(f"Last agent: {last_agent}")
         if last_message:
             lines.append("")
@@ -863,7 +1010,8 @@ class TrinityRuntime:
             pass
 
         repo_changes = self._get_repo_changes()
-        report = self._format_final_report(
+        commit_hash: Optional[str] = None
+        base_report = self._format_final_report(
             task=input_text,
             outcome=outcome,
             repo_changes=repo_changes,
@@ -871,11 +1019,20 @@ class TrinityRuntime:
             last_message=last_agent_message,
         )
 
-        # Regenerate project structure with final report if task completed successfully
         if outcome in {"completed", "success"}:
-            if self.verbose:
-                print("🔄 [Trinity] Regenerating project structure with final report...")
-            self._regenerate_project_structure(report)
+            commit_res = self._auto_commit_on_success(task=input_text, report=base_report, repo_changes=repo_changes)
+            if commit_res.get("ok") is True and not commit_res.get("skipped"):
+                commit_hash = str(commit_res.get("commit") or "").strip() or None
+                repo_changes = self._get_repo_changes()
+
+        report = self._format_final_report(
+            task=input_text,
+            outcome=outcome,
+            repo_changes=repo_changes,
+            last_agent=last_agent_label or last_node_name or "unknown",
+            last_message=last_agent_message,
+            commit_hash=commit_hash,
+        )
 
         final_messages = [HumanMessage(content=input_text), AIMessage(content=report)]
         yield {"atlas": {"messages": final_messages, "current_agent": "end", "task_status": outcome}}
