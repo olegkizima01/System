@@ -20,6 +20,7 @@
 import argparse
 import atexit
 from collections import Counter, defaultdict
+import ctypes
 import glob
 import json
 import os
@@ -63,6 +64,202 @@ from tui.cli_paths import (
     UI_SETTINGS_PATH,
 )
 
+
+def _macos_open_privacy_pane(pane: str) -> None:
+    if sys.platform != "darwin":
+        return
+    p = str(pane or "").strip().lower()
+    url_map = {
+        "accessibility": "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility",
+        "screen_recording": "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture",
+        "automation": "x-apple.systempreferences:com.apple.preference.security?Privacy_Automation",
+    }
+    url = url_map.get(p)
+    if not url:
+        return
+    try:
+        subprocess.run(["/usr/bin/open", url], capture_output=True, text=True)
+    except Exception:
+        return
+
+
+def _macos_screen_recording_preflight() -> Optional[bool]:
+    if sys.platform != "darwin":
+        return None
+    try:
+        cg = ctypes.cdll.LoadLibrary(
+            "/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics"
+        )
+        fn = getattr(cg, "CGPreflightScreenCaptureAccess", None)
+        if fn is None:
+            return None
+        fn.restype = ctypes.c_bool
+        fn.argtypes = []
+        return bool(fn())
+    except Exception:
+        return None
+
+
+def _macos_screen_recording_request_prompt() -> Optional[bool]:
+    if sys.platform != "darwin":
+        return None
+    try:
+        cg = ctypes.cdll.LoadLibrary(
+            "/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics"
+        )
+        fn = getattr(cg, "CGRequestScreenCaptureAccess", None)
+        if fn is None:
+            return None
+        fn.restype = ctypes.c_bool
+        fn.argtypes = []
+        return bool(fn())
+    except Exception:
+        return None
+
+
+def _macos_accessibility_is_trusted() -> Optional[bool]:
+    if sys.platform != "darwin":
+        return None
+    try:
+        app = ctypes.cdll.LoadLibrary(
+            "/System/Library/Frameworks/ApplicationServices.framework/ApplicationServices"
+        )
+        fn = getattr(app, "AXIsProcessTrusted", None)
+        if fn is None:
+            return None
+        fn.restype = ctypes.c_bool
+        fn.argtypes = []
+        return bool(fn())
+    except Exception:
+        return None
+
+
+def _macos_accessibility_request_prompt() -> Optional[bool]:
+    if sys.platform != "darwin":
+        return None
+    try:
+        app = ctypes.cdll.LoadLibrary(
+            "/System/Library/Frameworks/ApplicationServices.framework/ApplicationServices"
+        )
+        cf = ctypes.cdll.LoadLibrary(
+            "/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation"
+        )
+
+        fn = getattr(app, "AXIsProcessTrustedWithOptions", None)
+        if fn is None:
+            return None
+
+        key = ctypes.c_void_p.in_dll(app, "kAXTrustedCheckOptionPrompt")
+        val = ctypes.c_void_p.in_dll(cf, "kCFBooleanTrue")
+
+        cf.CFDictionaryCreate.restype = ctypes.c_void_p
+        cf.CFDictionaryCreate.argtypes = [
+            ctypes.c_void_p,
+            ctypes.POINTER(ctypes.c_void_p),
+            ctypes.POINTER(ctypes.c_void_p),
+            ctypes.c_long,
+            ctypes.c_void_p,
+            ctypes.c_void_p,
+        ]
+        cf.CFRelease.restype = None
+        cf.CFRelease.argtypes = [ctypes.c_void_p]
+
+        keys = (ctypes.c_void_p * 1)(key)
+        vals = (ctypes.c_void_p * 1)(val)
+        d = cf.CFDictionaryCreate(None, keys, vals, 1, None, None)
+        try:
+            fn.restype = ctypes.c_bool
+            fn.argtypes = [ctypes.c_void_p]
+            ok = bool(fn(ctypes.c_void_p(d)))
+        finally:
+            try:
+                if d:
+                    cf.CFRelease(ctypes.c_void_p(d))
+            except Exception:
+                pass
+        return ok
+    except Exception:
+        return None
+
+
+def _macos_automation_check_system_events(*, prompt: bool) -> Optional[bool]:
+    if sys.platform != "darwin":
+        return None
+    script = 'tell application "System Events" to count of processes'
+    try:
+        proc = subprocess.run(
+            ["/usr/bin/osascript", "-e", script],
+            capture_output=True,
+            text=True,
+            timeout=2.5,
+        )
+        if proc.returncode == 0:
+            return True
+        err = (proc.stderr or "") + "\n" + (proc.stdout or "")
+        low = err.lower()
+        if "not authorised" in low or "not authorized" in low or "not allowed" in low or "permission" in low:
+            if prompt:
+                try:
+                    subprocess.run(
+                        ["/usr/bin/osascript", "-e", script],
+                        capture_output=True,
+                        text=True,
+                        timeout=2.5,
+                    )
+                except Exception:
+                    pass
+            proc2 = subprocess.run(
+                ["/usr/bin/osascript", "-e", script],
+                capture_output=True,
+                text=True,
+                timeout=2.5,
+            )
+            return bool(proc2.returncode == 0)
+        return False
+    except Exception:
+        return None
+
+
+def _permissions_wizard(
+    *,
+    require_accessibility: bool,
+    require_screen_recording: bool,
+    require_automation: bool,
+    prompt: bool,
+    open_settings: bool,
+) -> Dict[str, Any]:
+    missing: List[str] = []
+    out: Dict[str, Any] = {"missing": missing}
+    if sys.platform != "darwin":
+        return out
+
+    if require_accessibility:
+        ok = _macos_accessibility_is_trusted()
+        if ok is False and prompt:
+            _macos_accessibility_request_prompt()
+            ok = _macos_accessibility_is_trusted()
+        if ok is False:
+            missing.append("accessibility")
+
+    if require_screen_recording:
+        ok = _macos_screen_recording_preflight()
+        if ok is False and prompt:
+            _macos_screen_recording_request_prompt()
+            ok = _macos_screen_recording_preflight()
+        if ok is False:
+            missing.append("screen_recording")
+
+    if require_automation:
+        ok = _macos_automation_check_system_events(prompt=prompt)
+        if ok is False:
+            missing.append("automation")
+
+    if open_settings and missing:
+        for p in list(dict.fromkeys(missing)):
+            _macos_open_privacy_pane(p)
+
+    return out
+
 try:
     from watchdog.events import FileSystemEventHandler
     from watchdog.observers import Observer
@@ -83,6 +280,11 @@ try:
 except Exception:
     CopilotLLM = None  # type: ignore
     HumanMessage = SystemMessage = AIMessage = ToolMessage = None  # type: ignore
+
+try:
+    from system_ai.recorder import RecorderService  # type: ignore
+except Exception:
+    RecorderService = None  # type: ignore
 
 
 @dataclass
@@ -219,6 +421,7 @@ def _run_graph_agent_task(
     allow_shell: bool,
     allow_applescript: bool,
     allow_gui: bool,
+    allow_shortcuts: bool = False,
     gui_mode: str = "auto",
 ) -> None:
     # TRINITY INTEGRATION START
@@ -233,6 +436,7 @@ def _run_graph_agent_task(
             allow_applescript=allow_applescript,
             allow_file_write=allow_autopilot,
             allow_gui=allow_gui,
+            allow_shortcuts=allow_shortcuts,
         )
         
         log("[ATLAS] Initializing NeuroMac System (Atlas/Tetyana/Grisha)...", "info")
@@ -268,7 +472,8 @@ def _run_graph_agent_task(
         runtime = TrinityRuntime(verbose=False, permissions=permissions, on_stream=on_stream_callback)
         
         step_count = 0
-        for event in runtime.run(user_text, gui_mode=gui_mode):
+        exec_mode = str(getattr(state, "ui_execution_mode", "native") or "native").strip().lower() or "native"
+        for event in runtime.run(user_text, gui_mode=gui_mode, execution_mode=exec_mode):
             step_count += 1
             for node_name, state_update in event.items():
                 agent_name = node_name.capitalize()
@@ -920,9 +1125,16 @@ def _load_ui_settings() -> None:
         gui_mode = str(data.get("gui_mode") or "").strip().lower()
         if gui_mode in {"off", "on", "auto"}:
             state.ui_gui_mode = gui_mode
+        exec_mode = str(data.get("execution_mode") or "").strip().lower()
+        if exec_mode in {"native", "gui"}:
+            state.ui_execution_mode = exec_mode
         unsafe_mode = data.get("unsafe_mode")
         if isinstance(unsafe_mode, bool):
             state.ui_unsafe_mode = unsafe_mode
+
+        automation_allow_shortcuts = data.get("automation_allow_shortcuts")
+        if isinstance(automation_allow_shortcuts, bool):
+            state.automation_allow_shortcuts = automation_allow_shortcuts
 
         env_unsafe = _env_bool(os.getenv("SYSTEM_CLI_UNSAFE_MODE"))
         if env_unsafe is None:
@@ -942,7 +1154,9 @@ def _save_ui_settings() -> bool:
             "chat_lang": normalize_lang(state.chat_lang),
             "streaming": bool(getattr(state, "ui_streaming", True)),
             "gui_mode": str(getattr(state, "ui_gui_mode", "auto") or "auto").strip().lower() or "auto",
+            "execution_mode": str(getattr(state, "ui_execution_mode", "native") or "native").strip().lower() or "native",
             "unsafe_mode": bool(state.ui_unsafe_mode),
+            "automation_allow_shortcuts": bool(getattr(state, "automation_allow_shortcuts", False)),
         }
         with open(UI_SETTINGS_PATH, "w", encoding="utf-8") as f:
             json.dump(payload, f, ensure_ascii=False, indent=2)
@@ -1095,6 +1309,10 @@ def _is_confirmed_applescript(text: str) -> bool:
 
 def _is_confirmed_gui(text: str) -> bool:
     return "confirm_gui" in text.lower()
+
+
+def _is_confirmed_shortcuts(text: str) -> bool:
+    return "confirm_shortcuts" in text.lower()
 
 
 @dataclass
@@ -1970,12 +2188,6 @@ def _agent_send(user_text: str) -> Tuple[bool, str]:
 
 
 
-def get_prompt_width() -> int:
-    return 55 if state.menu_level != MenuLevel.NONE else 3
-
-
-
-
 @dataclass
 class _DummyProcService:
     running: bool = False
@@ -1992,6 +2204,466 @@ class _DummyProcService:
 monitor_service = _DummyProcService()
 fs_usage_service = _DummyProcService()
 opensnoop_service = _DummyProcService()
+
+
+recorder_service: Any = None
+recorder_last_session_dir: str = ""
+
+
+def _recordings_base_dir() -> str:
+    return os.path.expanduser("~/.system_cli/recordings")
+
+
+def _recordings_last_path() -> str:
+    return os.path.join(_recordings_base_dir(), "last.json")
+
+
+def _recordings_save_last(dir_path: str) -> None:
+    try:
+        base = _recordings_base_dir()
+        os.makedirs(base, exist_ok=True)
+        payload = {"dir": str(dir_path or "").strip(), "ts": int(time.time())}
+        with open(_recordings_last_path(), "w", encoding="utf-8") as f:
+            json.dump(payload, f, ensure_ascii=False, indent=2)
+    except Exception:
+        return
+
+
+def _recordings_load_last() -> str:
+    try:
+        p = _recordings_last_path()
+        if not os.path.exists(p):
+            return ""
+        with open(p, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        d = str(data.get("dir") or "").strip()
+        return d
+    except Exception:
+        return ""
+
+
+def _recordings_list_session_dirs(limit: int = 10) -> List[str]:
+    base = _recordings_base_dir()
+    try:
+        if not os.path.isdir(base):
+            return []
+        dirs: List[str] = []
+        for name in os.listdir(base):
+            if not name.isdigit():
+                continue
+            full = os.path.join(base, name)
+            if os.path.isdir(full):
+                dirs.append(full)
+        dirs.sort(key=lambda p: int(os.path.basename(p) or 0), reverse=True)
+        return dirs[: max(0, int(limit or 0))]
+    except Exception:
+        return []
+
+
+def _recordings_read_meta(dir_path: str) -> Dict[str, Any]:
+    try:
+        meta_path = os.path.join(dir_path, "meta.json")
+        if not os.path.exists(meta_path):
+            return {}
+        with open(meta_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return data if isinstance(data, dict) else {}
+    except Exception:
+        return {}
+
+
+def _recordings_update_meta(dir_path: str, updates: Dict[str, Any]) -> None:
+    try:
+        meta_path = os.path.join(dir_path, "meta.json")
+        data = _recordings_read_meta(dir_path)
+        if not isinstance(data, dict):
+            data = {}
+        for k, v in (updates or {}).items():
+            data[k] = v
+        os.makedirs(dir_path, exist_ok=True)
+        with open(meta_path, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+    except Exception:
+        return
+
+
+def _extract_automation_title(text: str) -> str:
+    try:
+        s = str(text or "")
+        if not s.strip():
+            return ""
+        m = re.search(r"^\s*AUTOMATION_TITLE\s*:\s*(.+?)\s*$", s, flags=re.IGNORECASE | re.MULTILINE)
+        if not m:
+            return ""
+        t = str(m.group(1) or "").strip()
+        t = re.sub(r"\s+", " ", t).strip()
+        return t[:120]
+    except Exception:
+        return ""
+
+
+def _extract_automation_prompt(text: str) -> str:
+    try:
+        s = str(text or "")
+        if not s.strip():
+            return ""
+        m = re.search(r"^\s*AUTOMATION_PROMPT\s*:\s*(.+?)\s*$", s, flags=re.IGNORECASE | re.MULTILINE)
+        if not m:
+            return ""
+        t = str(m.group(1) or "").strip()
+        t = re.sub(r"\s+", " ", t).strip()
+        return t[:1200]
+    except Exception:
+        return ""
+
+
+def _start_recording_analysis(*, rec_dir: str, name: str, user_context: str) -> None:
+    def _bg() -> None:
+        state.agent_processing = True
+        try:
+            meta = _recordings_read_meta(rec_dir)
+            events_path = os.path.join(rec_dir, "events.jsonl")
+            if not os.path.exists(events_path):
+                log(f"No events.jsonl: {events_path}", "error")
+                return
+
+            stats: Dict[str, Any] = {
+                "dir": rec_dir,
+                "name": name,
+                "session_id": str(meta.get("session_id") or os.path.basename(rec_dir) or ""),
+                "start_ts": meta.get("start_ts"),
+                "end_ts": meta.get("end_ts"),
+                "events_count": meta.get("events_count"),
+                "user_context": (str(user_context or "").strip() or None),
+                "counts": {},
+                "top_focus_seconds": [],
+                "top_click_apps": [],
+                "top_click_hotspots": [],
+                "mouse_move_count": 0,
+                "top_move_hotspots": [],
+                "key_down_count": 0,
+                "top_keycodes": [],
+                "clipboard_events": 0,
+                "last_clipboard_preview": "",
+                "screenshots": {"dir": os.path.join(rec_dir, "screens"), "count": 0, "sample_paths": []},
+                "logs": {"dir": os.path.join(rec_dir, "logs"), "available": False, "preview": ""},
+                "corrections": {"detected": False, "patterns": [], "summary": ""},
+            }
+
+            counts = Counter()
+            focus_dur: Counter = Counter()
+            click_apps: Counter = Counter()
+            hotspots: Counter = Counter()
+            move_hotspots: Counter = Counter()
+            keycodes: Counter = Counter()
+            screenshots: List[str] = []
+            last_clip_preview = ""
+
+            last_focus_app = ""
+            last_focus_ts: Optional[float] = None
+            last_ts: Optional[float] = None
+            
+            correction_patterns: List[str] = []
+            backspace_count = 0
+            undo_count = 0
+            last_click_pos: Optional[Tuple[float, float]] = None
+            last_click_ts: Optional[float] = None
+            rapid_clicks_same_pos = 0
+
+            def _bucket(x: float, y: float) -> Tuple[int, int]:
+                return (int(x // 80) * 80, int(y // 80) * 80)
+
+            events_list: List[Dict[str, Any]] = []
+            with open(events_path, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        ev = json.loads(line)
+                    except Exception:
+                        continue
+                    if not isinstance(ev, dict):
+                        continue
+                    events_list.append(ev)
+                    et = str(ev.get("type") or "").strip()
+                    ts = ev.get("ts")
+                    try:
+                        tsf = float(ts) if ts is not None else None
+                    except Exception:
+                        tsf = None
+                    if tsf is not None:
+                        last_ts = tsf
+                    counts[et] += 1
+
+                    sp = str(ev.get("screenshot") or "").strip()
+                    if sp:
+                        screenshots.append(sp)
+
+                    if et == "focus":
+                        app = str(ev.get("front_app") or "").strip()
+                        if last_focus_ts is not None and last_focus_app:
+                            focus_dur[last_focus_app] += max(0.0, float(tsf or last_focus_ts) - float(last_focus_ts))
+                        last_focus_app = app
+                        last_focus_ts = tsf
+
+                    if et == "clipboard":
+                        stats["clipboard_events"] = int(stats.get("clipboard_events") or 0) + 1
+                        last_clip_preview = str(ev.get("text_preview") or "")
+
+                    if et == "mouse":
+                        stp = 0
+                        try:
+                            stp = int(ev.get("subtype") or 0)
+                        except Exception:
+                            stp = 0
+                        if stp not in {1, 3}:
+                            continue
+                        app = str(ev.get("front_app") or "").strip() or "(unknown)"
+                        click_apps[app] += 1
+                        try:
+                            x = float(ev.get("x") or 0.0)
+                            y = float(ev.get("y") or 0.0)
+                            hotspots[_bucket(x, y)] += 1
+                            curr_pos = (x, y)
+                            if last_click_pos and last_click_ts and tsf:
+                                dist = ((x - last_click_pos[0])**2 + (y - last_click_pos[1])**2)**0.5
+                                time_diff = tsf - last_click_ts
+                                if dist < 50 and time_diff < 1.0:
+                                    rapid_clicks_same_pos += 1
+                                    if rapid_clicks_same_pos >= 2:
+                                        correction_patterns.append(f"rapid_clicks_at_({int(x)},{int(y)})")
+                            last_click_pos = curr_pos
+                            last_click_ts = tsf
+                        except Exception:
+                            pass
+
+                    if et == "mouse_move":
+                        stats["mouse_move_count"] = int(stats.get("mouse_move_count") or 0) + 1
+                        try:
+                            x = float(ev.get("x") or 0.0)
+                            y = float(ev.get("y") or 0.0)
+                            move_hotspots[_bucket(x, y)] += 1
+                        except Exception:
+                            pass
+
+                    if et == "key":
+                        stp = 0
+                        try:
+                            stp = int(ev.get("subtype") or 0)
+                        except Exception:
+                            stp = 0
+                        if stp == 10:
+                            stats["key_down_count"] = int(stats.get("key_down_count") or 0) + 1
+                            try:
+                                kc = int(ev.get("keycode") or 0)
+                                keycodes[kc] += 1
+                                if kc == 51:
+                                    backspace_count += 1
+                                    if backspace_count >= 3:
+                                        correction_patterns.append("multiple_backspaces")
+                                if kc == 6 and (ev.get("flags") or 0) & 0x100000:
+                                    undo_count += 1
+                                    correction_patterns.append("undo_detected")
+                            except Exception:
+                                pass
+
+            end_ts = meta.get("end_ts")
+            try:
+                end_f = float(end_ts) if end_ts is not None else (float(last_ts) if last_ts is not None else None)
+            except Exception:
+                end_f = float(last_ts) if last_ts is not None else None
+
+            if last_focus_ts is not None and last_focus_app and end_f is not None:
+                focus_dur[last_focus_app] += max(0.0, float(end_f) - float(last_focus_ts))
+
+            stats["counts"] = dict(counts)
+            stats["top_focus_seconds"] = focus_dur.most_common(7)
+            stats["top_click_apps"] = click_apps.most_common(7)
+            stats["top_click_hotspots"] = [
+                {"x": int(xy[0]), "y": int(xy[1]), "count": int(c)}
+                for (xy, c) in hotspots.most_common(7)
+            ]
+            stats["top_move_hotspots"] = [
+                {"x": int(xy[0]), "y": int(xy[1]), "count": int(c)}
+                for (xy, c) in move_hotspots.most_common(7)
+            ]
+            stats["top_keycodes"] = [{"keycode": int(k), "count": int(c)} for (k, c) in keycodes.most_common(12)]
+            stats["last_clipboard_preview"] = last_clip_preview[:500] if last_clip_preview else ""
+            
+            if correction_patterns:
+                stats["corrections"]["detected"] = True
+                stats["corrections"]["patterns"] = list(set(correction_patterns))
+                if backspace_count > 0:
+                    stats["corrections"]["summary"] += f"User corrected text input {backspace_count} times (backspace). "
+                if undo_count > 0:
+                    stats["corrections"]["summary"] += f"User used undo {undo_count} times. "
+                if rapid_clicks_same_pos > 0:
+                    stats["corrections"]["summary"] += f"User made rapid clicks on same position {rapid_clicks_same_pos} times (likely correcting wrong click). "
+                stats["corrections"]["summary"] = stats["corrections"]["summary"].strip()
+
+            screens_dir = os.path.join(rec_dir, "screens")
+            if os.path.isdir(screens_dir):
+                try:
+                    files = [os.path.join(screens_dir, fn) for fn in os.listdir(screens_dir) if fn and not fn.startswith(".")]
+                    files.sort()
+                    stats["screenshots"] = {
+                        "dir": screens_dir,
+                        "count": int(len(files)),
+                        "sample_paths": files[-10:],
+                    }
+                except Exception:
+                    pass
+            if screenshots:
+                try:
+                    uniq = list(dict.fromkeys(screenshots))
+                    stats["screenshots"]["linked_in_events"] = int(len(uniq))
+                    stats["screenshots"]["event_sample_paths"] = uniq[-10:]
+                except Exception:
+                    pass
+
+            logs_dir = os.path.join(rec_dir, "logs")
+            if os.path.isdir(logs_dir):
+                try:
+                    log_files = [f for f in os.listdir(logs_dir) if f.endswith(".log")]
+                    if log_files:
+                        stats["logs"]["available"] = True
+                        combined_logs = ""
+                        for log_file_name in sorted(log_files):
+                            log_file = os.path.join(logs_dir, log_file_name)
+                            try:
+                                with open(log_file, "r", encoding="utf-8") as f:
+                                    log_content = f.read()
+                                if log_content:
+                                    combined_logs += f"\n=== {log_file_name} ===\n{log_content}"
+                            except Exception:
+                                pass
+                        if combined_logs:
+                            stats["logs"]["preview"] = combined_logs[-3000:]
+                except Exception:
+                    pass
+
+            reply_lang = _get_reply_language_label()
+            sys_msg = SystemMessage(
+                content=(
+                    "You are an expert analyst for macOS user recordings and automation design. "
+                    "Start your response with exactly two lines:\n"
+                    "AUTOMATION_TITLE: <short title> (max 80 chars)\n"
+                    "AUTOMATION_PROMPT: <detailed, step-by-step automation instructions>\n"
+                    "The AUTOMATION_PROMPT must be CONCRETE and EXECUTABLE. Include:\n"
+                    "- Specific UI element names/labels to interact with (e.g., 'button labeled \"Connect\"', 'dropdown showing cities')\n"
+                    "- Exact actions: click, scroll, type, verify state (e.g., 'click on the inactive city', 'verify the city is now connected')\n"
+                    "- Logic for detecting state (e.g., 'identify which city is currently active by looking for checkmark or highlight')\n"
+                    "- Coordinates only if absolutely necessary and relative to UI elements (e.g., 'click 50px below the city list header')\n"
+                    "- Handle multiple scenarios (e.g., 'if city is already active, skip to next inactive city')\n"
+                    "IMPORTANT: The user made corrections during recording (see 'corrections' field). "
+                    "Your automation should AVOID the mistakes the user corrected and do it RIGHT THE FIRST TIME. "
+                    "For example, if user corrected by clicking same position multiple times, your automation should identify the correct element first. "
+                    "If user used backspace/undo, your automation should enter the correct value directly without errors.\n"
+                    "Then produce: (1) short summary of what the user did, (2) attention/UX focus points (apps/windows/hotspots), "
+                    "(3) an automation plan that could replicate the workflow (steps + required tools/permissions), "
+                    "(4) missing data / permissions to improve recording. "
+                    "Use the provided user_context (may be null) to tailor the automation and focus on the moments implied by mouse hotspots. "
+                    "Use screenshot data and logs to understand the UI state and generate precise automation steps. "
+                    f"Respond in {reply_lang}."
+                )
+            )
+            human = HumanMessage(content=json.dumps(stats, ensure_ascii=False, indent=2))
+            resp = agent_session.llm.invoke([sys_msg, human])
+            text = str(getattr(resp, "content", "") or "").strip()
+            if not text:
+                log("LLM returned empty response", "error")
+                return
+
+            title = _extract_automation_title(text)
+            prompt = _extract_automation_prompt(text)
+            updates: Dict[str, Any] = {"analysis_ts": float(time.time())}
+            if title:
+                updates["automation_title"] = title
+            if prompt:
+                updates["automation_prompt"] = prompt
+            if len(updates) > 1:
+                _recordings_update_meta(rec_dir, updates)
+            log(text, "action")
+        except Exception as e:
+            log(f"Analyze failed: {e}", "error")
+        finally:
+            state.agent_processing = False
+            _trim_logs_if_needed()
+            try:
+                from tui.layout import force_ui_update
+
+                force_ui_update()
+            except Exception:
+                pass
+
+    threading.Thread(target=_bg, daemon=True).start()
+
+
+def _recordings_ensure_meta_name(dir_path: str) -> str:
+    try:
+        meta_path = os.path.join(dir_path, "meta.json")
+        data = _recordings_read_meta(dir_path)
+        if not data:
+            data = {"session_id": os.path.basename(dir_path)}
+        name = str(data.get("name") or "").strip()
+        if not name:
+            front_app = str(data.get("front_app") or "").strip()
+            sid = str(data.get("session_id") or os.path.basename(dir_path) or "").strip()
+            name = front_app or (f"Recording {sid}" if sid else "Recording")
+            data["name"] = name
+        try:
+            os.makedirs(dir_path, exist_ok=True)
+            with open(meta_path, "w", encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+        except Exception:
+            pass
+        return name
+    except Exception:
+        return ""
+
+
+def _recordings_resolve_last_dir() -> str:
+    p = str(recorder_last_session_dir or "").strip()
+    if p and os.path.exists(p):
+        return p
+    p = _recordings_load_last()
+    if p and os.path.exists(p):
+        return p
+    latest = _recordings_list_session_dirs(limit=1)
+    return latest[0] if latest else ""
+
+
+def _open_in_finder(path: str) -> Tuple[bool, str]:
+    p = str(path or "").strip()
+    if not p:
+        return False, "Empty path"
+    if not os.path.exists(p):
+        return False, f"Not found: {p}"
+    try:
+        proc = subprocess.run(["/usr/bin/open", p], capture_output=True, text=True)
+        if int(proc.returncode or 0) == 0:
+            return True, f"Opened: {p}"
+        proc2 = subprocess.run(["/usr/bin/open", "-a", "Finder", p], capture_output=True, text=True)
+        if int(proc2.returncode or 0) == 0:
+            return True, f"Opened: {p}"
+        err = ((proc.stderr or "") + "\n" + (proc2.stderr or "")).strip()
+        out = ((proc.stdout or "") + "\n" + (proc2.stdout or "")).strip()
+        tail = (err or out).strip()
+        tail = tail[-1200:] if tail else ""
+        return False, f"Failed to open: {p}" + ("\n" + tail if tail else "")
+    except Exception as e:
+        return False, f"Failed to open: {p}\n{e}"
+
+
+def _get_recorder_service() -> Any:
+    global recorder_service
+    if recorder_service is not None:
+        return recorder_service
+    if RecorderService is None:
+        return None
+    recorder_service = RecorderService()
+    return recorder_service
 
 
 def _monitor_start_selected() -> Tuple[bool, str]:
@@ -2046,7 +2718,189 @@ def _set_cleanup_cfg(cfg: Any) -> None:
 
 
 def _get_custom_tasks_menu_items() -> List[Tuple[str, Any]]:
-    return [("menu.custom.windsurf_register", _custom_task_windsurf_register)]
+    items: List[Tuple[str, Any]] = []
+    items.append(("menu.custom.section.recorder", None))
+    items.append(("menu.custom.recorder_start", _custom_task_recorder_start))
+    items.append(("menu.custom.recorder_stop", _custom_task_recorder_stop))
+
+    items.append(("menu.custom.section.recordings", None))
+
+    last_dir = _recordings_resolve_last_dir()
+    if last_dir:
+        meta = _recordings_read_meta(last_dir)
+        name = str(meta.get("name") or "").strip() or _recordings_ensure_meta_name(last_dir)
+        auto_title = str(meta.get("automation_title") or "").strip()
+        display = auto_title or name
+        sid = str(meta.get("session_id") or os.path.basename(last_dir) or "").strip()
+        if str(state.ui_lang or "").strip().lower() == "uk":
+            items.append((f"Останній запис: {display} ({sid})", _custom_task_recorder_open_last))
+            items.append((f"Аналізувати: {display} ({sid})", _custom_task_recording_analyze_last))
+        else:
+            items.append((f"Last recording: {display} ({sid})", _custom_task_recorder_open_last))
+            items.append((f"Analyze: {display} ({sid})", _custom_task_recording_analyze_last))
+    else:
+        items.append(("menu.custom.recorder_open_last", _custom_task_recorder_open_last))
+        items.append(("menu.custom.recording_analyze_last", _custom_task_recording_analyze_last))
+
+    for d in _recordings_list_session_dirs(limit=6):
+        if last_dir and os.path.abspath(d) == os.path.abspath(last_dir):
+            continue
+        meta = _recordings_read_meta(d)
+        name = str(meta.get("name") or "").strip() or _recordings_ensure_meta_name(d)
+        auto_title = str(meta.get("automation_title") or "").strip()
+        sid = str(meta.get("session_id") or os.path.basename(d) or "").strip()
+        if auto_title and name and auto_title.strip() != name.strip() and name.strip() not in auto_title.strip():
+            label = f"  {auto_title} — {name} ({sid})"
+        else:
+            label = f"  {(auto_title or name)} ({sid})"
+
+        def _make_open(dd: str) -> Any:
+            def _act() -> Tuple[bool, str]:
+                return _open_in_finder(dd)
+
+            return _act
+
+        items.append((label, _make_open(d)))
+
+    items.append(("menu.custom.windsurf_register", _custom_task_windsurf_register))
+
+    items.append(("menu.custom.section.automations", None))
+    items.append(("menu.custom.automation_run_last", _custom_task_automation_run_last))
+    items.append(("menu.custom.automation_permissions", _custom_task_automation_permissions_help))
+
+    # show a few recent automations (if present)
+    for d in _recordings_list_session_dirs(limit=6):
+        meta = _recordings_read_meta(d)
+        prompt = str(meta.get("automation_prompt") or "").strip()
+        if not prompt:
+            continue
+        name = str(meta.get("name") or "").strip() or _recordings_ensure_meta_name(d)
+        auto_title = str(meta.get("automation_title") or "").strip() or "(automation)"
+        sid = str(meta.get("session_id") or os.path.basename(d) or "").strip()
+
+        def _make_run(dd: str) -> Any:
+            def _act() -> Tuple[bool, str]:
+                return _custom_task_automation_run_dir(dd)
+
+            return _act
+
+        if str(state.ui_lang or "").strip().lower() == "uk":
+            items.append((f"▶ {auto_title} ({sid})", _make_run(d)))
+        else:
+            items.append((f"▶ {auto_title} ({sid})", _make_run(d)))
+
+    return items
+
+
+def _custom_task_automation_run_dir(rec_dir: str) -> Tuple[bool, str]:
+    ok, msg = _custom_tasks_allowed()
+    if not ok:
+        return False, msg
+
+    if not bool(getattr(state, "ui_unsafe_mode", False)):
+        return False, "Enable Unsafe mode (Settings -> Unsafe mode) to run automation"
+
+    pw = _permissions_wizard(
+        require_accessibility=True,
+        require_screen_recording=False,
+        require_automation=True,
+        prompt=True,
+        open_settings=True,
+    )
+    missing = pw.get("missing") or []
+    if missing:
+        return False, f"Missing permissions: {', '.join(missing)}"
+
+    meta = _recordings_read_meta(rec_dir)
+    prompt = str(meta.get("automation_prompt") or "").strip()
+    if not prompt:
+        return False, "No automation prompt in this recording. Run Analyze first."
+
+    title = str(meta.get("automation_title") or "").strip() or str(meta.get("name") or "").strip() or "Automation"
+    # Native-first. GUI is fallback controlled by gui_mode.
+    gui_mode = str(getattr(state, "ui_gui_mode", "auto") or "auto").strip().lower() or "auto"
+
+    def _runner() -> None:
+        state.agent_processing = True
+        try:
+            log(f"[AUTO] {title}", "action")
+            unsafe_mode = bool(getattr(state, "ui_unsafe_mode", False))
+            allow_shell = unsafe_mode
+            allow_applescript = unsafe_mode
+            allow_gui = unsafe_mode
+            allow_shortcuts = bool(getattr(state, "automation_allow_shortcuts", False))
+            _run_graph_agent_task(
+                prompt,
+                allow_autopilot=True,
+                allow_shell=allow_shell,
+                allow_applescript=allow_applescript,
+                allow_gui=allow_gui,
+                allow_shortcuts=allow_shortcuts,
+                gui_mode=gui_mode,
+            )
+        finally:
+            state.agent_processing = False
+            _trim_logs_if_needed()
+            try:
+                from tui.layout import force_ui_update
+
+                force_ui_update()
+            except Exception:
+                pass
+
+    threading.Thread(target=_runner, daemon=True).start()
+    return True, "Automation started"
+
+
+def _custom_task_automation_run_last() -> Tuple[bool, str]:
+    ok, msg = _custom_tasks_allowed()
+    if not ok:
+        return False, msg
+
+    rec_dir = _recordings_resolve_last_dir()
+    if not rec_dir:
+        return False, "Немає останнього запису"
+    return _custom_task_automation_run_dir(rec_dir)
+
+
+def _custom_task_automation_permissions_help() -> Tuple[bool, str]:
+    ok, msg = _custom_tasks_allowed()
+    if not ok:
+        return False, msg
+
+    if str(state.ui_lang or "").strip().lower() == "uk":
+        body = (
+            "Дозволи macOS для Recorder + Automation:\n\n"
+            "1) Accessibility (Доступність):\n"
+            "   System Settings -> Privacy & Security -> Accessibility\n"
+            "   Увімкни для застосунку, з якого запускаєш SYSTEM CLI (Terminal / iTerm / VS Code / Windsurf).\n\n"
+            "2) Screen Recording (Запис екрана):\n"
+            "   System Settings -> Privacy & Security -> Screen Recording\n"
+            "   Увімкни для того ж застосунку (щоб зберігались screenshots у записі).\n\n"
+            "3) Automation (Автоматизація):\n"
+            "   System Settings -> Privacy & Security -> Automation\n"
+            "   Дозволь застосунку-джерелу керувати: \"System Events\" (і за потреби ClearVPN).\n\n"
+            "4) Якщо GUI-автоматизація не клікає/не бачить UI:\n"
+            "   Перезапусти застосунок-джерело після видачі дозволів.\n"
+        )
+    else:
+        body = (
+            "macOS permissions for Recorder + Automation:\n\n"
+            "1) Accessibility:\n"
+            "   System Settings -> Privacy & Security -> Accessibility\n"
+            "   Enable for the app running SYSTEM CLI (Terminal / iTerm / VS Code / Windsurf).\n\n"
+            "2) Screen Recording:\n"
+            "   System Settings -> Privacy & Security -> Screen Recording\n"
+            "   Enable for the same app (for screenshots during recording).\n\n"
+            "3) Automation:\n"
+            "   System Settings -> Privacy & Security -> Automation\n"
+            "   Allow the source app to control \"System Events\" (and ClearVPN if prompted).\n\n"
+            "4) If GUI automation doesn't interact with UI:\n"
+            "   Restart the source app after granting permissions.\n"
+        )
+
+    log(body, "info")
+    return True, "OK"
 
 
 def _custom_tasks_allowed() -> Tuple[bool, str]:
@@ -2108,6 +2962,131 @@ def _custom_task_windsurf_register() -> Tuple[bool, str]:
     return False, f"Windsurf registration failed (code={rc})" + ("\n" + tail if tail else "")
 
 
+def _custom_task_recorder_start() -> Tuple[bool, str]:
+    ok, msg = _custom_tasks_allowed()
+    if not ok:
+        return False, msg
+
+    svc = _get_recorder_service()
+    if svc is None:
+        return False, "Recorder недоступний"
+
+    try:
+        st = getattr(svc, "get_status", lambda: None)()
+        if getattr(st, "running", False):
+            return False, "Recorder вже запущено"
+    except Exception:
+        pass
+
+    def _bg() -> None:
+        try:
+            pw = _permissions_wizard(
+                require_accessibility=True,
+                require_screen_recording=True,
+                require_automation=False,
+                prompt=True,
+                open_settings=True,
+            )
+            missing = pw.get("missing") or []
+            if missing:
+                log(f"Missing permissions: {', '.join(missing)}", "error")
+                if "accessibility" in missing:
+                    log("Enable Accessibility for your Terminal/IDE: Privacy & Security -> Accessibility", "error")
+                if "screen_recording" in missing:
+                    log("Enable Screen Recording for your Terminal/IDE: Privacy & Security -> Screen Recording", "error")
+                return
+
+            for i in range(5, 0, -1):
+                log(f"Recorder стартує через {i}s...", "action")
+                time.sleep(1)
+            ok2, msg2 = svc.start()
+            log(msg2, "action" if ok2 else "error")
+        except Exception as e:
+            log(f"Recorder start failed: {e}", "error")
+
+    threading.Thread(target=_bg, daemon=True).start()
+    return True, "Recorder старт заплановано (5s)"
+
+
+def _custom_task_recorder_stop() -> Tuple[bool, str]:
+    ok, msg = _custom_tasks_allowed()
+    if not ok:
+        return False, msg
+
+    svc = _get_recorder_service()
+    if svc is None:
+        return False, "Recorder недоступний"
+
+    global recorder_last_session_dir
+    try:
+        ok2, msg2, out_dir = svc.stop()
+        if ok2 and out_dir:
+            recorder_last_session_dir = str(out_dir)
+            _recordings_save_last(recorder_last_session_dir)
+            name = _recordings_ensure_meta_name(recorder_last_session_dir)
+            return True, msg2 + (f"\nName: {name}" if name else "")
+        return False, msg2
+    except Exception as e:
+        return False, f"Recorder stop failed: {e}"
+
+
+def _custom_task_recorder_open_last() -> Tuple[bool, str]:
+    ok, msg = _custom_tasks_allowed()
+    if not ok:
+        return False, msg
+
+    p = _recordings_resolve_last_dir()
+    if not p:
+        return False, "Немає останнього запису"
+    return _open_in_finder(p)
+
+
+def _custom_task_recording_analyze_last() -> Tuple[bool, str]:
+    ok, msg = _custom_tasks_allowed()
+    if not ok:
+        return False, msg
+
+    rec_dir = _recordings_resolve_last_dir()
+    if not rec_dir:
+        return False, "Немає останнього запису"
+
+    ok_llm, llm_msg = _ensure_agent_ready()
+    if not ok_llm:
+        return False, llm_msg
+
+    pw = _permissions_wizard(
+        require_accessibility=False,
+        require_screen_recording=True,
+        require_automation=False,
+        prompt=True,
+        open_settings=True,
+    )
+    missing = pw.get("missing") or []
+    if missing:
+        return False, "Screen Recording permission required for analysis (screenshots needed for richer LLM context)"
+
+    meta = _recordings_read_meta(rec_dir)
+    name = str(meta.get("name") or "").strip() or _recordings_ensure_meta_name(rec_dir)
+
+    state.recording_analysis_waiting = True
+    state.recording_analysis_dir = rec_dir
+    state.recording_analysis_name = name
+    try:
+        state.menu_level = MenuLevel.NONE
+    except Exception:
+        pass
+    try:
+        from tui.layout import force_ui_update
+
+        force_ui_update()
+    except Exception:
+        pass
+
+    if str(state.ui_lang or "").strip().lower() == "uk":
+        return True, "Введи додатковий контекст для аналізу (опціонально) і натисни Enter. Можна просто Enter щоб пропустити."
+    return True, "Type optional extra context for analysis and press Enter (or press Enter to skip)."
+
+
 def _get_monitoring_menu_items() -> List[Tuple[str, Any]]:
     return [
         ("menu.monitoring.targets", MenuLevel.MONITOR_TARGETS),
@@ -2117,11 +3096,15 @@ def _get_monitoring_menu_items() -> List[Tuple[str, Any]]:
 
 def _get_settings_menu_items() -> List[Tuple[str, Any]]:
     return [
-        ("menu.settings.llm", MenuLevel.LLM_SETTINGS),
-        ("menu.settings.agent", MenuLevel.AGENT_SETTINGS),
+        ("menu.settings.section.appearance", None, "section"),
         ("menu.settings.appearance", MenuLevel.APPEARANCE),
         ("menu.settings.language", MenuLevel.LANGUAGE),
         ("menu.settings.locales", MenuLevel.LOCALES),
+        ("menu.settings.section.agent", None, "section"),
+        ("menu.settings.llm", MenuLevel.LLM_SETTINGS),
+        ("menu.settings.agent", MenuLevel.AGENT_SETTINGS),
+        ("menu.settings.section.automation", None, "section"),
+        ("menu.settings.automation_permissions", MenuLevel.AUTOMATION_PERMISSIONS),
         ("menu.settings.unsafe_mode", MenuLevel.UNSAFE_MODE),
     ]
 
@@ -2134,6 +3117,16 @@ def _get_agent_menu_items() -> List[Tuple[str, Any]]:
     mode = "ON" if agent_chat_mode and agent_session.enabled else "OFF"
     unsafe = "ON" if bool(getattr(state, "ui_unsafe_mode", False)) else "OFF"
     return [(f"Agent: {mode}", None), (f"Unsafe mode: {unsafe}", None)]
+
+
+def _get_automation_permissions_menu_items() -> List[Tuple[str, Any]]:
+    shortcuts = "ON" if bool(getattr(state, "automation_allow_shortcuts", False)) else "OFF"
+    exec_mode = str(getattr(state, "ui_execution_mode", "native") or "native").strip().lower() or "native"
+    exec_label = "NATIVE" if exec_mode == "native" else "GUI"
+    return [
+        (f"Execution mode: {exec_label}", "ui_execution_mode"),
+        (f"Shortcuts: {shortcuts}", "automation_allow_shortcuts"),
+    ]
 
 
 def run_tui() -> None:
@@ -2150,6 +3143,7 @@ def run_tui() -> None:
     get_settings_menu_items_cb = globals().get("_get_settings_menu_items") or (lambda: [])
     get_llm_menu_items_cb = globals().get("_get_llm_menu_items") or (lambda: [])
     get_agent_menu_items_cb = globals().get("_get_agent_menu_items") or (lambda: [])
+    get_automation_permissions_menu_items_cb = globals().get("_get_automation_permissions_menu_items") or (lambda: [])
 
     show_menu, get_menu_content = build_menu(
         state=state,
@@ -2162,6 +3156,7 @@ def run_tui() -> None:
         get_settings_menu_items=get_settings_menu_items_cb,
         get_llm_menu_items=get_llm_menu_items_cb,
         get_agent_menu_items=get_agent_menu_items_cb,
+        get_automation_permissions_menu_items=get_automation_permissions_menu_items_cb,
         get_editors_list=_get_editors_list,
         get_cleanup_cfg=_get_cleanup_cfg,
         AVAILABLE_LOCALES=AVAILABLE_LOCALES,
@@ -2191,6 +3186,7 @@ def run_tui() -> None:
         get_settings_menu_items=get_settings_menu_items_cb,
         get_llm_menu_items=get_llm_menu_items_cb,
         get_agent_menu_items=get_agent_menu_items_cb,
+        get_automation_permissions_menu_items=_get_automation_permissions_menu_items,
         get_editors_list=_get_editors_list,
         get_cleanup_cfg=_get_cleanup_cfg,
         set_cleanup_cfg=_set_cleanup_cfg,
@@ -3058,39 +4054,30 @@ def _handle_command(cmd: str) -> None:
             return
 
         allow_autopilot = "confirm_autopilot" in cmd.lower()
-        allow_shell = "confirm_shell" in cmd.lower() or bool(getattr(state, "ui_unsafe_mode", False))
-        allow_applescript = "confirm_applescript" in cmd.lower() or bool(getattr(state, "ui_unsafe_mode", False))
-        allow_gui = "confirm_gui" in cmd.lower() or bool(getattr(state, "ui_unsafe_mode", False))
+        unsafe_mode = bool(getattr(state, "ui_unsafe_mode", False))
+        allow_shell = unsafe_mode
+        allow_applescript = unsafe_mode
+        allow_gui = unsafe_mode
+        allow_shortcuts = bool(getattr(state, "automation_allow_shortcuts", False))
         if not allow_autopilot and not bool(getattr(state, "ui_unsafe_mode", False)):
             log("Autopilot confirmation required. Add CONFIRM_AUTOPILOT to the same line.", "error")
             return
 
         def _runner() -> None:
             try:
-                from system_ai.autopilot.autopilot_agent import AutopilotAgent
-
-                agent = AutopilotAgent(
+                log(
+                    f"Autopilot started. shell={'ON' if allow_shell else 'OFF'} applescript={'ON' if allow_applescript else 'OFF'} gui={'ON' if allow_gui else 'OFF'} shortcuts={'ON' if allow_shortcuts else 'OFF'}",
+                    "action",
+                )
+                _run_graph_agent_task(
+                    task,
                     allow_autopilot=True,
                     allow_shell=bool(allow_shell),
                     allow_applescript=bool(allow_applescript),
+                    allow_gui=bool(allow_gui),
+                    allow_shortcuts=bool(allow_shortcuts),
+                    gui_mode=str(getattr(state, "ui_gui_mode", "auto") or "auto"),
                 )
-                log(f"Autopilot started. shell={'ON' if allow_shell else 'OFF'} applescript={'ON' if allow_applescript else 'OFF'}", "action")
-                for event in agent.run_task(task, max_steps=30):
-                    step = event.get("step")
-                    plan = event.get("plan")
-                    actions_results = event.get("actions_results") or []
-                    thought = getattr(plan, "thought", "") if plan else ""
-                    result_message = getattr(plan, "result_message", "") if plan else ""
-                    log(f"[AP] Step {step}: {thought}", "info")
-                    if result_message:
-                        log(f"[AP] {result_message}", "action")
-                    for r in actions_results:
-                        tool = r.get("tool")
-                        status = r.get("status")
-                        if tool and status:
-                            log(f"[AP] tool={tool} status={status}", "info")
-                    if event.get("done"):
-                        break
                 log("Autopilot done.", "action")
             except Exception as e:
                 log(f"Autopilot error: {e}", "error")
@@ -3108,10 +4095,27 @@ def _get_editors_list() -> List[Tuple[str, str]]:
 
 
 def _handle_input(buff: Buffer) -> None:
-    text = buff.text.strip()
+    raw = str(buff.text or "")
+    text = raw.strip()
+    buff.text = ""
+
+    if getattr(state, "recording_analysis_waiting", False):
+        rec_dir = str(getattr(state, "recording_analysis_dir", "") or "").strip() or _recordings_resolve_last_dir()
+        meta = _recordings_read_meta(rec_dir) if rec_dir else {}
+        name = str(getattr(state, "recording_analysis_name", "") or "").strip() or str(meta.get("name") or "").strip() or _recordings_ensure_meta_name(rec_dir)
+        state.recording_analysis_waiting = False
+        state.recording_analysis_dir = None
+        state.recording_analysis_name = None
+        if not rec_dir:
+            log("Немає останнього запису", "error")
+            return
+        _start_recording_analysis(rec_dir=rec_dir, name=name, user_context=text)
+        if text:
+            log(text, "user")
+        return
+
     if not text:
         return
-    buff.text = ""
 
     if getattr(state, "agent_paused", False) and not text.lower().startswith(("/resume", "/help", "/h")):
         log(str(getattr(state, "agent_pause_message", "") or "Стан паузи. Дай дозвіл і введи /resume."), "error")
@@ -3145,12 +4149,14 @@ def _handle_input(buff: Buffer) -> None:
                 # Auto-switch to graph runtime for complex tasks when permitted.
                 allow_graph = bool(getattr(state, "ui_unsafe_mode", False)) or _is_confirmed_autopilot(text)
                 if _is_complex_task(text) and allow_graph:
+                    unsafe_mode = bool(getattr(state, "ui_unsafe_mode", False))
                     _run_graph_agent_task(
                         text,
                         allow_autopilot=True,
-                        allow_shell=bool(getattr(state, "ui_unsafe_mode", False)) or _is_confirmed_shell(text),
-                        allow_applescript=bool(getattr(state, "ui_unsafe_mode", False)) or _is_confirmed_applescript(text),
-                        allow_gui=bool(getattr(state, "ui_unsafe_mode", False)) or _is_confirmed_gui(text),
+                        allow_shell=unsafe_mode,
+                        allow_applescript=unsafe_mode,
+                        allow_gui=unsafe_mode,
+                        allow_shortcuts=bool(getattr(state, "automation_allow_shortcuts", False)) or _is_confirmed_shortcuts(text),
                         gui_mode=getattr(state, "ui_gui_mode", "auto"),
                     )
                     ok, answer = True, ""
@@ -3182,12 +4188,18 @@ input_buffer = Buffer(multiline=False, accept_handler=_handle_input)
 
 
 def get_input_prompt():
+    if getattr(state, "recording_analysis_waiting", False):
+        if str(state.ui_lang or "").strip().lower() == "uk":
+            return [("class:input.prompt", " user> "), ("class:input.hint", " (контекст для аналізу, Enter=skip) ")]
+        return [("class:input.prompt", " user> "), ("class:input.hint", " (analysis context, Enter=skip) ")]
     if state.menu_level != MenuLevel.NONE:
         return [("class:input.menu", " MENU "), ("class:input.hint", " ↑↓ рух | Enter/Space дія | F2 меню ")]
     return [("class:input.prompt", " > ")]
 
 
 def get_prompt_width() -> int:
+    if getattr(state, "recording_analysis_waiting", False):
+        return 12
     return 55 if state.menu_level != MenuLevel.NONE else 3
 
 
@@ -3479,24 +4491,43 @@ def cli_main(argv: List[str]) -> None:
             print("Confirmation required: pass --confirm-autopilot (or enable Unsafe mode in TUI Settings)")
             raise SystemExit(1)
         try:
-            from system_ai.autopilot.autopilot_agent import AutopilotAgent
-
-            agent = AutopilotAgent(
-                allow_autopilot=True,
-                allow_shell=True if unsafe_mode else bool(args.confirm_shell),
-                allow_applescript=True if unsafe_mode else bool(args.confirm_applescript),
+            from core.trinity import TrinityRuntime, TrinityPermissions
+            
+            allow_shell = unsafe_mode
+            allow_applescript = unsafe_mode
+            allow_gui = unsafe_mode
+            allow_shortcuts = bool(getattr(state, "automation_allow_shortcuts", False))
+            
+            permissions = TrinityPermissions(
+                allow_shell=allow_shell,
+                allow_applescript=allow_applescript,
+                allow_file_write=True,
+                allow_gui=allow_gui,
+                allow_shortcuts=allow_shortcuts,
             )
-            for event in agent.run_task(args.task, max_steps=int(args.max_steps)):
-                step = event.get("step")
-                plan = event.get("plan")
-                thought = getattr(plan, "thought", "") if plan else ""
-                result_message = getattr(plan, "result_message", "") if plan else ""
-                print(f"[AP] Step {step}: {thought}")
-                if result_message:
-                    print(f"[AP] {result_message}")
-                if event.get("done"):
-                    break
+            
+            runtime = TrinityRuntime(verbose=True, permissions=permissions)
+            step_count = 0
+            for event in runtime.run(args.task):
+                step_count += 1
+                for node_name, state_update in event.items():
+                    messages = state_update.get("messages", [])
+                    last_msg = messages[-1] if messages else None
+                    content = getattr(last_msg, "content", "") if last_msg else ""
+                    if content:
+                        print(f"[{node_name.upper()}] {content}")
+                    
+                    pause_info = state_update.get("pause_info")
+                    if pause_info:
+                        perm = pause_info.get("permission", "unknown")
+                        msg = pause_info.get("message", "Permission required")
+                        print(f"[PAUSED] {perm}: {msg}")
+                        raise SystemExit(1)
+            
+            print("[AUTOPILOT] Task completed successfully.")
             raise SystemExit(0)
+        except SystemExit:
+            raise
         except Exception as e:
             print(f"Autopilot error: {e}")
             raise SystemExit(1)

@@ -23,6 +23,7 @@ class MenuLevel(Enum):
     AGENT_SETTINGS = "agent_settings"
     APPEARANCE = "appearance"
     LANGUAGE = "language"
+    AUTOMATION_PERMISSIONS = "automation_permissions"
 
 
 @dataclass
@@ -42,11 +43,16 @@ class AppState:
     ui_unsafe_mode: bool = False
     ui_streaming: bool = True
     ui_gui_mode: str = "auto"
+    ui_execution_mode: str = "native"
+    automation_allow_shortcuts: bool = False
     agent_processing: bool = False
     agent_paused: bool = False
     agent_pause_permission: Optional[str] = None
     agent_pause_message: Optional[str] = None
     agent_pause_pending_text: Optional[str] = None
+    recording_analysis_waiting: bool = False
+    recording_analysis_dir: Optional[str] = None
+    recording_analysis_name: Optional[str] = None
 
 
 state = AppState()

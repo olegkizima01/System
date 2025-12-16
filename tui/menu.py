@@ -19,6 +19,7 @@ def build_menu(
     get_settings_menu_items: Callable[[], List[Tuple[str, Any]]],
     get_llm_menu_items: Callable[[], List[Tuple[str, Any]]],
     get_agent_menu_items: Callable[[], List[Tuple[str, Any]]],
+    get_automation_permissions_menu_items: Callable[[], List[Tuple[str, Any]]],
     get_editors_list: Callable[[], List[Tuple[str, str]]],
     get_cleanup_cfg: Callable[[], Any],
     AVAILABLE_LOCALES: Sequence[Any],
@@ -69,10 +70,14 @@ def build_menu(
             result.append(("class:menu.title", f" {tr('menu.settings.title', state.ui_lang)}\n\n"))
             items = get_settings_menu_items()
             state.menu_index = max(0, min(state.menu_index, len(items) - 1))
-            for i, (label, _) in enumerate(items):
-                prefix = " > " if i == state.menu_index else "   "
-                style_cls = "class:menu.selected" if i == state.menu_index else "class:menu.item"
-                result.append((style_cls, f"{prefix}{tr(label, state.ui_lang)}\n"))
+            for i, item in enumerate(items):
+                if isinstance(item, tuple) and len(item) == 3 and item[2] == "section":
+                    result.append(("class:menu.title", f"\n {tr(item[0], state.ui_lang)}\n"))
+                else:
+                    label = item[0] if isinstance(item, tuple) else item
+                    prefix = " > " if i == state.menu_index else "   "
+                    style_cls = "class:menu.selected" if i == state.menu_index else "class:menu.item"
+                    result.append((style_cls, f"{prefix}{tr(label, state.ui_lang)}\n"))
             return result
 
         if state.menu_level == MenuLevel.LLM_SETTINGS:
@@ -133,6 +138,16 @@ def build_menu(
             result.append(("class:menu.selected", " > Unsafe mode ["))
             result.append((toggle_style, f"{mark}"))
             result.append(("class:menu.selected", "]\n"))
+            return result
+
+        if state.menu_level == MenuLevel.AUTOMATION_PERMISSIONS:
+            result.append(("class:menu.title", f" {tr('menu.automation_permissions.title', state.ui_lang)}\n\n"))
+            items = get_automation_permissions_menu_items()
+            state.menu_index = max(0, min(state.menu_index, len(items) - 1))
+            for i, (label, _) in enumerate(items):
+                prefix = " > " if i == state.menu_index else "   "
+                style_cls = "class:menu.selected" if i == state.menu_index else "class:menu.item"
+                result.append((style_cls, f"{prefix}{label}\n"))
             return result
 
         if state.menu_level == MenuLevel.MONITOR_CONTROL:

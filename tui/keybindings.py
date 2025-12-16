@@ -27,6 +27,7 @@ def build_keybindings(
     get_settings_menu_items: Callable[[], List[Tuple[str, Any]]],
     get_llm_menu_items: Callable[[], List[Tuple[str, Any]]],
     get_agent_menu_items: Callable[[], List[Tuple[str, Any]]],
+    get_automation_permissions_menu_items: Callable[[], List[Tuple[str, Any]]],
     get_editors_list: Callable[[], List[Tuple[str, str]]],
     # cleanup/module operations
     get_cleanup_cfg: Callable[[], Any],
@@ -50,6 +51,29 @@ def build_keybindings(
     opensnoop_service: Any,
 ) -> KeyBindings:
     kb = KeyBindings()
+
+    def _is_section_item(item: Any) -> bool:
+        return isinstance(item, tuple) and len(item) == 3 and item[2] == "section"
+
+    def _settings_next_selectable_index(items: List[Any], start: int, direction: int) -> int:
+        if not items:
+            return 0
+        idx = max(0, min(int(start), len(items) - 1))
+        step = 1 if direction >= 0 else -1
+        while 0 <= idx < len(items) and _is_section_item(items[idx]):
+            idx += step
+        if 0 <= idx < len(items):
+            return idx
+        # fallback: scan from beginning/end
+        if step > 0:
+            for i in range(0, len(items)):
+                if not _is_section_item(items[i]):
+                    return i
+        else:
+            for i in range(len(items) - 1, -1, -1):
+                if not _is_section_item(items[i]):
+                    return i
+        return 0
 
     @kb.add("c-c")
     def _(event):
@@ -82,6 +106,7 @@ def build_keybindings(
             MenuLevel.MONITOR_CONTROL,
             MenuLevel.SETTINGS,
             MenuLevel.UNSAFE_MODE,
+            MenuLevel.AUTOMATION_PERMISSIONS,
             MenuLevel.LLM_SETTINGS,
             MenuLevel.AGENT_SETTINGS,
             MenuLevel.APPEARANCE,
@@ -93,6 +118,9 @@ def build_keybindings(
     @kb.add("up", filter=show_menu)
     def _(event):
         state.menu_index = max(0, state.menu_index - 1)
+        if state.menu_level == MenuLevel.SETTINGS:
+            items = get_settings_menu_items()
+            state.menu_index = _settings_next_selectable_index(items, state.menu_index, -1)
         if state.menu_level == MenuLevel.MONITOR_TARGETS:
             items = get_monitor_menu_items()
             normalize_menu_index(items)
@@ -118,6 +146,8 @@ def build_keybindings(
             max_idx = max(0, len(get_settings_menu_items()) - 1)
         elif state.menu_level == MenuLevel.UNSAFE_MODE:
             max_idx = 0
+        elif state.menu_level == MenuLevel.AUTOMATION_PERMISSIONS:
+            max_idx = max(0, len(get_automation_permissions_menu_items()) - 1)
         elif state.menu_level == MenuLevel.MONITOR_TARGETS:
             max_idx = max(0, len(get_monitor_menu_items()) - 1)
         elif state.menu_level == MenuLevel.MONITOR_CONTROL:
@@ -132,6 +162,10 @@ def build_keybindings(
             max_idx = 1
 
         state.menu_index = min(max_idx, state.menu_index + 1)
+
+        if state.menu_level == MenuLevel.SETTINGS:
+            items = get_settings_menu_items()
+            state.menu_index = _settings_next_selectable_index(items, state.menu_index, 1)
 
         if state.menu_level == MenuLevel.MONITOR_TARGETS:
             items = get_monitor_menu_items()
@@ -243,6 +277,8 @@ def build_keybindings(
             state.menu_index = max(0, min(state.menu_index, len(items) - 1))
             _label, action = items[state.menu_index]
             try:
+                if not callable(action):
+                    return
                 ok, msg = action()
                 log(msg, "action" if ok else "error")
             except Exception as e:
@@ -264,7 +300,11 @@ def build_keybindings(
             if not items:
                 return
             state.menu_index = max(0, min(state.menu_index, len(items) - 1))
-            _, lvl = items[state.menu_index]
+            state.menu_index = _settings_next_selectable_index(items, state.menu_index, 1)
+            item = items[state.menu_index]
+            if _is_section_item(item):
+                return
+            _, lvl = item[0], item[1]
             state.menu_level = lvl
             state.menu_index = 0
             return
@@ -273,6 +313,22 @@ def build_keybindings(
             state.ui_unsafe_mode = not bool(getattr(state, "ui_unsafe_mode", False))
             save_ui_settings()
             log(f"Unsafe mode: {'ON' if state.ui_unsafe_mode else 'OFF'}", "action")
+            return
+
+        if state.menu_level == MenuLevel.AUTOMATION_PERMISSIONS:
+            items = get_automation_permissions_menu_items()
+            if not items:
+                return
+            state.menu_index = max(0, min(state.menu_index, len(items) - 1))
+            _, perm_key = items[state.menu_index]
+            if perm_key == "ui_execution_mode":
+                cur = str(getattr(state, "ui_execution_mode", "native") or "native").strip().lower() or "native"
+                state.ui_execution_mode = "gui" if cur == "native" else "native"
+                log(f"Execution mode: {state.ui_execution_mode}", "action")
+            if perm_key == "automation_allow_shortcuts":
+                state.automation_allow_shortcuts = not bool(getattr(state, "automation_allow_shortcuts", False))
+                log(f"Shortcuts: {'ON' if state.automation_allow_shortcuts else 'OFF'}", "action")
+            save_ui_settings()
             return
 
         if state.menu_level == MenuLevel.APPEARANCE:

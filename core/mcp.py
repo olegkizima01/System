@@ -1,8 +1,10 @@
 from typing import Dict, Any, Callable, List, Optional
 import json
+import time
 
 # Import all tools
 from system_ai.tools.executor import run_shell, open_app, run_applescript, run_shortcut
+from system_ai.tools.executor import open_system_settings_privacy
 from system_ai.tools.screenshot import take_screenshot
 from system_ai.tools.filesystem import read_file, write_file, list_files
 from system_ai.tools.windsurf import send_to_windsurf, open_file_in_windsurf
@@ -10,6 +12,10 @@ from system_ai.tools.input import click, type_text, press_key, move_mouse, click
 from system_ai.tools.screenshot import capture_screen_region
 from system_ai.tools.vision import analyze_with_copilot, ocr_region, find_image_on_screen
 from core.memory import save_memory_tool, query_memory_tool
+
+from system_ai.tools.permissions_manager import create_permissions_manager
+from system_ai.tools.macos_native_automation import create_automation_executor
+from system_ai.tools.macos_commands import create_command_executor
 
 class MCPToolRegistry:
     """
@@ -28,6 +34,129 @@ class MCPToolRegistry:
         self.register_tool("open_app", open_app, "Open MacOS Application. Args: name (str)")
         self.register_tool("run_applescript", run_applescript, "Run AppleScript. Args: script (str)")
         self.register_tool("run_shortcut", run_shortcut, "Run Shortcuts automation. Args: name (str), allow=True")
+
+        # Permissions / Privacy
+        self.register_tool(
+            "open_system_settings_privacy",
+            open_system_settings_privacy,
+            "Open macOS Privacy pane. Args: permission (accessibility|automation|screen_recording|full_disk_access|microphone|files_and_folders)",
+        )
+
+        pm = create_permissions_manager()
+        self.register_tool("check_permissions", lambda: {"tool": "check_permissions", "status": "success", "permissions": {k: vars(v) for k, v in pm.check_all().items()}}, "Check macOS permissions (accessibility/screen_recording/automation). Args: none")
+        self.register_tool("permission_help", lambda lang="en": {"tool": "permission_help", "status": "success", "text": pm.get_permission_help_text(lang=str(lang or 'en').strip().lower())}, "Get permissions help text. Args: lang (en|uk)")
+
+        def _get_recorder_service() -> Any:
+            # Optional integration with TUI recorder if running under that environment.
+            # Keep this import local to avoid hard dependency from core -> tui.
+            try:
+                from tui.cli import _get_recorder_service as _tui_get_recorder_service  # type: ignore
+
+                return _tui_get_recorder_service()
+            except Exception:
+                return None
+
+        def _record_automation_event(tool: str, args: Dict[str, Any], result: Any) -> None:
+            try:
+                rec = _get_recorder_service()
+                if rec is None:
+                    return
+                status = getattr(rec, "status", None)
+                if not bool(getattr(status, "running", False)):
+                    return
+                if not hasattr(rec, "_enqueue"):
+                    return
+
+                safe_args: Dict[str, Any] = {}
+                for k, v in (args or {}).items():
+                    if k == "script" and isinstance(v, str):
+                        safe_args[k] = v[:200]
+                    elif isinstance(v, str):
+                        safe_args[k] = v[:500]
+                    else:
+                        safe_args[k] = v
+
+                ev = {
+                    "type": "automation",
+                    "ts": time.time(),
+                    "tool": str(tool or ""),
+                    "args": safe_args,
+                    "result": result,
+                }
+                rec._enqueue(ev)
+            except Exception:
+                return
+
+        def _open_app_wrapped(name: str) -> Any:
+            res = open_app(name=name)
+            _record_automation_event("open_app", {"name": name}, res)
+            return res
+
+        def _run_applescript_wrapped(script: str) -> Any:
+            res = run_applescript(script=script)
+            _record_automation_event("run_applescript", {"script": script}, res)
+            return res
+
+        def _run_shell_wrapped(command: str, allow: bool = True) -> Any:
+            res = run_shell(command=command, allow=allow)
+            _record_automation_event("run_shell", {"command": command, "allow": allow}, res)
+            return res
+
+        def _run_shortcut_wrapped(name: str, allow: bool = True) -> Any:
+            res = run_shortcut(name=name, allow=allow)
+            _record_automation_event("run_shortcut", {"name": name, "allow": allow}, res)
+            return res
+
+        # Overwrite foundation tools with recorder-aware wrappers.
+        self.register_tool("run_shell", _run_shell_wrapped, "Execute shell command. Args: command (str), allow=True")
+        self.register_tool("open_app", _open_app_wrapped, "Open MacOS Application. Args: name (str)")
+        self.register_tool("run_applescript", _run_applescript_wrapped, "Run AppleScript. Args: script (str)")
+        self.register_tool("run_shortcut", _run_shortcut_wrapped, "Run Shortcuts automation. Args: name (str), allow=True")
+
+        def _native() -> Any:
+            return create_automation_executor(recorder_service=_get_recorder_service())
+
+        def _native_cmd() -> Any:
+            return create_command_executor(_native())
+
+        # Native macOS automation (AppleScript-based)
+        self.register_tool(
+            "native_applescript",
+            lambda script: _native().execute_applescript(str(script or ""), record=True),
+            "Execute AppleScript via native automation (recordable if recorder is active). Args: script (str)",
+        )
+        self.register_tool(
+            "native_click_ui",
+            lambda app_name, ui_path: _native().click_ui_element(str(app_name or ""), str(ui_path or ""), record=True),
+            "Click UI element via AppleScript (recordable). Args: app_name (str), ui_path (str)",
+        )
+        self.register_tool(
+            "native_type_text",
+            lambda text: _native().type_text(str(text or ""), record=True),
+            "Type text via AppleScript (recordable). Args: text (str)",
+        )
+        self.register_tool(
+            "native_wait",
+            lambda seconds=1.0: _native().wait(float(seconds or 0.0), record=True),
+            "Sleep/wait (recordable). Args: seconds (float)",
+        )
+        self.register_tool(
+            "native_front_app",
+            lambda: _native().get_frontmost_app(),
+            "Get frontmost application name. Args: none",
+        )
+
+        # High-level commands (wrappers)
+        self.register_tool(
+            "native_open_app",
+            lambda name: _native_cmd().open_app(str(name or "")),
+            "Open application (native). Args: name (str)",
+        )
+        self.register_tool(
+            "native_activate_app",
+            lambda name: _native_cmd().activate_app(str(name or "")),
+            "Activate application (native). Args: name (str)",
+        )
         
         # Filesystem
         self.register_tool("read_file", read_file, "Read file content. Args: path (str)")
@@ -40,6 +169,7 @@ class MCPToolRegistry:
         
         # Vision/Input
         self.register_tool("capture_screen", take_screenshot, "Take screenshot of app or screen. Args: app_name (optional)")
+        self.register_tool("take_screenshot", take_screenshot, "Take screenshot of app or screen. Args: app_name (optional)")
         self.register_tool("capture_screen_region", capture_screen_region, "Capture screenshot of screen region. Args: x,y,width,height")
         self.register_tool("analyze_screen", analyze_with_copilot, "Analyze screen image with AI. Args: image_path (str), prompt (str)")
         self.register_tool("ocr_region", ocr_region, "OCR a screen region using vision. Args: x,y,width,height")
