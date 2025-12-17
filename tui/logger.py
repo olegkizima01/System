@@ -159,6 +159,7 @@ def log_exception(logger: logging.Logger, exc: Exception, context: str = "") -> 
     logger.exception(msg)
 
 
+
 def log_command_execution(logger: logging.Logger, cmd: str, cwd: Optional[str] = None, 
                           returncode: Optional[int] = None, stdout: str = "", 
                           stderr: str = "") -> None:
@@ -172,6 +173,19 @@ def log_command_execution(logger: logging.Logger, cmd: str, cwd: Optional[str] =
         logger.debug(f"STDOUT:\n{stdout}")
     if stderr:
         logger.warning(f"STDERR:\n{stderr}")
+
+
+def trace(logger: logging.Logger, event: str, data: Optional[dict] = None) -> None:
+    """Log structured trace event for AI analysis."""
+    import json
+    try:
+        payload = {"event": event}
+        if data:
+            payload.update(data)
+        serialized = json.dumps(payload, ensure_ascii=False)
+        logger.debug(f"[TRACE] {serialized}")
+    except Exception:
+        logger.debug(f"[TRACE] {event} (serialization failed)")
 
 
 def get_log_files_info() -> dict:

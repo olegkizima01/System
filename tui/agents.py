@@ -503,6 +503,21 @@ def run_graph_agent_task(
         gui_mode_val = str(gui_mode or "auto").strip().lower() or "auto"
         runtime = TrinityRuntime(verbose=False, permissions=permissions, on_stream=on_stream_callback)
         
+        # Enrich Trinity Registry with TUI tools
+        if not agent_session.tools:
+             try:
+                 # Initialize TUI tools if not already done
+                 init_agent_tools()
+             except Exception:
+                 pass
+                 
+        if agent_session.tools:
+            for tool in agent_session.tools:
+                # Only register if not already present (Trinity core tools take precedence or we overwrite?)
+                # We'll overwrite to ensure TUI-specific wrappers (like monitor_start logging) are used.
+                runtime.registry.register_tool(tool.name, tool.handler, tool.description)
+
+        
         exec_mode = str(getattr(state, "ui_execution_mode", "native") or "native").strip().lower() or "native"
         for event in runtime.run(user_text, gui_mode=gui_mode_val, execution_mode=exec_mode):
             for node_name, state_update in event.items():

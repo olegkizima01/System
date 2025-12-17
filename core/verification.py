@@ -1,5 +1,6 @@
 from typing import List, Dict, Any, Optional
 import json
+import logging
 
 class AdaptiveVerifier:
     """
@@ -8,6 +9,7 @@ class AdaptiveVerifier:
     
     def __init__(self, llm):
         self.llm = llm
+        self.logger = logging.getLogger("system_cli.verifier")
 
     def optimize_plan(self, raw_plan: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """
@@ -62,15 +64,19 @@ class AdaptiveVerifier:
             if isinstance(optimized, list):
                 # Fallback: if LLM didn't add verify steps, add them manually for critical steps
                 enhanced = self._ensure_verify_steps(optimized)
-                print(f"[Verifier] Plan optimized: {len(raw_plan)} → {len(enhanced)} steps (added {len(enhanced) - len(raw_plan)} verify steps)")
+                self.logger.debug(
+                    f"[Verifier] Plan optimized: {len(raw_plan)} → {len(enhanced)} steps (added {len(enhanced) - len(raw_plan)} verify steps)"
+                )
                 return enhanced
                 
         except Exception as e:
-            print(f"[Verifier] LLM JSON parsing error: {e}")
-            print(f"[Verifier] Raw response: {content[:200]}...") # Debug log
+            self.logger.warning(f"[Verifier] LLM JSON parsing error: {e}")
+            self.logger.debug(f"[Verifier] Raw response: {content[:200]}...")
             # Fallback: ensure verify steps manually
             enhanced = self._ensure_verify_steps(raw_plan)
-            print(f"[Verifier] Plan fallback: {len(raw_plan)} → {len(enhanced)} steps (added {len(enhanced) - len(raw_plan)} verify steps)")
+            self.logger.debug(
+                f"[Verifier] Plan fallback: {len(raw_plan)} → {len(enhanced)} steps (added {len(enhanced) - len(raw_plan)} verify steps)"
+            )
             return enhanced
     
     def _ensure_verify_steps(self, plan: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
@@ -145,7 +151,7 @@ class AdaptiveVerifier:
 
         except Exception as e:
             # If local diff fails, assume change (safety fallback)
-            print(f"[Verifier] Diff calculation error: {e}")
+            self.logger.warning(f"[Verifier] Diff calculation error: {e}")
             return 1.0 
 
     def replan_on_failure(self, failed_step: Dict[str, Any], context: str) -> List[Dict[str, Any]]:

@@ -862,7 +862,13 @@ class TrinityRuntime:
         }
 
     def _router(self, state: TrinityState):
-        return state["current_agent"]
+        current = state["current_agent"]
+        try:
+            from tui.logger import get_logger, trace
+            trace(get_logger("core.trinity"), "router_decision", {"current": current, "next": current})  # Router typically just returns current agent for StateGraph? No, state graph edge logic uses this.
+        except Exception:
+            pass
+        return current
 
     def _get_git_root(self) -> Optional[str]:
         try:
