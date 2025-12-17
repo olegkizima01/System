@@ -702,19 +702,34 @@ class TrinityRuntime:
         test_results = ""
         critical_dirs = ["core/", "system_ai/", "tui/", "providers/"]
         try:
+            # Check if we should even verify tests based on task type
+            task_type = str(state.get("task_type") or "").strip().upper()
+            should_skip_tests = (task_type == "GENERAL")
+            
             repo_changes = self._get_repo_changes()
             changed_files = []
             if isinstance(repo_changes, dict) and repo_changes.get("ok") is True:
                 changed_files = list(repo_changes.get("changed_files") or [])
+            
             has_critical_changes = any(
                 any(f.startswith(d) for d in critical_dirs) 
                 for f in changed_files
             )
             
-            if has_critical_changes and self.verbose:
-                print("👁️ [Grisha] Detected changes in critical directories. Running pytest...")
+            try:
+                from tui.logger import get_logger, trace
+                trace(get_logger("core.trinity"), "grisha_verification_check", {
+                    "task_type": task_type,
+                    "critical_changes": has_critical_changes,
+                    "changed_files": changed_files,
+                    "skip": should_skip_tests
+                })
+            except Exception:
+                pass
             
-            if has_critical_changes:
+            if has_critical_changes and not should_skip_tests:
+                if self.verbose:
+                    print("👁️ [Grisha] Detected changes in critical directories. Running pytest...")
                 # Run pytest
                 test_cmd = "pytest -q --tb=short 2>&1"
                 test_proc = subprocess.run(test_cmd, shell=True, capture_output=True, text=True, cwd=self._get_git_root() or ".")
@@ -723,6 +738,10 @@ class TrinityRuntime:
                 
                 if self.verbose:
                     print(f"👁️ [Grisha] Test results:\n{test_output[:200]}...")
+            else:
+                 if self.verbose:
+                    print("👁️ [Grisha] Skipping extensive tests (simple task or no critical changes).")
+                    
         except Exception as e:
             if self.verbose:
                 print(f"👁️ [Grisha] Test execution error: {e}")
