@@ -684,7 +684,6 @@ class TrinityRuntime:
             "execution_mode": execution_mode,
             "gui_mode": gui_mode,
             "gui_fallback_attempted": gui_fallback_attempted,
-            "gui_fallback_attempted": gui_fallback_attempted,
             "dev_edit_mode": dev_edit_mode,
             "last_step_status": "success",
         }
@@ -841,17 +840,13 @@ class TrinityRuntime:
         elif (has_explicit_complete or (has_positive and (not has_uncertainty) and (not has_question))) and not tool_calls:
             # Case D: VERIFICATION PASSED and no new tools called.
             # TASK IS COMPLETE!
-            # TASK IS COMPLETE!
-            # TASK IS COMPLETE!
             next_agent = "end"
-            step_status = "success"
             step_status = "success"
             
         else:
             # Default fallback - continue to atlas for more instructions
             next_agent = "atlas"
             step_status = "uncertain"
-            next_agent = "atlas"
 
         # Preserve existing messages and add new one
         updated_messages = list(context) + [AIMessage(content=content)]
