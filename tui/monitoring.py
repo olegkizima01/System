@@ -436,6 +436,144 @@ class MonitorSummaryService:
 monitor_summary_service = MonitorSummaryService(db_path=MONITOR_EVENTS_DB_PATH)
 
 
+
+def monitor_start_selected() -> Tuple[bool, str]:
+    """Start the selected monitoring source."""
+    from tui.cli import monitor_service, fs_usage_service, opensnoop_service
+    src = state.monitor_source
+    if src == "watchdog":
+        return monitor_service.start()
+    elif src == "fs_usage":
+        return fs_usage_service.start()
+    elif src == "opensnoop":
+        return opensnoop_service.start()
+    return False, f"Unknown source: {src}"
+
+
+def monitor_stop_selected() -> Tuple[bool, str]:
+    """Stop the selected monitoring source."""
+    from tui.cli import monitor_service, fs_usage_service, opensnoop_service
+    src = state.monitor_source
+    if src == "watchdog":
+        return monitor_service.stop()
+    elif src == "fs_usage":
+        return fs_usage_service.stop()
+    elif src == "opensnoop":
+        return opensnoop_service.stop()
+    return False, f"Unknown source: {src}"
+
+
+def monitor_summary_start_if_needed() -> None:
+    """Start summary service if monitoring is active."""
+    if state.monitor_active:
+        monitor_summary_service.start()
+
+
+def monitor_summary_stop_if_needed() -> None:
+    """Stop summary service."""
+    monitor_summary_service.stop()
+
+
+def tool_monitor_status() -> Dict[str, Any]:
+    """Get monitoring status."""
+    return {
+        "ok": True,
+        "active": bool(state.monitor_active),
+        "source": state.monitor_source,
+        "use_sudo": bool(state.monitor_use_sudo),
+        "targets_count": len(state.monitor_targets),
+        "db": MONITOR_EVENTS_DB_PATH,
+    }
+
+
+def tool_monitor_set_source(args: Dict[str, Any]) -> Dict[str, Any]:
+    """Set monitoring source."""
+    src = str(args.get("source") or "").strip().lower()
+    if src not in {"watchdog", "fs_usage", "opensnoop"}:
+        return {"ok": False, "error": "Invalid source. Use watchdog|fs_usage|opensnoop"}
+    if state.monitor_active:
+        return {"ok": False, "error": "Stop monitoring before changing source"}
+    
+    from tui.agents import load_env
+    load_env()
+    state.monitor_source = src
+    if src in {"fs_usage", "opensnoop"} and not state.monitor_use_sudo:
+        if str(os.getenv("SUDO_PASSWORD") or "").strip():
+            state.monitor_use_sudo = True
+    save_monitor_settings()
+    return {"ok": True, "source": state.monitor_source}
+
+
+def tool_monitor_set_use_sudo(args: Dict[str, Any]) -> Dict[str, Any]:
+    """Toggle sudo usage for monitoring."""
+    use_sudo = args.get("use_sudo")
+    if not isinstance(use_sudo, bool):
+        raw = str(use_sudo or "").strip().lower()
+        if raw in {"1", "true", "yes", "on", "enable", "enabled"}:
+            use_sudo = True
+        elif raw in {"0", "false", "no", "off", "disable", "disabled"}:
+            use_sudo = False
+        else:
+            return {"ok": False, "error": "use_sudo must be boolean"}
+    
+    if state.monitor_active:
+        return {"ok": False, "error": "Stop monitoring before changing sudo setting"}
+    state.monitor_use_sudo = bool(use_sudo)
+    save_monitor_settings()
+    return {"ok": True, "use_sudo": state.monitor_use_sudo}
+
+
+def tool_monitor_start() -> Dict[str, Any]:
+    """Start monitoring."""
+    if state.monitor_active:
+        return {"ok": True, "message": "Monitoring already active"}
+    if not state.monitor_targets:
+        return {"ok": False, "error": "No targets selected"}
+    
+    ok, msg = monitor_start_selected()
+    # Note: monitor_service and others are still in cli.py, 
+    # so we might need to check if they are running.
+    # For now assume ok means they are running or starting.
+    state.monitor_active = ok 
+    if ok:
+        monitor_summary_start_if_needed()
+    return {"ok": ok, "message": msg, "active": state.monitor_active}
+
+
+def tool_monitor_stop() -> Dict[str, Any]:
+    """Stop monitoring."""
+    ok, msg = monitor_stop_selected()
+    state.monitor_active = False
+    monitor_summary_stop_if_needed()
+    return {"ok": ok, "message": msg, "active": state.monitor_active}
+
+
+def tool_monitor_targets(args: Dict[str, Any]) -> Dict[str, Any]:
+    """Manage monitoring targets (tool handler)."""
+    action = str(args.get("action") or "status").strip().lower()
+    key = str(args.get("key") or "").strip()
+    if action in {"status", "list", "ls"}:
+        return {"ok": True, "targets": sorted(state.monitor_targets)}
+    if action == "add":
+        if not key:
+            return {"ok": False, "error": "Missing key"}
+        state.monitor_targets.add(key)
+        return {"ok": True, "targets": sorted(state.monitor_targets)}
+    if action in {"remove", "rm"}:
+        if not key:
+            return {"ok": False, "error": "Missing key"}
+        if key in state.monitor_targets:
+            state.monitor_targets.remove(key)
+        return {"ok": True, "targets": sorted(state.monitor_targets)}
+    if action == "clear":
+        state.monitor_targets = set()
+        return {"ok": True, "targets": []}
+    if action == "save":
+        ok = save_monitor_targets()
+        return {"ok": ok, "targets": sorted(state.monitor_targets)}
+    return {"ok": False, "error": f"Unknown action: {action}"}
+
+
 # Backward compatibility aliases
 _load_monitor_settings = load_monitor_settings
 _save_monitor_settings = save_monitor_settings
@@ -447,3 +585,13 @@ _monitor_db_get_max_id = monitor_db_get_max_id
 _format_monitor_summary = format_monitor_summary
 _monitor_resolve_watch_items = monitor_resolve_watch_items
 _MonitorSummaryService = MonitorSummaryService
+_monitor_start_selected = monitor_start_selected
+_monitor_stop_selected = monitor_stop_selected
+_monitor_summary_start_if_needed = monitor_summary_start_if_needed
+_monitor_summary_stop_if_needed = monitor_summary_stop_if_needed
+_tool_monitor_status = tool_monitor_status
+_tool_monitor_set_source = tool_monitor_set_source
+_tool_monitor_set_use_sudo = tool_monitor_set_use_sudo
+_tool_monitor_start = tool_monitor_start
+_tool_monitor_stop = tool_monitor_stop
+_tool_monitor_targets = tool_monitor_targets

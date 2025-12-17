@@ -108,6 +108,18 @@ def build_keybindings(
         cur = str(getattr(state, "ui_scroll_target", "log") or "log")
         state.ui_scroll_target = "agents" if cur == "log" else "log"
 
+    @kb.add("f3")
+    def _(event):
+        """Decrease left panel ratio."""
+        state.ui_left_panel_ratio = max(0.2, float(getattr(state, "ui_left_panel_ratio", 0.6)) - 0.05)
+        save_ui_settings()
+
+    @kb.add("f4")
+    def _(event):
+        """Increase left panel ratio."""
+        state.ui_left_panel_ratio = min(0.8, float(getattr(state, "ui_left_panel_ratio", 0.6)) + 0.05)
+        save_ui_settings()
+
     @kb.add("pageup")
     def _(event):
         if show_menu():

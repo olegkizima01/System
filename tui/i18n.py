@@ -64,6 +64,12 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "menu.item.monitoring": "Monitoring",
         "menu.item.settings": "Settings",
         "menu.item.localization": "Localization",
+        "prompt.default": " > ",
+        "prompt.paused": " (PAUSED) > ",
+        "prompt.confirm_shell": " (CONFIRM SHELL) > ",
+        "prompt.confirm_applescript": " (CONFIRM APPLESCRIPT) > ",
+        "prompt.confirm_gui": " (CONFIRM GUI) > ",
+        "prompt.confirm_run": " (CONFIRM RUN) > ",
     },
     "uk": {
         "menu.main.title": "ГОЛОВНЕ МЕНЮ (Enter: Вибір, Q/Esc: Закрити)",
@@ -109,18 +115,28 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "menu.item.monitoring": "Моніторинг",
         "menu.item.settings": "Налаштування",
         "menu.item.localization": "Локалізація",
+        "prompt.default": " > ",
+        "prompt.paused": " (ПАУЗА) > ",
+        "prompt.confirm_shell": " (CONFIRM SHELL) > ",
+        "prompt.confirm_applescript": " (CONFIRM APPLESCRIPT) > ",
+        "prompt.confirm_gui": " (CONFIRM GUI) > ",
+        "prompt.confirm_run": " (CONFIRM RUN) > ",
     },
 }
 
 
-def tr(key: str, lang: str, *, fallback_lang: str = DEFAULT_LANG) -> str:
+def tr(key: str, lang: Optional[str] = None, *, fallback_lang: str = DEFAULT_LANG) -> str:
+    """Translate a key into the specified or current UI language."""
+    from system_cli.state import state
     k = str(key)
-    l = (lang or "").strip().lower() or fallback_lang
+    l = (lang or getattr(state, "ui_lang", None) or "").strip().lower() or fallback_lang
     if l in TRANSLATIONS and k in TRANSLATIONS[l]:
         return TRANSLATIONS[l][k]
     if fallback_lang in TRANSLATIONS and k in TRANSLATIONS[fallback_lang]:
         return TRANSLATIONS[fallback_lang][k]
     return k
+from tui.cli_localization import AVAILABLE_LOCALES, LocalizationConfig  # noqa: F401
+localization = LocalizationConfig.load()
 
 
 def lang_name(code: str) -> str:

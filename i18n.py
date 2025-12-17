@@ -12,4 +12,6 @@ from tui.i18n import (  # noqa: F401
     lang_name,
     normalize_lang,
     tr,
+    localization,
+    AVAILABLE_LOCALES,
 )

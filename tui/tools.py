@@ -20,7 +20,8 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 
 from system_cli.state import state
-from tui.cli_paths import SCRIPT_DIR
+from tui.cli_paths import SCRIPT_DIR, UI_SETTINGS_PATH, LLM_SETTINGS_PATH
+from tui.themes import THEME_NAMES
 
 
 def _safe_abspath(path: str) -> str:
@@ -452,6 +453,62 @@ def tool_create_module(args: Dict[str, Any]) -> Dict[str, Any]:
         return {"ok": False, "error": str(e)}
 
 
+def tool_ui_streaming_status(args: Dict[str, Any] = None) -> Dict[str, Any]:
+    """Get UI streaming status."""
+    return {"ok": True, "streaming": getattr(state, 'ui_streaming', True)}
+
+
+def tool_ui_streaming_set(args: Dict[str, Any]) -> Dict[str, Any]:
+    """Set UI streaming status."""
+    streaming = args.get("streaming")
+    if streaming is not None:
+        if isinstance(streaming, str):
+            streaming = streaming.lower() in {"true", "1", "on", "yes"}
+        state.ui_streaming = bool(streaming)
+    return {"ok": True, "streaming": state.ui_streaming}
+
+
+def tool_llm_status(args: Dict[str, Any] = None) -> Dict[str, Any]:
+    """Get LLM configuration status."""
+    from tui.agents import load_llm_settings
+    load_llm_settings()
+    return {
+        "ok": True,
+        "provider": str(os.getenv("LLM_PROVIDER") or "copilot"),
+        "main_model": str(os.getenv("COPILOT_MODEL") or ""),
+        "vision_model": str(os.getenv("COPILOT_VISION_MODEL") or ""),
+        "settings_path": LLM_SETTINGS_PATH,
+    }
+
+
+def tool_llm_set(args: Dict[str, Any]) -> Dict[str, Any]:
+    """Set LLM configuration."""
+    from tui.agents import save_llm_settings, reset_agent_llm
+    provider = str(args.get("provider") or os.getenv("LLM_PROVIDER") or "copilot").strip().lower() or "copilot"
+    main_model = str(args.get("main_model") or os.getenv("COPILOT_MODEL") or "gpt-4o").strip() or "gpt-4o"
+    vision_model = str(args.get("vision_model") or os.getenv("COPILOT_VISION_MODEL") or "gpt-4.1").strip() or "gpt-4.1"
+    ok = save_llm_settings(provider, main_model, vision_model)
+    if ok:
+        reset_agent_llm()
+    return {"ok": ok, "provider": provider, "main_model": main_model, "vision_model": vision_model}
+
+
+def tool_ui_theme_status(args: Dict[str, Any] = None) -> Dict[str, Any]:
+    """Get UI theme status."""
+    return {"ok": True, "theme": state.ui_theme, "settings_path": UI_SETTINGS_PATH}
+
+
+def tool_ui_theme_set(args: Dict[str, Any]) -> Dict[str, Any]:
+    """Set UI theme."""
+    theme = str(args.get("theme") or "").strip().lower()
+    if theme not in set(THEME_NAMES):
+        return {"ok": False, "error": f"Unknown theme: {theme}"}
+    state.ui_theme = theme
+    from tui.cli import _save_ui_settings
+    ok = _save_ui_settings()
+    return {"ok": ok, "theme": state.ui_theme}
+
+
 # Backward compatibility aliases
 _tool_scan_traces = tool_scan_traces
 _tool_list_dir = tool_list_dir
@@ -470,3 +527,9 @@ _tool_read_file = tool_read_file
 _tool_grep = tool_grep
 _tool_take_screenshot = tool_take_screenshot
 _tool_create_module = tool_create_module
+_tool_ui_streaming_status = tool_ui_streaming_status
+_tool_ui_streaming_set = tool_ui_streaming_set
+_tool_llm_status = tool_llm_status
+_tool_llm_set = tool_llm_set
+_tool_ui_theme_status = tool_ui_theme_status
+_tool_ui_theme_set = tool_ui_theme_set

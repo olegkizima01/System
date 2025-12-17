@@ -345,6 +345,107 @@ def get_logs_lock() -> threading.RLock:
     return _logs_lock
 
 
+
+def get_header() -> List[Tuple[str, str]]:
+    """Generate header content for TUI."""
+    from i18n import localization
+    primary = localization.primary
+    active_locales = " ".join(localization.selected)
+    selected_editor = state.selected_editor or "-"
+    ui_lang = str(getattr(state, "ui_lang", "") or "").strip() or "-"
+    chat_lang = str(getattr(state, "chat_lang", "") or "").strip() or "-"
+    scroll_target = str(getattr(state, "ui_scroll_target", "log") or "log").strip().lower() or "log"
+
+    return [
+        ("class:header", " "),
+        ("class:header.title", "SYSTEM CLI"),
+        ("class:header.sep", " | "),
+        ("class:header.label", "Editor: "),
+        ("class:header.value", selected_editor),
+        ("class:header.sep", " | "),
+        ("class:header.label", "Region: "),
+        ("class:header.value", f"{primary} ({active_locales or 'none'})"),
+        ("class:header.sep", " | "),
+        ("class:header.label", "Lang: "),
+        ("class:header.value", f"ui={ui_lang} chat={chat_lang}"),
+        ("class:header.sep", " | "),
+        ("class:header.label", "Scroll: "),
+        ("class:header.value", "АГЕНТИ" if scroll_target == "agents" else "LOG"),
+        ("class:header", " "),
+    ]
+
+
+def get_context() -> List[Tuple[str, str]]:
+    """Generate context panel content for TUI."""
+    from tui.cli_paths import CLEANUP_CONFIG_PATH, LOCALIZATION_CONFIG_PATH
+    result: List[Tuple[str, str]] = []
+
+    result.append(("class:context.label", " Cleanup config: "))
+    result.append(("class:context.value", f"{CLEANUP_CONFIG_PATH}\n"))
+    result.append(("class:context.label", " Locales config: "))
+    result.append(("class:context.value", f"{LOCALIZATION_CONFIG_PATH}\n\n"))
+
+    result.append(("class:context.title", " Commands\n"))
+    result.append(("class:context.label", " /help\n"))
+    result.append(("class:context.label", " /run <editor> [--dry]\n"))
+    result.append(("class:context.label", " /modules <editor>\n"))
+    result.append(("class:context.label", " /enable <editor> <id> | /disable <editor> <id>\n"))
+    result.append(("class:context.label", " /install <editor>\n"))
+    result.append(("class:context.label", " /smart <editor> <query...>\n"))
+    result.append(("class:context.label", " /ask <question...>\n"))
+    result.append(("class:context.label", " /locales ua us eu\n"))
+    result.append(("class:context.label", " /monitor status|start|stop|source <watchdog|fs_usage|opensnoop>|sudo <on|off>\n"))
+    result.append(("class:context.label", " /monitor-targets list|add <key>|remove <key>|clear|save\n"))
+    result.append(("class:context.label", " /llm status|set provider <copilot>|set main <model>|set vision <model>\n"))
+    result.append(("class:context.label", " /theme status|set <monaco|dracula|nord|gruvbox>\n"))
+    result.append(("class:context.label", " /lang status|set ui <code>|set chat <code>\n"))
+    result.append(("class:context.label", " /streaming status|on|off\n"))
+    result.append(("class:context.label", " /gui_mode status|on|off|auto\n"))
+    result.append(("class:context.label", " /trinity <task>\n"))
+
+    return result
+
+
+def get_status() -> List[Tuple[str, str]]:
+    """Generate status bar content for TUI."""
+    from system_cli.state import MenuLevel
+    if state.menu_level != MenuLevel.NONE:
+        mode_indicator = [("class:status.menu", " MENU "), ("class:status", " ")]
+    else:
+        if getattr(state, "agent_paused", False):
+            mode_indicator = [("class:status.error", " PAUSED "), ("class:status", " ")]
+        elif state.agent_processing:
+            mode_indicator = [("class:status.processing", " PROCESSING "), ("class:status", " ")]
+        else:
+            mode_indicator = [("class:status.chat", " INPUT "), ("class:status", " ")]
+
+    monitor_tag = f"MON:{'ON' if state.monitor_active else 'OFF'}:{state.monitor_source}"
+
+    scroll_target = str(getattr(state, "ui_scroll_target", "log") or "log").strip().lower() or "log"
+    if scroll_target == "agents":
+        follow = bool(getattr(state, "ui_agents_follow", True))
+        follow_tag = f"AGENTS:{'FOLLOW' if follow else 'FREE'}"
+    else:
+        follow = bool(getattr(state, "ui_log_follow", True))
+        follow_tag = f"LOG:{'FOLLOW' if follow else 'FREE'}"
+
+    paused_hint: list[tuple[str, str]] = []
+    if getattr(state, "agent_paused", False):
+        paused_hint = [("class:status", " | "), ("class:status.key", "Type: /resume")]
+
+    return mode_indicator + [
+        ("class:status.ready", f" {state.status} "),
+        ("class:status", " "),
+        ("class:status.key", monitor_tag),
+        ("class:status", " | "),
+        ("class:status.key", follow_tag),
+        ("class:status", " | "),
+        ("class:status.key", "F2: Menu"),
+        ("class:status", " | "),
+        ("class:status.key", "Ctrl+C: Quit"),
+    ] + paused_hint
+
+
 # Backward compatibility aliases
 _get_render_log_snapshot = get_render_log_snapshot
 _get_render_agents_snapshot = get_render_agents_snapshot
@@ -352,3 +453,6 @@ _trim_logs_if_needed = trim_logs_if_needed
 _log_replace_last = log_replace_last
 _log_reserve_line = log_reserve_line
 _log_replace_at = log_replace_at
+_get_header = get_header
+_get_context = get_context
+_get_status = get_status

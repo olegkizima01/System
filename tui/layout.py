@@ -125,6 +125,7 @@ def build_app(
         FormattedTextControl(safe_get_logs, get_cursor_position=_safe_cursor_position(safe_get_logs, get_log_cursor_position)),
         wrap_lines=False,
         right_margins=[ScrollbarMargin(display_arrows=True)],
+        name="log",
     )
 
     # Agent messages panel (clean communication display)
@@ -139,6 +140,7 @@ def build_app(
         wrap_lines=False,
         style="class:agent.panel",
         right_margins=[ScrollbarMargin(display_arrows=True)],
+        name="agents",
     ) if get_agent_messages else None
 
     menu_window = Window(
@@ -201,8 +203,34 @@ def build_app(
             Frame(header_window, style="class:frame.border"),
             VSplit(
                 [
-                    Frame(log_window, title="LOG", style="class:frame.border"),
-                ] + right_panel_items
+                    Frame(
+                        log_window, 
+                        title="LOG", 
+                        style="class:frame.border",
+                        width=Dimension(
+                            weight=lambda: int(getattr(state, "ui_left_panel_ratio", 0.6) * 100),
+                            min=lambda: getattr(state, "ui_panel_min_width", 40),
+                        )
+                    ),
+                ] + [
+                    ConditionalContainer(
+                        Frame(
+                            w,
+                            title=title,
+                            style="class:frame.border",
+                            width=Dimension(
+                                weight=lambda: int((1.0 - getattr(state, "ui_left_panel_ratio", 0.6)) * 100),
+                                min=lambda: getattr(state, "ui_panel_min_width", 40),
+                                max=lambda: getattr(state, "ui_panel_max_width", 120),
+                            )
+                        ),
+                        filter=filt
+                    ) for w, title, filt in [
+                        (agent_messages_window, "АГЕНТИ", Condition(lambda: agent_messages_window is not None and not show_menu())),
+                        (context_window, "КОНТЕКСТ", Condition(lambda: agent_messages_window is None and not show_menu())),
+                        (menu_window, "MENU", show_menu)
+                    ] if w is not None
+                ]
             ),
             Frame(input_area, style="class:frame.border", height=3),
             status_window,

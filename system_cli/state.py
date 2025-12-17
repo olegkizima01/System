@@ -60,6 +60,9 @@ class AppState:
     ui_agents_follow: bool = True
     ui_agents_cursor_y: int = 0
     ui_agents_line_count: int = 1
+    ui_panel_min_width: int = 40
+    ui_panel_max_width: int = 120
+    ui_left_panel_ratio: float = 0.6
 
 
 state = AppState()
