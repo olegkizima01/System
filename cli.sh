@@ -36,29 +36,34 @@ if ! command -v python3 >/dev/null 2>&1; then
   exit 1
 fi
 
-# Перевіряємо cli.py
-if [ ! -f "$SCRIPT_DIR/cli.py" ]; then
-  echo "cli.py не знайдено в $SCRIPT_DIR" >&2
-  exit 1
-fi
-
-export TOKENIZERS_PARALLELISM=false
+# Створюємо директорію для налаштувань, якщо її немає
+mkdir -p "$HOME/.system_cli"
 
 # Якщо потрібні sudo-права (наприклад для fs_usage/dtrace), перевіряємо наявність пароля
 if [ -n "$SUDO_PASSWORD" ]; then
   # Тихо перевіряємо, чи пароль працює (без інтерактивного запиту)
   echo "$SUDO_PASSWORD" | sudo -S -k true 2>/dev/null
   if [ $? -eq 0 ]; then
-    export SUDO_ASKPASS="$SCRIPT_DIR/.sudo_askpass"
-    cat > "$SCRIPT_DIR/.sudo_askpass" <<'EOF'
+    export SUDO_ASKPASS="$HOME/.system_cli/.sudo_askpass"
+    cat > "$SUDO_ASKPASS" <<EOF
 #!/bin/bash
 echo "$SUDO_PASSWORD"
 EOF
-    chmod 700 "$SCRIPT_DIR/.sudo_askpass"
+    chmod 700 "$SUDO_ASKPASS"
+    
+    # Видаляємо старий .sudo_askpass з кореня, якщо він там лишився
+    [ -f "$SCRIPT_DIR/.sudo_askpass" ] && rm "$SCRIPT_DIR/.sudo_askpass"
   else
     echo "Попередження: пароль sudo не дійсний. sudo-команди можуть не працювати." >&2
   fi
 fi
 
+export TOKENIZERS_PARALLELISM=false
+
 # Запускаємо cli.py з усіма аргументами
-exec python3 "$SCRIPT_DIR/cli.py" "$@"
+python3 "$SCRIPT_DIR/cli.py" "$@"
+
+# Очищення при виході
+if [ -f "$HOME/.system_cli/.sudo_askpass" ]; then
+  rm "$HOME/.system_cli/.sudo_askpass"
+fi

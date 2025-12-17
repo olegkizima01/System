@@ -4,74 +4,15 @@
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 115
-- **Files Skipped**: 12301
+- **Files Skipped**: 12309
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-17 22:45:05
+- **Generated**: 2025-12-17 22:49:57
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-2025-12-17 20:46:43 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-modules']
-2025-12-17 20:46:43 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-modules
-2025-12-17 20:46:43 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 20:46:43 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
-2025-12-17 20:46:43 | INFO     | MainThread | system_cli.cli | cli_main:4628 | Listing modules for editor: windsurf
-2025-12-17 20:46:43 | INFO     | MainThread | system_cli.cli | cli_main:4637 | Modules listed for windsurf
-2025-12-17 20:46:43 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['run', '--dry-run']
-2025-12-17 20:46:43 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: run
-2025-12-17 20:46:43 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 20:46:43 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
-2025-12-17 20:46:43 | INFO     | MainThread | system_cli.cli | cli_main:4642 | Running cleanup for editor: windsurf, dry_run=True
-2025-12-17 20:46:43 | INFO     | MainThread | system_cli.cli | cli_main:4645 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
-2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-editors']
-2025-12-17 20:46:56 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-editors
-2025-12-17 20:46:56 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4620 | Listing editors
-2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4623 | Editors listed successfully
-2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-modules', '--editor', '__unknown__']
-2025-12-17 20:46:56 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-modules
-2025-12-17 20:46:56 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 20:46:56 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
-2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4628 | Listing modules for editor: windsurf
-2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4637 | Modules listed for windsurf
-2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['run', '--editor', 'windsurf', '--dry-run']
-2025-12-17 20:46:56 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: run
-2025-12-17 20:46:56 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4642 | Running cleanup for editor: windsurf, dry_run=True
-2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4645 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
-2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-modules']
-2025-12-17 20:46:56 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-modules
-2025-12-17 20:46:56 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 20:46:56 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
-2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4628 | Listing modules for editor: windsurf
-2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4637 | Modules listed for windsurf
-2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['run', '--dry-run']
-2025-12-17 20:46:56 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: run
-2025-12-17 20:46:56 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 20:46:56 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
-2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4642 | Running cleanup for editor: windsurf, dry_run=True
-2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4645 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
-2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-editors']
-2025-12-17 20:47:06 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-editors
-2025-12-17 20:47:06 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4620 | Listing editors
-2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4623 | Editors listed successfully
-2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-modules', '--editor', '__unknown__']
-2025-12-17 20:47:06 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-modules
-2025-12-17 20:47:06 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 20:47:06 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
-2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4628 | Listing modules for editor: windsurf
-2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4637 | Modules listed for windsurf
-2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['run', '--editor', 'windsurf', '--dry-run']
-2025-12-17 20:47:06 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: run
-2025-12-17 20:47:06 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4642 | Running cleanup for editor: windsurf, dry_run=True
-2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4645 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
-2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-modules']
-2025-12-17 20:47:06 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-modules
-2025-12-17 20:47:06 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
 2025-12-17 20:47:06 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
 2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4628 | Listing modules for editor: windsurf
 2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4637 | Modules listed for windsurf
@@ -113,6 +54,65 @@
 2025-12-17 20:49:15 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: None
 2025-12-17 20:49:15 | INFO     | MainThread | system_cli.cli | cli_main:4595 | Starting TUI mode
 2025-12-17 21:34:52 | INFO     | MainThread | system_cli.cli | cli_main:4598 | TUI mode exited successfully
+2025-12-17 22:45:22 | INFO     | MainThread | system_cli.cli | cli_main:2375 | CLI started with arguments: ['--help']
+2025-12-17 22:46:16 | INFO     | MainThread | system_cli.cli | cli_main:2375 | CLI started with arguments: []
+2025-12-17 22:46:16 | DEBUG    | MainThread | system_cli.cli | cli_main:2417 | Parsed command: None
+2025-12-17 22:46:16 | INFO     | MainThread | system_cli.cli | cli_main:2420 | Starting TUI mode
+2025-12-17 22:46:16 | ERROR    | MainThread | system_cli.cli | log_exception:159 | Exception occurred in TUI mode
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2422, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1654, in run_tui
+    app = build_app(
+          ^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 124, in build_app
+    log_window = Window(
+                 ^^^^^^^
+TypeError: Window.__init__() got an unexpected keyword argument 'name'
+2025-12-17 22:46:16 | ERROR    | MainThread | system_cli.cli | log_exception:159 | Exception occurred in main()
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2584, in main
+    cli_main(sys.argv[1:])
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2422, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1654, in run_tui
+    app = build_app(
+          ^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 124, in build_app
+    log_window = Window(
+                 ^^^^^^^
+TypeError: Window.__init__() got an unexpected keyword argument 'name'
+2025-12-17 22:46:21 | INFO     | MainThread | system_cli.cli | cli_main:2375 | CLI started with arguments: []
+2025-12-17 22:46:21 | DEBUG    | MainThread | system_cli.cli | cli_main:2417 | Parsed command: None
+2025-12-17 22:46:21 | INFO     | MainThread | system_cli.cli | cli_main:2420 | Starting TUI mode
+2025-12-17 22:46:21 | ERROR    | MainThread | system_cli.cli | log_exception:159 | Exception occurred in TUI mode
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2422, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1654, in run_tui
+    app = build_app(
+          ^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 124, in build_app
+    log_window = Window(
+                 ^^^^^^^
+TypeError: Window.__init__() got an unexpected keyword argument 'name'
+2025-12-17 22:46:21 | ERROR    | MainThread | system_cli.cli | log_exception:159 | Exception occurred in main()
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2584, in main
+    cli_main(sys.argv[1:])
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2422, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1654, in run_tui
+    app = build_app(
+          ^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 124, in build_app
+    log_window = Window(
+                 ^^^^^^^
+TypeError: Window.__init__() got an unexpected keyword argument 'name'
+2025-12-17 22:47:56 | INFO     | MainThread | system_cli.cli | cli_main:2375 | CLI started with arguments: ['--help']
+2025-12-17 22:49:12 | INFO     | MainThread | system_cli.cli | cli_main:2375 | CLI started with arguments: ['--help']
+2025-12-17 22:49:13 | INFO     | MainThread | system_cli.cli | cli_main:2375 | CLI started with arguments: ['--help']
+2025-12-17 22:49:14 | INFO     | MainThread | system_cli.cli | cli_main:2375 | CLI started with arguments: ['--help']
 ```
 
 ---
@@ -539,18 +539,19 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 37600 +-----------------------------------------
- 1 file changed, 4 insertions(+), 37596 deletions(-)
+ .sudo_askpass               |     2 -
+ project_structure_final.txt | 36960 +-----------------------------------------
+ 2 files changed, 61 insertions(+), 36901 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-ddf3d0c refactor: complete TUI modularization and implementation of dynamic panel resizing
+435e94d refactor: organize root scripts and cleanup entry points
+03f86a0 refactor: complete TUI modularization and implementation of dynamic panel resizing
 d0536b3 feat: add TUI file monitoring service with event aggregation and target management.
 b2e1248 feat: Introduce agent tool handling, new TUI modules for agents and monitoring, and expand theme options.
 b2c3bdd Update: Add latest response
-987b109 Update: Add latest response
 ```
 
 ---
@@ -679,7 +680,6 @@ System/
 ├── .env.example
 ├── .gitignore
 ├── .last_response.txt
-├── .sudo_askpass
 ├── auto_commit.sh
 ├── cleanup_modules.json
 ├── cli.py
@@ -688,6 +688,7 @@ System/
 ├── generate_structure.py
 ├── i18n.py
 ├── index.html
+├── main.py
 ├── output.txt
 ├── project_structure_final.txt
 ├── pytest.ini
@@ -1383,13 +1384,6 @@ Verification:
 
 Tests:
 - not executed by Trinity (no deterministic test runner in pipeline)
-```
-
-### `.sudo_askpass` (0.0 KB)
-
-```text
-#!/bin/bash
-echo "$SUDO_PASSWORD"
 ```
 
 ### `.windsurf/rules/logs.md` (1.3 KB)
@@ -5933,54 +5927,50 @@ echo "${GREEN}╚═════════════════════
 echo ""
 ```
 
-### `cli.py` (0.8 KB)
+### `cli.py` (0.9 KB)
 
 ```python
 #!/usr/bin/env python3
-"""Compatibility wrapper.
+"""cli.py - Entry point for the System CLI.
 
-The main implementation was moved into `tui/cli.py`.
-This file is kept to avoid breaking existing scripts (e.g. `cli.sh`) and imports.
+The main implementation is located in `tui/cli.py`.
+This file serves as a minimal wrapper to ensure proper path configuration and encoding.
 """
 
 from __future__ import annotations
 
-import importlib
+import os
 import sys
+
+# Ensure project root is in path
+_repo_root = os.path.abspath(os.path.dirname(__file__))
+if _repo_root not in sys.path:
+    sys.path.insert(0, _repo_root)
 
 # Ensure stdin is utf-8 to prevent encoding errors
 try:
-    sys.stdin.reconfigure(encoding='utf-8')
+    if hasattr(sys.stdin, 'reconfigure'):
+        sys.stdin.reconfigure(encoding='utf-8')
 except Exception:
     pass
 
-_impl = None
-
-
-def _load_impl():
-    global _impl
-    if _impl is None:
-        _impl = importlib.import_module("tui.cli")
-    return _impl
-
 
 def main() -> None:
-    _load_impl().main()
-
-
-def __getattr__(name: str):  # pragma: no cover
-    return getattr(_load_impl(), name)
-
-
-def __dir__():  # pragma: no cover
-    return sorted(set(globals().keys()) | set(dir(_load_impl())))
+    try:
+        from tui.cli import main as tui_main
+        tui_main()
+    except KeyboardInterrupt:
+        sys.exit(0)
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == "__main__":
     main()
 ```
 
-### `cli.sh` (2.3 KB)
+### `cli.sh` (2.5 KB)
 
 ```bash
 #!/bin/zsh
@@ -6021,32 +6011,37 @@ if ! command -v python3 >/dev/null 2>&1; then
   exit 1
 fi
 
-# Перевіряємо cli.py
-if [ ! -f "$SCRIPT_DIR/cli.py" ]; then
-  echo "cli.py не знайдено в $SCRIPT_DIR" >&2
-  exit 1
-fi
-
-export TOKENIZERS_PARALLELISM=false
+# Створюємо директорію для налаштувань, якщо її немає
+mkdir -p "$HOME/.system_cli"
 
 # Якщо потрібні sudo-права (наприклад для fs_usage/dtrace), перевіряємо наявність пароля
 if [ -n "$SUDO_PASSWORD" ]; then
   # Тихо перевіряємо, чи пароль працює (без інтерактивного запиту)
   echo "$SUDO_PASSWORD" | sudo -S -k true 2>/dev/null
   if [ $? -eq 0 ]; then
-    export SUDO_ASKPASS="$SCRIPT_DIR/.sudo_askpass"
-    cat > "$SCRIPT_DIR/.sudo_askpass" <<'EOF'
+    export SUDO_ASKPASS="$HOME/.system_cli/.sudo_askpass"
+    cat > "$SUDO_ASKPASS" <<EOF
 #!/bin/bash
 echo "$SUDO_PASSWORD"
 EOF
-    chmod 700 "$SCRIPT_DIR/.sudo_askpass"
+    chmod 700 "$SUDO_ASKPASS"
+    
+    # Видаляємо старий .sudo_askpass з кореня, якщо він там лишився
+    [ -f "$SCRIPT_DIR/.sudo_askpass" ] && rm "$SCRIPT_DIR/.sudo_askpass"
   else
     echo "Попередження: пароль sudo не дійсний. sudo-команди можуть не працювати." >&2
   fi
 fi
 
+export TOKENIZERS_PARALLELISM=false
+
 # Запускаємо cli.py з усіма аргументами
-exec python3 "$SCRIPT_DIR/cli.py" "$@"
+python3 "$SCRIPT_DIR/cli.py" "$@"
+
+# Очищення при виході
+if [ -f "$HOME/.system_cli/.sudo_askpass" ]; then
+  rm "$HOME/.system_cli/.sudo_askpass"
+fi
 ```
 
 ### `configs_vscode/original/User/globalStorage/storage.json` (111.1 KB)
@@ -11783,13 +11778,31 @@ from tui.i18n import (  # noqa: F401
 </html>
 ```
 
+### `main.py` (0.2 KB)
+
+```python
+#!/usr/bin/env python3
+"""main.py - Entry point for the System CLI.
+
+This is a convenience wrapper that calls `cli.py`.
+"""
+
+from __future__ import annotations
+
+import sys
+import cli
+
+if __name__ == "__main__":
+    cli.main()
+```
+
 ### `output.txt` (0.0 KB)
 
 ```text
 test content
 ```
 
-### `project_structure_final.txt` (543.1 KB)
+### `project_structure_final.txt` (539.5 KB)
 
 ```text
 # System — Project Structure
@@ -11798,74 +11811,15 @@ test content
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 115
-- **Files Skipped**: 12301
+- **Files Skipped**: 12309
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-17 22:45:05
+- **Generated**: 2025-12-17 22:49:57
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-2025-12-17 20:46:43 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-modules']
-2025-12-17 20:46:43 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-modules
-2025-12-17 20:46:43 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 20:46:43 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
-2025-12-17 20:46:43 | INFO     | MainThread | system_cli.cli | cli_main:4628 | Listing modules for editor: windsurf
-2025-12-17 20:46:43 | INFO     | MainThread | system_cli.cli | cli_main:4637 | Modules listed for windsurf
-2025-12-17 20:46:43 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['run', '--dry-run']
-2025-12-17 20:46:43 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: run
-2025-12-17 20:46:43 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 20:46:43 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
-2025-12-17 20:46:43 | INFO     | MainThread | system_cli.cli | cli_main:4642 | Running cleanup for editor: windsurf, dry_run=True
-2025-12-17 20:46:43 | INFO     | MainThread | system_cli.cli | cli_main:4645 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
-2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-editors']
-2025-12-17 20:46:56 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-editors
-2025-12-17 20:46:56 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4620 | Listing editors
-2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4623 | Editors listed successfully
-2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-modules', '--editor', '__unknown__']
-2025-12-17 20:46:56 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-modules
-2025-12-17 20:46:56 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 20:46:56 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
-2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4628 | Listing modules for editor: windsurf
-2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4637 | Modules listed for windsurf
-2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['run', '--editor', 'windsurf', '--dry-run']
-2025-12-17 20:46:56 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: run
-2025-12-17 20:46:56 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4642 | Running cleanup for editor: windsurf, dry_run=True
-2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4645 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
-2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-modules']
-2025-12-17 20:46:56 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-modules
-2025-12-17 20:46:56 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 20:46:56 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
-2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4628 | Listing modules for editor: windsurf
-2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4637 | Modules listed for windsurf
-2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['run', '--dry-run']
-2025-12-17 20:46:56 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: run
-2025-12-17 20:46:56 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 20:46:56 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
-2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4642 | Running cleanup for editor: windsurf, dry_run=True
-2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4645 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
-2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-editors']
-2025-12-17 20:47:06 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-editors
-2025-12-17 20:47:06 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4620 | Listing editors
-2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4623 | Editors listed successfully
-2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-modules', '--editor', '__unknown__']
-2025-12-17 20:47:06 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-modules
-2025-12-17 20:47:06 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 20:47:06 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
-2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4628 | Listing modules for editor: windsurf
-2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4637 | Modules listed for windsurf
-2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['run', '--editor', 'windsurf', '--dry-run']
-2025-12-17 20:47:06 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: run
-2025-12-17 20:47:06 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4642 | Running cleanup for editor: windsurf, dry_run=True
-2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4645 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
-2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-modules']
-2025-12-17 20:47:06 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-modules
-2025-12-17 20:47:06 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
 2025-12-17 20:47:06 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
 2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4628 | Listing modules for editor: windsurf
 2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4637 | Modules listed for windsurf
@@ -11907,6 +11861,65 @@ test content
 2025-12-17 20:49:15 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: None
 2025-12-17 20:49:15 | INFO     | MainThread | system_cli.cli | cli_main:4595 | Starting TUI mode
 2025-12-17 21:34:52 | INFO     | MainThread | system_cli.cli | cli_main:4598 | TUI mode exited successfully
+2025-12-17 22:45:22 | INFO     | MainThread | system_cli.cli | cli_main:2375 | CLI started with arguments: ['--help']
+2025-12-17 22:46:16 | INFO     | MainThread | system_cli.cli | cli_main:2375 | CLI started with arguments: []
+2025-12-17 22:46:16 | DEBUG    | MainThread | system_cli.cli | cli_main:2417 | Parsed command: None
+2025-12-17 22:46:16 | INFO     | MainThread | system_cli.cli | cli_main:2420 | Starting TUI mode
+2025-12-17 22:46:16 | ERROR    | MainThread | system_cli.cli | log_exception:159 | Exception occurred in TUI mode
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2422, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1654, in run_tui
+    app = build_app(
+          ^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 124, in build_app
+    log_window = Window(
+                 ^^^^^^^
+TypeError: Window.__init__() got an unexpected keyword argument 'name'
+2025-12-17 22:46:16 | ERROR    | MainThread | system_cli.cli | log_exception:159 | Exception occurred in main()
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2584, in main
+    cli_main(sys.argv[1:])
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2422, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1654, in run_tui
+    app = build_app(
+          ^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 124, in build_app
+    log_window = Window(
+                 ^^^^^^^
+TypeError: Window.__init__() got an unexpected keyword argument 'name'
+2025-12-17 22:46:21 | INFO     | MainThread | system_cli.cli | cli_main:2375 | CLI started with arguments: []
+2025-12-17 22:46:21 | DEBUG    | MainThread | system_cli.cli | cli_main:2417 | Parsed command: None
+2025-12-17 22:46:21 | INFO     | MainThread | system_cli.cli | cli_main:2420 | Starting TUI mode
+2025-12-17 22:46:21 | ERROR    | MainThread | system_cli.cli | log_exception:159 | Exception occurred in TUI mode
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2422, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1654, in run_tui
+    app = build_app(
+          ^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 124, in build_app
+    log_window = Window(
+                 ^^^^^^^
+TypeError: Window.__init__() got an unexpected keyword argument 'name'
+2025-12-17 22:46:21 | ERROR    | MainThread | system_cli.cli | log_exception:159 | Exception occurred in main()
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2584, in main
+    cli_main(sys.argv[1:])
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2422, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1654, in run_tui
+    app = build_app(
+          ^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 124, in build_app
+    log_window = Window(
+                 ^^^^^^^
+TypeError: Window.__init__() got an unexpected keyword argument 'name'
+2025-12-17 22:47:56 | INFO     | MainThread | system_cli.cli | cli_main:2375 | CLI started with arguments: ['--help']
+2025-12-17 22:49:12 | INFO     | MainThread | system_cli.cli | cli_main:2375 | CLI started with arguments: ['--help']
+2025-12-17 22:49:13 | INFO     | MainThread | system_cli.cli | cli_main:2375 | CLI started with arguments: ['--help']
+2025-12-17 22:49:14 | INFO     | MainThread | system_cli.cli | cli_main:2375 | CLI started with arguments: ['--help']
 ```
 
 ---
@@ -12333,18 +12346,19 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 37600 +-----------------------------------------
- 1 file changed, 4 insertions(+), 37596 deletions(-)
+ .sudo_askpass               |     2 -
+ project_structure_final.txt | 36960 +-----------------------------------------
+ 2 files changed, 61 insertions(+), 36901 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-ddf3d0c refactor: complete TUI modularization and implementation of dynamic panel resizing
+435e94d refactor: organize root scripts and cleanup entry points
+03f86a0 refactor: complete TUI modularization and implementation of dynamic panel resizing
 d0536b3 feat: add TUI file monitoring service with event aggregation and target management.
 b2e1248 feat: Introduce agent tool handling, new TUI modules for agents and monitoring, and expand theme options.
 b2c3bdd Update: Add latest response
-987b109 Update: Add latest response
 ```
 
 ---
@@ -12473,7 +12487,6 @@ System/
 ├── .env.example
 ├── .gitignore
 ├── .last_response.txt
-├── .sudo_askpass
 ├── auto_commit.sh
 ├── cleanup_modules.json
 ├── cli.py
@@ -12482,6 +12495,7 @@ System/
 ├── generate_structure.py
 ├── i18n.py
 ├── index.html
+├── main.py
 ├── output.txt
 ├── project_structure_final.txt
 ├── pytest.ini
@@ -13177,13 +13191,6 @@ Verification:
 
 Tests:
 - not executed by Trinity (no deterministic test runner in pipeline)
-```
-
-### `.sudo_askpass` (0.0 KB)
-
-```text
-#!/bin/bash
-echo "$SUDO_PASSWORD"
 ```
 
 ### `.windsurf/rules/logs.md` (1.3 KB)
@@ -17727,54 +17734,50 @@ echo "${GREEN}╚═════════════════════
 echo ""
 ```
 
-### `cli.py` (0.8 KB)
+### `cli.py` (0.9 KB)
 
 ```python
 #!/usr/bin/env python3
-"""Compatibility wrapper.
+"""cli.py - Entry point for the System CLI.
 
-The main implementation was moved into `tui/cli.py`.
-This file is kept to avoid breaking existing scripts (e.g. `cli.sh`) and imports.
+The main implementation is located in `tui/cli.py`.
+This file serves as a minimal wrapper to ensure proper path configuration and encoding.
 """
 
 from __future__ import annotations
 
-import importlib
+import os
 import sys
+
+# Ensure project root is in path
+_repo_root = os.path.abspath(os.path.dirname(__file__))
+if _repo_root not in sys.path:
+    sys.path.insert(0, _repo_root)
 
 # Ensure stdin is utf-8 to prevent encoding errors
 try:
-    sys.stdin.reconfigure(encoding='utf-8')
+    if hasattr(sys.stdin, 'reconfigure'):
+        sys.stdin.reconfigure(encoding='utf-8')
 except Exception:
     pass
 
-_impl = None
-
-
-def _load_impl():
-    global _impl
-    if _impl is None:
-        _impl = importlib.import_module("tui.cli")
-    return _impl
-
 
 def main() -> None:
-    _load_impl().main()
-
-
-def __getattr__(name: str):  # pragma: no cover
-    return getattr(_load_impl(), name)
-
-
-def __dir__():  # pragma: no cover
-    return sorted(set(globals().keys()) | set(dir(_load_impl())))
+    try:
+        from tui.cli import main as tui_main
+        tui_main()
+    except KeyboardInterrupt:
+        sys.exit(0)
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == "__main__":
     main()
 ```
 
-### `cli.sh` (2.3 KB)
+### `cli.sh` (2.5 KB)
 
 ```bash
 #!/bin/zsh
@@ -17815,32 +17818,37 @@ if ! command -v python3 >/dev/null 2>&1; then
   exit 1
 fi
 
-# Перевіряємо cli.py
-if [ ! -f "$SCRIPT_DIR/cli.py" ]; then
-  echo "cli.py не знайдено в $SCRIPT_DIR" >&2
-  exit 1
-fi
-
-export TOKENIZERS_PARALLELISM=false
+# Створюємо директорію для налаштувань, якщо її немає
+mkdir -p "$HOME/.system_cli"
 
 # Якщо потрібні sudo-права (наприклад для fs_usage/dtrace), перевіряємо наявність пароля
 if [ -n "$SUDO_PASSWORD" ]; then
   # Тихо перевіряємо, чи пароль працює (без інтерактивного запиту)
   echo "$SUDO_PASSWORD" | sudo -S -k true 2>/dev/null
   if [ $? -eq 0 ]; then
-    export SUDO_ASKPASS="$SCRIPT_DIR/.sudo_askpass"
-    cat > "$SCRIPT_DIR/.sudo_askpass" <<'EOF'
+    export SUDO_ASKPASS="$HOME/.system_cli/.sudo_askpass"
+    cat > "$SUDO_ASKPASS" <<EOF
 #!/bin/bash
 echo "$SUDO_PASSWORD"
 EOF
-    chmod 700 "$SCRIPT_DIR/.sudo_askpass"
+    chmod 700 "$SUDO_ASKPASS"
+    
+    # Видаляємо старий .sudo_askpass з кореня, якщо він там лишився
+    [ -f "$SCRIPT_DIR/.sudo_askpass" ] && rm "$SCRIPT_DIR/.sudo_askpass"
   else
     echo "Попередження: пароль sudo не дійсний. sudo-команди можуть не працювати." >&2
   fi
 fi
 
+export TOKENIZERS_PARALLELISM=false
+
 # Запускаємо cli.py з усіма аргументами
-exec python3 "$SCRIPT_DIR/cli.py" "$@"
+python3 "$SCRIPT_DIR/cli.py" "$@"
+
+# Очищення при виході
+if [ -f "$HOME/.system_cli/.sudo_askpass" ]; then
+  rm "$HOME/.system_cli/.sudo_askpass"
+fi
 ```
 
 ### `configs_vscode/original/User/globalStorage/storage.json` (111.1 KB)
@@ -37369,4 +37377,4 @@ graph TD
 ## Summary
 
 - **Total Files**: 115
-- **Skipped**: 12301
+- **Skipped**: 12309
