@@ -81,7 +81,7 @@ class MessageFilter:
 
 
 class MessageFormatter:
-    """Format agent messages with colors and styling."""
+    """Format agent messages with colors and styling for direct communication."""
     
     AGENT_COLORS = {
         AgentType.ATLAS: "class:agent.atlas",
@@ -92,20 +92,78 @@ class MessageFormatter:
     }
     
     AGENT_NAMES = {
-        AgentType.ATLAS: "Atlas",
-        AgentType.TETYANA: "Tetyana",
-        AgentType.GRISHA: "Grisha",
-        AgentType.USER: "You",
-        AgentType.SYSTEM: "System",
+        AgentType.ATLAS: "ATLAS",
+        AgentType.TETYANA: "TETYANA",
+        AgentType.GRISHA: "GRISHA",
+        AgentType.USER: "USER",
+        AgentType.SYSTEM: "SYSTEM",
+    }
+    
+    AGENT_EMOJIS = {
+        AgentType.ATLAS: "🌐",
+        AgentType.TETYANA: "💻",
+        AgentType.GRISHA: "👁️",
+        AgentType.USER: "👤",
+        AgentType.SYSTEM: "⚙️",
+    }
+    
+    # Patterns for highlighting @mentions
+    MENTION_PATTERNS = {
+        "tetyana": AgentType.TETYANA,
+        "тетяна": AgentType.TETYANA,
+        "тетяно": AgentType.TETYANA,
+        "тетяну": AgentType.TETYANA,
+        "grisha": AgentType.GRISHA,
+        "гріша": AgentType.GRISHA,
+        "грішо": AgentType.GRISHA,
+        "atlas": AgentType.ATLAS,
+        "атлас": AgentType.ATLAS,
+        "атласе": AgentType.ATLAS,
     }
     
     @staticmethod
+    def highlight_mentions(text: str) -> List[Tuple[str, str]]:
+        """Parse text and highlight agent @mentions with their colors."""
+        import re
+        
+        result: List[Tuple[str, str]] = []
+        
+        # Build pattern for all mentions (case insensitive)
+        mention_words = list(MessageFormatter.MENTION_PATTERNS.keys())
+        pattern = r'(@?)(' + '|'.join(re.escape(w) for w in mention_words) + r')'
+        
+        last_end = 0
+        for match in re.finditer(pattern, text, re.IGNORECASE):
+            # Add text before the match
+            if match.start() > last_end:
+                result.append(("class:agent.text", text[last_end:match.start()]))
+            
+            # Find the agent type for this mention
+            mention_key = match.group(2).lower()
+            agent_type = MessageFormatter.MENTION_PATTERNS.get(mention_key)
+            if agent_type:
+                color = MessageFormatter.AGENT_COLORS.get(agent_type, "class:agent.text")
+                result.append((color, match.group(0)))
+            else:
+                result.append(("class:agent.text", match.group(0)))
+            
+            last_end = match.end()
+        
+        # Add remaining text
+        if last_end < len(text):
+            result.append(("class:agent.text", text[last_end:]))
+        
+        return result if result else [("class:agent.text", text)]
+    
+    @staticmethod
     def format_message(msg: AgentMessage) -> List[Tuple[str, str]]:
-        """Format agent message with color and styling.
+        """Format agent message with direct communication style.
+        
+        Format: (ATLAS) 🌐 Тетяно, виконай...
         
         Returns list of (style, text) tuples for prompt_toolkit.
         """
-        result = []
+        result: List[Tuple[str, str]] = []
         
         # Skip technical messages
         if msg.is_technical or MessageFilter.is_technical(msg.text):
@@ -119,22 +177,29 @@ class MessageFormatter:
         if not clean_text:
             return result
         
-        # Agent header with name
-        name = MessageFormatter.AGENT_NAMES.get(msg.agent, "Unknown")
+        # Format: (AGENT_NAME) emoji
+        name = MessageFormatter.AGENT_NAMES.get(msg.agent, "UNKNOWN")
+        emoji = MessageFormatter.AGENT_EMOJIS.get(msg.agent, "")
         color = MessageFormatter.AGENT_COLORS.get(msg.agent, "class:agent.system")
 
-        result.append((color, f"{name}: "))
-        result.append(("class:agent.text", f"{clean_text}\n\n"))
+        # Agent header in parentheses with emoji
+        result.append((color, f"({name}) {emoji} "))
+        
+        # Message text with @mentions highlighted
+        highlighted = MessageFormatter.highlight_mentions(clean_text)
+        result.extend(highlighted)
+        result.append(("class:agent.text", "\n\n"))
         
         return result
     
     @staticmethod
     def format_messages(messages: List[AgentMessage]) -> List[Tuple[str, str]]:
         """Format multiple messages."""
-        result = []
+        result: List[Tuple[str, str]] = []
         for msg in messages:
             result.extend(MessageFormatter.format_message(msg))
         return result
+
 
 
 class MessageBuffer:

@@ -4,9 +4,9 @@
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 113
-- **Files Skipped**: 12263
+- **Files Skipped**: 12282
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-17 21:26:06
+- **Generated**: 2025-12-17 21:26:27
 
 ---
 
@@ -539,23 +539,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- core/trinity.py              |     7 +-
- project_structure_final.txt  | 35333 +----------------------------------------
- tests/test_grisha_routing.py |    27 +
- tui/cli.py                   |   426 +-
- tui/messages.py              |    91 +-
- tui/themes.py                |   202 +-
- 6 files changed, 497 insertions(+), 35589 deletions(-)
+ project_structure_final.txt | 37606 +-----------------------------------------
+ 1 file changed, 2 insertions(+), 37604 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-1cc1a8f feat: Introduce agent tool handling, new TUI modules for agents and monitoring, and expand theme options.
+1f13bd2 feat: add TUI file monitoring service with event aggregation and target management.
+b2e1248 feat: Introduce agent tool handling, new TUI modules for agents and monitoring, and expand theme options.
 b2c3bdd Update: Add latest response
 987b109 Update: Add latest response
 4421360 Update: Add latest response
-0025b55 Update: Add latest response
 ```
 
 ---
@@ -11790,7 +11785,7 @@ from tui.i18n import (  # noqa: F401
 test content
 ```
 
-### `project_structure_final.txt` (543.3 KB)
+### `project_structure_final.txt` (543.2 KB)
 
 ```text
 # System — Project Structure
@@ -11799,9 +11794,9 @@ test content
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 113
-- **Files Skipped**: 12263
+- **Files Skipped**: 12282
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-17 21:26:06
+- **Generated**: 2025-12-17 21:26:27
 
 ---
 
@@ -12334,23 +12329,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- core/trinity.py              |     7 +-
- project_structure_final.txt  | 35333 +----------------------------------------
- tests/test_grisha_routing.py |    27 +
- tui/cli.py                   |   426 +-
- tui/messages.py              |    91 +-
- tui/themes.py                |   202 +-
- 6 files changed, 497 insertions(+), 35589 deletions(-)
+ project_structure_final.txt | 37606 +-----------------------------------------
+ 1 file changed, 2 insertions(+), 37604 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-1cc1a8f feat: Introduce agent tool handling, new TUI modules for agents and monitoring, and expand theme options.
+1f13bd2 feat: add TUI file monitoring service with event aggregation and target management.
+b2e1248 feat: Introduce agent tool handling, new TUI modules for agents and monitoring, and expand theme options.
 b2c3bdd Update: Add latest response
 987b109 Update: Add latest response
 4421360 Update: Add latest response
-0025b55 Update: Add latest response
 ```
 
 ---
@@ -38133,4 +38123,4 @@ graph TD
 ## Summary
 
 - **Total Files**: 113
-- **Skipped**: 12263
+- **Skipped**: 12282

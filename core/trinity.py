@@ -783,8 +783,10 @@ class TrinityRuntime:
         # ------------------------------------------------------------------
         # FEEDBACK LOOP LOGIC (Phase 3)
         # ------------------------------------------------------------------
-        
+
         lower_content = content.lower()
+
+        step_status = "uncertain"
 
         has_question = ("?" in content) or lower_content.strip().startswith("чи ") or (" чи " in lower_content)
         uncertainty_keywords = [
@@ -826,16 +828,19 @@ class TrinityRuntime:
             if self.verbose:
                 print("👁️ [Grisha] Tests failed - blocking task and requesting replan")
             next_agent = "atlas"
+            step_status = "failed"
             
         elif "tools results" in lower_content and tool_calls:
             # Case B: Grisha used a tool (e.g. took a screenshot). 
             # Loop back to Atlas to analyze the screenshot.
             next_agent = "atlas"
+            step_status = "uncertain"
             
         elif has_negative:
             # Case C: VERIFICATION FAILED.
             # Trigger "Dynamic Granularity" (Replan).
             next_agent = "atlas"
+            step_status = "failed"
             
         elif (has_explicit_complete or (has_positive and (not has_uncertainty) and (not has_question))) and not tool_calls:
             # Case D: VERIFICATION PASSED and no new tools called.

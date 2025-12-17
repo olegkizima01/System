@@ -1,0 +1,449 @@
+"""File monitoring service for TUI.
+
+Provides:
+- MonitorSummaryService for aggregating file events
+- Database operations for monitor events
+- Settings persistence
+- Target resolution for editors and browsers
+"""
+
+from __future__ import annotations
+
+import json
+import os
+import sqlite3
+import threading
+import time
+from collections import Counter, defaultdict
+from dataclasses import dataclass, field
+from typing import Any, Dict, List, Optional, Set, Tuple
+
+from system_cli.state import state
+from tui.cli_paths import (
+    SYSTEM_CLI_DIR,
+    MONITOR_SETTINGS_PATH,
+    MONITOR_TARGETS_PATH,
+    MONITOR_EVENTS_DB_PATH,
+)
+
+
+def load_monitor_settings() -> None:
+    """Load monitor settings from file."""
+    try:
+        from tui.agents import load_env
+        load_env()
+        
+        if not os.path.exists(MONITOR_SETTINGS_PATH):
+            if str(os.getenv("SUDO_PASSWORD") or "").strip():
+                state.monitor_use_sudo = True
+            return
+
+        with open(MONITOR_SETTINGS_PATH, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        src = str(data.get("source") or "").strip().lower()
+        if src in {"watchdog", "fs_usage", "opensnoop"}:
+            state.monitor_source = src
+        use_sudo = data.get("use_sudo")
+        if isinstance(use_sudo, bool):
+            state.monitor_use_sudo = use_sudo
+    except Exception:
+        return
+
+
+def save_monitor_settings() -> bool:
+    """Save monitor settings to file."""
+    try:
+        os.makedirs(SYSTEM_CLI_DIR, exist_ok=True)
+        payload = {
+            "source": state.monitor_source,
+            "use_sudo": bool(state.monitor_use_sudo),
+        }
+        with open(MONITOR_SETTINGS_PATH, "w", encoding="utf-8") as f:
+            json.dump(payload, f, ensure_ascii=False, indent=2)
+        return True
+    except Exception:
+        return False
+
+
+def load_monitor_targets() -> None:
+    """Load monitor targets from file."""
+    try:
+        if not os.path.exists(MONITOR_TARGETS_PATH):
+            return
+        with open(MONITOR_TARGETS_PATH, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        selected = data.get("selected") or []
+        if isinstance(selected, list):
+            state.monitor_targets = {str(x) for x in selected if x}
+    except Exception:
+        return
+
+
+def save_monitor_targets() -> bool:
+    """Save monitor targets to file."""
+    try:
+        os.makedirs(SYSTEM_CLI_DIR, exist_ok=True)
+        payload = {"selected": sorted(state.monitor_targets)}
+        with open(MONITOR_TARGETS_PATH, "w", encoding="utf-8") as f:
+            json.dump(payload, f, ensure_ascii=False, indent=2)
+        return True
+    except Exception:
+        return False
+
+
+def monitor_get_sudo_password() -> str:
+    """Get SUDO_PASSWORD from environment."""
+    from tui.agents import load_env
+    load_env()
+    return str(os.getenv("SUDO_PASSWORD") or "").strip()
+
+
+def monitor_db_read_since_id(db_path: str, last_id: int, limit: int = 5000) -> List[Dict[str, Any]]:
+    """Read monitor events from database since given ID."""
+    rows: List[Dict[str, Any]] = []
+    try:
+        conn = sqlite3.connect(db_path)
+        try:
+            cur = conn.execute(
+                "SELECT id, ts, source, event_type, src_path, dest_path, is_directory, target_key, pid, process, raw_line "
+                "FROM events WHERE id > ? ORDER BY id ASC LIMIT ?",
+                (int(last_id or 0), int(limit)),
+            )
+            for r in cur.fetchall():
+                rows.append(
+                    {
+                        "id": int(r[0] or 0),
+                        "ts": int(r[1] or 0),
+                        "source": str(r[2] or ""),
+                        "event_type": str(r[3] or ""),
+                        "src_path": str(r[4] or ""),
+                        "dest_path": str(r[5] or ""),
+                        "is_directory": bool(int(r[6] or 0)),
+                        "target_key": str(r[7] or ""),
+                        "pid": int(r[8] or 0),
+                        "process": str(r[9] or ""),
+                        "raw_line": str(r[10] or ""),
+                    }
+                )
+        finally:
+            conn.close()
+    except Exception:
+        return []
+    return rows
+
+
+def monitor_db_get_max_id(db_path: str) -> int:
+    """Get maximum event ID from database."""
+    try:
+        conn = sqlite3.connect(db_path)
+        try:
+            cur = conn.execute("SELECT MAX(id) FROM events")
+            row = cur.fetchone()
+            if not row:
+                return 0
+            return int(row[0] or 0)
+        finally:
+            conn.close()
+    except Exception:
+        return 0
+
+
+def format_monitor_summary(
+    *,
+    title: str,
+    source: str,
+    targets: List[str],
+    ts_from: int,
+    ts_to: int,
+    total_events: int,
+    by_target: Dict[str, int],
+    by_type: Dict[str, int],
+    top_paths: Dict[str, List[Tuple[str, int]]],
+    include_processes: bool,
+    top_processes: List[Tuple[str, int]],
+) -> str:
+    """Format monitor summary as human-readable string."""
+    lines: List[str] = []
+    lines.append(title)
+    lines.append(f"source={source} targets={len(targets)} events={total_events}")
+    lines.append(f"ts_range={ts_from}..{ts_to}")
+    if targets:
+        lines.append("targets: " + ", ".join(targets[:20]) + ("" if len(targets) <= 20 else " ..."))
+    if by_target:
+        top_t = sorted(by_target.items(), key=lambda x: x[1], reverse=True)[:10]
+        lines.append("top_targets: " + ", ".join([f"{k}={v}" for k, v in top_t]))
+    if by_type:
+        top_e = sorted(by_type.items(), key=lambda x: x[1], reverse=True)[:10]
+        lines.append("top_event_types: " + ", ".join([f"{k}={v}" for k, v in top_e]))
+    if include_processes and top_processes:
+        lines.append("top_processes: " + ", ".join([f"{k}={v}" for k, v in top_processes[:10]]))
+    if top_paths:
+        for tk, paths in list(top_paths.items())[:10]:
+            if not paths:
+                continue
+            p = ", ".join([f"{path}({cnt})" for path, cnt in paths[:5]])
+            lines.append(f"paths[{tk}]: {p}")
+    return "\n".join(lines)
+
+
+def monitor_resolve_watch_items(targets: Set[str]) -> List[Tuple[str, str]]:
+    """Resolve monitor targets to (path, target_key) tuples."""
+    home = os.path.expanduser("~")
+    items: List[Tuple[str, str]] = []
+
+    def add_if_dir(path: str, target_key: str) -> None:
+        if os.path.isdir(path):
+            items.append((path, target_key))
+
+    for t in sorted(targets):
+        if t.startswith("browser:"):
+            name = t.split(":", 1)[1]
+            low = name.lower()
+            if low == "safari":
+                add_if_dir(os.path.join(home, "Library", "Safari"), t)
+                add_if_dir(os.path.join(home, "Library", "Containers", "com.apple.Safari"), t)
+            elif "chrome" in low:
+                add_if_dir(os.path.join(home, "Library", "Application Support", "Google", "Chrome"), t)
+                add_if_dir(os.path.join(home, "Library", "Caches", "Google", "Chrome"), t)
+            elif "chromium" in low:
+                add_if_dir(os.path.join(home, "Library", "Application Support", "Chromium"), t)
+                add_if_dir(os.path.join(home, "Library", "Caches", "Chromium"), t)
+            elif "firefox" in low:
+                add_if_dir(os.path.join(home, "Library", "Application Support", "Firefox"), t)
+                add_if_dir(os.path.join(home, "Library", "Caches", "Firefox"), t)
+            else:
+                add_if_dir(os.path.join(home, "Library", "Application Support", name), t)
+                add_if_dir(os.path.join(home, "Library", "Caches", name), t)
+
+        if t.startswith("editor:"):
+            editor_key = t.split(":", 1)[1]
+            add_if_dir(os.path.join(home, "Library", "Application Support", editor_key), t)
+            add_if_dir(os.path.join(home, "Library", "Caches", editor_key), t)
+
+    # unique by (path,target)
+    seen: Set[Tuple[str, str]] = set()
+    uniq: List[Tuple[str, str]] = []
+    for p, k in items:
+        key = (p, k)
+        if key in seen:
+            continue
+        seen.add(key)
+        uniq.append((p, k))
+    return uniq
+
+
+@dataclass
+class MonitorMenuItem:
+    """Menu item for monitor targets selection."""
+    key: str
+    label: str
+    selectable: bool
+    category: str
+    origin: str = ""
+
+
+@dataclass
+class MonitorSummaryService:
+    """Service for aggregating and ingesting monitor summaries."""
+    db_path: str
+    interval_sec: int = 30
+    flush_threshold: int = 250
+    thread: Optional[threading.Thread] = None
+    running: bool = False
+    stop_event: threading.Event = field(default_factory=threading.Event)
+    last_id: int = 0
+    session_start_ts: int = 0
+    session_end_ts: int = 0
+    total_events: int = 0
+    totals_by_target: Counter = field(default_factory=Counter)
+    totals_by_type: Counter = field(default_factory=Counter)
+    totals_by_process: Counter = field(default_factory=Counter)
+    totals_paths_by_target: Dict[str, Counter] = field(default_factory=lambda: defaultdict(Counter))
+    last_flush_ts: int = 0
+
+    def _ingest(self, text: str, metadata: Dict[str, Any]) -> bool:
+        """Ingest summary into RAG pipeline."""
+        try:
+            from tui.agents import load_env
+            load_env()
+            from system_ai.rag.rag_pipeline import RagPipeline
+
+            rp = RagPipeline(persist_dir="~/.system_cli/chroma")
+            return bool(rp.ingest_text(text, metadata=metadata))
+        except Exception:
+            return False
+
+    def _flush(self, *, kind: str, targets: List[str], source: str) -> None:
+        """Flush pending events to summary."""
+        batch = monitor_db_read_since_id(self.db_path, self.last_id, limit=5000)
+        if not batch:
+            return
+
+        self.last_id = max(self.last_id, max(int(x.get("id") or 0) for x in batch))
+        ts_values = [int(x.get("ts") or 0) for x in batch if int(x.get("ts") or 0) > 0]
+        ts_from = min(ts_values) if ts_values else int(time.time())
+        ts_to = max(ts_values) if ts_values else int(time.time())
+
+        by_target = Counter()
+        by_type = Counter()
+        by_process = Counter()
+        paths_by_target: Dict[str, Counter] = defaultdict(Counter)
+
+        for e in batch:
+            tk = str(e.get("target_key") or "")
+            et = str(e.get("event_type") or "")
+            by_target[tk] += 1
+            by_type[et] += 1
+            src = str(e.get("src_path") or "")
+            if src:
+                paths_by_target[tk][src] += 1
+            proc = str(e.get("process") or "").strip()
+            if proc:
+                by_process[proc] += 1
+
+        self.total_events += len(batch)
+        self.totals_by_target.update(by_target)
+        self.totals_by_type.update(by_type)
+        self.totals_by_process.update(by_process)
+        for tk, c in paths_by_target.items():
+            self.totals_paths_by_target[tk].update(c)
+        self.session_end_ts = max(self.session_end_ts, ts_to)
+
+        top_paths: Dict[str, List[Tuple[str, int]]] = {}
+        for tk, c in paths_by_target.items():
+            top_paths[tk] = c.most_common(10)
+
+        include_processes = bool(by_process)
+        summary_text = format_monitor_summary(
+            title=f"MONITOR SUMMARY ({kind})",
+            source=str(source or ""),
+            targets=targets,
+            ts_from=ts_from,
+            ts_to=ts_to,
+            total_events=len(batch),
+            by_target=dict(by_target),
+            by_type=dict(by_type),
+            top_paths=top_paths,
+            include_processes=include_processes,
+            top_processes=by_process.most_common(10),
+        )
+
+        meta = {
+            "type": "monitor_summary",
+            "kind": kind,
+            "source": str(source or ""),
+            "targets": targets,
+            "events": int(len(batch)),
+            "ts_from": int(ts_from),
+            "ts_to": int(ts_to),
+        }
+        ok = self._ingest(summary_text, meta)
+        if ok:
+            self.last_flush_ts = int(time.time())
+
+    def _run(self) -> None:
+        """Background thread for periodic flushing."""
+        while not self.stop_event.wait(timeout=max(5, int(self.interval_sec))):
+            if not self.running:
+                break
+            try:
+                targets = sorted(getattr(state, "monitor_targets", set()) or set())
+                source = str(getattr(state, "monitor_source", "") or "")
+                self._flush(kind="periodic", targets=targets, source=source)
+            except Exception:
+                continue
+
+        # Final flush on stop
+        try:
+            targets = sorted(getattr(state, "monitor_targets", set()) or set())
+            source = str(getattr(state, "monitor_source", "") or "")
+            self._flush(kind="final", targets=targets, source=source)
+        except Exception:
+            pass
+
+        # Session summary
+        if self.total_events > 0:
+            try:
+                targets = sorted(getattr(state, "monitor_targets", set()) or set())
+                source = str(getattr(state, "monitor_source", "") or "")
+
+                top_paths_total: Dict[str, List[Tuple[str, int]]] = {}
+                for tk, c in self.totals_paths_by_target.items():
+                    top_paths_total[tk] = c.most_common(10)
+
+                session_text = format_monitor_summary(
+                    title="MONITOR SESSION SUMMARY",
+                    source=str(source or ""),
+                    targets=targets,
+                    ts_from=int(self.session_start_ts or 0),
+                    ts_to=int(self.session_end_ts or 0),
+                    total_events=int(self.total_events),
+                    by_target=dict(self.totals_by_target),
+                    by_type=dict(self.totals_by_type),
+                    top_paths=top_paths_total,
+                    include_processes=bool(self.totals_by_process),
+                    top_processes=self.totals_by_process.most_common(10),
+                )
+
+                meta = {
+                    "type": "monitor_summary",
+                    "kind": "session",
+                    "source": str(source or ""),
+                    "targets": targets,
+                    "events": int(self.total_events),
+                    "ts_from": int(self.session_start_ts or 0),
+                    "ts_to": int(self.session_end_ts or 0),
+                }
+                self._ingest(session_text, meta)
+            except Exception:
+                pass
+
+        self.running = False
+
+    def start(self) -> None:
+        """Start the summary service."""
+        if self.running:
+            return
+        self.stop_event.clear()
+        self.running = True
+        self.session_start_ts = int(time.time())
+        self.session_end_ts = int(self.session_start_ts)
+        self.last_flush_ts = 0
+        self.total_events = 0
+        self.totals_by_target = Counter()
+        self.totals_by_type = Counter()
+        self.totals_by_process = Counter()
+        self.totals_paths_by_target = defaultdict(Counter)
+        self.last_id = monitor_db_get_max_id(self.db_path)
+        self.thread = threading.Thread(target=self._run, daemon=True)
+        self.thread.start()
+
+    def stop(self) -> None:
+        """Stop the summary service."""
+        if not self.running:
+            return
+        self.stop_event.set()
+        try:
+            if self.thread:
+                self.thread.join(timeout=8)
+        except Exception:
+            pass
+        self.thread = None
+        self.running = False
+
+
+# Global service instance
+monitor_summary_service = MonitorSummaryService(db_path=MONITOR_EVENTS_DB_PATH)
+
+
+# Backward compatibility aliases
+_load_monitor_settings = load_monitor_settings
+_save_monitor_settings = save_monitor_settings
+_load_monitor_targets = load_monitor_targets
+_save_monitor_targets = save_monitor_targets
+_monitor_get_sudo_password = monitor_get_sudo_password
+_monitor_db_read_since_id = monitor_db_read_since_id
+_monitor_db_get_max_id = monitor_db_get_max_id
+_format_monitor_summary = format_monitor_summary
+_monitor_resolve_watch_items = monitor_resolve_watch_items
+_MonitorSummaryService = MonitorSummaryService

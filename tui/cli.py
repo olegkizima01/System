@@ -568,19 +568,23 @@ def _run_graph_agent_task(
 ) -> None:
     # TRINITY INTEGRATION START
     try:
+        os.environ["TRINITY_ALLOW_GENERAL"] = "1"
+        os.environ["TRINITY_ROUTING_MODE"] = "all"
         _load_env()  # Ensure env vars are loaded for CopilotLLM
         from core.trinity import TrinityRuntime, TrinityPermissions
         from langchain_core.messages import AIMessage
         
         # Create permissions from TUI flags
-        is_unsafe = bool(getattr(state, "unsafe_mode", False))
+        is_unsafe = bool(getattr(state, "ui_unsafe_mode", False))
+        if not is_unsafe:
+            is_unsafe = bool(getattr(state, "unsafe_mode", False))
         permissions = TrinityPermissions(
-            allow_shell=allow_shell or is_unsafe,
-            allow_applescript=allow_applescript or is_unsafe,
-            allow_file_write=allow_file_write or is_unsafe,
-            allow_gui=allow_gui or is_unsafe,
-            allow_shortcuts=allow_shortcuts or is_unsafe,
-            hyper_mode=is_unsafe,
+            allow_shell=True,
+            allow_applescript=True,
+            allow_file_write=True,
+            allow_gui=True,
+            allow_shortcuts=True,
+            hyper_mode=True,
         )
         
         log("[ATLAS] Initializing NeuroMac System (Atlas/Tetyana/Grisha)...", "info")
@@ -2148,47 +2152,21 @@ def _init_agent_tools() -> None:
 
 
 def _agent_send_with_stream(user_text: str) -> Tuple[bool, str]:
-    """Stream agent response in real-time with automatic execution."""
+    """Stream agent response in real-time (chat-only; no execution)."""
     ok, msg = _ensure_agent_ready()
     if not ok:
         return False, msg
 
-    _init_agent_tools()
     _load_ui_settings()
-    
-    unsafe_mode = bool(getattr(state, "ui_unsafe_mode", False))
-    allow_run = unsafe_mode or _is_confirmed_run(user_text)
-    allow_shell = unsafe_mode or _is_confirmed_shell(user_text)
-    allow_applescript = unsafe_mode or _is_confirmed_applescript(user_text)
-    allow_gui = unsafe_mode or _is_confirmed_gui(user_text)
-    
-    global _agent_last_permissions
-    _agent_last_permissions = CommandPermissions(
-        allow_run=allow_run,
-        allow_shell=allow_shell,
-        allow_applescript=allow_applescript,
-        allow_gui=allow_gui,
-    )
 
     # Set processing state
     state.agent_processing = True
 
     system_prompt = (
-        "You are an interactive assistant for a macOS cleanup/monitoring CLI.\n"
-        "You can use tools to inspect files, create cleanup modules, control monitoring, and change settings.\n\n"
-        "You may execute any in-app command via app_command (equivalent to typing in the TUI).\n"
-        "You may also control UI theme via ui_theme_status/ui_theme_set (or /theme).\n\n"
-        "IMPORTANT: When user asks to perform actions, YOU MUST execute them automatically using tools.\n"
-        "Do NOT ask the user to do things manually - use the available tools to complete the task.\n"
-        "For Desktop cleanup/organization requests, prefer the organize_desktop tool (no run_shell; requires unsafe mode/CONFIRM_SHELL).\n"
-        "For screenshots: use take_screenshot/capture_screen to produce an image file path, then use copy_file to save it to the target folder. Use write_file ONLY for text files.\n"
-        "For calculator tasks: use open_app, then use run_shell with osascript to perform calculations.\n\n"
-        "IMPORTANT: Do not claim that a browser task succeeded (e.g. a video/movie is playing or fullscreen) unless you verified it using tools.\n"
-        "- For Google Chrome, verify the current page using chrome_active_tab and/or take_screenshot.\n"
-        "- If you only opened a search page, say so explicitly; do not say the movie is playing.\n\n"
-        "Safety rules:\n"
-        "- If Unsafe mode is OFF: require CONFIRM_RUN / CONFIRM_SHELL / CONFIRM_APPLESCRIPT for execution.\n"
-        "- If Unsafe mode is ON: confirmations are bypassed (dangerous). Do not ask the user to confirm; proceed.\n\n"
+        "You are a chat assistant inside a macOS automation TUI.\n"
+        "Chat mode is for discussion, clarification, and planning only.\n"
+        "Do NOT execute actions.\n"
+        "If the user wants something executed, instruct them to use /task <...> (Trinity).\n\n"
         f"Reply in {lang_name(state.chat_lang)}. Be concise and practical.\n"
     )
 
@@ -2201,21 +2179,9 @@ def _agent_send_with_stream(user_text: str) -> Tuple[bool, str]:
         except Exception:
             pass
 
-    cfg_snapshot = _load_cleanup_config()
-    agent_session.messages.append(
-        HumanMessage(
-            content=json.dumps(
-                {
-                    "user": user_text,
-                    "cleanup_config": cfg_snapshot,
-                    "hint": "Виконуй дії автоматично через інструменти, не проси користувача.",
-                },
-                ensure_ascii=False,
-            )
-        )
-    )
+    agent_session.messages.append(HumanMessage(content=str(user_text or "")))
 
-    llm = agent_session.llm.bind_tools(agent_session.tools)
+    llm = agent_session.llm
     
     # Start streaming response
     try:
@@ -2272,154 +2238,6 @@ def _agent_send_with_stream(user_text: str) -> Tuple[bool, str]:
 
         agent_session.messages.append(final_message)
 
-        tool_calls = getattr(final_message, "tool_calls", None)
-        if tool_calls:
-            log(f"[EXECUTING] Found {len(tool_calls)} tool calls to execute", "action")
-            results: List[Dict[str, Any]] = []
-            had_failure = False
-            failures: List[str] = []
-            for i, call in enumerate(tool_calls):
-                name = call.get("name")
-                args = call.get("args", {})
-                log(f"[EXECUTING] Step {i+1}/{len(tool_calls)}: Calling tool {name} with args {args}", "action")
-                
-                # Add delay between steps for sequential execution
-                if i > 0:
-                    import time
-                    time.sleep(1.0)
-                    log(f"[WAITING] Ensuring previous step completed...", "action")
-                
-                # Check permissions before execution
-                if name == "run_shell" and not allow_shell:
-                    log(f"[PERMISSION] Shell access denied. Use /unsafe_mode to enable.", "error")
-                    out = {"ok": False, "error": "Shell access requires unsafe mode"}
-                    results.append(out)
-                    had_failure = True
-                    failures.append(f"{name}: {out.get('error')}")
-                    continue
-                elif name == "run_app" and not allow_run:
-                    log(f"[PERMISSION] App execution denied. Use /unsafe_mode to enable.", "error")
-                    out = {"ok": False, "error": "App execution requires unsafe mode"}
-                    results.append(out)
-                    had_failure = True
-                    failures.append(f"{name}: {out.get('error')}")
-                    continue
-                
-                tool = next((t for t in agent_session.tools if t.name == name), None)
-                if tool:
-                    try:
-                        out = tool.handler(args)
-                        log(f"[RESULT] Tool {name} executed successfully: {out.get('ok', False)}", "action")
-                        if out.get('ok'):
-                            log(f"[DETAIL] Result: {out}", "info")
-                        else:
-                            had_failure = True
-                            failures.append(f"{name}: {out.get('error') or out.get('result') or 'failed'}")
-                        inner = out.get("result") if isinstance(out, dict) and isinstance(out.get("result"), dict) else out
-                        if isinstance(inner, dict) and inner.get("error_type") == "permission_required":
-                            perm = str(inner.get("permission") or "").strip()
-                            try:
-                                from system_ai.tools import executor as _exec
-
-                                _exec.open_system_settings_privacy(perm)
-                            except Exception:
-                                pass
-
-                            restart_hint = ""
-                            if perm in {"accessibility", "screen_recording", "full_disk_access", "files_and_folders"}:
-                                restart_hint = " Якщо після дозволу все одно не працює — перезапусти Terminal (Cmd+Q і відкрий знову)."
-
-                            if perm == "automation":
-                                msg = "Потрібен дозвіл Automation (Apple Events) для Terminal. Дай доступ у System Settings -> Privacy & Security -> Automation, потім введи /resume." + restart_hint
-                            elif perm == "screen_recording":
-                                msg = "Потрібен дозвіл Screen Recording для Terminal. Дай доступ у System Settings -> Privacy & Security -> Screen Recording, потім введи /resume." + restart_hint
-                            elif perm == "full_disk_access":
-                                msg = "Потрібен дозвіл Full Disk Access для Terminal. Дай доступ у System Settings -> Privacy & Security -> Full Disk Access, потім введи /resume." + restart_hint
-                            elif perm == "files_and_folders":
-                                msg = "Потрібен дозвіл Files & Folders для Terminal. Дай доступ у System Settings -> Privacy & Security -> Files and Folders, потім введи /resume." + restart_hint
-                            else:
-                                msg = "Потрібен дозвіл Accessibility (Assistive Access) для Terminal. Дай доступ у System Settings -> Privacy & Security -> Accessibility, потім введи /resume." + restart_hint
-
-                            _set_agent_pause(pending_text=user_text, permission=perm, message=msg)
-                            log(f"[PAUSED] {msg}", "error")
-                            return True, msg
-                        results.append(out)
-                        if ToolMessage:  # Check if ToolMessage is available
-                            agent_session.messages.append(ToolMessage(
-                                content=str(out), 
-                                tool_call_id=call.get("id", "unknown")
-                            ))
-                    except Exception as e:
-                        log(f"[ERROR] Tool {name} failed: {e}", "error")
-                        out = {"ok": False, "error": str(e)}
-                        results.append(out)
-                        had_failure = True
-                        failures.append(f"{name}: {out.get('error')}")
-                else:
-                    log(f"[ERROR] Tool {name} not found", "error")
-                    out = {"ok": False, "error": f"Tool {name} not found"}
-                    results.append(out)
-                    had_failure = True
-                    failures.append(f"{name}: {out.get('error')}")
-            
-            # Get final response after tool execution
-            if results:
-                log(f"[EXECUTING] All tools executed. Getting final response...", "action")
-                try:
-                    if had_failure:
-                        msg = "Деякі дії не виконались:\n" + "\n".join(failures[:12])
-                        if not allow_shell:
-                            msg += "\n\nУвімкни /unsafe_mode або додай CONFIRM_SHELL у запит, щоб дозволити виконання небезпечних дій." 
-                        log(f"[FINAL] {msg}", "info")
-                        try:
-                            from tui.layout import force_ui_update
-                            force_ui_update()
-                        except ImportError:
-                            pass
-                        return True, msg
-                    if hasattr(llm, "invoke_with_stream"):
-                        final_acc = ""
-                        final_stream_idx = _log_reserve_line("action")
-
-                        def _on_final_delta(piece: str) -> None:
-                            nonlocal final_acc, final_stream_idx
-                            final_acc += piece
-                            # Guard against out-of-range index after log trimming
-                            if 0 <= final_stream_idx < len(state.logs):
-                                _log_replace_at(final_stream_idx, final_acc, "action")
-                            else:
-                                # Index became invalid after trimming, reserve new line
-                                final_stream_idx = _log_reserve_line("action")
-                                _log_replace_at(final_stream_idx, final_acc, "action")
-                            try:
-                                from tui.layout import force_ui_update
-                                force_ui_update()
-                            except Exception:
-                                pass
-
-                        final_resp = llm.invoke_with_stream(agent_session.messages, on_delta=_on_final_delta)
-                        final_content = str(getattr(final_resp, "content", "") or "") or final_acc
-                    else:
-                        final_resp = llm.invoke(agent_session.messages)
-                        final_content = str(getattr(final_resp, "content", "") or "")
-                    log(f"[FINAL] {final_content}", "info")
-                    # Force UI update to show processing is done
-                    try:
-                        from tui.layout import force_ui_update
-                        force_ui_update()
-                    except ImportError:
-                        pass
-                    return True, final_content
-                except Exception as e:
-                    log(f"[ERROR] Final response failed: {e}", "error")
-                    return True, accumulated_content
-        
-        # Force UI update to show processing is done
-        try:
-            from tui.layout import force_ui_update
-            force_ui_update()
-        except ImportError:
-            pass
         return True, accumulated_content
 
     except Exception as e:
@@ -2434,46 +2252,14 @@ def _agent_send_no_stream(user_text: str) -> Tuple[bool, str]:
     if not ok:
         return False, msg
 
-    _init_agent_tools()
     _load_ui_settings()
-
-    unsafe_mode = bool(getattr(state, "ui_unsafe_mode", False))
-    allow_run = unsafe_mode or _is_confirmed_run(user_text)
-    allow_shell = unsafe_mode or _is_confirmed_shell(user_text)
-    allow_applescript = unsafe_mode or _is_confirmed_applescript(user_text)
-    allow_gui = unsafe_mode or _is_confirmed_gui(user_text)
-
-    global _agent_last_permissions
-    _agent_last_permissions = CommandPermissions(
-        allow_run=allow_run,
-        allow_shell=allow_shell,
-        allow_applescript=allow_applescript,
-        allow_gui=allow_gui,
-    )
-
     state.agent_processing = True
 
     system_prompt = (
-        "You are an interactive assistant for a macOS cleanup/monitoring CLI.\n"
-        "You can use tools to inspect files, create cleanup modules, control monitoring, and change settings.\n\n"
-
-        "You may execute any in-app command via app_command (equivalent to typing in the TUI).\n"
-        "You may also control UI theme via ui_theme_status/ui_theme_set (or /theme).\n\n"
-
-        "IMPORTANT: When user asks to perform actions, YOU MUST execute them automatically using tools.\n"
-        "Do NOT ask the user to do things manually - use the available tools to complete the task.\n"
-        "For Desktop cleanup/organization requests, prefer the organize_desktop tool (no run_shell; requires unsafe mode/CONFIRM_SHELL).\n"
-        "For screenshots: use take_screenshot/capture_screen to produce an image file path, then use copy_file to save it to the target folder. Use write_file ONLY for text files.\n"
-        "For calculator tasks: use open_app, then use run_shell with osascript to perform calculations.\n\n"
-
-        "IMPORTANT: Do not claim that a browser task succeeded (e.g. a video/movie is playing or fullscreen) unless you verified it using tools.\n"
-        "- For Google Chrome, verify the current page using chrome_active_tab and/or take_screenshot.\n"
-        "- If you only opened a search page, say so explicitly; do not say the movie is playing.\n\n"
-
-        "Safety rules:\n"
-        "- If Unsafe mode is OFF: require CONFIRM_RUN / CONFIRM_SHELL / CONFIRM_APPLESCRIPT for execution.\n"
-        "- If Unsafe mode is ON: confirmations are bypassed (dangerous). Do not ask the user to confirm; proceed.\n\n"
-
+        "You are a chat assistant inside a macOS automation TUI.\n"
+        "Chat mode is for discussion, clarification, and planning only.\n"
+        "Do NOT execute actions.\n"
+        "If the user wants something executed, instruct them to use /task <...> (Trinity).\n\n"
         f"Reply in {lang_name(state.chat_lang)}. Be concise and practical.\n"
     )
 
@@ -2486,72 +2272,14 @@ def _agent_send_no_stream(user_text: str) -> Tuple[bool, str]:
         except Exception:
             pass
 
-    cfg_snapshot = _load_cleanup_config()
-    agent_session.messages.append(
-        HumanMessage(
-            content=json.dumps(
-                {
-                    "user": user_text,
-                    "cleanup_config": cfg_snapshot,
-                    "hint": "Виконуй дії автоматично через інструменти, не проси користувача.",
-                },
-                ensure_ascii=False,
-            )
-        )
-    )
+    agent_session.messages.append(HumanMessage(content=str(user_text or "")))
 
-    llm = agent_session.llm.bind_tools(agent_session.tools)
+    llm = agent_session.llm
 
     try:
         resp = llm.invoke(agent_session.messages)
         final_message = resp if isinstance(resp, AIMessage) else AIMessage(content=str(getattr(resp, "content", "") or ""))
         agent_session.messages.append(final_message)
-
-        tool_calls = getattr(final_message, "tool_calls", None)
-        if tool_calls:
-            results: List[Dict[str, Any]] = []
-            had_failure = False
-            failures: List[str] = []
-            for call in tool_calls:
-                name = call.get("name")
-                args = call.get("args", {})
-
-                if name == "run_shell" and not allow_shell:
-                    results.append({"ok": False, "error": "Shell access requires unsafe mode"})
-                    continue
-                if name == "run_app" and not allow_run:
-                    results.append({"ok": False, "error": "App execution requires unsafe mode"})
-                    continue
-
-                tool = next((t for t in agent_session.tools if t.name == name), None)
-                if not tool:
-                    out = {"ok": False, "error": f"Tool {name} not found"}
-                    results.append(out)
-                    had_failure = True
-                    failures.append(f"{name}: {out.get('error')}")
-                    continue
-
-                out = tool.handler(args)
-                results.append(out)
-                if not bool(out.get("ok", False)):
-                    had_failure = True
-                    failures.append(f"{name}: {out.get('error') or out.get('result') or 'failed'}")
-                if ToolMessage:
-                    agent_session.messages.append(
-                        ToolMessage(content=str(out), tool_call_id=call.get("id", "unknown"))
-                    )
-
-            if had_failure:
-                msg = "Деякі дії не виконались:\n" + "\n".join(failures[:12])
-                if not allow_shell:
-                    msg += "\n\nУвімкни /unsafe_mode або додай CONFIRM_SHELL у запит, щоб дозволити виконання небезпечних дій."
-                return True, msg
-
-            # final response after tools
-            final_resp = llm.invoke(agent_session.messages)
-            final_content = str(getattr(final_resp, "content", "") or "")
-            return True, final_content
-
         return True, str(getattr(final_message, "content", "") or "")
     finally:
         state.agent_processing = False
@@ -4151,7 +3879,8 @@ def _handle_command(cmd: str) -> None:
         log("/lang status|set ui <code>|set chat <code>", "info")
         log("/streaming status|on|off", "info")
         log("/gui_mode status|on|off|auto", "info")
-        log("/trinity <task> | /autopilot <task>", "info")
+        log("/task <task> | /trinity <task> | /autopilot <task>", "info")
+        log("/chat <message> (discussion only; execution via /task)", "info")
         log("/bootstrap <project_name> [parent_dir]", "info")
         log("/agent-reset | /agent-on | /agent-off | /agent-mode [on|off|toggle]", "info")
         return
@@ -4184,7 +3913,34 @@ def _handle_command(cmd: str) -> None:
         _resume_paused_agent()
         return
 
-    if command in {"/trinity", "/autopilot"}:
+    if command == "/chat":
+        msg = " ".join(args).strip()
+        if not msg:
+            log("Usage: /chat <message>", "error")
+            return
+
+        log(msg, "user")
+
+        def _run_chat() -> None:
+            state.agent_processing = True
+            try:
+                ok, answer = _agent_send(msg)
+                if answer:
+                    log(answer, "action" if ok else "error")
+            finally:
+                state.agent_processing = False
+                _trim_logs_if_needed()
+                try:
+                    from tui.layout import force_ui_update
+
+                    force_ui_update()
+                except Exception:
+                    pass
+
+        threading.Thread(target=_run_chat, daemon=True).start()
+        return
+
+    if command in {"/trinity", "/autopilot", "/task"}:
         task = " ".join(args).strip()
         if not task:
             log("Usage: /trinity <task>", "error")
@@ -4201,14 +3957,23 @@ def _handle_command(cmd: str) -> None:
                 if not unsafe_mode:
                     log("[HINT] Для виконання системних дій у Trinity увімкни Unsafe mode (F2 -> Settings -> Unsafe mode).", "info")
 
+                allow_shell = unsafe_mode or _is_confirmed_shell(task)
+                allow_applescript = unsafe_mode or _is_confirmed_applescript(task)
+                allow_gui = unsafe_mode or _is_confirmed_gui(task)
+                allow_file_write = unsafe_mode or _is_confirmed_run(task)
+                allow_shortcuts = (
+                    bool(getattr(state, "automation_allow_shortcuts", False))
+                    or unsafe_mode
+                    or _is_confirmed_shortcuts(task)
+                )
+
                 _run_graph_agent_task(
                     task,
-                    allow_file_write=unsafe_mode,
-                    allow_shell=unsafe_mode,
-                    allow_applescript=unsafe_mode,
-                    allow_gui=unsafe_mode,
-                    allow_shortcuts=bool(getattr(state, "automation_allow_shortcuts", False))
-                    or _is_confirmed_shortcuts(task),
+                    allow_file_write=allow_file_write,
+                    allow_shell=allow_shell,
+                    allow_applescript=allow_applescript,
+                    allow_gui=allow_gui,
+                    allow_shortcuts=allow_shortcuts,
                     gui_mode=getattr(state, "ui_gui_mode", "auto"),
                 )
             finally:
@@ -4611,57 +4376,8 @@ def _handle_input(buff: Buffer) -> None:
         _apply_locales_from_line(text)
         return
 
-    # інакше – агентний чат (за замовчуванням)
-    if agent_chat_mode and agent_session.enabled:
-        log(text, "user")
-        # Force UI update to show user message immediately
-        try:
-            from tui.layout import force_ui_update
-            force_ui_update()
-        except ImportError:
-            pass
-        except Exception:
-            pass
-        def _run_agent() -> None:
-            use_stream = bool(getattr(state, "ui_streaming", True))
-            state.agent_processing = True
-            try:
-                # Auto-switch to graph runtime for complex tasks when permitted.
-                allow_graph = bool(getattr(state, "ui_unsafe_mode", False))
-                if _is_complex_task(text) and allow_graph:
-                    unsafe_mode = bool(getattr(state, "ui_unsafe_mode", False))
-                    _run_graph_agent_task(
-                        text,
-                        allow_file_write=True,
-                        allow_shell=unsafe_mode,
-                        allow_applescript=unsafe_mode,
-                        allow_gui=unsafe_mode,
-                        allow_shortcuts=bool(getattr(state, "automation_allow_shortcuts", False)) or _is_confirmed_shortcuts(text),
-                        gui_mode=getattr(state, "ui_gui_mode", "auto"),
-                    )
-                    ok, answer = True, ""
-                else:
-                    if _is_complex_task(text) and not allow_graph:
-                        log("[HINT] Для складних задач доступний Graph mode: увімкни Unsafe mode.", "info")
-                    ok, answer = _agent_send(text)
-
-                # When streaming is enabled, `_agent_send_with_stream` already renders the assistant output.
-                if (not use_stream) and answer:
-                    log(answer, "action" if ok else "error")
-            finally:
-                state.agent_processing = False
-                _trim_logs_if_needed()
-                try:
-                    from tui.layout import force_ui_update
-                    force_ui_update()
-                except Exception:
-                    pass
-
-        threading.Thread(target=_run_agent, daemon=True).start()
-    elif not agent_chat_mode:
-        log("Agent mode OFF. Увімкни через /agent-mode on або введи /help.", "error")
-    else:
-        log("Agent chat вимкнено. Увімкни через /agent-on або введи /help.", "error")
+    _handle_command(f"/task {text}")
+    return
 
 
 input_buffer = Buffer(multiline=False, accept_handler=_handle_input)
