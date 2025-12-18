@@ -67,6 +67,24 @@ class MemoryHandler(logging.Handler):
 _memory_handler = MemoryHandler()
 
 
+
+# JSON Formatter
+class JSONFormatter(logging.Formatter):
+    def format(self, record):
+        log_obj = {
+            "timestamp": datetime.fromtimestamp(record.created).isoformat(),
+            "level": record.levelname,
+            "logger": record.name,
+            "message": record.getMessage(),
+            "module": record.module,
+            "func": record.funcName,
+            "line": record.lineno,
+            "thread": record.threadName,
+        }
+        if record.exc_info:
+            log_obj["exception"] = self.formatException(record.exc_info)
+        return json.dumps(log_obj, ensure_ascii=False)
+
 def setup_logging(verbose: bool = False, name: str = "system_cli") -> logging.Logger:
     """Setup comprehensive logging system.
     
@@ -130,7 +148,22 @@ def setup_logging(verbose: bool = False, name: str = "system_cli") -> logging.Lo
     except Exception as e:
         print(f"Failed to setup debug log file: {e}", file=sys.stderr)
 
-    # 4. Memory handler (for TUI display)
+    # 4. AI JSON Log (Machine readable)
+    try:
+        json_log_file = LOGS_DIR / "ai.log.jsonl"
+        json_handler = logging.handlers.RotatingFileHandler(
+            json_log_file,
+            maxBytes=50 * 1024 * 1024,  # 50 MB
+            backupCount=3,
+            encoding="utf-8"
+        )
+        json_handler.setLevel(logging.DEBUG)
+        json_handler.setFormatter(JSONFormatter())
+        logger.addHandler(json_handler)
+    except Exception as e:
+        print(f"Failed to setup AI JSON log file: {e}", file=sys.stderr)
+
+    # 5. Memory handler (for TUI display)
     _memory_handler.setLevel(logging.INFO) # Keep TUI display cleaner (INFO+), or DEBUG if preferred? User asked for detailed logs "for me" (likely file), but TUI shouldn't be spammed.
     _memory_handler.setFormatter(logging.Formatter(LOG_FORMAT_SIMPLE, datefmt=DATE_FORMAT))
     logger.addHandler(_memory_handler)

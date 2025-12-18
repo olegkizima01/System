@@ -117,22 +117,23 @@ def build_app(
     get_prompt_width: Callable[[], int],
     get_status: Callable[[], Any],
     input_buffer: Buffer,
+    input_key_bindings: KeyBindings | None = None,  # Added argument
     show_menu: Condition,
     kb: KeyBindings,
     style: BaseStyle,
 ) -> Application:
 
     # --- Interactive Header Helpers ---
-    def header_callback_menu():
+    def header_callback_menu(*args):
         state.menu_level = MenuLevel.MAIN if state.menu_level == MenuLevel.NONE else MenuLevel.NONE
         state.menu_index = 0
         force_ui_update()
 
-    def header_callback_logs():
+    def header_callback_logs(*args):
         state.ui_scroll_target = "log"
         force_ui_update()
 
-    def header_callback_agents():
+    def header_callback_agents(*args):
         state.ui_scroll_target = "agents"
         force_ui_update()
 
@@ -215,7 +216,7 @@ def build_app(
                 style="class:input",
                 dont_extend_width=True,
             ),
-            Window(BufferControl(buffer=input_buffer), style="class:input"),
+            Window(BufferControl(buffer=input_buffer, key_bindings=input_key_bindings), style="class:input"),
         ]
     )
 
@@ -223,7 +224,7 @@ def build_app(
         return get_status()
     
     # Interactive status bar
-    def status_callback_menu():
+    def status_callback_menu(*args):
          state.menu_level = MenuLevel.MAIN if state.menu_level == MenuLevel.NONE else MenuLevel.NONE
 
     def get_interactive_status() -> AnyFormattedText:
@@ -267,6 +268,9 @@ def build_app(
         ),
     ]
 
+    def get_log_title() -> str:
+        return " LOG [ACTIVE] " if getattr(state, "ui_scroll_target", "log") == "log" else " LOG "
+
     main_body = HSplit(
         [
             Frame(header_window, style="class:frame.border"),
@@ -274,7 +278,7 @@ def build_app(
                 [
                     Frame(
                         log_window, 
-                        title="LOG", 
+                        title=get_log_title, 
                         style="class:frame.border",
                         width=lambda: Dimension(
                             weight=int(getattr(state, "ui_left_panel_ratio", 0.6) * 100),
@@ -285,7 +289,7 @@ def build_app(
                     ConditionalContainer(
                         Frame(
                             w,
-                            title=title,
+                            title=lambda: f" {title} [ACTIVE] " if getattr(state, "ui_scroll_target", "log") == "agents" and title == "АГЕНТИ" else f" {title} ",
                             style="class:frame.border",
                             width=lambda: Dimension(
                                 weight=int((1.0 - getattr(state, "ui_left_panel_ratio", 0.6)) * 100),

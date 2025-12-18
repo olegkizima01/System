@@ -48,8 +48,9 @@ from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.data_structures import Point
 from prompt_toolkit.styles import DynamicStyle, Style
 from prompt_toolkit.application import run_in_terminal
+from prompt_toolkit.key_binding import KeyBindings
 
-from tui.layout import build_app
+from tui.layout import build_app, force_ui_update
 from tui.menu import build_menu
 from tui.keybindings import build_keybindings
 from tui.app import TuiRuntime, run_tui as tui_run_tui
@@ -1634,6 +1635,7 @@ def run_tui() -> None:
         MONITOR_EVENTS_DB_PATH=MONITOR_EVENTS_DB_PATH,
         CLEANUP_CONFIG_PATH=CLEANUP_CONFIG_PATH,
         LOCALIZATION_CONFIG_PATH=LOCALIZATION_CONFIG_PATH,
+        force_ui_update=force_ui_update,
     )
 
     kb = build_keybindings(
@@ -1674,7 +1676,22 @@ def run_tui() -> None:
         opensnoop_service=opensnoop_service,
     )
 
+    input_kb = KeyBindings()
+
+    @input_kb.add("enter")
+    def _(event):
+        buff = event.current_buffer
+        if buff.text.strip():
+            buff.validate_and_handle()
+
+    @input_kb.add("s-enter")
+    @input_kb.add("c-enter")
+    @input_kb.add("escape", "enter")
+    def _(event):
+        event.current_buffer.insert_text("\n")
+
     app = build_app(
+        input_key_bindings=input_kb,
         get_header=get_header,
         get_context=get_context,
         get_logs=get_logs,

@@ -15,6 +15,7 @@ from core.mcp import MCPToolRegistry
 from core.verification import AdaptiveVerifier
 from core.memory import get_memory
 from dataclasses import dataclass
+from tui.logger import get_logger, trace
 
 @dataclass
 class TrinityPermissions:
@@ -95,6 +96,7 @@ class TrinityRuntime:
     ):
         self.llm = CopilotLLM()
         self.verbose = verbose
+        self.logger = get_logger("system_cli.trinity")
         self.registry = MCPToolRegistry()
         self.verifier = AdaptiveVerifier(self.llm)
         self.memory = get_memory()

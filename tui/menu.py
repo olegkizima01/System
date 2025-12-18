@@ -30,10 +30,20 @@ def build_menu(
     MONITOR_EVENTS_DB_PATH: str,
     CLEANUP_CONFIG_PATH: str,
     LOCALIZATION_CONFIG_PATH: str,
+    force_ui_update: Callable[[], None],
 ) -> Tuple[Condition, Callable[[], List[Tuple[str, str]]]]:
     @Condition
     def show_menu() -> bool:
         return state.menu_level != MenuLevel.NONE
+
+    def make_click(idx: int) -> Callable[[Any], None]:
+        def _click(mouse_event: Any) -> None:
+            if state.menu_index != idx:
+                state.menu_index = idx
+                force_ui_update()
+            # If prompt_toolkit supports double click, we could execute. 
+            # For now, just focus.
+        return _click
 
     def get_toggle_text(val: bool) -> List[Tuple[str, str]]:
         style = "class:toggle.on" if val else "class:toggle.off"
@@ -68,7 +78,8 @@ def build_menu(
             for i, (name, _) in enumerate(MAIN_MENU_ITEMS):
                 prefix = " > " if i == state.menu_index else "   "
                 style_cls = "class:menu.selected" if i == state.menu_index else "class:menu.item"
-                result.append((style_cls, f"{prefix}{tr(name, state.ui_lang)}\n"))
+                handler = make_click(i)
+                result.append((style_cls, f"{prefix}{tr(name, state.ui_lang)}\n", handler))
             return result
 
         if state.menu_level == MenuLevel.CUSTOM_TASKS:
@@ -78,7 +89,8 @@ def build_menu(
             for i, (label, _) in enumerate(items):
                 prefix = " > " if i == state.menu_index else "   "
                 style_cls = "class:menu.selected" if i == state.menu_index else "class:menu.item"
-                result.append((style_cls, f"{prefix}{tr(label, state.ui_lang)}\n"))
+                handler = make_click(i)
+                result.append((style_cls, f"{prefix}{tr(label, state.ui_lang)}\n", handler))
             return result
 
         if state.menu_level == MenuLevel.MONITORING:
@@ -102,7 +114,8 @@ def build_menu(
                     label = item[0] if isinstance(item, tuple) else item
                     prefix = " > " if i == state.menu_index else "   "
                     style_cls = "class:menu.selected" if i == state.menu_index else "class:menu.item"
-                    result.append((style_cls, f"{prefix}{tr(label, state.ui_lang)}\n"))
+                    handler = make_click(i)
+                    result.append((style_cls, f"{prefix}{tr(label, state.ui_lang)}\n", handler))
             return result
 
         if state.menu_level == MenuLevel.LLM_SETTINGS:
@@ -115,7 +128,8 @@ def build_menu(
             for i, (label, _) in enumerate(items):
                 prefix = " > " if i == state.menu_index else "   "
                 style_cls = "class:menu.selected" if i == state.menu_index else "class:menu.item"
-                result.append((style_cls, f"{prefix}{label}\n"))
+                handler = make_click(i)
+                result.append((style_cls, f"{prefix}{label}\n", handler))
             return result
 
         if state.menu_level == MenuLevel.AGENT_SETTINGS:
@@ -128,7 +142,8 @@ def build_menu(
             for i, (label, _) in enumerate(items):
                 prefix = " > " if i == state.menu_index else "   "
                 style_cls = "class:menu.selected" if i == state.menu_index else "class:menu.item"
-                result.append((style_cls, f"{prefix}{label}\n"))
+                handler = make_click(i)
+                result.append((style_cls, f"{prefix}{label}\n", handler))
             return result
 
         if state.menu_level == MenuLevel.APPEARANCE:
@@ -139,7 +154,8 @@ def build_menu(
                 prefix = " > " if i == state.menu_index else "   "
                 style_cls = "class:menu.selected" if i == state.menu_index else "class:menu.item"
                 mark = "[*]" if state.ui_theme == t else "[ ]"
-                result.append((style_cls, f"{prefix}{mark} {t}"))
+                handler = make_click(i)
+                result.append((style_cls, f"{prefix}{mark} {t}", handler))
                 result.extend(get_theme_preview(t))
                 result.append(("", "\n"))
             return result
@@ -154,7 +170,8 @@ def build_menu(
             for i, (label, _k) in enumerate(items):
                 prefix = " > " if i == state.menu_index else "   "
                 style_cls = "class:menu.selected" if i == state.menu_index else "class:menu.item"
-                result.append((style_cls, f"{prefix}{label}\n"))
+                handler = make_click(i)
+                result.append((style_cls, f"{prefix}{label}\n", handler))
             result.append(("class:menu.item", "\n Enter: cycle | /lang set ui|chat <code>\n"))
             return result
 
@@ -162,7 +179,8 @@ def build_menu(
             result.append(("class:menu.title", f" {tr('menu.unsafe_mode.title', state.ui_lang)}\n\n"))
             on = bool(getattr(state, "ui_unsafe_mode", False))
             prefix = " > "
-            result.append(("class:menu.selected", f"{prefix}{tr('menu.unsafe_mode.label', state.ui_lang)} "))
+            handler = make_click(0)
+            result.append(("class:menu.selected", f"{prefix}{tr('menu.unsafe_mode.label', state.ui_lang)} ", handler))
             result.extend(get_toggle_text(on))
             result.append(("", "\n"))
             return result
@@ -216,7 +234,8 @@ def build_menu(
             result.append(("class:menu.item", f" Targets: {len(state.monitor_targets)} selected\n"))
             result.append(("class:menu.item", f" DB: {MONITOR_EVENTS_DB_PATH}\n\n"))
             action = "STOP" if state.monitor_active else "START"
-            result.append(("class:menu.selected", f" > {action}\n"))
+            handler = make_click(0)
+            result.append(("class:menu.selected", f" > {action}\n", handler))
             if state.monitor_source == "watchdog":
                 result.append(("class:menu.item", "\n Note: watchdog monitors directories (no process attribution).\n"))
             elif state.monitor_source == "fs_usage":
@@ -245,7 +264,8 @@ def build_menu(
                 on = it.key in state.monitor_targets
                 mark = "[x]" if on else "[ ]"
                 origin = f" ({it.origin})" if getattr(it, "origin", "") else ""
-                result.append((style_cls, f"{prefix}{mark} {it.label}{origin}\n"))
+                handler = make_click(i)
+                result.append((style_cls, f"{prefix}{mark} {it.label}{origin}\n", handler))
             return result
 
         if state.menu_level == MenuLevel.CLEANUP_EDITORS:
@@ -254,7 +274,8 @@ def build_menu(
             for i, (key, label) in enumerate(editors):
                 prefix = " > " if i == state.menu_index else "   "
                 style_cls = "class:menu.selected" if i == state.menu_index else "class:menu.item"
-                result.append((style_cls, f"{prefix}{key} - {label}\n"))
+                handler = make_click(i)
+                result.append((style_cls, f"{prefix}{key} - {label}\n", handler))
             return result
 
         if state.menu_level == MenuLevel.MODULE_EDITORS:
@@ -263,7 +284,8 @@ def build_menu(
             for i, (key, label) in enumerate(editors):
                 prefix = " > " if i == state.menu_index else "   "
                 style_cls = "class:menu.selected" if i == state.menu_index else "class:menu.item"
-                result.append((style_cls, f"{prefix}{key} - {label}\n"))
+                handler = make_click(i)
+                result.append((style_cls, f"{prefix}{key} - {label}\n", handler))
             return result
 
         if state.menu_level == MenuLevel.MODULE_LIST:
@@ -286,7 +308,8 @@ def build_menu(
                 on = bool(m.get("enabled"))
                 toggle_style = "class:toggle.on" if on else "class:toggle.off"
                 mark = "ON" if on else "OFF"
-                result.append((style_cls, f"{prefix}{m.get('id')} - {m.get('name')} ["))
+                handler = make_click(i)
+                result.append((style_cls, f"{prefix}{m.get('id')} - {m.get('name')} [", handler))
                 result.append((toggle_style, f"{mark}"))
                 result.append((style_cls, "]\n"))
             return result
@@ -297,7 +320,8 @@ def build_menu(
             for i, (key, label) in enumerate(editors):
                 prefix = " > " if i == state.menu_index else "   "
                 style_cls = "class:menu.selected" if i == state.menu_index else "class:menu.item"
-                result.append((style_cls, f"{prefix}{key} - {label}\n"))
+                handler = make_click(i)
+                result.append((style_cls, f"{prefix}{key} - {label}\n", handler))
             return result
 
         if state.menu_level == MenuLevel.LOCALES:
@@ -316,6 +340,7 @@ def build_menu(
                     (
                         style_cls,
                         f"{prefix}[P:{primary_mark}] [A:{active_mark}] {loc.code} - {loc.name} ({loc.group})\n",
+                        make_click(idx)
                     )
                 )
             return result

@@ -4,94 +4,15 @@
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 119
-- **Files Skipped**: 13436
+- **Files Skipped**: 13448
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-18 01:43:14
+- **Generated**: 2025-12-18 02:24:00
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-2025-12-18 00:13:55 | DEBUG    | MainThread | system_cli.cli | cli_main:2440 | Parsed command: run
-2025-12-18 00:13:55 | DEBUG    | MainThread | system_cli.cli | cli_main:2454 | Cleanup config loaded successfully
-2025-12-18 00:13:55 | WARNING  | MainThread | system_cli.cli | cli_main:2461 | Доступні редактори: windsurf, vscode, antigravity, cursor. Вкажіть --editor.
-2025-12-18 00:13:55 | INFO     | MainThread | system_cli.cli | cli_main:2490 | Running cleanup for editor: None, dry_run=True
-2025-12-18 00:13:55 | INFO     | MainThread | system_cli.cli | cli_main:2493 | Cleanup completed: Невідомий редактор: None
-2025-12-18 00:16:21 | INFO     | MainThread | system_cli.cli | cli_main:2446 | TUI mode exited successfully
-2025-12-18 00:16:37 | INFO     | MainThread | system_cli.cli | cli_main:2398 | CLI started with arguments: []
-2025-12-18 00:16:37 | DEBUG    | MainThread | system_cli.cli | cli_main:2440 | Parsed command: None
-2025-12-18 00:16:37 | INFO     | MainThread | system_cli.cli | cli_main:2443 | Starting TUI mode
-2025-12-18 00:17:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:67 | [Verifier] Plan optimized: 29 → 9 steps (added -20 verify steps)
-2025-12-18 00:33:20 | INFO     | MainThread | system_cli.cli | cli_main:2446 | TUI mode exited successfully
-2025-12-18 00:33:23 | INFO     | MainThread | system_cli.cli | cli_main:2398 | CLI started with arguments: []
-2025-12-18 00:33:23 | DEBUG    | MainThread | system_cli.cli | cli_main:2440 | Parsed command: None
-2025-12-18 00:33:23 | INFO     | MainThread | system_cli.cli | cli_main:2443 | Starting TUI mode
-2025-12-18 00:33:57 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:67 | [Verifier] Plan optimized: 31 → 9 steps (added -22 verify steps)
-2025-12-18 01:11:47 | INFO     | MainThread | system_cli.cli | cli_main:2446 | TUI mode exited successfully
-2025-12-18 01:11:49 | INFO     | MainThread | system_cli.cli | cli_main:2398 | CLI started with arguments: []
-2025-12-18 01:11:49 | DEBUG    | MainThread | system_cli.cli | cli_main:2440 | Parsed command: None
-2025-12-18 01:11:49 | INFO     | MainThread | system_cli.cli | cli_main:2443 | Starting TUI mode
-2025-12-18 01:18:37 | INFO     | MainThread | system_cli.cli | cli_main:2446 | TUI mode exited successfully
-2025-12-18 01:19:03 | INFO     | MainThread | system_cli.cli | cli_main:2398 | CLI started with arguments: []
-2025-12-18 01:19:03 | DEBUG    | MainThread | system_cli.cli | cli_main:2440 | Parsed command: None
-2025-12-18 01:19:03 | INFO     | MainThread | system_cli.cli | cli_main:2443 | Starting TUI mode
-2025-12-18 01:19:27 | INFO     | MainThread | system_cli.cli | cli_main:2446 | TUI mode exited successfully
-2025-12-18 01:19:29 | INFO     | MainThread | system_cli.cli | cli_main:2398 | CLI started with arguments: []
-2025-12-18 01:19:29 | DEBUG    | MainThread | system_cli.cli | cli_main:2440 | Parsed command: None
-2025-12-18 01:19:29 | INFO     | MainThread | system_cli.cli | cli_main:2443 | Starting TUI mode
-2025-12-18 01:19:44 | INFO     | MainThread | system_cli.cli | cli_main:2446 | TUI mode exited successfully
-2025-12-18 01:19:47 | INFO     | MainThread | system_cli.cli | cli_main:2398 | CLI started with arguments: []
-2025-12-18 01:19:47 | DEBUG    | MainThread | system_cli.cli | cli_main:2440 | Parsed command: None
-2025-12-18 01:19:47 | INFO     | MainThread | system_cli.cli | cli_main:2443 | Starting TUI mode
-2025-12-18 01:26:07 | INFO     | MainThread | system_cli.cli | cli_main:2446 | TUI mode exited successfully
-2025-12-18 01:26:10 | INFO     | MainThread | system_cli.cli | cli_main:2398 | CLI started with arguments: []
-2025-12-18 01:26:10 | DEBUG    | MainThread | system_cli.cli | cli_main:2440 | Parsed command: None
-2025-12-18 01:26:10 | INFO     | MainThread | system_cli.cli | cli_main:2443 | Starting TUI mode
-2025-12-18 01:26:10 | ERROR    | MainThread | system_cli.cli | log_exception:159 | Exception occurred in TUI mode
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2445, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1677, in run_tui
-    app = build_app(
-          ^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 149, in build_app
-    FormattedTextControl(_safe_formatted_text(get_context, fallback_style="class:context")),
-                        ^^^^^^^^^^^^^^^^^^^^
-NameError: name '_safe_formatted_text' is not defined
-2025-12-18 01:26:10 | ERROR    | MainThread | system_cli.cli | log_exception:159 | Exception occurred in main()
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2607, in main
-    cli_main(sys.argv[1:])
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2445, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1677, in run_tui
-    app = build_app(
-          ^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 149, in build_app
-    FormattedTextControl(_safe_formatted_text(get_context, fallback_style="class:context")),
-                        ^^^^^^^^^^^^^^^^^^^^
-NameError: name '_safe_formatted_text' is not defined
-2025-12-18 01:26:15 | INFO     | MainThread | system_cli.cli | cli_main:2398 | CLI started with arguments: []
-2025-12-18 01:26:15 | DEBUG    | MainThread | system_cli.cli | cli_main:2440 | Parsed command: None
-2025-12-18 01:26:15 | INFO     | MainThread | system_cli.cli | cli_main:2443 | Starting TUI mode
-2025-12-18 01:26:15 | ERROR    | MainThread | system_cli.cli | log_exception:159 | Exception occurred in TUI mode
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2445, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1677, in run_tui
-    app = build_app(
-          ^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 149, in build_app
-    FormattedTextControl(_safe_formatted_text(get_context, fallback_style="class:context")),
-                        ^^^^^^^^^^^^^^^^^^^^
-NameError: name '_safe_formatted_text' is not defined
-2025-12-18 01:26:15 | ERROR    | MainThread | system_cli.cli | log_exception:159 | Exception occurred in main()
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2607, in main
-    cli_main(sys.argv[1:])
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2445, in cli_main
-    run_tui()
   File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1677, in run_tui
     app = build_app(
           ^^^^^^^^^^
@@ -113,6 +34,85 @@ NameError: name '_safe_formatted_text' is not defined
 2025-12-18 01:37:07 | INFO     | MainThread | system_cli.cli | cli_main:2398 | CLI started with arguments: []
 2025-12-18 01:37:07 | DEBUG    | MainThread | system_cli.cli | cli_main:2440 | Parsed command: None
 2025-12-18 01:37:07 | INFO     | MainThread | system_cli.cli | cli_main:2443 | Starting TUI mode
+2025-12-18 02:18:22 | INFO     | MainThread | system_cli.cli | cli_main:2446 | TUI mode exited successfully
+2025-12-18 02:18:26 | INFO     | MainThread | system_cli.cli | cli_main:2398 | CLI started with arguments: []
+2025-12-18 02:18:26 | DEBUG    | MainThread | system_cli.cli | cli_main:2440 | Parsed command: None
+2025-12-18 02:18:26 | INFO     | MainThread | system_cli.cli | cli_main:2443 | Starting TUI mode
+2025-12-18 02:21:01 | INFO     | MainThread | system_cli.cli | cli_main:2446 | TUI mode exited successfully
+2025-12-18 02:21:06 | INFO     | MainThread | system_cli.cli | cli_main:2415 | CLI started with arguments: []
+2025-12-18 02:21:06 | DEBUG    | MainThread | system_cli.cli | cli_main:2457 | Parsed command: None
+2025-12-18 02:21:06 | INFO     | MainThread | system_cli.cli | cli_main:2460 | Starting TUI mode
+2025-12-18 02:21:06 | ERROR    | MainThread | system_cli.cli | log_exception:192 | Exception occurred in TUI mode
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2462, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1687, in run_tui
+    @input_kb.add("s-enter")
+     ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in add
+    keys = tuple(_parse_key(k) for k in keys)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in <genexpr>
+    keys = tuple(_parse_key(k) for k in keys)
+                 ^^^^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 455, in _parse_key
+    raise ValueError(f"Invalid key: {key}")
+ValueError: Invalid key: s-enter
+2025-12-18 02:21:06 | ERROR    | MainThread | system_cli.cli | log_exception:192 | Exception occurred in main()
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2624, in main
+    cli_main(sys.argv[1:])
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2462, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1687, in run_tui
+    @input_kb.add("s-enter")
+     ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in add
+    keys = tuple(_parse_key(k) for k in keys)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in <genexpr>
+    keys = tuple(_parse_key(k) for k in keys)
+                 ^^^^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 455, in _parse_key
+    raise ValueError(f"Invalid key: {key}")
+ValueError: Invalid key: s-enter
+2025-12-18 02:21:11 | INFO     | MainThread | system_cli.cli | cli_main:2415 | CLI started with arguments: []
+2025-12-18 02:21:11 | DEBUG    | MainThread | system_cli.cli | cli_main:2457 | Parsed command: None
+2025-12-18 02:21:11 | INFO     | MainThread | system_cli.cli | cli_main:2460 | Starting TUI mode
+2025-12-18 02:21:11 | ERROR    | MainThread | system_cli.cli | log_exception:192 | Exception occurred in TUI mode
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2462, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1687, in run_tui
+    @input_kb.add("s-enter")
+     ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in add
+    keys = tuple(_parse_key(k) for k in keys)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in <genexpr>
+    keys = tuple(_parse_key(k) for k in keys)
+                 ^^^^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 455, in _parse_key
+    raise ValueError(f"Invalid key: {key}")
+ValueError: Invalid key: s-enter
+2025-12-18 02:21:11 | ERROR    | MainThread | system_cli.cli | log_exception:192 | Exception occurred in main()
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2624, in main
+    cli_main(sys.argv[1:])
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2462, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1687, in run_tui
+    @input_kb.add("s-enter")
+     ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in add
+    keys = tuple(_parse_key(k) for k in keys)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in <genexpr>
+    keys = tuple(_parse_key(k) for k in keys)
+                 ^^^^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 455, in _parse_key
+    raise ValueError(f"Invalid key: {key}")
+ValueError: Invalid key: s-enter
 ```
 
 ---
@@ -147,18 +147,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 36626 +-----------------------------------------
- 1 file changed, 2 insertions(+), 36624 deletions(-)
+ project_structure_final.txt | 36751 +-----------------------------------------
+ 1 file changed, 81 insertions(+), 36670 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-833f4c4 feat: Add initial project README and implement browser and desktop automation tools.
+a75706d feat: Enhance TUI input keybindings, enable clickable menu items, add dynamic panel titles, and introduce a JSON logger for AI events.
+b60dddf feat: Add initial project README and implement browser and desktop automation tools.
 479922a Fix TUI startup: NameError resolution and list-editors bugfix
 8972bd4 Trinity task completed: Ось перероблена версія завдання з чіткою прив’язкою не до Desktop, а вс…
 4ea7f19 Trinity task completed: Велике комплексне завдання: Створення автоматизованого звіту про систем…
-502bf67 feat: Conditionally skip Grisha verification tests for 'GENERAL' task types and add decision logging.
 ```
 
 ---
@@ -8402,7 +8402,7 @@ def query_memory_tool(category: str, query: str) -> Dict[str, Any]:
     return {"status": "success", "results": results}
 ```
 
-### `core/trinity.py` (65.6 KB)
+### `core/trinity.py` (65.7 KB)
 
 ```python
 from typing import Annotated, TypedDict, Literal, List, Dict, Any, Optional, Callable
@@ -8422,6 +8422,7 @@ from core.mcp import MCPToolRegistry
 from core.verification import AdaptiveVerifier
 from core.memory import get_memory
 from dataclasses import dataclass
+from tui.logger import get_logger, trace
 
 @dataclass
 class TrinityPermissions:
@@ -8502,6 +8503,7 @@ class TrinityRuntime:
     ):
         self.llm = CopilotLLM()
         self.verbose = verbose
+        self.logger = get_logger("system_cli.trinity")
         self.registry = MCPToolRegistry()
         self.verifier = AdaptiveVerifier(self.llm)
         self.memory = get_memory()
@@ -11147,7 +11149,7 @@ if __name__ == "__main__":
 test content
 ```
 
-### `project_structure_final.txt` (497.7 KB)
+### `project_structure_final.txt` (496.8 KB)
 
 ```text
 # System — Project Structure
@@ -11156,94 +11158,15 @@ test content
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 119
-- **Files Skipped**: 13436
+- **Files Skipped**: 13448
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-18 01:43:14
+- **Generated**: 2025-12-18 02:24:00
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-2025-12-18 00:13:55 | DEBUG    | MainThread | system_cli.cli | cli_main:2440 | Parsed command: run
-2025-12-18 00:13:55 | DEBUG    | MainThread | system_cli.cli | cli_main:2454 | Cleanup config loaded successfully
-2025-12-18 00:13:55 | WARNING  | MainThread | system_cli.cli | cli_main:2461 | Доступні редактори: windsurf, vscode, antigravity, cursor. Вкажіть --editor.
-2025-12-18 00:13:55 | INFO     | MainThread | system_cli.cli | cli_main:2490 | Running cleanup for editor: None, dry_run=True
-2025-12-18 00:13:55 | INFO     | MainThread | system_cli.cli | cli_main:2493 | Cleanup completed: Невідомий редактор: None
-2025-12-18 00:16:21 | INFO     | MainThread | system_cli.cli | cli_main:2446 | TUI mode exited successfully
-2025-12-18 00:16:37 | INFO     | MainThread | system_cli.cli | cli_main:2398 | CLI started with arguments: []
-2025-12-18 00:16:37 | DEBUG    | MainThread | system_cli.cli | cli_main:2440 | Parsed command: None
-2025-12-18 00:16:37 | INFO     | MainThread | system_cli.cli | cli_main:2443 | Starting TUI mode
-2025-12-18 00:17:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:67 | [Verifier] Plan optimized: 29 → 9 steps (added -20 verify steps)
-2025-12-18 00:33:20 | INFO     | MainThread | system_cli.cli | cli_main:2446 | TUI mode exited successfully
-2025-12-18 00:33:23 | INFO     | MainThread | system_cli.cli | cli_main:2398 | CLI started with arguments: []
-2025-12-18 00:33:23 | DEBUG    | MainThread | system_cli.cli | cli_main:2440 | Parsed command: None
-2025-12-18 00:33:23 | INFO     | MainThread | system_cli.cli | cli_main:2443 | Starting TUI mode
-2025-12-18 00:33:57 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:67 | [Verifier] Plan optimized: 31 → 9 steps (added -22 verify steps)
-2025-12-18 01:11:47 | INFO     | MainThread | system_cli.cli | cli_main:2446 | TUI mode exited successfully
-2025-12-18 01:11:49 | INFO     | MainThread | system_cli.cli | cli_main:2398 | CLI started with arguments: []
-2025-12-18 01:11:49 | DEBUG    | MainThread | system_cli.cli | cli_main:2440 | Parsed command: None
-2025-12-18 01:11:49 | INFO     | MainThread | system_cli.cli | cli_main:2443 | Starting TUI mode
-2025-12-18 01:18:37 | INFO     | MainThread | system_cli.cli | cli_main:2446 | TUI mode exited successfully
-2025-12-18 01:19:03 | INFO     | MainThread | system_cli.cli | cli_main:2398 | CLI started with arguments: []
-2025-12-18 01:19:03 | DEBUG    | MainThread | system_cli.cli | cli_main:2440 | Parsed command: None
-2025-12-18 01:19:03 | INFO     | MainThread | system_cli.cli | cli_main:2443 | Starting TUI mode
-2025-12-18 01:19:27 | INFO     | MainThread | system_cli.cli | cli_main:2446 | TUI mode exited successfully
-2025-12-18 01:19:29 | INFO     | MainThread | system_cli.cli | cli_main:2398 | CLI started with arguments: []
-2025-12-18 01:19:29 | DEBUG    | MainThread | system_cli.cli | cli_main:2440 | Parsed command: None
-2025-12-18 01:19:29 | INFO     | MainThread | system_cli.cli | cli_main:2443 | Starting TUI mode
-2025-12-18 01:19:44 | INFO     | MainThread | system_cli.cli | cli_main:2446 | TUI mode exited successfully
-2025-12-18 01:19:47 | INFO     | MainThread | system_cli.cli | cli_main:2398 | CLI started with arguments: []
-2025-12-18 01:19:47 | DEBUG    | MainThread | system_cli.cli | cli_main:2440 | Parsed command: None
-2025-12-18 01:19:47 | INFO     | MainThread | system_cli.cli | cli_main:2443 | Starting TUI mode
-2025-12-18 01:26:07 | INFO     | MainThread | system_cli.cli | cli_main:2446 | TUI mode exited successfully
-2025-12-18 01:26:10 | INFO     | MainThread | system_cli.cli | cli_main:2398 | CLI started with arguments: []
-2025-12-18 01:26:10 | DEBUG    | MainThread | system_cli.cli | cli_main:2440 | Parsed command: None
-2025-12-18 01:26:10 | INFO     | MainThread | system_cli.cli | cli_main:2443 | Starting TUI mode
-2025-12-18 01:26:10 | ERROR    | MainThread | system_cli.cli | log_exception:159 | Exception occurred in TUI mode
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2445, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1677, in run_tui
-    app = build_app(
-          ^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 149, in build_app
-    FormattedTextControl(_safe_formatted_text(get_context, fallback_style="class:context")),
-                        ^^^^^^^^^^^^^^^^^^^^
-NameError: name '_safe_formatted_text' is not defined
-2025-12-18 01:26:10 | ERROR    | MainThread | system_cli.cli | log_exception:159 | Exception occurred in main()
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2607, in main
-    cli_main(sys.argv[1:])
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2445, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1677, in run_tui
-    app = build_app(
-          ^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 149, in build_app
-    FormattedTextControl(_safe_formatted_text(get_context, fallback_style="class:context")),
-                        ^^^^^^^^^^^^^^^^^^^^
-NameError: name '_safe_formatted_text' is not defined
-2025-12-18 01:26:15 | INFO     | MainThread | system_cli.cli | cli_main:2398 | CLI started with arguments: []
-2025-12-18 01:26:15 | DEBUG    | MainThread | system_cli.cli | cli_main:2440 | Parsed command: None
-2025-12-18 01:26:15 | INFO     | MainThread | system_cli.cli | cli_main:2443 | Starting TUI mode
-2025-12-18 01:26:15 | ERROR    | MainThread | system_cli.cli | log_exception:159 | Exception occurred in TUI mode
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2445, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1677, in run_tui
-    app = build_app(
-          ^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 149, in build_app
-    FormattedTextControl(_safe_formatted_text(get_context, fallback_style="class:context")),
-                        ^^^^^^^^^^^^^^^^^^^^
-NameError: name '_safe_formatted_text' is not defined
-2025-12-18 01:26:15 | ERROR    | MainThread | system_cli.cli | log_exception:159 | Exception occurred in main()
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2607, in main
-    cli_main(sys.argv[1:])
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2445, in cli_main
-    run_tui()
   File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1677, in run_tui
     app = build_app(
           ^^^^^^^^^^
@@ -11265,6 +11188,85 @@ NameError: name '_safe_formatted_text' is not defined
 2025-12-18 01:37:07 | INFO     | MainThread | system_cli.cli | cli_main:2398 | CLI started with arguments: []
 2025-12-18 01:37:07 | DEBUG    | MainThread | system_cli.cli | cli_main:2440 | Parsed command: None
 2025-12-18 01:37:07 | INFO     | MainThread | system_cli.cli | cli_main:2443 | Starting TUI mode
+2025-12-18 02:18:22 | INFO     | MainThread | system_cli.cli | cli_main:2446 | TUI mode exited successfully
+2025-12-18 02:18:26 | INFO     | MainThread | system_cli.cli | cli_main:2398 | CLI started with arguments: []
+2025-12-18 02:18:26 | DEBUG    | MainThread | system_cli.cli | cli_main:2440 | Parsed command: None
+2025-12-18 02:18:26 | INFO     | MainThread | system_cli.cli | cli_main:2443 | Starting TUI mode
+2025-12-18 02:21:01 | INFO     | MainThread | system_cli.cli | cli_main:2446 | TUI mode exited successfully
+2025-12-18 02:21:06 | INFO     | MainThread | system_cli.cli | cli_main:2415 | CLI started with arguments: []
+2025-12-18 02:21:06 | DEBUG    | MainThread | system_cli.cli | cli_main:2457 | Parsed command: None
+2025-12-18 02:21:06 | INFO     | MainThread | system_cli.cli | cli_main:2460 | Starting TUI mode
+2025-12-18 02:21:06 | ERROR    | MainThread | system_cli.cli | log_exception:192 | Exception occurred in TUI mode
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2462, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1687, in run_tui
+    @input_kb.add("s-enter")
+     ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in add
+    keys = tuple(_parse_key(k) for k in keys)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in <genexpr>
+    keys = tuple(_parse_key(k) for k in keys)
+                 ^^^^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 455, in _parse_key
+    raise ValueError(f"Invalid key: {key}")
+ValueError: Invalid key: s-enter
+2025-12-18 02:21:06 | ERROR    | MainThread | system_cli.cli | log_exception:192 | Exception occurred in main()
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2624, in main
+    cli_main(sys.argv[1:])
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2462, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1687, in run_tui
+    @input_kb.add("s-enter")
+     ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in add
+    keys = tuple(_parse_key(k) for k in keys)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in <genexpr>
+    keys = tuple(_parse_key(k) for k in keys)
+                 ^^^^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 455, in _parse_key
+    raise ValueError(f"Invalid key: {key}")
+ValueError: Invalid key: s-enter
+2025-12-18 02:21:11 | INFO     | MainThread | system_cli.cli | cli_main:2415 | CLI started with arguments: []
+2025-12-18 02:21:11 | DEBUG    | MainThread | system_cli.cli | cli_main:2457 | Parsed command: None
+2025-12-18 02:21:11 | INFO     | MainThread | system_cli.cli | cli_main:2460 | Starting TUI mode
+2025-12-18 02:21:11 | ERROR    | MainThread | system_cli.cli | log_exception:192 | Exception occurred in TUI mode
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2462, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1687, in run_tui
+    @input_kb.add("s-enter")
+     ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in add
+    keys = tuple(_parse_key(k) for k in keys)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in <genexpr>
+    keys = tuple(_parse_key(k) for k in keys)
+                 ^^^^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 455, in _parse_key
+    raise ValueError(f"Invalid key: {key}")
+ValueError: Invalid key: s-enter
+2025-12-18 02:21:11 | ERROR    | MainThread | system_cli.cli | log_exception:192 | Exception occurred in main()
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2624, in main
+    cli_main(sys.argv[1:])
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2462, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1687, in run_tui
+    @input_kb.add("s-enter")
+     ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in add
+    keys = tuple(_parse_key(k) for k in keys)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in <genexpr>
+    keys = tuple(_parse_key(k) for k in keys)
+                 ^^^^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 455, in _parse_key
+    raise ValueError(f"Invalid key: {key}")
+ValueError: Invalid key: s-enter
 ```
 
 ---
@@ -11299,18 +11301,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 36626 +-----------------------------------------
- 1 file changed, 2 insertions(+), 36624 deletions(-)
+ project_structure_final.txt | 36751 +-----------------------------------------
+ 1 file changed, 81 insertions(+), 36670 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-833f4c4 feat: Add initial project README and implement browser and desktop automation tools.
+a75706d feat: Enhance TUI input keybindings, enable clickable menu items, add dynamic panel titles, and introduce a JSON logger for AI events.
+b60dddf feat: Add initial project README and implement browser and desktop automation tools.
 479922a Fix TUI startup: NameError resolution and list-editors bugfix
 8972bd4 Trinity task completed: Ось перероблена версія завдання з чіткою прив’язкою не до Desktop, а вс…
 4ea7f19 Trinity task completed: Велике комплексне завдання: Створення автоматизованого звіту про систем…
-502bf67 feat: Conditionally skip Grisha verification tests for 'GENERAL' task types and add decision logging.
 ```
 
 ---
@@ -19554,7 +19556,7 @@ def query_memory_tool(category: str, query: str) -> Dict[str, Any]:
     return {"status": "success", "results": results}
 ```
 
-### `core/trinity.py` (65.6 KB)
+### `core/trinity.py` (65.7 KB)
 
 ```python
 from typing import Annotated, TypedDict, Literal, List, Dict, Any, Optional, Callable
@@ -19574,6 +19576,7 @@ from core.mcp import MCPToolRegistry
 from core.verification import AdaptiveVerifier
 from core.memory import get_memory
 from dataclasses import dataclass
+from tui.logger import get_logger, trace
 
 @dataclass
 class TrinityPermissions:
@@ -19654,6 +19657,7 @@ class TrinityRuntime:
     ):
         self.llm = CopilotLLM()
         self.verbose = verbose
+        self.logger = get_logger("system_cli.trinity")
         self.registry = MCPToolRegistry()
         self.verifier = AdaptiveVerifier(self.llm)
         self.memory = get_memory()
@@ -28889,7 +28893,7 @@ _scan_traces = scan_traces
 _get_editors_list = get_editors_list
 ```
 
-### `tui/cli.py` (88.1 KB)
+### `tui/cli.py` (88.6 KB)
 
 ```python
 #!/usr/bin/env python3
@@ -28942,8 +28946,9 @@ from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.data_structures import Point
 from prompt_toolkit.styles import DynamicStyle, Style
 from prompt_toolkit.application import run_in_terminal
+from prompt_toolkit.key_binding import KeyBindings
 
-from tui.layout import build_app
+from tui.layout import build_app, force_ui_update
 from tui.menu import build_menu
 from tui.keybindings import build_keybindings
 from tui.app import TuiRuntime, run_tui as tui_run_tui
@@ -30528,6 +30533,7 @@ def run_tui() -> None:
         MONITOR_EVENTS_DB_PATH=MONITOR_EVENTS_DB_PATH,
         CLEANUP_CONFIG_PATH=CLEANUP_CONFIG_PATH,
         LOCALIZATION_CONFIG_PATH=LOCALIZATION_CONFIG_PATH,
+        force_ui_update=force_ui_update,
     )
 
     kb = build_keybindings(
@@ -30568,7 +30574,22 @@ def run_tui() -> None:
         opensnoop_service=opensnoop_service,
     )
 
+    input_kb = KeyBindings()
+
+    @input_kb.add("enter")
+    def _(event):
+        buff = event.current_buffer
+        if buff.text.strip():
+            buff.validate_and_handle()
+
+    @input_kb.add("s-enter")
+    @input_kb.add("c-enter")
+    @input_kb.add("escape", "enter")
+    def _(event):
+        event.current_buffer.insert_text("\n")
+
     app = build_app(
+        input_key_bindings=input_kb,
         get_header=get_header,
         get_context=get_context,
         get_logs=get_logs,
@@ -32642,7 +32663,7 @@ def build_keybindings(
     return kb
 ```
 
-### `tui/layout.py` (11.5 KB)
+### `tui/layout.py` (11.9 KB)
 
 ```python
 from __future__ import annotations
@@ -32764,22 +32785,23 @@ def build_app(
     get_prompt_width: Callable[[], int],
     get_status: Callable[[], Any],
     input_buffer: Buffer,
+    input_key_bindings: KeyBindings | None = None,  # Added argument
     show_menu: Condition,
     kb: KeyBindings,
     style: BaseStyle,
 ) -> Application:
 
     # --- Interactive Header Helpers ---
-    def header_callback_menu():
+    def header_callback_menu(*args):
         state.menu_level = MenuLevel.MAIN if state.menu_level == MenuLevel.NONE else MenuLevel.NONE
         state.menu_index = 0
         force_ui_update()
 
-    def header_callback_logs():
+    def header_callback_logs(*args):
         state.ui_scroll_target = "log"
         force_ui_update()
 
-    def header_callback_agents():
+    def header_callback_agents(*args):
         state.ui_scroll_target = "agents"
         force_ui_update()
 
@@ -32862,7 +32884,7 @@ def build_app(
                 style="class:input",
                 dont_extend_width=True,
             ),
-            Window(BufferControl(buffer=input_buffer), style="class:input"),
+            Window(BufferControl(buffer=input_buffer, key_bindings=input_key_bindings), style="class:input"),
         ]
     )
 
@@ -32870,7 +32892,7 @@ def build_app(
         return get_status()
     
     # Interactive status bar
-    def status_callback_menu():
+    def status_callback_menu(*args):
          state.menu_level = MenuLevel.MAIN if state.menu_level == MenuLevel.NONE else MenuLevel.NONE
 
     def get_interactive_status() -> AnyFormattedText:
@@ -32914,6 +32936,9 @@ def build_app(
         ),
     ]
 
+    def get_log_title() -> str:
+        return " LOG [ACTIVE] " if getattr(state, "ui_scroll_target", "log") == "log" else " LOG "
+
     main_body = HSplit(
         [
             Frame(header_window, style="class:frame.border"),
@@ -32921,7 +32946,7 @@ def build_app(
                 [
                     Frame(
                         log_window, 
-                        title="LOG", 
+                        title=get_log_title, 
                         style="class:frame.border",
                         width=lambda: Dimension(
                             weight=int(getattr(state, "ui_left_panel_ratio", 0.6) * 100),
@@ -32932,7 +32957,7 @@ def build_app(
                     ConditionalContainer(
                         Frame(
                             w,
-                            title=title,
+                            title=lambda: f" {title} [ACTIVE] " if getattr(state, "ui_scroll_target", "log") == "agents" and title == "АГЕНТИ" else f" {title} ",
                             style="class:frame.border",
                             width=lambda: Dimension(
                                 weight=int((1.0 - getattr(state, "ui_left_panel_ratio", 0.6)) * 100),
@@ -32967,7 +32992,7 @@ def build_app(
     return app
 ```
 
-### `tui/logger.py` (6.8 KB)
+### `tui/logger.py` (7.9 KB)
 
 ```python
 #!/usr/bin/env python3
@@ -33039,6 +33064,24 @@ class MemoryHandler(logging.Handler):
 _memory_handler = MemoryHandler()
 
 
+
+# JSON Formatter
+class JSONFormatter(logging.Formatter):
+    def format(self, record):
+        log_obj = {
+            "timestamp": datetime.fromtimestamp(record.created).isoformat(),
+            "level": record.levelname,
+            "logger": record.name,
+            "message": record.getMessage(),
+            "module": record.module,
+            "func": record.funcName,
+            "line": record.lineno,
+            "thread": record.threadName,
+        }
+        if record.exc_info:
+            log_obj["exception"] = self.formatException(record.exc_info)
+        return json.dumps(log_obj, ensure_ascii=False)
+
 def setup_logging(verbose: bool = False, name: str = "system_cli") -> logging.Logger:
     """Setup comprehensive logging system.
     
@@ -33102,7 +33145,22 @@ def setup_logging(verbose: bool = False, name: str = "system_cli") -> logging.Lo
     except Exception as e:
         print(f"Failed to setup debug log file: {e}", file=sys.stderr)
 
-    # 4. Memory handler (for TUI display)
+    # 4. AI JSON Log (Machine readable)
+    try:
+        json_log_file = LOGS_DIR / "ai.log.jsonl"
+        json_handler = logging.handlers.RotatingFileHandler(
+            json_log_file,
+            maxBytes=50 * 1024 * 1024,  # 50 MB
+            backupCount=3,
+            encoding="utf-8"
+        )
+        json_handler.setLevel(logging.DEBUG)
+        json_handler.setFormatter(JSONFormatter())
+        logger.addHandler(json_handler)
+    except Exception as e:
+        print(f"Failed to setup AI JSON log file: {e}", file=sys.stderr)
+
+    # 5. Memory handler (for TUI display)
     _memory_handler.setLevel(logging.INFO) # Keep TUI display cleaner (INFO+), or DEBUG if preferred? User asked for detailed logs "for me" (likely file), but TUI shouldn't be spammed.
     _memory_handler.setFormatter(logging.Formatter(LOG_FORMAT_SIMPLE, datefmt=DATE_FORMAT))
     logger.addHandler(_memory_handler)
@@ -33188,7 +33246,7 @@ def get_log_files_info() -> dict:
 _default_logger = setup_logging(verbose=False)
 ```
 
-### `tui/menu.py` (16.7 KB)
+### `tui/menu.py` (17.7 KB)
 
 ```python
 from __future__ import annotations
@@ -33223,10 +33281,20 @@ def build_menu(
     MONITOR_EVENTS_DB_PATH: str,
     CLEANUP_CONFIG_PATH: str,
     LOCALIZATION_CONFIG_PATH: str,
+    force_ui_update: Callable[[], None],
 ) -> Tuple[Condition, Callable[[], List[Tuple[str, str]]]]:
     @Condition
     def show_menu() -> bool:
         return state.menu_level != MenuLevel.NONE
+
+    def make_click(idx: int) -> Callable[[Any], None]:
+        def _click(mouse_event: Any) -> None:
+            if state.menu_index != idx:
+                state.menu_index = idx
+                force_ui_update()
+            # If prompt_toolkit supports double click, we could execute. 
+            # For now, just focus.
+        return _click
 
     def get_toggle_text(val: bool) -> List[Tuple[str, str]]:
         style = "class:toggle.on" if val else "class:toggle.off"
@@ -33261,7 +33329,8 @@ def build_menu(
             for i, (name, _) in enumerate(MAIN_MENU_ITEMS):
                 prefix = " > " if i == state.menu_index else "   "
                 style_cls = "class:menu.selected" if i == state.menu_index else "class:menu.item"
-                result.append((style_cls, f"{prefix}{tr(name, state.ui_lang)}\n"))
+                handler = make_click(i)
+                result.append((style_cls, f"{prefix}{tr(name, state.ui_lang)}\n", handler))
             return result
 
         if state.menu_level == MenuLevel.CUSTOM_TASKS:
@@ -33271,7 +33340,8 @@ def build_menu(
             for i, (label, _) in enumerate(items):
                 prefix = " > " if i == state.menu_index else "   "
                 style_cls = "class:menu.selected" if i == state.menu_index else "class:menu.item"
-                result.append((style_cls, f"{prefix}{tr(label, state.ui_lang)}\n"))
+                handler = make_click(i)
+                result.append((style_cls, f"{prefix}{tr(label, state.ui_lang)}\n", handler))
             return result
 
         if state.menu_level == MenuLevel.MONITORING:
@@ -33295,7 +33365,8 @@ def build_menu(
                     label = item[0] if isinstance(item, tuple) else item
                     prefix = " > " if i == state.menu_index else "   "
                     style_cls = "class:menu.selected" if i == state.menu_index else "class:menu.item"
-                    result.append((style_cls, f"{prefix}{tr(label, state.ui_lang)}\n"))
+                    handler = make_click(i)
+                    result.append((style_cls, f"{prefix}{tr(label, state.ui_lang)}\n", handler))
             return result
 
         if state.menu_level == MenuLevel.LLM_SETTINGS:
@@ -33308,7 +33379,8 @@ def build_menu(
             for i, (label, _) in enumerate(items):
                 prefix = " > " if i == state.menu_index else "   "
                 style_cls = "class:menu.selected" if i == state.menu_index else "class:menu.item"
-                result.append((style_cls, f"{prefix}{label}\n"))
+                handler = make_click(i)
+                result.append((style_cls, f"{prefix}{label}\n", handler))
             return result
 
         if state.menu_level == MenuLevel.AGENT_SETTINGS:
@@ -33321,7 +33393,8 @@ def build_menu(
             for i, (label, _) in enumerate(items):
                 prefix = " > " if i == state.menu_index else "   "
                 style_cls = "class:menu.selected" if i == state.menu_index else "class:menu.item"
-                result.append((style_cls, f"{prefix}{label}\n"))
+                handler = make_click(i)
+                result.append((style_cls, f"{prefix}{label}\n", handler))
             return result
 
         if state.menu_level == MenuLevel.APPEARANCE:
@@ -33332,7 +33405,8 @@ def build_menu(
                 prefix = " > " if i == state.menu_index else "   "
                 style_cls = "class:menu.selected" if i == state.menu_index else "class:menu.item"
                 mark = "[*]" if state.ui_theme == t else "[ ]"
-                result.append((style_cls, f"{prefix}{mark} {t}"))
+                handler = make_click(i)
+                result.append((style_cls, f"{prefix}{mark} {t}", handler))
                 result.extend(get_theme_preview(t))
                 result.append(("", "\n"))
             return result
@@ -33347,7 +33421,8 @@ def build_menu(
             for i, (label, _k) in enumerate(items):
                 prefix = " > " if i == state.menu_index else "   "
                 style_cls = "class:menu.selected" if i == state.menu_index else "class:menu.item"
-                result.append((style_cls, f"{prefix}{label}\n"))
+                handler = make_click(i)
+                result.append((style_cls, f"{prefix}{label}\n", handler))
             result.append(("class:menu.item", "\n Enter: cycle | /lang set ui|chat <code>\n"))
             return result
 
@@ -33355,7 +33430,8 @@ def build_menu(
             result.append(("class:menu.title", f" {tr('menu.unsafe_mode.title', state.ui_lang)}\n\n"))
             on = bool(getattr(state, "ui_unsafe_mode", False))
             prefix = " > "
-            result.append(("class:menu.selected", f"{prefix}{tr('menu.unsafe_mode.label', state.ui_lang)} "))
+            handler = make_click(0)
+            result.append(("class:menu.selected", f"{prefix}{tr('menu.unsafe_mode.label', state.ui_lang)} ", handler))
             result.extend(get_toggle_text(on))
             result.append(("", "\n"))
             return result
@@ -33409,7 +33485,8 @@ def build_menu(
             result.append(("class:menu.item", f" Targets: {len(state.monitor_targets)} selected\n"))
             result.append(("class:menu.item", f" DB: {MONITOR_EVENTS_DB_PATH}\n\n"))
             action = "STOP" if state.monitor_active else "START"
-            result.append(("class:menu.selected", f" > {action}\n"))
+            handler = make_click(0)
+            result.append(("class:menu.selected", f" > {action}\n", handler))
             if state.monitor_source == "watchdog":
                 result.append(("class:menu.item", "\n Note: watchdog monitors directories (no process attribution).\n"))
             elif state.monitor_source == "fs_usage":
@@ -33438,7 +33515,8 @@ def build_menu(
                 on = it.key in state.monitor_targets
                 mark = "[x]" if on else "[ ]"
                 origin = f" ({it.origin})" if getattr(it, "origin", "") else ""
-                result.append((style_cls, f"{prefix}{mark} {it.label}{origin}\n"))
+                handler = make_click(i)
+                result.append((style_cls, f"{prefix}{mark} {it.label}{origin}\n", handler))
             return result
 
         if state.menu_level == MenuLevel.CLEANUP_EDITORS:
@@ -33447,7 +33525,8 @@ def build_menu(
             for i, (key, label) in enumerate(editors):
                 prefix = " > " if i == state.menu_index else "   "
                 style_cls = "class:menu.selected" if i == state.menu_index else "class:menu.item"
-                result.append((style_cls, f"{prefix}{key} - {label}\n"))
+                handler = make_click(i)
+                result.append((style_cls, f"{prefix}{key} - {label}\n", handler))
             return result
 
         if state.menu_level == MenuLevel.MODULE_EDITORS:
@@ -33456,7 +33535,8 @@ def build_menu(
             for i, (key, label) in enumerate(editors):
                 prefix = " > " if i == state.menu_index else "   "
                 style_cls = "class:menu.selected" if i == state.menu_index else "class:menu.item"
-                result.append((style_cls, f"{prefix}{key} - {label}\n"))
+                handler = make_click(i)
+                result.append((style_cls, f"{prefix}{key} - {label}\n", handler))
             return result
 
         if state.menu_level == MenuLevel.MODULE_LIST:
@@ -33479,7 +33559,8 @@ def build_menu(
                 on = bool(m.get("enabled"))
                 toggle_style = "class:toggle.on" if on else "class:toggle.off"
                 mark = "ON" if on else "OFF"
-                result.append((style_cls, f"{prefix}{m.get('id')} - {m.get('name')} ["))
+                handler = make_click(i)
+                result.append((style_cls, f"{prefix}{m.get('id')} - {m.get('name')} [", handler))
                 result.append((toggle_style, f"{mark}"))
                 result.append((style_cls, "]\n"))
             return result
@@ -33490,7 +33571,8 @@ def build_menu(
             for i, (key, label) in enumerate(editors):
                 prefix = " > " if i == state.menu_index else "   "
                 style_cls = "class:menu.selected" if i == state.menu_index else "class:menu.item"
-                result.append((style_cls, f"{prefix}{key} - {label}\n"))
+                handler = make_click(i)
+                result.append((style_cls, f"{prefix}{key} - {label}\n", handler))
             return result
 
         if state.menu_level == MenuLevel.LOCALES:
@@ -33509,6 +33591,7 @@ def build_menu(
                     (
                         style_cls,
                         f"{prefix}[P:{primary_mark}] [A:{active_mark}] {loc.code} - {loc.name} ({loc.group})\n",
+                        make_click(idx)
                     )
                 )
             return result
@@ -36728,4 +36811,4 @@ graph TD
 ## Summary
 
 - **Total Files**: 119
-- **Skipped**: 13436
+- **Skipped**: 13448
