@@ -48,6 +48,7 @@ class TrinityState(TypedDict):
     intent_reason: Optional[str]
     last_step_status: Optional[str] # success|failed|uncertain
     uncertain_streak: Optional[int]  # Count of consecutive uncertain decisions (anti-loop)
+    current_step_fail_count: Optional[int]  # Count of consecutive failures on the same step
 
 class TrinityRuntime:
     MAX_REPLANS = 10
@@ -310,12 +311,14 @@ class TrinityRuntime:
         # 2. Manage Plan State (Consumption)
         plan = state.get("plan")
         last_step_status = state.get("last_step_status", "success") # Default to success for first run
+        current_step_fail_count = int(state.get("current_step_fail_count") or 0)
 
         if plan and step_count > 1:
             if last_step_status == "success":
                 # Only pop if the previous agent explicitly succeeded
                 if len(plan) > 0:
                     plan.pop(0)
+                    current_step_fail_count = 0  # Reset fail count on success
                     if self.verbose: print(f"🌐 [Atlas] Step completed successfully. Remaining steps: {len(plan)}")
                     try:
                         trace(self.logger, "atlas_step_consumed", {"remaining_steps": len(plan), "step_count": step_count})
@@ -329,20 +332,23 @@ class TrinityRuntime:
                             pass
                         return {"current_agent": "end", "messages": [AIMessage(content="[VOICE] Всі кроки плану виконано успішно.")]}
             elif last_step_status == "failed":
-                 if self.verbose: print(f"🌐 [Atlas] Step failed. Retrying or Replanning...")
-                 try:
-                     trace(self.logger, "atlas_step_failed", {"step_count": step_count, "replan_count": replan_count})
-                 except Exception:
-                     pass
-                 # We keep the step. The logic below will likely trigger a replan if the plan is empty, 
-                 # but if the plan is NOT empty, we currently just retry the same step.
-                 # TODO: Trigger replan logic if needed. For now, Atlas just sees the same step at index 0.
+                current_step_fail_count += 1
+                if self.verbose: print(f"🌐 [Atlas] Step failed (attempt {current_step_fail_count}). Retrying...")
+                try:
+                    trace(self.logger, "atlas_step_failed", {"step_count": step_count, "replan_count": replan_count, "fail_count": current_step_fail_count})
+                except Exception:
+                    pass
+                # If 3+ failures on the same step, force replan
+                if current_step_fail_count >= 3:
+                    if self.verbose: print(f"🌐 [Atlas] 3+ failures on same step. Forcing replan.")
+                    plan = None  # Force new plan generation
+                    current_step_fail_count = 0
             else:
-                 if self.verbose: print(f"🌐 [Atlas] Step status uncertain ({last_step_status}). Continuing current step...")
-                 try:
-                     trace(self.logger, "atlas_step_uncertain", {"step_count": step_count, "replan_count": replan_count})
-                 except Exception:
-                     pass
+                if self.verbose: print(f"🌐 [Atlas] Step status uncertain ({last_step_status}). Continuing current step...")
+                try:
+                    trace(self.logger, "atlas_step_uncertain", {"step_count": step_count, "replan_count": replan_count})
+                except Exception:
+                    pass
 
         # 3. Generate New Plan if empty
         if not plan:
@@ -463,7 +469,8 @@ class TrinityRuntime:
             "plan": plan,
             "step_count": step_count,
             "replan_count": replan_count,
-            "summary": summary
+            "summary": summary,
+            "current_step_fail_count": current_step_fail_count,
         }
 
     def _tetyana_node(self, state: TrinityState):
@@ -1054,18 +1061,35 @@ class TrinityRuntime:
             "messages": updated_messages,
             "last_step_status": step_status,
             "uncertain_streak": current_streak,
+            "plan": state.get("plan"),  # Always preserve plan in state
         }
         
         # Determine if we need to increase replan_count
+        # Only trigger full replan after 2+ consecutive uncertainties OR explicit failure
         if next_agent == "atlas" and step_status in {"failed", "uncertain"}:
             current_replan = int(state.get("replan_count") or 0)
-            # Only increment replan if plan is effectively cleared
-            out["replan_count"] = current_replan + 1
-            out["plan"] = None
-            try:
-                trace(self.logger, "replan_triggered", {"replan_count": out["replan_count"], "status": step_status})
-            except Exception:
-                pass
+            
+            # Only clear plan and increment replan if:
+            # - 2+ consecutive uncertainties (uncertain_streak >= 2), OR
+            # - Explicit failure with streak >= 1
+            should_replan = (
+                (step_status == "uncertain" and current_streak >= 2) or
+                (step_status == "failed" and current_streak >= 1)
+            )
+            
+            if should_replan:
+                out["replan_count"] = current_replan + 1
+                out["plan"] = None  # Clear plan to trigger regeneration
+                try:
+                    trace(self.logger, "replan_triggered", {"replan_count": out["replan_count"], "status": step_status, "streak": current_streak})
+                except Exception:
+                    pass
+            else:
+                # Keep plan, Atlas will retry the current step
+                try:
+                    trace(self.logger, "retry_without_replan", {"status": step_status, "streak": current_streak})
+                except Exception:
+                    pass
         return out
 
     def _router(self, state: TrinityState):
