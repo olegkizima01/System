@@ -51,8 +51,16 @@ class MessageFilter:
         return any(pattern.lower() in lower_text for pattern in MessageFilter.TECHNICAL_PATTERNS)
     
     @staticmethod
-    def clean_message(text: str) -> str:
-        """Remove technical details from message."""
+        # Strict Voice Filtering
+        if "[VOICE]" in text:
+            import re
+            match = re.search(r"\[VOICE\]\s*(.*)", text, re.DOTALL)
+            if match:
+                voice_content = match.group(1).split("\n")[0].strip()
+                if voice_content:
+                    return voice_content
+        
+        # Fallback cleaning
         lines = text.split("\n")
         clean_lines = []
         skip_until_empty = False
@@ -77,6 +85,13 @@ class MessageFilter:
         
         # Join and clean up extra whitespace
         result = "\n".join(clean_lines).strip()
+        # Fallback: if result is still too technical (multiline JSON or code), truncate
+        if "{" in result and "}" in result:
+             # Heuristic: try to take just the first sentence if it looks normal
+             first_line = result.split("\n")[0]
+             if not first_line.startswith(("{", "[")):
+                 return first_line.strip()
+                 
         return result
 
 

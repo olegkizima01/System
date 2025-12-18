@@ -4,16 +4,15 @@
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 119
-- **Files Skipped**: 13609
+- **Files Skipped**: 13622
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-18 04:53:10
+- **Generated**: 2025-12-18 04:57:56
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-2025-12-18 04:44:16 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 2, "replan_count": 1, "last_step_status": "uncertain", "plan_len": 0, "task_type": "GENERAL", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "Для перевірки стабільності системи та готовності до взаємодії, я виконаю наступні дії:\n\n1. Отримаю поточну статистику системи (CPU, RAM).\n2. Перевірю час роботи системи (uptime).\n3. Проаналізую отрима"}
 2025-12-18 04:44:17 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generate_start", "step_count": 2, "replan_count": 1}
 2025-12-18 04:44:27 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:76 | [Verifier] Plan optimized: 16 → 17 steps (added 1 verify steps)
 2025-12-18 04:44:27 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generated", "steps": 17, "step_count": 2, "replan_count": 1}
@@ -113,6 +112,7 @@
 2025-12-18 04:49:14 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "end", "next": "end"}
 2025-12-18 04:49:14 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "end", "last_step_status": "success", "step_count": null, "replan_count": 2}
 2025-12-18 04:49:14 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_end", "outcome": "completed", "last_agent": "grisha", "replan_count": 2}
+2025-12-18 04:56:47 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
 ```
 
 ---
@@ -144,18 +144,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 37603 +-----------------------------------------
- 1 file changed, 62 insertions(+), 37541 deletions(-)
+ project_structure_final.txt | 37485 +-----------------------------------------
+ 1 file changed, 3 insertions(+), 37482 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-6050560 fix(core): ensure Grisha returns to Atlas after step verification to continue multi-step plans
+73623d0 feat(ui): implement [VOICE] tag filtering for clean agent dialogue in TUI
+32a8235 fix(core): ensure Grisha returns to Atlas after step verification to continue multi-step plans
 76a23c4 Trinity task completed: Атлас, виконай практичну перевірку нових можливостей системи як єдиний…
 62675c2 Update MCP execution logic to support '_args' parameter convention
 e04f293 Trinity task completed: Атлас, виконай практичну перевірку нових можливостей системи як єдиний…
-69e3ae8 Fix MCPToolRegistry execution logic to support TUI tool conventions
 ```
 
 ---
@@ -7756,9 +7756,9 @@ ATLAS_SYSTEM_PROMPT = """Ти - Atlas, Архітектор та Стратег 
 - У кінці завжди дай чіткий висновок: виконано / частково виконано / неможливо виконати.
 - Якщо неможливо — вкажи причину (permissions, відсутні ресурси, блокери) і що саме потрібно від користувача.
 
-Стиль спілкування:
-- Виважений, професійний, лаконічний.
-- Ти не пишеш код сам. Ти кажеш Тетяні, ЩО треба зробити.
+Стиль спілкування (STRICT):
+- ЗАВЖДИ починай з [VOICE].
+- Формат: "[VOICE] Тетяно, <наказ>." або "[VOICE] Гріша, <питання>."
 """
 
 def get_atlas_prompt(task_description: str):
@@ -7827,7 +7827,7 @@ def run_atlas(llm, state):
     pass
 ```
 
-### `core/agents/grisha.py` (4.1 KB)
+### `core/agents/grisha.py` (4.2 KB)
 
 ```python
 from langchain_core.prompts import ChatPromptTemplate
@@ -7871,10 +7871,10 @@ GRISHA_SYSTEM_PROMPT = """Ти - Grisha, Офіцер Безпеки та QA к�
 - Якщо перевірка пройдена і ти впевнений у результаті — завершуй відповідь рядком: [VERIFIED]
 - Якщо потрібна інформація/дозволи/є сумніви — НЕ додавай [VERIFIED]
 
-Стиль спілкування:
-- Підозрілий, критичний, прискіпливий.
-- "Довіряй, але перевіряй".
-- Ти завжди шукаєш підводні камені.
+Стиль спілкування (STRICT):
+- ЗАВЖДИ починай відповідь з тегу [VOICE].
+- Формат: "[VOICE] <Коротка фраза про статус перевірки>."
+- Приклад: "[VOICE] Перевіряю знімок екрану." або "[VOICE] Усе чисто. [VERIFIED]"
 """
 
 def get_grisha_prompt(context: str, tools_desc: str = ""):
@@ -7934,10 +7934,11 @@ TETYANA_SYSTEM_PROMPT = """Ти - Tetyana, Головний Оператор т�
 - Виконувати його, використовуючи відповідні інструменти.
 - Звітувати про виконання.
 
-Стиль спілкування:
-- Ти "doer". Ти не любиш зайвих розмов, ти любиш діяти.
-- Якщо задача проста (відкрити щось) - просто зроби це.
-- Якщо задача складна (код) - сформуй план для Windsurf.
+Стиль спілкування (STRICT):
+- ЗАВЖДИ починай відповідь з тегу [VOICE].
+- Формат: "[VOICE] <Коротка фраза адресована іншим агентам>."
+- Після цього — tool calls.
+- Приклад: "[VOICE] Відкриваю браузер Safari, як наказано."
 """
 
 def get_tetyana_prompt(task_context: str, tools_desc: str = ""):
@@ -8423,7 +8424,7 @@ def query_memory_tool(category: str, query: str) -> Dict[str, Any]:
     return {"status": "success", "results": results}
 ```
 
-### `core/trinity.py` (74.4 KB)
+### `core/trinity.py` (74.8 KB)
 
 ```python
 from typing import Annotated, TypedDict, Literal, List, Dict, Any, Optional, Callable
@@ -8677,14 +8678,14 @@ class TrinityRuntime:
                 trace(self.logger, "atlas_limit_reached", {"step_count": step_count, "max_steps": self.MAX_STEPS})
             except Exception:
                 pass
-            return {"current_agent": "end", "messages": [AIMessage(content=f"[Atlas] Ліміт кроків ({self.MAX_STEPS}) досягнуто. Завершую.")]}
+            return {"current_agent": "end", "messages": [AIMessage(content=f"[VOICE] Ліміт кроків ({self.MAX_STEPS}) досягнуто. Завершую.")]}
          
         if replan_count > self.MAX_REPLANS:
             try:
                 trace(self.logger, "atlas_replan_limit_reached", {"replan_count": replan_count, "max_replans": self.MAX_REPLANS})
             except Exception:
                 pass
-            return {"current_agent": "end", "messages": [AIMessage(content=f"[Atlas] Ліміт перепланувань ({self.MAX_REPLANS}) досягнуто. Потрібна допомога користувача.")]}
+            return {"current_agent": "end", "messages": [AIMessage(content=f"[VOICE] Ліміт перепланувань ({self.MAX_REPLANS}) досягнуто. Потрібна допомога.")]}
          
         # Check for pause (permission required)
         pause_info = state.get("pause_info")
@@ -8699,7 +8700,7 @@ class TrinityRuntime:
             return {
                 "current_agent": "end",
                 "task_status": "paused",
-                "messages": [AIMessage(content=f"[ПАУЗА] {msg}")],
+                "messages": [AIMessage(content=f"[VOICE] ПАУЗА. {msg}")],
                 "pause_info": pause_info
             }
         
@@ -8754,7 +8755,7 @@ class TrinityRuntime:
                             trace(self.logger, "atlas_plan_completed", {"step_count": step_count, "replan_count": replan_count})
                         except Exception:
                             pass
-                        return {"current_agent": "end", "messages": [AIMessage(content="[Atlas] Всі кроки плану виконано успішно.")]}
+                        return {"current_agent": "end", "messages": [AIMessage(content="[VOICE] Всі кроки плану виконано успішно.")]}
             elif last_step_status == "failed":
                  if self.verbose: print(f"🌐 [Atlas] Step failed. Retrying or Replanning...")
                  try:
@@ -8847,7 +8848,7 @@ class TrinityRuntime:
         current_step = plan[0] if plan else None
         
         if not current_step:
-            return {"current_agent": "end", "messages": [AIMessage(content="No plan generated.")]}
+            return {"current_agent": "end", "messages": [AIMessage(content="[VOICE] Не вдалося створити план.")]}
         
         # Router Logic based on Plan Step Type
         step_type = current_step.get("type", "execute")
@@ -8872,7 +8873,15 @@ class TrinityRuntime:
             
         # Update state with the plan and counters
         # Build content from plan result or current step description
-        content = f"[Atlas] Plan: {len(plan)} steps. Current: {current_step.get('description', '')}. Next: {next_agent}"
+        desc = current_step.get('description', '')
+        if next_agent == "tetyana":
+            voice = f"[VOICE] Тетяно, {desc}. Виконуй."
+        elif next_agent == "grisha":
+            voice = f"[VOICE] Гріша, перевір: {desc}."
+        else:
+            voice = f"[VOICE] Наступний крок: {desc}."
+
+        content = f"{voice}\n\n[Atlas Debug] Plan: {len(plan)} steps. Current: {desc}. Next: {next_agent}"
         
         # Preserve existing messages and add new one
         updated_messages = list(context) + [AIMessage(content=content)]
@@ -8889,7 +8898,7 @@ class TrinityRuntime:
         if self.verbose: print("💻 [Tetyana] Developing...")
         context = state.get("messages", [])
         if not context:
-            return {"current_agent": "end", "messages": [AIMessage(content="[Tetyana] No context available.")]}
+            return {"current_agent": "end", "messages": [AIMessage(content="[VOICE] Немає контексту для виконання.")]}
         last_msg = context[-1].content
 
         gui_mode = str(state.get("gui_mode") or "auto").strip().lower()
@@ -9115,7 +9124,7 @@ class TrinityRuntime:
                             pass
                         if windsurf_failed and not pause_info and dev_edit_mode == "windsurf":
                             updated_messages = list(context) + [
-                                AIMessage(content="[Tetyana] Windsurf tool failed. Switching DEV editing fallback to CLI mode.")
+                                AIMessage(content="[VOICE] Windsurf не відповідає. Перемикаюсь на CLI режим.")
                             ]
                             
                             try:
@@ -9174,7 +9183,7 @@ class TrinityRuntime:
                 and (not gui_fallback_attempted)
             ):
                 # Tell the graph to retry this step in GUI mode.
-                updated_messages = list(context) + [AIMessage(content=f"[Tetyana] Native execution had failures. Switching to GUI fallback mode.")]
+                updated_messages = list(context) + [AIMessage(content=f"[VOICE] Native не спрацював. Перемикаюся на GUI режим.")]
                 
                 try:
                     trace(self.logger, "tetyana_gui_fallback", {"from": execution_mode, "to": "gui"})
@@ -9235,7 +9244,7 @@ class TrinityRuntime:
         if self.verbose: print("👁️ [Grisha] Verifying...")
         context = state.get("messages", [])
         if not context:
-            return {"current_agent": "end", "messages": [AIMessage(content="[Grisha] No context available.")]}
+            return {"current_agent": "end", "messages": [AIMessage(content="[VOICE] Немає контексту для перевірки.")]}
         last_msg = context[-1].content
 
         gui_mode = str(state.get("gui_mode") or "auto").strip().lower()
@@ -11377,7 +11386,7 @@ if __name__ == "__main__":
 test content
 ```
 
-### `project_structure_final.txt` (520.6 KB)
+### `project_structure_final.txt` (520.7 KB)
 
 ```text
 # System — Project Structure
@@ -11386,16 +11395,15 @@ test content
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 119
-- **Files Skipped**: 13609
+- **Files Skipped**: 13622
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-18 04:53:10
+- **Generated**: 2025-12-18 04:57:56
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-2025-12-18 04:44:16 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 2, "replan_count": 1, "last_step_status": "uncertain", "plan_len": 0, "task_type": "GENERAL", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "Для перевірки стабільності системи та готовності до взаємодії, я виконаю наступні дії:\n\n1. Отримаю поточну статистику системи (CPU, RAM).\n2. Перевірю час роботи системи (uptime).\n3. Проаналізую отрима"}
 2025-12-18 04:44:17 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generate_start", "step_count": 2, "replan_count": 1}
 2025-12-18 04:44:27 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:76 | [Verifier] Plan optimized: 16 → 17 steps (added 1 verify steps)
 2025-12-18 04:44:27 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generated", "steps": 17, "step_count": 2, "replan_count": 1}
@@ -11495,6 +11503,7 @@ test content
 2025-12-18 04:49:14 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "end", "next": "end"}
 2025-12-18 04:49:14 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "end", "last_step_status": "success", "step_count": null, "replan_count": 2}
 2025-12-18 04:49:14 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_end", "outcome": "completed", "last_agent": "grisha", "replan_count": 2}
+2025-12-18 04:56:47 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
 ```
 
 ---
@@ -11526,18 +11535,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 37603 +-----------------------------------------
- 1 file changed, 62 insertions(+), 37541 deletions(-)
+ project_structure_final.txt | 37485 +-----------------------------------------
+ 1 file changed, 3 insertions(+), 37482 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-6050560 fix(core): ensure Grisha returns to Atlas after step verification to continue multi-step plans
+73623d0 feat(ui): implement [VOICE] tag filtering for clean agent dialogue in TUI
+32a8235 fix(core): ensure Grisha returns to Atlas after step verification to continue multi-step plans
 76a23c4 Trinity task completed: Атлас, виконай практичну перевірку нових можливостей системи як єдиний…
 62675c2 Update MCP execution logic to support '_args' parameter convention
 e04f293 Trinity task completed: Атлас, виконай практичну перевірку нових можливостей системи як єдиний…
-69e3ae8 Fix MCPToolRegistry execution logic to support TUI tool conventions
 ```
 
 ---
@@ -19138,9 +19147,9 @@ ATLAS_SYSTEM_PROMPT = """Ти - Atlas, Архітектор та Стратег 
 - У кінці завжди дай чіткий висновок: виконано / частково виконано / неможливо виконати.
 - Якщо неможливо — вкажи причину (permissions, відсутні ресурси, блокери) і що саме потрібно від користувача.
 
-Стиль спілкування:
-- Виважений, професійний, лаконічний.
-- Ти не пишеш код сам. Ти кажеш Тетяні, ЩО треба зробити.
+Стиль спілкування (STRICT):
+- ЗАВЖДИ починай з [VOICE].
+- Формат: "[VOICE] Тетяно, <наказ>." або "[VOICE] Гріша, <питання>."
 """
 
 def get_atlas_prompt(task_description: str):
@@ -19209,7 +19218,7 @@ def run_atlas(llm, state):
     pass
 ```
 
-### `core/agents/grisha.py` (4.1 KB)
+### `core/agents/grisha.py` (4.2 KB)
 
 ```python
 from langchain_core.prompts import ChatPromptTemplate
@@ -19253,10 +19262,10 @@ GRISHA_SYSTEM_PROMPT = """Ти - Grisha, Офіцер Безпеки та QA к�
 - Якщо перевірка пройдена і ти впевнений у результаті — завершуй відповідь рядком: [VERIFIED]
 - Якщо потрібна інформація/дозволи/є сумніви — НЕ додавай [VERIFIED]
 
-Стиль спілкування:
-- Підозрілий, критичний, прискіпливий.
-- "Довіряй, але перевіряй".
-- Ти завжди шукаєш підводні камені.
+Стиль спілкування (STRICT):
+- ЗАВЖДИ починай відповідь з тегу [VOICE].
+- Формат: "[VOICE] <Коротка фраза про статус перевірки>."
+- Приклад: "[VOICE] Перевіряю знімок екрану." або "[VOICE] Усе чисто. [VERIFIED]"
 """
 
 def get_grisha_prompt(context: str, tools_desc: str = ""):
@@ -19316,10 +19325,11 @@ TETYANA_SYSTEM_PROMPT = """Ти - Tetyana, Головний Оператор т�
 - Виконувати його, використовуючи відповідні інструменти.
 - Звітувати про виконання.
 
-Стиль спілкування:
-- Ти "doer". Ти не любиш зайвих розмов, ти любиш діяти.
-- Якщо задача проста (відкрити щось) - просто зроби це.
-- Якщо задача складна (код) - сформуй план для Windsurf.
+Стиль спілкування (STRICT):
+- ЗАВЖДИ починай відповідь з тегу [VOICE].
+- Формат: "[VOICE] <Коротка фраза адресована іншим агентам>."
+- Після цього — tool calls.
+- Приклад: "[VOICE] Відкриваю браузер Safari, як наказано."
 """
 
 def get_tetyana_prompt(task_context: str, tools_desc: str = ""):
@@ -19805,7 +19815,7 @@ def query_memory_tool(category: str, query: str) -> Dict[str, Any]:
     return {"status": "success", "results": results}
 ```
 
-### `core/trinity.py` (74.4 KB)
+### `core/trinity.py` (74.8 KB)
 
 ```python
 from typing import Annotated, TypedDict, Literal, List, Dict, Any, Optional, Callable
@@ -20059,14 +20069,14 @@ class TrinityRuntime:
                 trace(self.logger, "atlas_limit_reached", {"step_count": step_count, "max_steps": self.MAX_STEPS})
             except Exception:
                 pass
-            return {"current_agent": "end", "messages": [AIMessage(content=f"[Atlas] Ліміт кроків ({self.MAX_STEPS}) досягнуто. Завершую.")]}
+            return {"current_agent": "end", "messages": [AIMessage(content=f"[VOICE] Ліміт кроків ({self.MAX_STEPS}) досягнуто. Завершую.")]}
          
         if replan_count > self.MAX_REPLANS:
             try:
                 trace(self.logger, "atlas_replan_limit_reached", {"replan_count": replan_count, "max_replans": self.MAX_REPLANS})
             except Exception:
                 pass
-            return {"current_agent": "end", "messages": [AIMessage(content=f"[Atlas] Ліміт перепланувань ({self.MAX_REPLANS}) досягнуто. Потрібна допомога користувача.")]}
+            return {"current_agent": "end", "messages": [AIMessage(content=f"[VOICE] Ліміт перепланувань ({self.MAX_REPLANS}) досягнуто. Потрібна допомога.")]}
          
         # Check for pause (permission required)
         pause_info = state.get("pause_info")
@@ -20081,7 +20091,7 @@ class TrinityRuntime:
             return {
                 "current_agent": "end",
                 "task_status": "paused",
-                "messages": [AIMessage(content=f"[ПАУЗА] {msg}")],
+                "messages": [AIMessage(content=f"[VOICE] ПАУЗА. {msg}")],
                 "pause_info": pause_info
             }
         
@@ -20136,7 +20146,7 @@ class TrinityRuntime:
                             trace(self.logger, "atlas_plan_completed", {"step_count": step_count, "replan_count": replan_count})
                         except Exception:
                             pass
-                        return {"current_agent": "end", "messages": [AIMessage(content="[Atlas] Всі кроки плану виконано успішно.")]}
+                        return {"current_agent": "end", "messages": [AIMessage(content="[VOICE] Всі кроки плану виконано успішно.")]}
             elif last_step_status == "failed":
                  if self.verbose: print(f"🌐 [Atlas] Step failed. Retrying or Replanning...")
                  try:
@@ -20229,7 +20239,7 @@ class TrinityRuntime:
         current_step = plan[0] if plan else None
         
         if not current_step:
-            return {"current_agent": "end", "messages": [AIMessage(content="No plan generated.")]}
+            return {"current_agent": "end", "messages": [AIMessage(content="[VOICE] Не вдалося створити план.")]}
         
         # Router Logic based on Plan Step Type
         step_type = current_step.get("type", "execute")
@@ -20254,7 +20264,15 @@ class TrinityRuntime:
             
         # Update state with the plan and counters
         # Build content from plan result or current step description
-        content = f"[Atlas] Plan: {len(plan)} steps. Current: {current_step.get('description', '')}. Next: {next_agent}"
+        desc = current_step.get('description', '')
+        if next_agent == "tetyana":
+            voice = f"[VOICE] Тетяно, {desc}. Виконуй."
+        elif next_agent == "grisha":
+            voice = f"[VOICE] Гріша, перевір: {desc}."
+        else:
+            voice = f"[VOICE] Наступний крок: {desc}."
+
+        content = f"{voice}\n\n[Atlas Debug] Plan: {len(plan)} steps. Current: {desc}. Next: {next_agent}"
         
         # Preserve existing messages and add new one
         updated_messages = list(context) + [AIMessage(content=content)]
@@ -20271,7 +20289,7 @@ class TrinityRuntime:
         if self.verbose: print("💻 [Tetyana] Developing...")
         context = state.get("messages", [])
         if not context:
-            return {"current_agent": "end", "messages": [AIMessage(content="[Tetyana] No context available.")]}
+            return {"current_agent": "end", "messages": [AIMessage(content="[VOICE] Немає контексту для виконання.")]}
         last_msg = context[-1].content
 
         gui_mode = str(state.get("gui_mode") or "auto").strip().lower()
@@ -20497,7 +20515,7 @@ class TrinityRuntime:
                             pass
                         if windsurf_failed and not pause_info and dev_edit_mode == "windsurf":
                             updated_messages = list(context) + [
-                                AIMessage(content="[Tetyana] Windsurf tool failed. Switching DEV editing fallback to CLI mode.")
+                                AIMessage(content="[VOICE] Windsurf не відповідає. Перемикаюсь на CLI режим.")
                             ]
                             
                             try:
@@ -20556,7 +20574,7 @@ class TrinityRuntime:
                 and (not gui_fallback_attempted)
             ):
                 # Tell the graph to retry this step in GUI mode.
-                updated_messages = list(context) + [AIMessage(content=f"[Tetyana] Native execution had failures. Switching to GUI fallback mode.")]
+                updated_messages = list(context) + [AIMessage(content=f"[VOICE] Native не спрацював. Перемикаюся на GUI режим.")]
                 
                 try:
                     trace(self.logger, "tetyana_gui_fallback", {"from": execution_mode, "to": "gui"})
@@ -20617,7 +20635,7 @@ class TrinityRuntime:
         if self.verbose: print("👁️ [Grisha] Verifying...")
         context = state.get("messages", [])
         if not context:
-            return {"current_agent": "end", "messages": [AIMessage(content="[Grisha] No context available.")]}
+            return {"current_agent": "end", "messages": [AIMessage(content="[VOICE] Немає контексту для перевірки.")]}
         last_msg = context[-1].content
 
         gui_mode = str(state.get("gui_mode") or "auto").strip().lower()
@@ -34352,7 +34370,7 @@ def build_menu(
     return show_menu, get_menu_content
 ```
 
-### `tui/messages.py` (8.2 KB)
+### `tui/messages.py` (8.8 KB)
 
 ```python
 """Clean agent messages display component.
@@ -34408,8 +34426,16 @@ class MessageFilter:
         return any(pattern.lower() in lower_text for pattern in MessageFilter.TECHNICAL_PATTERNS)
     
     @staticmethod
-    def clean_message(text: str) -> str:
-        """Remove technical details from message."""
+        # Strict Voice Filtering
+        if "[VOICE]" in text:
+            import re
+            match = re.search(r"\[VOICE\]\s*(.*)", text, re.DOTALL)
+            if match:
+                voice_content = match.group(1).split("\n")[0].strip()
+                if voice_content:
+                    return voice_content
+        
+        # Fallback cleaning
         lines = text.split("\n")
         clean_lines = []
         skip_until_empty = False
@@ -34434,6 +34460,13 @@ class MessageFilter:
         
         # Join and clean up extra whitespace
         result = "\n".join(clean_lines).strip()
+        # Fallback: if result is still too technical (multiline JSON or code), truncate
+        if "{" in result and "}" in result:
+             # Heuristic: try to take just the first sentence if it looks normal
+             first_line = result.split("\n")[0]
+             if not first_line.startswith(("{", "[")):
+                 return first_line.strip()
+                 
         return result
 
 
@@ -37591,4 +37624,4 @@ graph TD
 ## Summary
 
 - **Total Files**: 119
-- **Skipped**: 13609
+- **Skipped**: 13622

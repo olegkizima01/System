@@ -249,14 +249,14 @@ class TrinityRuntime:
                 trace(self.logger, "atlas_limit_reached", {"step_count": step_count, "max_steps": self.MAX_STEPS})
             except Exception:
                 pass
-            return {"current_agent": "end", "messages": [AIMessage(content=f"[Atlas] Ліміт кроків ({self.MAX_STEPS}) досягнуто. Завершую.")]}
+            return {"current_agent": "end", "messages": [AIMessage(content=f"[VOICE] Ліміт кроків ({self.MAX_STEPS}) досягнуто. Завершую.")]}
          
         if replan_count > self.MAX_REPLANS:
             try:
                 trace(self.logger, "atlas_replan_limit_reached", {"replan_count": replan_count, "max_replans": self.MAX_REPLANS})
             except Exception:
                 pass
-            return {"current_agent": "end", "messages": [AIMessage(content=f"[Atlas] Ліміт перепланувань ({self.MAX_REPLANS}) досягнуто. Потрібна допомога користувача.")]}
+            return {"current_agent": "end", "messages": [AIMessage(content=f"[VOICE] Ліміт перепланувань ({self.MAX_REPLANS}) досягнуто. Потрібна допомога.")]}
          
         # Check for pause (permission required)
         pause_info = state.get("pause_info")
@@ -271,7 +271,7 @@ class TrinityRuntime:
             return {
                 "current_agent": "end",
                 "task_status": "paused",
-                "messages": [AIMessage(content=f"[ПАУЗА] {msg}")],
+                "messages": [AIMessage(content=f"[VOICE] ПАУЗА. {msg}")],
                 "pause_info": pause_info
             }
         
@@ -326,7 +326,7 @@ class TrinityRuntime:
                             trace(self.logger, "atlas_plan_completed", {"step_count": step_count, "replan_count": replan_count})
                         except Exception:
                             pass
-                        return {"current_agent": "end", "messages": [AIMessage(content="[Atlas] Всі кроки плану виконано успішно.")]}
+                        return {"current_agent": "end", "messages": [AIMessage(content="[VOICE] Всі кроки плану виконано успішно.")]}
             elif last_step_status == "failed":
                  if self.verbose: print(f"🌐 [Atlas] Step failed. Retrying or Replanning...")
                  try:
@@ -419,7 +419,7 @@ class TrinityRuntime:
         current_step = plan[0] if plan else None
         
         if not current_step:
-            return {"current_agent": "end", "messages": [AIMessage(content="No plan generated.")]}
+            return {"current_agent": "end", "messages": [AIMessage(content="[VOICE] Не вдалося створити план.")]}
         
         # Router Logic based on Plan Step Type
         step_type = current_step.get("type", "execute")
@@ -444,7 +444,15 @@ class TrinityRuntime:
             
         # Update state with the plan and counters
         # Build content from plan result or current step description
-        content = f"[Atlas] Plan: {len(plan)} steps. Current: {current_step.get('description', '')}. Next: {next_agent}"
+        desc = current_step.get('description', '')
+        if next_agent == "tetyana":
+            voice = f"[VOICE] Тетяно, {desc}. Виконуй."
+        elif next_agent == "grisha":
+            voice = f"[VOICE] Гріша, перевір: {desc}."
+        else:
+            voice = f"[VOICE] Наступний крок: {desc}."
+
+        content = f"{voice}\n\n[Atlas Debug] Plan: {len(plan)} steps. Current: {desc}. Next: {next_agent}"
         
         # Preserve existing messages and add new one
         updated_messages = list(context) + [AIMessage(content=content)]
@@ -461,7 +469,7 @@ class TrinityRuntime:
         if self.verbose: print("💻 [Tetyana] Developing...")
         context = state.get("messages", [])
         if not context:
-            return {"current_agent": "end", "messages": [AIMessage(content="[Tetyana] No context available.")]}
+            return {"current_agent": "end", "messages": [AIMessage(content="[VOICE] Немає контексту для виконання.")]}
         last_msg = context[-1].content
 
         gui_mode = str(state.get("gui_mode") or "auto").strip().lower()
@@ -687,7 +695,7 @@ class TrinityRuntime:
                             pass
                         if windsurf_failed and not pause_info and dev_edit_mode == "windsurf":
                             updated_messages = list(context) + [
-                                AIMessage(content="[Tetyana] Windsurf tool failed. Switching DEV editing fallback to CLI mode.")
+                                AIMessage(content="[VOICE] Windsurf не відповідає. Перемикаюсь на CLI режим.")
                             ]
                             
                             try:
@@ -746,7 +754,7 @@ class TrinityRuntime:
                 and (not gui_fallback_attempted)
             ):
                 # Tell the graph to retry this step in GUI mode.
-                updated_messages = list(context) + [AIMessage(content=f"[Tetyana] Native execution had failures. Switching to GUI fallback mode.")]
+                updated_messages = list(context) + [AIMessage(content=f"[VOICE] Native не спрацював. Перемикаюся на GUI режим.")]
                 
                 try:
                     trace(self.logger, "tetyana_gui_fallback", {"from": execution_mode, "to": "gui"})
@@ -807,7 +815,7 @@ class TrinityRuntime:
         if self.verbose: print("👁️ [Grisha] Verifying...")
         context = state.get("messages", [])
         if not context:
-            return {"current_agent": "end", "messages": [AIMessage(content="[Grisha] No context available.")]}
+            return {"current_agent": "end", "messages": [AIMessage(content="[VOICE] Немає контексту для перевірки.")]}
         last_msg = context[-1].content
 
         gui_mode = str(state.get("gui_mode") or "auto").strip().lower()
