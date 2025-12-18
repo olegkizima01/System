@@ -197,6 +197,7 @@ def build_app(
     log_control = FormattedTextControl(
         safe_get_logs, 
         get_cursor_position=_safe_cursor_position(safe_get_logs, get_log_cursor_position),
+        show_cursor=False,
         focusable=True,
     )
     log_control.mouse_handler = make_scroll_handler("log")
@@ -204,7 +205,6 @@ def build_app(
     log_window = Window(
         log_control,
         wrap_lines=True,
-        show_cursor=False, # Disable to allow free mouse scrolling
         right_margins=[ScrollbarMargin(display_arrows=True)],
         style="class:log.window", # ensure background
     )
@@ -218,6 +218,7 @@ def build_app(
         agent_control = FormattedTextControl(
             safe_get_agent_messages,
             get_cursor_position=_safe_cursor_position(safe_get_agent_messages, get_agent_cursor_position) if get_agent_cursor_position else None,
+            show_cursor=False,
             focusable=True,
         )
         agent_control.mouse_handler = make_scroll_handler("agents")
@@ -225,7 +226,6 @@ def build_app(
         agent_messages_window = Window(
             agent_control,
             wrap_lines=True,
-            show_cursor=False, # Disable to allow free mouse scrolling
             style="class:agent.panel",
             right_margins=[ScrollbarMargin(display_arrows=True)],
         )
