@@ -40,6 +40,9 @@ STYLE_MAP = {
     "user": "class:log.user",
     "action": "class:log.action",
     "error": "class:log.error",
+    "tool_success": "class:log.tool.success",
+    "tool_fail": "class:log.tool.fail",
+    "tool_run": "class:log.tool.run",
 }
 
 

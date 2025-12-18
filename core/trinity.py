@@ -430,6 +430,9 @@ class TrinityRuntime:
             pass
             
         # Update state with the plan and counters
+        # Build content from plan result or current step description
+        content = f"[Atlas] Plan: {len(plan)} steps. Current: {current_step.get('description', '')}. Next: {next_agent}"
+        
         # Preserve existing messages and add new one
         updated_messages = list(context) + [AIMessage(content=content)]
         return {
@@ -860,6 +863,7 @@ class TrinityRuntime:
         
         content = ""  # Initialize content variable
         try:
+            trace(self.logger, "grisha_llm_start", {"prompt_len": len(str(prompt.format_messages()))})
             # For tool-bound calls, don't stream (JSON protocol needs complete response)
             response = self.llm.invoke(prompt.format_messages())
             content = response.content

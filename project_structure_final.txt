@@ -4,71 +4,15 @@
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 119
-- **Files Skipped**: 13504
+- **Files Skipped**: 13520
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-18 02:51:54
+- **Generated**: 2025-12-18 03:19:42
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2507 | Running cleanup for editor: windsurf, dry_run=True
-2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2510 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
-2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2415 | CLI started with arguments: ['list-modules']
-2025-12-18 02:46:37 | DEBUG    | MainThread | system_cli.cli | cli_main:2457 | Parsed command: list-modules
-2025-12-18 02:46:37 | DEBUG    | MainThread | system_cli.cli | cli_main:2471 | Cleanup config loaded successfully
-2025-12-18 02:46:37 | WARNING  | MainThread | system_cli.cli | cli_main:2478 | Editor not specified. Доступні редактори: windsurf, vscode, antigravity, cursor. Вкажіть --editor.
-2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2493 | Listing modules for editor: windsurf
-2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2502 | Modules listed for windsurf
-2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2415 | CLI started with arguments: ['run', '--dry-run']
-2025-12-18 02:46:37 | DEBUG    | MainThread | system_cli.cli | cli_main:2457 | Parsed command: run
-2025-12-18 02:46:37 | DEBUG    | MainThread | system_cli.cli | cli_main:2471 | Cleanup config loaded successfully
-2025-12-18 02:46:37 | WARNING  | MainThread | system_cli.cli | cli_main:2478 | Editor not specified. Доступні редактори: windsurf, vscode, antigravity, cursor. Вкажіть --editor.
-2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2507 | Running cleanup for editor: windsurf, dry_run=True
-2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2510 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": null, "replan_count": null, "plan_len": 0, "task_type": null, "gui_mode": "off", "execution_mode": "native", "last_msg_preview": "previous"}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "", "critical_changes": false, "changed_files": [], "skip": false}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "План виглядає безпечним і чітким. Проте перед початком перевірки я маю уточнити кілька моментів:\n\n1. Чи впевнені ви, що папка `System_Report_2025` доступна для читання?\n\n2. Якщо все готово, я можу роз"}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "atlas", "last_step_status": "uncertain"}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "replan_triggered", "replan_count": 1, "status": "uncertain"}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": null, "replan_count": null, "plan_len": 0, "task_type": null, "gui_mode": "off", "execution_mode": "native", "last_msg_preview": "previous"}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "", "critical_changes": false, "changed_files": [], "skip": false}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "Якщо все готово, можу починати?"}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "atlas", "last_step_status": "uncertain"}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "replan_triggered", "replan_count": 1, "status": "uncertain"}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": null, "replan_count": null, "plan_len": 0, "task_type": null, "gui_mode": "off", "execution_mode": "native", "last_msg_preview": "previous"}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "", "critical_changes": false, "changed_files": [], "skip": false}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "Все перевірено. [VERIFIED]"}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "end", "last_step_status": "success"}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": null, "replan_count": null, "plan_len": 0, "task_type": null, "gui_mode": "off", "execution_mode": "native", "last_msg_preview": "previous"}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "", "critical_changes": false, "changed_files": [], "skip": false}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "Verification passed. [VERIFIED]"}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "end", "last_step_status": "success"}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": null, "replan_count": null, "plan_len": 0, "task_type": null, "gui_mode": "off", "execution_mode": "native", "last_msg_preview": "previous"}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "", "critical_changes": false, "changed_files": [], "skip": false}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "верифікація пройдена\n[VERIFIED]"}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "end", "last_step_status": "success"}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": null, "replan_count": null, "plan_len": 0, "task_type": null, "gui_mode": "off", "execution_mode": "native", "last_msg_preview": "previous"}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "", "critical_changes": false, "changed_files": [], "skip": false}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 1, "content_preview": "I'll verify using tools."}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "atlas", "last_step_status": "uncertain"}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "replan_triggered", "replan_count": 1, "status": "uncertain"}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "GENERAL", "requires_windsurf": false, "dev_edit_mode": "cli", "execution_mode": "native", "gui_mode": "off", "gui_fallback_attempted": false, "plan_len": 0, "last_msg_preview": "do something"}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 1, "content_preview": ""}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "native", "gui_mode": "off", "dev_edit_mode": "cli"}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "DEV", "requires_windsurf": true, "dev_edit_mode": "windsurf", "execution_mode": "native", "gui_mode": "off", "gui_fallback_attempted": false, "plan_len": 0, "last_msg_preview": "change code"}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 1, "content_preview": ""}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "native", "gui_mode": "off", "dev_edit_mode": "windsurf"}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "DEV", "requires_windsurf": true, "dev_edit_mode": "cli", "execution_mode": "native", "gui_mode": "off", "gui_fallback_attempted": false, "plan_len": 0, "last_msg_preview": "change code"}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 1, "content_preview": ""}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "native", "gui_mode": "off", "dev_edit_mode": "cli"}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_start", "task_type": "DEV", "requires_windsurf": true, "gui_mode": "auto", "execution_mode": "native", "recursion_limit": 100, "input_preview": "Зроби зміну у файлі some_change.txt"}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "end", "last_step_status": null, "step_count": null, "replan_count": 0}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_end", "outcome": "completed", "last_agent": "atlas", "replan_count": 0}
-2025-12-18 02:49:01 | INFO     | MainThread | system_cli.cli | cli_main:2462 | TUI mode exited successfully
-2025-12-18 02:49:03 | INFO     | MainThread | system_cli.cli | cli_main:2415 | CLI started with arguments: []
-2025-12-18 02:49:03 | DEBUG    | MainThread | system_cli.cli | cli_main:2457 | Parsed command: None
 2025-12-18 02:49:03 | INFO     | MainThread | system_cli.cli | cli_main:2460 | Starting TUI mode
 2025-12-18 02:49:03 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in TUI mode
 Traceback (most recent call last):
@@ -113,33 +57,80 @@ NameError: name 'Condition' is not defined
 2025-12-18 02:50:40 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: []
 2025-12-18 02:50:40 | DEBUG    | MainThread | system_cli.cli | cli_main:2458 | Parsed command: None
 2025-12-18 02:50:40 | INFO     | MainThread | system_cli.cli | cli_main:2461 | Starting TUI mode
+2025-12-18 02:52:56 | INFO     | MainThread | system_cli.cli | cli_main:2446 | TUI mode exited successfully
+2025-12-18 02:52:59 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: []
+2025-12-18 02:52:59 | DEBUG    | MainThread | system_cli.cli | cli_main:2458 | Parsed command: None
+2025-12-18 02:52:59 | INFO     | MainThread | system_cli.cli | cli_main:2461 | Starting TUI mode
+2025-12-18 02:53:00 | INFO     | MainThread | system_cli.cli | cli_main:2464 | TUI mode exited successfully
+2025-12-18 02:53:12 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: []
+2025-12-18 02:53:12 | DEBUG    | MainThread | system_cli.cli | cli_main:2458 | Parsed command: None
+2025-12-18 02:53:12 | INFO     | MainThread | system_cli.cli | cli_main:2461 | Starting TUI mode
+2025-12-18 02:53:36 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_start", "task_type": "GENERAL", "requires_windsurf": false, "gui_mode": "auto", "execution_mode": "native", "recursion_limit": 100, "input_preview": "Привіт"}
+2025-12-18 02:53:36 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 1, "replan_count": 0, "last_step_status": null, "plan_len": 0, "task_type": "GENERAL", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "Привіт"}
+2025-12-18 02:53:36 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generate_start", "step_count": 1, "replan_count": 0}
+2025-12-18 02:53:39 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:67 | [Verifier] Plan optimized: 1 → 0 steps (added -1 verify steps)
+2025-12-18 02:53:39 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generated", "steps": 0, "step_count": 1, "replan_count": 0}
+2025-12-18 02:53:39 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "end", "next": "end"}
+2025-12-18 02:53:39 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "end", "last_step_status": null, "step_count": null, "replan_count": 0}
+2025-12-18 02:53:40 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_end", "outcome": "completed", "last_agent": "atlas", "replan_count": 0}
+2025-12-18 02:54:32 | INFO     | MainThread | system_cli.cli | cli_main:2464 | TUI mode exited successfully
+2025-12-18 02:54:37 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: []
+2025-12-18 02:54:37 | DEBUG    | MainThread | system_cli.cli | cli_main:2458 | Parsed command: None
+2025-12-18 02:54:37 | INFO     | MainThread | system_cli.cli | cli_main:2461 | Starting TUI mode
+2025-12-18 02:54:47 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_start", "task_type": "DEV", "requires_windsurf": false, "gui_mode": "auto", "execution_mode": "native", "recursion_limit": 100, "input_preview": "Завдання для Атласа (verification task) Контекст: Система оновлена і має повний доступ до system, desktop та browser інструментів. Потрібно перевірити, що ці можливості реально використовуються в зв’я"}
+2025-12-18 02:54:47 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 1, "replan_count": 0, "last_step_status": null, "plan_len": 0, "task_type": "DEV", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "Завдання для Атласа (verification task) Контекст: Система оновлена і має повний доступ до system, desktop та browser інструментів. Потрібно перевірити, що ці можливості реально використовуються в зв’я"}
+2025-12-18 02:54:48 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generate_start", "step_count": 1, "replan_count": 0}
+2025-12-18 02:55:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:67 | [Verifier] Plan optimized: 20 → 20 steps (added 0 verify steps)
+2025-12-18 02:55:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generated", "steps": 20, "step_count": 1, "replan_count": 0}
+2025-12-18 02:55:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_dispatch", "next_agent": "tetyana", "step_type": "execute", "step_count": 1, "replan_count": 0, "description_preview": "Отримати базову інформацію про систему (CPU, RAM, uptime)."}
+2025-12-18 03:00:15 | INFO     | MainThread | system_cli.cli | cli_main:2464 | TUI mode exited successfully
+2025-12-18 03:00:17 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: []
+2025-12-18 03:00:17 | DEBUG    | MainThread | system_cli.cli | cli_main:2458 | Parsed command: None
+2025-12-18 03:00:17 | INFO     | MainThread | system_cli.cli | cli_main:2461 | Starting TUI mode
+2025-12-18 03:00:37 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_start", "task_type": "DEV", "requires_windsurf": false, "gui_mode": "auto", "execution_mode": "native", "recursion_limit": 100, "input_preview": "Завдання для Атласа (verification task) Контекст: Система оновлена і має повний доступ до system, desktop та browser інструментів. Потрібно перевірити, що ці можливості реально використовуються в зв’я"}
+2025-12-18 03:00:37 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 1, "replan_count": 0, "last_step_status": null, "plan_len": 0, "task_type": "DEV", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "Завдання для Атласа (verification task) Контекст: Система оновлена і має повний доступ до system, desktop та browser інструментів. Потрібно перевірити, що ці можливості реально використовуються в зв’я"}
+2025-12-18 03:00:38 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generate_start", "step_count": 1, "replan_count": 0}
+2025-12-18 03:00:49 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:67 | [Verifier] Plan optimized: 20 → 10 steps (added -10 verify steps)
+2025-12-18 03:00:49 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generated", "steps": 10, "step_count": 1, "replan_count": 0}
+2025-12-18 03:00:49 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_dispatch", "next_agent": "grisha", "step_type": "verify", "step_count": 1, "replan_count": 0, "description_preview": "Перевірити, що система стабільна і готова до взаємодії"}
+2025-12-18 03:02:41 | INFO     | MainThread | system_cli.cli | cli_main:2464 | TUI mode exited successfully
+2025-12-18 03:03:12 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: []
+2025-12-18 03:03:12 | DEBUG    | MainThread | system_cli.cli | cli_main:2458 | Parsed command: None
+2025-12-18 03:03:12 | INFO     | MainThread | system_cli.cli | cli_main:2461 | Starting TUI mode
+2025-12-18 03:03:27 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_start", "task_type": "DEV", "requires_windsurf": false, "gui_mode": "auto", "execution_mode": "native", "recursion_limit": 100, "input_preview": "Завдання для Атласа (verification task) Контекст: Система оновлена і має повний доступ до system, desktop та browser інструментів. Потрібно перевірити, що ці можливості реально використовуються в зв’я"}
+2025-12-18 03:03:27 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 1, "replan_count": 0, "last_step_status": null, "plan_len": 0, "task_type": "DEV", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "Завдання для Атласа (verification task) Контекст: Система оновлена і має повний доступ до system, desktop та browser інструментів. Потрібно перевірити, що ці можливості реально використовуються в зв’я"}
+2025-12-18 03:03:27 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generate_start", "step_count": 1, "replan_count": 0}
+2025-12-18 03:03:38 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:67 | [Verifier] Plan optimized: 20 → 10 steps (added -10 verify steps)
+2025-12-18 03:03:38 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generated", "steps": 10, "step_count": 1, "replan_count": 0}
+2025-12-18 03:03:38 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_dispatch", "next_agent": "grisha", "step_type": "verify", "step_count": 1, "replan_count": 0, "description_preview": "Перевірити, що система стабільна і готова до взаємодії"}
+2025-12-18 03:09:50 | INFO     | MainThread | system_cli.cli | cli_main:2464 | TUI mode exited successfully
+2025-12-18 03:09:53 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: []
+2025-12-18 03:09:53 | DEBUG    | MainThread | system_cli.cli | cli_main:2458 | Parsed command: None
+2025-12-18 03:09:53 | INFO     | MainThread | system_cli.cli | cli_main:2461 | Starting TUI mode
+2025-12-18 03:11:01 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_start", "task_type": "GENERAL", "requires_windsurf": false, "gui_mode": "auto", "execution_mode": "native", "recursion_limit": 100, "input_preview": "Атлас, виконай практичну перевірку нових можливостей системи як єдиний сценарій. 1. Почни з аналізу стану системи • Отримай базову інформацію про систему (CPU, RAM, uptime). • Переконайся, що система "}
+2025-12-18 03:11:01 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 1, "replan_count": 0, "last_step_status": null, "plan_len": 0, "task_type": "GENERAL", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "Атлас, виконай практичну перевірку нових можливостей системи як єдиний сценарій. 1. Почни з аналізу стану системи • Отримай базову інформацію про систему (CPU, RAM, uptime). • Переконайся, що система "}
+2025-12-18 03:11:01 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generate_start", "step_count": 1, "replan_count": 0}
+2025-12-18 03:11:12 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:67 | [Verifier] Plan optimized: 20 → 10 steps (added -10 verify steps)
+2025-12-18 03:11:12 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generated", "steps": 10, "step_count": 1, "replan_count": 0}
+2025-12-18 03:11:12 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_dispatch", "next_agent": "grisha", "step_type": "verify", "step_count": 1, "replan_count": 0, "description_preview": "Перевірити, що система стабільна і готова до взаємодії"}
 ```
 
 ---
 
 ## Last Response
 
-## My Last Response
-
-Add Trinity trace logs and replan tracking
-
----
-
 [Atlas] Final report
 
-Task: Ось перероблена версія завдання з чіткою прив’язкою не до Desktop, а всередині репозиторія /Users/dev/Documents/GitHub/System/data ⸻ Велике комплексне завдання Створення автоматизованого звіту про систему (repo-based) Базовий шлях Усі файли та папки створюються тільки всередині репозиторія: /Users/dev/Documents/GitHub/System/data ⸻ 1. Створення папки звіту Створи папку для звіту за шляхом: /Users/dev/Documents/GitHub/System/data/System_Report_1212 ⸻ 2. Скріншот всього екрану Зроби скріншот усього екрану Збережи файл у папку звіту з назвою: desktop_screenshot.png ⸻ 3. Safari → apple.com • Відкрий Safari • Перейди на сайт https://apple.com • Зроби скріншот вікна Safari • Збережи у папку звіту як: safari_apple.png ⸻ 4. Finder → Downloads + system info • Відкрий Finder • Покажи вміст папки Downloads • Зроби скріншот вікна Finder • Збережи як: finder_downloads.png Додатково У папці звіту створи файл: system_info.txt З таким вмістом: • Дата і час створення звіту • Ім’я користувача системи • Версія macOS • Кількість RAM • Інформація про процесор ⸻ 5. Chrome (Guest) → Google Search • Відкрий Google Chrome у гостьовому режимі • Перейди на https://google.com • Знайди: “macOS automation” • Зроби скріншот результатів пошуку • Збережи як: chrome_search.png ⸻ 6. Shortcuts automation Якщо Shortcuts увімкнено: • Створи Shortcut, який: • відкриває Terminal • виконує команду date • Збережи Shortcut з назвою: auto_date_shortcut ⸻ 7. Генерація звіту Створи файл: report_summary.md У ньому опиши: • всі виконані дії (по пунктах) • список створених файлів • розміри кожного файлу ⸻ 8. Архівація Заархівуй всю папку: System_Report_1212 у файл: System_Report_1212.zip Архів має лежати в: /Users/dev/Documents/GitHub/System/data ⸻ 9–10. Сповіщення про завершення Надішли два сповіщення з текстом: "Звіт про систему успішно створено" ⸻ Важливо • ❌ Не використовувати Desktop • ✅ Усі артефакти — тільки всередині репозиторія • ✅ Шлях фіксований і відтворюваний • ✅ Підходить для автоматизації (Shortcuts / AppleScript / shell) ⸻ Якщо хочеш — можу: • перетворити це в Automator / Shortcuts workflow • або написати shell-скрипт, який робить 80% автоматично • або адаптувати під CI / dev-task для Trinity
+Task: Привіт
 Outcome: completed
+Replans: 0
 Last agent: atlas
 
 Last message:
-[Atlas] Ліміт кроків (30) досягнуто. Завершую.
+No plan generated.
 
 Changed files:
-- requirements.txt
-
-Diff stat:
-requirements.txt | 3 +++
- 1 file changed, 3 insertions(+)
+- (no uncommitted changes detected)
 
 Verification:
 - status: unknown (no explicit signal)
@@ -153,18 +144,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 37225 +-----------------------------------------
- 1 file changed, 49 insertions(+), 37176 deletions(-)
+ project_structure_final.txt | 37246 +-----------------------------------------
+ 1 file changed, 58 insertions(+), 37188 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-cdc9706 feat: Add prompt_toolkit Condition import to cli.py
+6c42661 feat: Implement real-time TUI log streaming with categorized tool execution feedback, refine menu click handling, and enhance Trinity's plan context.
+a5dbf4f Trinity task completed: Привіт
+031eba4 feat: Add prompt_toolkit Condition import to cli.py
 c315869 feat: Implement double-click menu activation, improve editor fallback logic, and refine UI button behavior and input buffer display.
 09807d9 Update: Add latest response
-b13d020 feat: Implement detailed workflow tracing and replan count tracking, and streamline logger access.
-6d2c7e4 feat: Add telemetry tracing for tetyana agent flow and update CLI newline keybindings.
 ```
 
 ---
@@ -586,30 +577,21 @@ Windsurf*.app/
 kinotavr.md
 ```
 
-### `.last_response.txt` (3.8 KB)
+### `.last_response.txt` (0.3 KB)
 
 ```text
-## My Last Response
-
-Add Trinity trace logs and replan tracking
-
----
-
 [Atlas] Final report
 
-Task: Ось перероблена версія завдання з чіткою прив’язкою не до Desktop, а всередині репозиторія /Users/dev/Documents/GitHub/System/data ⸻ Велике комплексне завдання Створення автоматизованого звіту про систему (repo-based) Базовий шлях Усі файли та папки створюються тільки всередині репозиторія: /Users/dev/Documents/GitHub/System/data ⸻ 1. Створення папки звіту Створи папку для звіту за шляхом: /Users/dev/Documents/GitHub/System/data/System_Report_1212 ⸻ 2. Скріншот всього екрану Зроби скріншот усього екрану Збережи файл у папку звіту з назвою: desktop_screenshot.png ⸻ 3. Safari → apple.com • Відкрий Safari • Перейди на сайт https://apple.com • Зроби скріншот вікна Safari • Збережи у папку звіту як: safari_apple.png ⸻ 4. Finder → Downloads + system info • Відкрий Finder • Покажи вміст папки Downloads • Зроби скріншот вікна Finder • Збережи як: finder_downloads.png Додатково У папці звіту створи файл: system_info.txt З таким вмістом: • Дата і час створення звіту • Ім’я користувача системи • Версія macOS • Кількість RAM • Інформація про процесор ⸻ 5. Chrome (Guest) → Google Search • Відкрий Google Chrome у гостьовому режимі • Перейди на https://google.com • Знайди: “macOS automation” • Зроби скріншот результатів пошуку • Збережи як: chrome_search.png ⸻ 6. Shortcuts automation Якщо Shortcuts увімкнено: • Створи Shortcut, який: • відкриває Terminal • виконує команду date • Збережи Shortcut з назвою: auto_date_shortcut ⸻ 7. Генерація звіту Створи файл: report_summary.md У ньому опиши: • всі виконані дії (по пунктах) • список створених файлів • розміри кожного файлу ⸻ 8. Архівація Заархівуй всю папку: System_Report_1212 у файл: System_Report_1212.zip Архів має лежати в: /Users/dev/Documents/GitHub/System/data ⸻ 9–10. Сповіщення про завершення Надішли два сповіщення з текстом: "Звіт про систему успішно створено" ⸻ Важливо • ❌ Не використовувати Desktop • ✅ Усі артефакти — тільки всередині репозиторія • ✅ Шлях фіксований і відтворюваний • ✅ Підходить для автоматизації (Shortcuts / AppleScript / shell) ⸻ Якщо хочеш — можу: • перетворити це в Automator / Shortcuts workflow • або написати shell-скрипт, який робить 80% автоматично • або адаптувати під CI / dev-task для Trinity
+Task: Привіт
 Outcome: completed
+Replans: 0
 Last agent: atlas
 
 Last message:
-[Atlas] Ліміт кроків (30) досягнуто. Завершую.
+No plan generated.
 
 Changed files:
-- requirements.txt
-
-Diff stat:
-requirements.txt | 3 +++
- 1 file changed, 3 insertions(+)
+- (no uncommitted changes detected)
 
 Verification:
 - status: unknown (no explicit signal)
@@ -8414,7 +8396,7 @@ def query_memory_tool(category: str, query: str) -> Dict[str, Any]:
     return {"status": "success", "results": results}
 ```
 
-### `core/trinity.py` (72.7 KB)
+### `core/trinity.py` (73.0 KB)
 
 ```python
 from typing import Annotated, TypedDict, Literal, List, Dict, Any, Optional, Callable
@@ -8849,6 +8831,9 @@ class TrinityRuntime:
             pass
             
         # Update state with the plan and counters
+        # Build content from plan result or current step description
+        content = f"[Atlas] Plan: {len(plan)} steps. Current: {current_step.get('description', '')}. Next: {next_agent}"
+        
         # Preserve existing messages and add new one
         updated_messages = list(context) + [AIMessage(content=content)]
         return {
@@ -9279,6 +9264,7 @@ class TrinityRuntime:
         
         content = ""  # Initialize content variable
         try:
+            trace(self.logger, "grisha_llm_start", {"prompt_len": len(str(prompt.format_messages()))})
             # For tool-bound calls, don't stream (JSON protocol needs complete response)
             response = self.llm.invoke(prompt.format_messages())
             content = response.content
@@ -11334,7 +11320,7 @@ if __name__ == "__main__":
 test content
 ```
 
-### `project_structure_final.txt` (510.3 KB)
+### `project_structure_final.txt` (505.2 KB)
 
 ```text
 # System — Project Structure
@@ -11343,71 +11329,15 @@ test content
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 119
-- **Files Skipped**: 13504
+- **Files Skipped**: 13520
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-18 02:51:54
+- **Generated**: 2025-12-18 03:19:42
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2507 | Running cleanup for editor: windsurf, dry_run=True
-2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2510 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
-2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2415 | CLI started with arguments: ['list-modules']
-2025-12-18 02:46:37 | DEBUG    | MainThread | system_cli.cli | cli_main:2457 | Parsed command: list-modules
-2025-12-18 02:46:37 | DEBUG    | MainThread | system_cli.cli | cli_main:2471 | Cleanup config loaded successfully
-2025-12-18 02:46:37 | WARNING  | MainThread | system_cli.cli | cli_main:2478 | Editor not specified. Доступні редактори: windsurf, vscode, antigravity, cursor. Вкажіть --editor.
-2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2493 | Listing modules for editor: windsurf
-2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2502 | Modules listed for windsurf
-2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2415 | CLI started with arguments: ['run', '--dry-run']
-2025-12-18 02:46:37 | DEBUG    | MainThread | system_cli.cli | cli_main:2457 | Parsed command: run
-2025-12-18 02:46:37 | DEBUG    | MainThread | system_cli.cli | cli_main:2471 | Cleanup config loaded successfully
-2025-12-18 02:46:37 | WARNING  | MainThread | system_cli.cli | cli_main:2478 | Editor not specified. Доступні редактори: windsurf, vscode, antigravity, cursor. Вкажіть --editor.
-2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2507 | Running cleanup for editor: windsurf, dry_run=True
-2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2510 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": null, "replan_count": null, "plan_len": 0, "task_type": null, "gui_mode": "off", "execution_mode": "native", "last_msg_preview": "previous"}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "", "critical_changes": false, "changed_files": [], "skip": false}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "План виглядає безпечним і чітким. Проте перед початком перевірки я маю уточнити кілька моментів:\n\n1. Чи впевнені ви, що папка `System_Report_2025` доступна для читання?\n\n2. Якщо все готово, я можу роз"}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "atlas", "last_step_status": "uncertain"}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "replan_triggered", "replan_count": 1, "status": "uncertain"}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": null, "replan_count": null, "plan_len": 0, "task_type": null, "gui_mode": "off", "execution_mode": "native", "last_msg_preview": "previous"}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "", "critical_changes": false, "changed_files": [], "skip": false}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "Якщо все готово, можу починати?"}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "atlas", "last_step_status": "uncertain"}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "replan_triggered", "replan_count": 1, "status": "uncertain"}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": null, "replan_count": null, "plan_len": 0, "task_type": null, "gui_mode": "off", "execution_mode": "native", "last_msg_preview": "previous"}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "", "critical_changes": false, "changed_files": [], "skip": false}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "Все перевірено. [VERIFIED]"}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "end", "last_step_status": "success"}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": null, "replan_count": null, "plan_len": 0, "task_type": null, "gui_mode": "off", "execution_mode": "native", "last_msg_preview": "previous"}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "", "critical_changes": false, "changed_files": [], "skip": false}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "Verification passed. [VERIFIED]"}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "end", "last_step_status": "success"}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": null, "replan_count": null, "plan_len": 0, "task_type": null, "gui_mode": "off", "execution_mode": "native", "last_msg_preview": "previous"}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "", "critical_changes": false, "changed_files": [], "skip": false}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "верифікація пройдена\n[VERIFIED]"}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "end", "last_step_status": "success"}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": null, "replan_count": null, "plan_len": 0, "task_type": null, "gui_mode": "off", "execution_mode": "native", "last_msg_preview": "previous"}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "", "critical_changes": false, "changed_files": [], "skip": false}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 1, "content_preview": "I'll verify using tools."}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "atlas", "last_step_status": "uncertain"}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "replan_triggered", "replan_count": 1, "status": "uncertain"}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "GENERAL", "requires_windsurf": false, "dev_edit_mode": "cli", "execution_mode": "native", "gui_mode": "off", "gui_fallback_attempted": false, "plan_len": 0, "last_msg_preview": "do something"}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 1, "content_preview": ""}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "native", "gui_mode": "off", "dev_edit_mode": "cli"}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "DEV", "requires_windsurf": true, "dev_edit_mode": "windsurf", "execution_mode": "native", "gui_mode": "off", "gui_fallback_attempted": false, "plan_len": 0, "last_msg_preview": "change code"}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 1, "content_preview": ""}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "native", "gui_mode": "off", "dev_edit_mode": "windsurf"}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "DEV", "requires_windsurf": true, "dev_edit_mode": "cli", "execution_mode": "native", "gui_mode": "off", "gui_fallback_attempted": false, "plan_len": 0, "last_msg_preview": "change code"}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 1, "content_preview": ""}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "native", "gui_mode": "off", "dev_edit_mode": "cli"}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_start", "task_type": "DEV", "requires_windsurf": true, "gui_mode": "auto", "execution_mode": "native", "recursion_limit": 100, "input_preview": "Зроби зміну у файлі some_change.txt"}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "end", "last_step_status": null, "step_count": null, "replan_count": 0}
-2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_end", "outcome": "completed", "last_agent": "atlas", "replan_count": 0}
-2025-12-18 02:49:01 | INFO     | MainThread | system_cli.cli | cli_main:2462 | TUI mode exited successfully
-2025-12-18 02:49:03 | INFO     | MainThread | system_cli.cli | cli_main:2415 | CLI started with arguments: []
-2025-12-18 02:49:03 | DEBUG    | MainThread | system_cli.cli | cli_main:2457 | Parsed command: None
 2025-12-18 02:49:03 | INFO     | MainThread | system_cli.cli | cli_main:2460 | Starting TUI mode
 2025-12-18 02:49:03 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in TUI mode
 Traceback (most recent call last):
@@ -11452,33 +11382,80 @@ NameError: name 'Condition' is not defined
 2025-12-18 02:50:40 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: []
 2025-12-18 02:50:40 | DEBUG    | MainThread | system_cli.cli | cli_main:2458 | Parsed command: None
 2025-12-18 02:50:40 | INFO     | MainThread | system_cli.cli | cli_main:2461 | Starting TUI mode
+2025-12-18 02:52:56 | INFO     | MainThread | system_cli.cli | cli_main:2446 | TUI mode exited successfully
+2025-12-18 02:52:59 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: []
+2025-12-18 02:52:59 | DEBUG    | MainThread | system_cli.cli | cli_main:2458 | Parsed command: None
+2025-12-18 02:52:59 | INFO     | MainThread | system_cli.cli | cli_main:2461 | Starting TUI mode
+2025-12-18 02:53:00 | INFO     | MainThread | system_cli.cli | cli_main:2464 | TUI mode exited successfully
+2025-12-18 02:53:12 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: []
+2025-12-18 02:53:12 | DEBUG    | MainThread | system_cli.cli | cli_main:2458 | Parsed command: None
+2025-12-18 02:53:12 | INFO     | MainThread | system_cli.cli | cli_main:2461 | Starting TUI mode
+2025-12-18 02:53:36 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_start", "task_type": "GENERAL", "requires_windsurf": false, "gui_mode": "auto", "execution_mode": "native", "recursion_limit": 100, "input_preview": "Привіт"}
+2025-12-18 02:53:36 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 1, "replan_count": 0, "last_step_status": null, "plan_len": 0, "task_type": "GENERAL", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "Привіт"}
+2025-12-18 02:53:36 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generate_start", "step_count": 1, "replan_count": 0}
+2025-12-18 02:53:39 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:67 | [Verifier] Plan optimized: 1 → 0 steps (added -1 verify steps)
+2025-12-18 02:53:39 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generated", "steps": 0, "step_count": 1, "replan_count": 0}
+2025-12-18 02:53:39 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "end", "next": "end"}
+2025-12-18 02:53:39 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "end", "last_step_status": null, "step_count": null, "replan_count": 0}
+2025-12-18 02:53:40 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_end", "outcome": "completed", "last_agent": "atlas", "replan_count": 0}
+2025-12-18 02:54:32 | INFO     | MainThread | system_cli.cli | cli_main:2464 | TUI mode exited successfully
+2025-12-18 02:54:37 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: []
+2025-12-18 02:54:37 | DEBUG    | MainThread | system_cli.cli | cli_main:2458 | Parsed command: None
+2025-12-18 02:54:37 | INFO     | MainThread | system_cli.cli | cli_main:2461 | Starting TUI mode
+2025-12-18 02:54:47 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_start", "task_type": "DEV", "requires_windsurf": false, "gui_mode": "auto", "execution_mode": "native", "recursion_limit": 100, "input_preview": "Завдання для Атласа (verification task) Контекст: Система оновлена і має повний доступ до system, desktop та browser інструментів. Потрібно перевірити, що ці можливості реально використовуються в зв’я"}
+2025-12-18 02:54:47 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 1, "replan_count": 0, "last_step_status": null, "plan_len": 0, "task_type": "DEV", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "Завдання для Атласа (verification task) Контекст: Система оновлена і має повний доступ до system, desktop та browser інструментів. Потрібно перевірити, що ці можливості реально використовуються в зв’я"}
+2025-12-18 02:54:48 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generate_start", "step_count": 1, "replan_count": 0}
+2025-12-18 02:55:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:67 | [Verifier] Plan optimized: 20 → 20 steps (added 0 verify steps)
+2025-12-18 02:55:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generated", "steps": 20, "step_count": 1, "replan_count": 0}
+2025-12-18 02:55:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_dispatch", "next_agent": "tetyana", "step_type": "execute", "step_count": 1, "replan_count": 0, "description_preview": "Отримати базову інформацію про систему (CPU, RAM, uptime)."}
+2025-12-18 03:00:15 | INFO     | MainThread | system_cli.cli | cli_main:2464 | TUI mode exited successfully
+2025-12-18 03:00:17 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: []
+2025-12-18 03:00:17 | DEBUG    | MainThread | system_cli.cli | cli_main:2458 | Parsed command: None
+2025-12-18 03:00:17 | INFO     | MainThread | system_cli.cli | cli_main:2461 | Starting TUI mode
+2025-12-18 03:00:37 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_start", "task_type": "DEV", "requires_windsurf": false, "gui_mode": "auto", "execution_mode": "native", "recursion_limit": 100, "input_preview": "Завдання для Атласа (verification task) Контекст: Система оновлена і має повний доступ до system, desktop та browser інструментів. Потрібно перевірити, що ці можливості реально використовуються в зв’я"}
+2025-12-18 03:00:37 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 1, "replan_count": 0, "last_step_status": null, "plan_len": 0, "task_type": "DEV", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "Завдання для Атласа (verification task) Контекст: Система оновлена і має повний доступ до system, desktop та browser інструментів. Потрібно перевірити, що ці можливості реально використовуються в зв’я"}
+2025-12-18 03:00:38 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generate_start", "step_count": 1, "replan_count": 0}
+2025-12-18 03:00:49 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:67 | [Verifier] Plan optimized: 20 → 10 steps (added -10 verify steps)
+2025-12-18 03:00:49 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generated", "steps": 10, "step_count": 1, "replan_count": 0}
+2025-12-18 03:00:49 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_dispatch", "next_agent": "grisha", "step_type": "verify", "step_count": 1, "replan_count": 0, "description_preview": "Перевірити, що система стабільна і готова до взаємодії"}
+2025-12-18 03:02:41 | INFO     | MainThread | system_cli.cli | cli_main:2464 | TUI mode exited successfully
+2025-12-18 03:03:12 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: []
+2025-12-18 03:03:12 | DEBUG    | MainThread | system_cli.cli | cli_main:2458 | Parsed command: None
+2025-12-18 03:03:12 | INFO     | MainThread | system_cli.cli | cli_main:2461 | Starting TUI mode
+2025-12-18 03:03:27 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_start", "task_type": "DEV", "requires_windsurf": false, "gui_mode": "auto", "execution_mode": "native", "recursion_limit": 100, "input_preview": "Завдання для Атласа (verification task) Контекст: Система оновлена і має повний доступ до system, desktop та browser інструментів. Потрібно перевірити, що ці можливості реально використовуються в зв’я"}
+2025-12-18 03:03:27 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 1, "replan_count": 0, "last_step_status": null, "plan_len": 0, "task_type": "DEV", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "Завдання для Атласа (verification task) Контекст: Система оновлена і має повний доступ до system, desktop та browser інструментів. Потрібно перевірити, що ці можливості реально використовуються в зв’я"}
+2025-12-18 03:03:27 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generate_start", "step_count": 1, "replan_count": 0}
+2025-12-18 03:03:38 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:67 | [Verifier] Plan optimized: 20 → 10 steps (added -10 verify steps)
+2025-12-18 03:03:38 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generated", "steps": 10, "step_count": 1, "replan_count": 0}
+2025-12-18 03:03:38 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_dispatch", "next_agent": "grisha", "step_type": "verify", "step_count": 1, "replan_count": 0, "description_preview": "Перевірити, що система стабільна і готова до взаємодії"}
+2025-12-18 03:09:50 | INFO     | MainThread | system_cli.cli | cli_main:2464 | TUI mode exited successfully
+2025-12-18 03:09:53 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: []
+2025-12-18 03:09:53 | DEBUG    | MainThread | system_cli.cli | cli_main:2458 | Parsed command: None
+2025-12-18 03:09:53 | INFO     | MainThread | system_cli.cli | cli_main:2461 | Starting TUI mode
+2025-12-18 03:11:01 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_start", "task_type": "GENERAL", "requires_windsurf": false, "gui_mode": "auto", "execution_mode": "native", "recursion_limit": 100, "input_preview": "Атлас, виконай практичну перевірку нових можливостей системи як єдиний сценарій. 1. Почни з аналізу стану системи • Отримай базову інформацію про систему (CPU, RAM, uptime). • Переконайся, що система "}
+2025-12-18 03:11:01 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 1, "replan_count": 0, "last_step_status": null, "plan_len": 0, "task_type": "GENERAL", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "Атлас, виконай практичну перевірку нових можливостей системи як єдиний сценарій. 1. Почни з аналізу стану системи • Отримай базову інформацію про систему (CPU, RAM, uptime). • Переконайся, що система "}
+2025-12-18 03:11:01 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generate_start", "step_count": 1, "replan_count": 0}
+2025-12-18 03:11:12 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:67 | [Verifier] Plan optimized: 20 → 10 steps (added -10 verify steps)
+2025-12-18 03:11:12 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generated", "steps": 10, "step_count": 1, "replan_count": 0}
+2025-12-18 03:11:12 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_dispatch", "next_agent": "grisha", "step_type": "verify", "step_count": 1, "replan_count": 0, "description_preview": "Перевірити, що система стабільна і готова до взаємодії"}
 ```
 
 ---
 
 ## Last Response
 
-## My Last Response
-
-Add Trinity trace logs and replan tracking
-
----
-
 [Atlas] Final report
 
-Task: Ось перероблена версія завдання з чіткою прив’язкою не до Desktop, а всередині репозиторія /Users/dev/Documents/GitHub/System/data ⸻ Велике комплексне завдання Створення автоматизованого звіту про систему (repo-based) Базовий шлях Усі файли та папки створюються тільки всередині репозиторія: /Users/dev/Documents/GitHub/System/data ⸻ 1. Створення папки звіту Створи папку для звіту за шляхом: /Users/dev/Documents/GitHub/System/data/System_Report_1212 ⸻ 2. Скріншот всього екрану Зроби скріншот усього екрану Збережи файл у папку звіту з назвою: desktop_screenshot.png ⸻ 3. Safari → apple.com • Відкрий Safari • Перейди на сайт https://apple.com • Зроби скріншот вікна Safari • Збережи у папку звіту як: safari_apple.png ⸻ 4. Finder → Downloads + system info • Відкрий Finder • Покажи вміст папки Downloads • Зроби скріншот вікна Finder • Збережи як: finder_downloads.png Додатково У папці звіту створи файл: system_info.txt З таким вмістом: • Дата і час створення звіту • Ім’я користувача системи • Версія macOS • Кількість RAM • Інформація про процесор ⸻ 5. Chrome (Guest) → Google Search • Відкрий Google Chrome у гостьовому режимі • Перейди на https://google.com • Знайди: “macOS automation” • Зроби скріншот результатів пошуку • Збережи як: chrome_search.png ⸻ 6. Shortcuts automation Якщо Shortcuts увімкнено: • Створи Shortcut, який: • відкриває Terminal • виконує команду date • Збережи Shortcut з назвою: auto_date_shortcut ⸻ 7. Генерація звіту Створи файл: report_summary.md У ньому опиши: • всі виконані дії (по пунктах) • список створених файлів • розміри кожного файлу ⸻ 8. Архівація Заархівуй всю папку: System_Report_1212 у файл: System_Report_1212.zip Архів має лежати в: /Users/dev/Documents/GitHub/System/data ⸻ 9–10. Сповіщення про завершення Надішли два сповіщення з текстом: "Звіт про систему успішно створено" ⸻ Важливо • ❌ Не використовувати Desktop • ✅ Усі артефакти — тільки всередині репозиторія • ✅ Шлях фіксований і відтворюваний • ✅ Підходить для автоматизації (Shortcuts / AppleScript / shell) ⸻ Якщо хочеш — можу: • перетворити це в Automator / Shortcuts workflow • або написати shell-скрипт, який робить 80% автоматично • або адаптувати під CI / dev-task для Trinity
+Task: Привіт
 Outcome: completed
+Replans: 0
 Last agent: atlas
 
 Last message:
-[Atlas] Ліміт кроків (30) досягнуто. Завершую.
+No plan generated.
 
 Changed files:
-- requirements.txt
-
-Diff stat:
-requirements.txt | 3 +++
- 1 file changed, 3 insertions(+)
+- (no uncommitted changes detected)
 
 Verification:
 - status: unknown (no explicit signal)
@@ -11492,18 +11469,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 37225 +-----------------------------------------
- 1 file changed, 49 insertions(+), 37176 deletions(-)
+ project_structure_final.txt | 37246 +-----------------------------------------
+ 1 file changed, 58 insertions(+), 37188 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-cdc9706 feat: Add prompt_toolkit Condition import to cli.py
+6c42661 feat: Implement real-time TUI log streaming with categorized tool execution feedback, refine menu click handling, and enhance Trinity's plan context.
+a5dbf4f Trinity task completed: Привіт
+031eba4 feat: Add prompt_toolkit Condition import to cli.py
 c315869 feat: Implement double-click menu activation, improve editor fallback logic, and refine UI button behavior and input buffer display.
 09807d9 Update: Add latest response
-b13d020 feat: Implement detailed workflow tracing and replan count tracking, and streamline logger access.
-6d2c7e4 feat: Add telemetry tracing for tetyana agent flow and update CLI newline keybindings.
 ```
 
 ---
@@ -11925,30 +11902,21 @@ Windsurf*.app/
 kinotavr.md
 ```
 
-### `.last_response.txt` (3.8 KB)
+### `.last_response.txt` (0.3 KB)
 
 ```text
-## My Last Response
-
-Add Trinity trace logs and replan tracking
-
----
-
 [Atlas] Final report
 
-Task: Ось перероблена версія завдання з чіткою прив’язкою не до Desktop, а всередині репозиторія /Users/dev/Documents/GitHub/System/data ⸻ Велике комплексне завдання Створення автоматизованого звіту про систему (repo-based) Базовий шлях Усі файли та папки створюються тільки всередині репозиторія: /Users/dev/Documents/GitHub/System/data ⸻ 1. Створення папки звіту Створи папку для звіту за шляхом: /Users/dev/Documents/GitHub/System/data/System_Report_1212 ⸻ 2. Скріншот всього екрану Зроби скріншот усього екрану Збережи файл у папку звіту з назвою: desktop_screenshot.png ⸻ 3. Safari → apple.com • Відкрий Safari • Перейди на сайт https://apple.com • Зроби скріншот вікна Safari • Збережи у папку звіту як: safari_apple.png ⸻ 4. Finder → Downloads + system info • Відкрий Finder • Покажи вміст папки Downloads • Зроби скріншот вікна Finder • Збережи як: finder_downloads.png Додатково У папці звіту створи файл: system_info.txt З таким вмістом: • Дата і час створення звіту • Ім’я користувача системи • Версія macOS • Кількість RAM • Інформація про процесор ⸻ 5. Chrome (Guest) → Google Search • Відкрий Google Chrome у гостьовому режимі • Перейди на https://google.com • Знайди: “macOS automation” • Зроби скріншот результатів пошуку • Збережи як: chrome_search.png ⸻ 6. Shortcuts automation Якщо Shortcuts увімкнено: • Створи Shortcut, який: • відкриває Terminal • виконує команду date • Збережи Shortcut з назвою: auto_date_shortcut ⸻ 7. Генерація звіту Створи файл: report_summary.md У ньому опиши: • всі виконані дії (по пунктах) • список створених файлів • розміри кожного файлу ⸻ 8. Архівація Заархівуй всю папку: System_Report_1212 у файл: System_Report_1212.zip Архів має лежати в: /Users/dev/Documents/GitHub/System/data ⸻ 9–10. Сповіщення про завершення Надішли два сповіщення з текстом: "Звіт про систему успішно створено" ⸻ Важливо • ❌ Не використовувати Desktop • ✅ Усі артефакти — тільки всередині репозиторія • ✅ Шлях фіксований і відтворюваний • ✅ Підходить для автоматизації (Shortcuts / AppleScript / shell) ⸻ Якщо хочеш — можу: • перетворити це в Automator / Shortcuts workflow • або написати shell-скрипт, який робить 80% автоматично • або адаптувати під CI / dev-task для Trinity
+Task: Привіт
 Outcome: completed
+Replans: 0
 Last agent: atlas
 
 Last message:
-[Atlas] Ліміт кроків (30) досягнуто. Завершую.
+No plan generated.
 
 Changed files:
-- requirements.txt
-
-Diff stat:
-requirements.txt | 3 +++
- 1 file changed, 3 insertions(+)
+- (no uncommitted changes detected)
 
 Verification:
 - status: unknown (no explicit signal)
@@ -19753,7 +19721,7 @@ def query_memory_tool(category: str, query: str) -> Dict[str, Any]:
     return {"status": "success", "results": results}
 ```
 
-### `core/trinity.py` (72.7 KB)
+### `core/trinity.py` (73.0 KB)
 
 ```python
 from typing import Annotated, TypedDict, Literal, List, Dict, Any, Optional, Callable
@@ -20188,6 +20156,9 @@ class TrinityRuntime:
             pass
             
         # Update state with the plan and counters
+        # Build content from plan result or current step description
+        content = f"[Atlas] Plan: {len(plan)} steps. Current: {current_step.get('description', '')}. Next: {next_agent}"
+        
         # Preserve existing messages and add new one
         updated_messages = list(context) + [AIMessage(content=content)]
         return {
@@ -20618,6 +20589,7 @@ class TrinityRuntime:
         
         content = ""  # Initialize content variable
         try:
+            trace(self.logger, "grisha_llm_start", {"prompt_len": len(str(prompt.format_messages()))})
             # For tool-bound calls, don't stream (JSON protocol needs complete response)
             response = self.llm.invoke(prompt.format_messages())
             content = response.content
@@ -28333,7 +28305,7 @@ def test_find_image_on_screen_missing_cv2_dependency(tmp_path, monkeypatch):
 
 ```
 
-### `tui/agents.py` (21.3 KB)
+### `tui/agents.py` (25.8 KB)
 
 ```python
 """Agent session and LLM interaction for TUI.
@@ -28839,6 +28811,98 @@ def run_graph_agent_task(
 
         on_stream_callback = _on_stream_delta if use_stream else None
         gui_mode_val = str(gui_mode or "auto").strip().lower() or "auto"
+        
+        # Log file tail thread to stream real-time logs from Trinity
+        from pathlib import Path
+        log_file_path = Path.home() / ".system_cli" / "logs" / "cli.log"
+        
+        tail_active = threading.Event()
+        tail_active.set()
+        last_position = [0]
+        
+        # Get current file position (start from end to only show new logs)
+        try:
+            if log_file_path.exists():
+                last_position[0] = log_file_path.stat().st_size
+        except Exception:
+            pass
+        
+        def _tail_loop():
+            """Tail log file and display new lines in TUI."""
+            while tail_active.is_set():
+                try:
+                    if not log_file_path.exists():
+                        threading.Event().wait(0.5)
+                        continue
+                    
+                    current_size = log_file_path.stat().st_size
+                    if current_size > last_position[0]:
+                        with open(log_file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                            f.seek(last_position[0])
+                            new_content = f.read()
+                            last_position[0] = f.tell()
+                        
+                        # Display raw log lines with minimal processing
+                        for line in new_content.strip().split('\n'):
+                            if not line:
+                                continue
+                            
+                            # Extract the message part (after last |)
+                            parts = line.split('|')
+                            if len(parts) >= 2:
+                                msg = parts[-1].strip()
+                            else:
+                                msg = line.strip()
+                            
+                            # Determine category based on content
+                            msg_lower = msg.lower()
+                            
+                            # Tool execution detection
+                            if 'result for' in msg_lower:
+                                # Tool result - check success/failure
+                                if any(x in msg_lower for x in ['error', 'failed', 'exception', '"status": "error"', 'permission_required']):
+                                    cat = 'tool_fail'
+                                    # Add visual indicator
+                                    msg = '✗ ' + msg
+                                else:
+                                    cat = 'tool_success'
+                                    msg = '✓ ' + msg
+                            elif 'execute' in msg_lower and ('tool' in msg_lower or 'name' in msg_lower):
+                                cat = 'tool_run'
+                                msg = '⚙ ' + msg
+                            elif '[blocked]' in msg_lower:
+                                cat = 'tool_fail'
+                                msg = '✗ ' + msg
+                            elif 'error' in msg_lower or 'ERROR' in line:
+                                cat = 'error'
+                            elif '[TRACE]' in line or 'DEBUG' in line:
+                                cat = 'info'
+                            else:
+                                cat = 'action'
+                            
+                            # Truncate very long messages
+                            if len(msg) > 150:
+                                msg = msg[:147] + '...'
+                            
+                            if msg:
+                                log(msg, cat)
+                        
+                        # Update UI
+                        try:
+                            from tui.layout import force_ui_update
+                            force_ui_update()
+                        except Exception:
+                            pass
+                    
+                except Exception:
+                    pass
+                
+                # Poll interval
+                threading.Event().wait(0.3)
+        
+        tail_thread = threading.Thread(target=_tail_loop, daemon=True)
+        tail_thread.start()
+
         runtime = TrinityRuntime(verbose=False, permissions=permissions, on_stream=on_stream_callback)
         
         # Enrich Trinity Registry with TUI tools
@@ -28857,7 +28921,18 @@ def run_graph_agent_task(
 
         
         exec_mode = str(getattr(state, "ui_execution_mode", "native") or "native").strip().lower() or "native"
+        log("[ATLAS] Starting task processing...", "info")
+        
+        # Force UI update before long-running operation
+        try:
+            from tui.layout import force_ui_update
+            force_ui_update()
+        except Exception:
+            pass
+        
+        event_count = 0
         for event in runtime.run(user_text, gui_mode=gui_mode_val, execution_mode=exec_mode):
+            event_count += 1
             for node_name, state_update in event.items():
                 agent_name = node_name.capitalize()
                 tag = str(node_name or agent_name or "TRINITY").strip().upper() or "TRINITY"
@@ -28890,13 +28965,16 @@ def run_graph_agent_task(
                     msg = pause_info.get("message", "Permission required")
                     set_agent_pause(pending_text=user_text, permission=perm, message=msg)
                     log(f"[{tag}] ⚠️ PAUSED: {msg}", "error")
+                    tail_active.clear()
                     return
                 
     except Exception as e:
+        tail_active.clear()
         log(f"[TRINITY] Runtime error: {e}", "error")
         return
 
-    log("[TRINITY] Task completed.", "action")
+    tail_active.clear()
+    log("[TRINITY] ✓ Task completed.", "action")
     trim_logs_if_needed()
 
 
@@ -33643,7 +33721,7 @@ def get_log_files_info() -> dict:
 _default_logger = setup_logging(verbose=False)
 ```
 
-### `tui/menu.py` (19.0 KB)
+### `tui/menu.py` (19.5 KB)
 
 ```python
 from __future__ import annotations
@@ -33686,6 +33764,17 @@ def build_menu(
 
     def make_click(idx: int) -> Callable[[Any], None]:
         def _click(mouse_event: Any) -> None:
+            from prompt_toolkit.mouse_events import MouseEventType
+            
+            # Only respond to actual clicks, not hover/move
+            event_type = getattr(mouse_event, 'event_type', None)
+            if event_type not in (MouseEventType.MOUSE_UP, MouseEventType.MOUSE_DOWN):
+                return
+            
+            # Only act on MOUSE_UP (button release)
+            if event_type != MouseEventType.MOUSE_UP:
+                return
+            
             now = time.time()
             # Double click detection (mac standard style)
             if last_click["idx"] == idx and now - last_click["time"] < 0.4:
@@ -35563,7 +35652,7 @@ _analyze_recording_bg = analyze_recording_bg
 _start_recording_analysis = start_recording_analysis
 ```
 
-### `tui/render.py` (16.4 KB)
+### `tui/render.py` (16.5 KB)
 
 ```python
 """Rendering and log management for TUI.
@@ -35608,6 +35697,9 @@ STYLE_MAP = {
     "user": "class:log.user",
     "action": "class:log.action",
     "error": "class:log.error",
+    "tool_success": "class:log.tool.success",
+    "tool_fail": "class:log.tool.fail",
+    "tool_run": "class:log.tool.run",
 }
 
 
@@ -36026,7 +36118,7 @@ _get_context = get_context
 _get_status = get_status
 ```
 
-### `tui/themes.py` (13.2 KB)
+### `tui/themes.py` (14.1 KB)
 
 ```python
 import os
@@ -36080,6 +36172,9 @@ THEMES: Dict[str, Dict[str, str]] = {
         "button.focused": "bg:#008787 #ffffff",
         "button.clicked": "bg:#5faf87 #ffffff",
         "bar.background": "#002b2b",
+        "log.tool.success": "#5faf87",
+        "log.tool.fail": "#d75f5f",
+        "log.tool.run": "#f2cc60",
     },
     "dracula": {
         "frame.border": "#6272a4",
@@ -36119,6 +36214,9 @@ THEMES: Dict[str, Dict[str, str]] = {
         "agent.user": "#bd93f9",
         "agent.system": "#6272a4",
         "agent.text": "#f8f8f2",
+        "log.tool.success": "#50fa7b",
+        "log.tool.fail": "#ff5555",
+        "log.tool.run": "#f1fa8c",
     },
     "nord": {
         "frame.border": "#4c566a",
@@ -36158,6 +36256,9 @@ THEMES: Dict[str, Dict[str, str]] = {
         "agent.user": "#81a1c1",
         "agent.system": "#4c566a",
         "agent.text": "#eceff4",
+        "log.tool.success": "#a3be8c",
+        "log.tool.fail": "#bf616a",
+        "log.tool.run": "#ebcb8b",
     },
     "gruvbox": {
         "frame.border": "#504945",
@@ -36197,6 +36298,9 @@ THEMES: Dict[str, Dict[str, str]] = {
         "agent.user": "#d79921",
         "agent.system": "#a89984",
         "agent.text": "#fbf1c7",
+        "log.tool.success": "#b8bb26",
+        "log.tool.fail": "#fb4934",
+        "log.tool.run": "#fabd2f",
     },
     "solarized-dark": {
         "frame.border": "#586e75",
@@ -36236,6 +36340,9 @@ THEMES: Dict[str, Dict[str, str]] = {
         "agent.user": "#268bd2",
         "agent.system": "#586e75",
         "agent.text": "#93a1a1",
+        "log.tool.success": "#859900",
+        "log.tool.fail": "#dc322f",
+        "log.tool.run": "#b58900",
     },
     "one-dark": {
         "frame.border": "#5c6370",
@@ -36275,6 +36382,9 @@ THEMES: Dict[str, Dict[str, str]] = {
         "agent.user": "#c678dd",
         "agent.system": "#5c6370",
         "agent.text": "#abb2bf",
+        "log.tool.success": "#98c379",
+        "log.tool.fail": "#e06c75",
+        "log.tool.run": "#e5c07b",
     },
     "catppuccin": {
         "frame.border": "#6c7086",
@@ -36314,6 +36424,9 @@ THEMES: Dict[str, Dict[str, str]] = {
         "agent.user": "#cba6f7",
         "agent.system": "#6c7086",
         "agent.text": "#cdd6f4",
+        "log.tool.success": "#a6e3a1",
+        "log.tool.fail": "#f38ba8",
+        "log.tool.run": "#f9e2af",
     },
     "tokyo-night": {
         "frame.border": "#565f89",
@@ -36353,6 +36466,9 @@ THEMES: Dict[str, Dict[str, str]] = {
         "agent.user": "#bb9af7",
         "agent.system": "#565f89",
         "agent.text": "#c0caf5",
+        "log.tool.success": "#9ece6a",
+        "log.tool.fail": "#f7768e",
+        "log.tool.run": "#e0af68",
     },
     "rose-pine": {
         "frame.border": "#6e6a86",
@@ -36392,6 +36508,9 @@ THEMES: Dict[str, Dict[str, str]] = {
         "agent.user": "#c4a7e7",
         "agent.system": "#6e6a86",
         "agent.text": "#e0def4",
+        "log.tool.success": "#31748f",
+        "log.tool.fail": "#eb6f92",
+        "log.tool.run": "#f6c177",
     },
 }
 
@@ -37242,4 +37361,4 @@ graph TD
 ## Summary
 
 - **Total Files**: 119
-- **Skipped**: 13504
+- **Skipped**: 13520

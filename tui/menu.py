@@ -38,6 +38,17 @@ def build_menu(
 
     def make_click(idx: int) -> Callable[[Any], None]:
         def _click(mouse_event: Any) -> None:
+            from prompt_toolkit.mouse_events import MouseEventType
+            
+            # Only respond to actual clicks, not hover/move
+            event_type = getattr(mouse_event, 'event_type', None)
+            if event_type not in (MouseEventType.MOUSE_UP, MouseEventType.MOUSE_DOWN):
+                return
+            
+            # Only act on MOUSE_UP (button release)
+            if event_type != MouseEventType.MOUSE_UP:
+                return
+            
             now = time.time()
             # Double click detection (mac standard style)
             if last_click["idx"] == idx and now - last_click["time"] < 0.4:

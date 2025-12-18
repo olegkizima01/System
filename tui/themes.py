@@ -49,6 +49,9 @@ THEMES: Dict[str, Dict[str, str]] = {
         "button.focused": "bg:#008787 #ffffff",
         "button.clicked": "bg:#5faf87 #ffffff",
         "bar.background": "#002b2b",
+        "log.tool.success": "#5faf87",
+        "log.tool.fail": "#d75f5f",
+        "log.tool.run": "#f2cc60",
     },
     "dracula": {
         "frame.border": "#6272a4",
@@ -88,6 +91,9 @@ THEMES: Dict[str, Dict[str, str]] = {
         "agent.user": "#bd93f9",
         "agent.system": "#6272a4",
         "agent.text": "#f8f8f2",
+        "log.tool.success": "#50fa7b",
+        "log.tool.fail": "#ff5555",
+        "log.tool.run": "#f1fa8c",
     },
     "nord": {
         "frame.border": "#4c566a",
@@ -127,6 +133,9 @@ THEMES: Dict[str, Dict[str, str]] = {
         "agent.user": "#81a1c1",
         "agent.system": "#4c566a",
         "agent.text": "#eceff4",
+        "log.tool.success": "#a3be8c",
+        "log.tool.fail": "#bf616a",
+        "log.tool.run": "#ebcb8b",
     },
     "gruvbox": {
         "frame.border": "#504945",
@@ -166,6 +175,9 @@ THEMES: Dict[str, Dict[str, str]] = {
         "agent.user": "#d79921",
         "agent.system": "#a89984",
         "agent.text": "#fbf1c7",
+        "log.tool.success": "#b8bb26",
+        "log.tool.fail": "#fb4934",
+        "log.tool.run": "#fabd2f",
     },
     "solarized-dark": {
         "frame.border": "#586e75",
@@ -205,6 +217,9 @@ THEMES: Dict[str, Dict[str, str]] = {
         "agent.user": "#268bd2",
         "agent.system": "#586e75",
         "agent.text": "#93a1a1",
+        "log.tool.success": "#859900",
+        "log.tool.fail": "#dc322f",
+        "log.tool.run": "#b58900",
     },
     "one-dark": {
         "frame.border": "#5c6370",
@@ -244,6 +259,9 @@ THEMES: Dict[str, Dict[str, str]] = {
         "agent.user": "#c678dd",
         "agent.system": "#5c6370",
         "agent.text": "#abb2bf",
+        "log.tool.success": "#98c379",
+        "log.tool.fail": "#e06c75",
+        "log.tool.run": "#e5c07b",
     },
     "catppuccin": {
         "frame.border": "#6c7086",
@@ -283,6 +301,9 @@ THEMES: Dict[str, Dict[str, str]] = {
         "agent.user": "#cba6f7",
         "agent.system": "#6c7086",
         "agent.text": "#cdd6f4",
+        "log.tool.success": "#a6e3a1",
+        "log.tool.fail": "#f38ba8",
+        "log.tool.run": "#f9e2af",
     },
     "tokyo-night": {
         "frame.border": "#565f89",
@@ -322,6 +343,9 @@ THEMES: Dict[str, Dict[str, str]] = {
         "agent.user": "#bb9af7",
         "agent.system": "#565f89",
         "agent.text": "#c0caf5",
+        "log.tool.success": "#9ece6a",
+        "log.tool.fail": "#f7768e",
+        "log.tool.run": "#e0af68",
     },
     "rose-pine": {
         "frame.border": "#6e6a86",
@@ -361,6 +385,9 @@ THEMES: Dict[str, Dict[str, str]] = {
         "agent.user": "#c4a7e7",
         "agent.system": "#6e6a86",
         "agent.text": "#e0def4",
+        "log.tool.success": "#31748f",
+        "log.tool.fail": "#eb6f92",
+        "log.tool.run": "#f6c177",
     },
 }
 

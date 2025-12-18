@@ -501,6 +501,98 @@ def run_graph_agent_task(
 
         on_stream_callback = _on_stream_delta if use_stream else None
         gui_mode_val = str(gui_mode or "auto").strip().lower() or "auto"
+        
+        # Log file tail thread to stream real-time logs from Trinity
+        from pathlib import Path
+        log_file_path = Path.home() / ".system_cli" / "logs" / "cli.log"
+        
+        tail_active = threading.Event()
+        tail_active.set()
+        last_position = [0]
+        
+        # Get current file position (start from end to only show new logs)
+        try:
+            if log_file_path.exists():
+                last_position[0] = log_file_path.stat().st_size
+        except Exception:
+            pass
+        
+        def _tail_loop():
+            """Tail log file and display new lines in TUI."""
+            while tail_active.is_set():
+                try:
+                    if not log_file_path.exists():
+                        threading.Event().wait(0.5)
+                        continue
+                    
+                    current_size = log_file_path.stat().st_size
+                    if current_size > last_position[0]:
+                        with open(log_file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                            f.seek(last_position[0])
+                            new_content = f.read()
+                            last_position[0] = f.tell()
+                        
+                        # Display raw log lines with minimal processing
+                        for line in new_content.strip().split('\n'):
+                            if not line:
+                                continue
+                            
+                            # Extract the message part (after last |)
+                            parts = line.split('|')
+                            if len(parts) >= 2:
+                                msg = parts[-1].strip()
+                            else:
+                                msg = line.strip()
+                            
+                            # Determine category based on content
+                            msg_lower = msg.lower()
+                            
+                            # Tool execution detection
+                            if 'result for' in msg_lower:
+                                # Tool result - check success/failure
+                                if any(x in msg_lower for x in ['error', 'failed', 'exception', '"status": "error"', 'permission_required']):
+                                    cat = 'tool_fail'
+                                    # Add visual indicator
+                                    msg = '✗ ' + msg
+                                else:
+                                    cat = 'tool_success'
+                                    msg = '✓ ' + msg
+                            elif 'execute' in msg_lower and ('tool' in msg_lower or 'name' in msg_lower):
+                                cat = 'tool_run'
+                                msg = '⚙ ' + msg
+                            elif '[blocked]' in msg_lower:
+                                cat = 'tool_fail'
+                                msg = '✗ ' + msg
+                            elif 'error' in msg_lower or 'ERROR' in line:
+                                cat = 'error'
+                            elif '[TRACE]' in line or 'DEBUG' in line:
+                                cat = 'info'
+                            else:
+                                cat = 'action'
+                            
+                            # Truncate very long messages
+                            if len(msg) > 150:
+                                msg = msg[:147] + '...'
+                            
+                            if msg:
+                                log(msg, cat)
+                        
+                        # Update UI
+                        try:
+                            from tui.layout import force_ui_update
+                            force_ui_update()
+                        except Exception:
+                            pass
+                    
+                except Exception:
+                    pass
+                
+                # Poll interval
+                threading.Event().wait(0.3)
+        
+        tail_thread = threading.Thread(target=_tail_loop, daemon=True)
+        tail_thread.start()
+
         runtime = TrinityRuntime(verbose=False, permissions=permissions, on_stream=on_stream_callback)
         
         # Enrich Trinity Registry with TUI tools
@@ -519,7 +611,18 @@ def run_graph_agent_task(
 
         
         exec_mode = str(getattr(state, "ui_execution_mode", "native") or "native").strip().lower() or "native"
+        log("[ATLAS] Starting task processing...", "info")
+        
+        # Force UI update before long-running operation
+        try:
+            from tui.layout import force_ui_update
+            force_ui_update()
+        except Exception:
+            pass
+        
+        event_count = 0
         for event in runtime.run(user_text, gui_mode=gui_mode_val, execution_mode=exec_mode):
+            event_count += 1
             for node_name, state_update in event.items():
                 agent_name = node_name.capitalize()
                 tag = str(node_name or agent_name or "TRINITY").strip().upper() or "TRINITY"
@@ -552,13 +655,16 @@ def run_graph_agent_task(
                     msg = pause_info.get("message", "Permission required")
                     set_agent_pause(pending_text=user_text, permission=perm, message=msg)
                     log(f"[{tag}] ⚠️ PAUSED: {msg}", "error")
+                    tail_active.clear()
                     return
                 
     except Exception as e:
+        tail_active.clear()
         log(f"[TRINITY] Runtime error: {e}", "error")
         return
 
-    log("[TRINITY] Task completed.", "action")
+    tail_active.clear()
+    log("[TRINITY] ✓ Task completed.", "action")
     trim_logs_if_needed()
 
 
