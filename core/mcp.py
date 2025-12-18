@@ -29,7 +29,8 @@ from system_ai.tools.browser import (
     browser_click_element,
     browser_type_text,
     browser_get_content,
-    browser_execute_script
+    browser_execute_script,
+    browser_ensure_ready
 )
 
 class MCPToolRegistry:
@@ -232,6 +233,8 @@ class MCPToolRegistry:
         self.register_tool("browser_type_text", browser_type_text, "Type text in browser. Args: selector (str), text (str)")
         self.register_tool("browser_get_content", browser_get_content, "Get page/element text. Args: selector (optional str)")
         self.register_tool("browser_execute_script", browser_execute_script, "Run JS in browser. Args: script (str)")
+        self.register_tool("browser_ensure_ready", browser_ensure_ready, "Check if browser is ready (Playwright installed). Returns setup instructions if not. Args: none")
+
 
         # Project Structure
         def _save_last_response_and_regenerate(text: str) -> Dict[str, Any]:

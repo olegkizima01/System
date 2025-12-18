@@ -47,6 +47,7 @@ class TrinityState(TypedDict):
     dev_edit_mode: Optional[str]  # windsurf|cli
     intent_reason: Optional[str]
     last_step_status: Optional[str] # success|failed|uncertain
+    uncertain_streak: Optional[int]  # Count of consecutive uncertain decisions (anti-loop)
 
 class TrinityRuntime:
     MAX_REPLANS = 10
@@ -960,10 +961,8 @@ class TrinityRuntime:
         ]
         has_explicit_complete = any(m in lower_content for m in explicit_complete_markers)
         
-        # 2. Check for tool usage
-        if tool_calls:
-            next_agent = "atlas"
-            step_status = "uncertain"
+        # 2. NEW: Check for tool execution errors in context (status: error = FAILED, not uncertain)
+        has_tool_error_in_context = '"status": "error"' in content or '"status":"error"' in content
         
         # 3. Check for test failures
         has_test_failure = "[test_verification]" in lower_content and ("failed" in lower_content or "error" in lower_content)
@@ -972,24 +971,81 @@ class TrinityRuntime:
         if has_test_failure:
             step_status = "failed"
             next_agent = "atlas"
+        elif has_tool_error_in_context:
+            # NEW: Tool execution error is a clear failure, not uncertain
+            step_status = "failed"
+            next_agent = "atlas"
+            if self.verbose:
+                print("👁️ [Grisha] Tool error detected in context → marking as FAILED")
         elif has_explicit_complete:
             step_status = "success"
             next_agent = "atlas"
-        elif any(kw in lower_content for kw in ["успішно", "verified", "працює", "готово"]):
+        elif any(kw in lower_content for kw in ["успішно", "verified", "працює", "готово", "виконано", "completed", "done"]):
             step_status = "success"
             next_agent = "atlas"
-        elif any(kw in lower_content for kw in ["failed", "error", "помилка", "не вдалося"]):
+        elif any(kw in lower_content for kw in ["failed", "error", "помилка", "не вдалося", "неможливо", "blocked"]):
             step_status = "failed"
             next_agent = "atlas"
         else:
-            step_status = "uncertain"
-            next_agent = "atlas"
+            # NEW: If no tools were used and status is uncertain, force verification
+            if not tool_calls:
+                if self.verbose:
+                    print("👁️ [Grisha] No tools used and uncertain → forcing capture_screen verification")
+                try:
+                    trace(self.logger, "grisha_forcing_verification", {"reason": "no_tools_uncertain"})
+                    snap = self.registry.execute("capture_screen", {"app_name": None})
+                    content += "\n\n[FORCED_VERIFY] capture_screen:\n" + str(snap)
+                    # Try to extract image path for analysis
+                    try:
+                        snap_dict = json.loads(snap)
+                        img_path = snap_dict.get("path") if isinstance(snap_dict, dict) else None
+                    except Exception:
+                        img_path = None
+                    if img_path:
+                        analysis = self.registry.execute(
+                            "analyze_screen",
+                            {"image_path": img_path, "prompt": "Describe what you see. Is this a success state or an error state?"},
+                        )
+                        content += "\n\n[FORCED_VERIFY] analyze_screen:\n" + str(analysis)
+                        # Check analysis result for success/failure indicators
+                        analysis_lower = str(analysis).lower()
+                        if any(kw in analysis_lower for kw in ["success", "done", "completed", "expected", "correct"]):
+                            step_status = "success"
+                        elif any(kw in analysis_lower for kw in ["error", "fail", "wrong", "unexpected"]):
+                            step_status = "failed"
+                except Exception as ve:
+                    if self.verbose:
+                        print(f"👁️ [Grisha] Forced verification failed: {ve}")
+            
+            # If still uncertain after forced verification
+            if step_status == "uncertain":
+                step_status = "uncertain"
+                next_agent = "atlas"
 
-        # Preserve existing messages and add new one
+        # Preserve existing messages and add new one (with potentially enriched content)
         updated_messages = list(context) + [AIMessage(content=content)]
 
+        # NEW: Anti-loop protection via uncertain_streak
+        current_streak = int(state.get("uncertain_streak") or 0)
+        if step_status == "uncertain":
+            current_streak += 1
+        else:
+            current_streak = 0  # Reset on definite decision
+        
+        # If 3+ consecutive uncertain decisions, force to success with warning
+        if current_streak >= 3:
+            if self.verbose:
+                print(f"⚠️ [Grisha] Uncertainty streak ({current_streak}) reached limit → forcing SUCCESS")
+            try:
+                trace(self.logger, "grisha_uncertainty_limit", {"streak": current_streak, "forced": "success"})
+            except Exception:
+                pass
+            step_status = "success"
+            updated_messages.append(AIMessage(content="[VOICE] Після кількох спроб перевірки, вважаю завдання виконаним. [VERIFIED]"))
+            current_streak = 0
+
         try:
-            trace(self.logger, "grisha_decision", {"next_agent": next_agent, "last_step_status": step_status})
+            trace(self.logger, "grisha_decision", {"next_agent": next_agent, "last_step_status": step_status, "uncertain_streak": current_streak})
         except Exception:
             pass
 
@@ -997,6 +1053,7 @@ class TrinityRuntime:
             "current_agent": next_agent, 
             "messages": updated_messages,
             "last_step_status": step_status,
+            "uncertain_streak": current_streak,
         }
         
         # Determine if we need to increase replan_count

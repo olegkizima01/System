@@ -55,6 +55,40 @@ class BrowserManager:
 # Global manager instance
 _manager = BrowserManager.get_instance()
 
+def browser_ensure_ready() -> Dict[str, Any]:
+    """Check if browser is ready, with setup instructions if not.
+    
+    Returns:
+        Dict with status and fix_command if Playwright not installed
+    """
+    try:
+        # Try to start browser (will raise exception if not installed)
+        _manager.start(headless=True)
+        # If successful, close it
+        _manager.stop()
+        return {
+            "tool": "browser_ensure_ready",
+            "status": "success",
+            "message": "Browser is ready to use"
+        }
+    except Exception as e:
+        error_msg = str(e)
+        if "Executable doesn't exist" in error_msg or "not found" in error_msg.lower():
+            return {
+                "tool": "browser_ensure_ready",
+                "status": "error",
+                "error_type": "dependency_missing",
+                "message": "Playwright browsers not installed",
+                "fix_command": "playwright install chromium",
+                "error": error_msg
+            }
+        return {
+            "tool": "browser_ensure_ready",
+            "status": "error",
+            "error": error_msg
+        }
+
+
 def browser_open_url(url: str, headless: bool = False) -> Dict[str, Any]:
     """Open a URL in the browser
     
