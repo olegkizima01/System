@@ -143,23 +143,18 @@ def build_app(
         if not isinstance(base, list):
             base = [("", str(base))]
             
-        # Add clickable buttons styled
-        # We append them to the header text
-        # Format: [ MENU ] [ LOGS ] [ AGENTS ]
-        
-        btn_style = "class:button"
-        
-        buttons = [
+        # Add labels purely informational
+        labels = [
              ("class:header", "  "),
-             (btn_style, "[ F2: MENU ]", header_callback_menu),
+             ("class:button", "[ F2: MENU ]"),
              ("class:header", " "),
-             (btn_style, "[ PgUp: LOGS ]", header_callback_logs),
+             ("class:button", "[ PgUp: LOGS ]"),
              ("class:header", " "),
-             (btn_style, "[ PgDn: AGENTS ]", header_callback_agents),
+             ("class:button", "[ PgDn: AGENTS ]"),
              ("class:header", "  "),
         ]
         
-        return base + buttons
+        return base + labels
 
     header_window = Window(
         FormattedTextControl(get_interactive_header), 
@@ -216,7 +211,12 @@ def build_app(
                 style="class:input",
                 dont_extend_width=True,
             ),
-            Window(BufferControl(buffer=input_buffer, key_bindings=input_key_bindings), style="class:input"),
+            Window(
+                BufferControl(buffer=input_buffer, key_bindings=input_key_bindings), 
+                style="class:input",
+                wrap_lines=True, # Ensure long pastes are visible
+                height=Dimension(min=1, preferred=2, max=10) # Dynamic height
+            ),
         ]
     )
 
@@ -224,16 +224,13 @@ def build_app(
         return get_status()
     
     # Interactive status bar
-    def status_callback_menu(*args):
-         state.menu_level = MenuLevel.MAIN if state.menu_level == MenuLevel.NONE else MenuLevel.NONE
-
     def get_interactive_status() -> AnyFormattedText:
          base = _safe_formatted_text(get_status_text, fallback_style="class:status")()
          if not isinstance(base, list):
              base = [("", str(base))]
          
-         # Add help hint
-         return base + [("class:status", "  "), ("class:button", "[ Click/F2 For Menu ]", status_callback_menu)]
+         # Informational hint (no callback as requested)
+         return base + [("class:status", "  "), ("class:button", "[ F2: Menu ]")]
 
     status_window = Window(FormattedTextControl(get_interactive_status), height=1, style="class:status")
 

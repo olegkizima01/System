@@ -1,11 +1,8 @@
 from __future__ import annotations
-
+import time
 from typing import Any, Callable, List, Sequence, Tuple
-
 from prompt_toolkit.filters import Condition
-
 from tui.themes import THEMES, get_theme_names
-
 
 def build_menu(
     *,
@@ -31,18 +28,28 @@ def build_menu(
     CLEANUP_CONFIG_PATH: str,
     LOCALIZATION_CONFIG_PATH: str,
     force_ui_update: Callable[[], None],
+    on_enter: Callable[[], None],
 ) -> Tuple[Condition, Callable[[], List[Tuple[str, str]]]]:
     @Condition
     def show_menu() -> bool:
         return state.menu_level != MenuLevel.NONE
 
+    last_click = {"time": 0, "idx": -1}
+
     def make_click(idx: int) -> Callable[[Any], None]:
         def _click(mouse_event: Any) -> None:
-            if state.menu_index != idx:
-                state.menu_index = idx
+            now = time.time()
+            # Double click detection (mac standard style)
+            if last_click["idx"] == idx and now - last_click["time"] < 0.4:
+                on_enter()
                 force_ui_update()
-            # If prompt_toolkit supports double click, we could execute. 
-            # For now, just focus.
+            else:
+                if state.menu_index != idx:
+                    state.menu_index = idx
+                    force_ui_update()
+            
+            last_click["idx"] = idx
+            last_click["time"] = now
         return _click
 
     def get_toggle_text(val: bool) -> List[Tuple[str, str]]:
@@ -73,6 +80,14 @@ def build_menu(
     def get_menu_content() -> List[Tuple[str, str]]:
         result: List[Tuple[str, str]] = []
 
+        def add_back_btn(res):
+            def _go_back(*args):
+                 state.menu_level = MenuLevel.MAIN
+                 state.menu_index = 0
+                 force_ui_update()
+            res.append(("class:menu.item", " [ < " + tr("menu.back", state.ui_lang) + " ]\n", _go_back))
+            res.append(("", "\n"))
+
         if state.menu_level == MenuLevel.MAIN:
             result.append(("class:menu.title", f" {tr('menu.main.title', state.ui_lang)}\n\n"))
             for i, (name, _) in enumerate(MAIN_MENU_ITEMS):
@@ -83,6 +98,7 @@ def build_menu(
             return result
 
         if state.menu_level == MenuLevel.CUSTOM_TASKS:
+            add_back_btn(result)
             result.append(("class:menu.title", f" {tr('menu.custom_tasks.title', state.ui_lang)}\n\n"))
             items = get_custom_tasks_menu_items()
             state.menu_index = max(0, min(state.menu_index, len(items) - 1))
@@ -94,6 +110,7 @@ def build_menu(
             return result
 
         if state.menu_level == MenuLevel.MONITORING:
+            add_back_btn(result)
             result.append(("class:menu.title", f" {tr('menu.monitoring.title', state.ui_lang)}\n\n"))
             items = get_monitoring_menu_items()
             state.menu_index = max(0, min(state.menu_index, len(items) - 1))
@@ -104,6 +121,7 @@ def build_menu(
             return result
 
         if state.menu_level == MenuLevel.SETTINGS:
+            add_back_btn(result)
             result.append(("class:menu.title", f" {tr('menu.settings.title', state.ui_lang)}\n\n"))
             items = get_settings_menu_items()
             state.menu_index = max(0, min(state.menu_index, len(items) - 1))
@@ -119,6 +137,7 @@ def build_menu(
             return result
 
         if state.menu_level == MenuLevel.LLM_SETTINGS:
+            add_back_btn(result)
             result.append(("class:menu.title", f" {tr('menu.llm.title', state.ui_lang)}\n\n"))
             items = get_llm_menu_items()
             if not items:
@@ -133,6 +152,7 @@ def build_menu(
             return result
 
         if state.menu_level == MenuLevel.AGENT_SETTINGS:
+            add_back_btn(result)
             result.append(("class:menu.title", f" {tr('menu.agent.title', state.ui_lang)}\n\n"))
             items = get_agent_menu_items()
             if not items:
@@ -147,6 +167,7 @@ def build_menu(
             return result
 
         if state.menu_level == MenuLevel.APPEARANCE:
+            add_back_btn(result)
             result.append(("class:menu.title", f" {tr('menu.appearance.title', state.ui_lang)}\n\n"))
             themes = list(get_theme_names())
             state.menu_index = max(0, min(state.menu_index, len(themes) - 1))
@@ -161,6 +182,7 @@ def build_menu(
             return result
 
         if state.menu_level == MenuLevel.LANGUAGE:
+            add_back_btn(result)
             result.append(("class:menu.title", f" {tr('menu.language.title', state.ui_lang)}\n\n"))
             items = [
                 (f"UI: {state.ui_lang} - {lang_name(state.ui_lang)}", "ui"),
@@ -176,6 +198,7 @@ def build_menu(
             return result
 
         if state.menu_level == MenuLevel.UNSAFE_MODE:
+            add_back_btn(result)
             result.append(("class:menu.title", f" {tr('menu.unsafe_mode.title', state.ui_lang)}\n\n"))
             on = bool(getattr(state, "ui_unsafe_mode", False))
             prefix = " > "
@@ -186,13 +209,15 @@ def build_menu(
             return result
 
         if state.menu_level == MenuLevel.AUTOMATION_PERMISSIONS:
+            add_back_btn(result)
             result.append(("class:menu.title", f" {tr('menu.automation_permissions.title', state.ui_lang)}\n\n"))
             items = get_automation_permissions_menu_items()
             state.menu_index = max(0, min(state.menu_index, len(items) - 1))
             for i, (label, key) in enumerate(items):
                 prefix = " > " if i == state.menu_index else "   "
                 style_cls = "class:menu.selected" if i == state.menu_index else "class:menu.item"
-                result.append((style_cls, f"{prefix}{label} "))
+                handler = make_click(i)
+                result.append((style_cls, f"{prefix}{label} ", handler))
                 
                 if key == "ui_execution_mode":
                     mode = str(getattr(state, "ui_execution_mode", "native")).upper()
@@ -205,6 +230,7 @@ def build_menu(
             return result
 
         if state.menu_level == MenuLevel.LAYOUT:
+            add_back_btn(result)
             result.append(("class:menu.title", f" {tr('menu.layout.title', state.ui_lang)}\n\n"))
             items = [
                 (tr("menu.layout.left_panel_ratio", state.ui_lang), "ratio"),
@@ -213,7 +239,8 @@ def build_menu(
             for i, (label, key) in enumerate(items):
                 prefix = " > " if i == state.menu_index else "   "
                 style_cls = "class:menu.selected" if i == state.menu_index else "class:menu.item"
-                result.append((style_cls, f"{prefix}{label} "))
+                handler = make_click(i)
+                result.append((style_cls, f"{prefix}{label} ", handler))
                 
                 if key == "ratio":
                     val = float(getattr(state, "ui_left_panel_ratio", 0.6))
@@ -224,6 +251,7 @@ def build_menu(
             return result
 
         if state.menu_level == MenuLevel.MONITOR_CONTROL:
+            add_back_btn(result)
             result.append(("class:menu.title", " MONITORING (Enter: Start/Stop, S: Source, U: Sudo, Q/Esc: Back)\n"))
             state_line = "ACTIVE" if state.monitor_active else "INACTIVE"
             result.append(("class:menu.item", f" State: {state_line}\n"))
@@ -247,6 +275,7 @@ def build_menu(
             return result
 
         if state.menu_level == MenuLevel.MONITOR_TARGETS:
+            add_back_btn(result)
             result.append(("class:menu.title", " MONITORING TARGETS (Space: Toggle, Enter: Save, Q/Esc: Back)\n"))
             result.append(("class:menu.item", f" Config: {MONITOR_TARGETS_PATH}\n\n"))
 
@@ -269,6 +298,7 @@ def build_menu(
             return result
 
         if state.menu_level == MenuLevel.CLEANUP_EDITORS:
+            add_back_btn(result)
             result.append(("class:menu.title", " RUN CLEANUP (Enter: Run, D: Dry-run, Q/Esc: Back)\n\n"))
             editors = get_editors_list()
             for i, (key, label) in enumerate(editors):
@@ -279,6 +309,7 @@ def build_menu(
             return result
 
         if state.menu_level == MenuLevel.MODULE_EDITORS:
+            add_back_btn(result)
             result.append(("class:menu.title", " MODULES: CHOOSE EDITOR (Enter: Select, Q/Esc: Back)\n\n"))
             editors = get_editors_list()
             for i, (key, label) in enumerate(editors):
@@ -289,6 +320,7 @@ def build_menu(
             return result
 
         if state.menu_level == MenuLevel.MODULE_LIST:
+            add_back_btn(result)
             editor = state.selected_editor
             if not editor:
                 result.append(("class:menu.title", " MODULES (no editor selected)\n"))
@@ -315,6 +347,7 @@ def build_menu(
             return result
 
         if state.menu_level == MenuLevel.INSTALL_EDITORS:
+            add_back_btn(result)
             result.append(("class:menu.title", " INSTALL (Enter: Open installer, Q/Esc: Back)\n\n"))
             editors = get_editors_list()
             for i, (key, label) in enumerate(editors):
@@ -325,6 +358,7 @@ def build_menu(
             return result
 
         if state.menu_level == MenuLevel.LOCALES:
+            add_back_btn(result)
             result.append(("class:menu.title", f" {tr('menu.locales.title', state.ui_lang)}\n\n"))
             for idx, loc in enumerate(AVAILABLE_LOCALES):
                 prefix = " > " if idx == state.menu_index else "   "

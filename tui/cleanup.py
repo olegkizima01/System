@@ -78,10 +78,29 @@ def list_editors(cfg: Dict[str, Any]) -> List[str]:
 def resolve_editor_arg(cfg: Dict[str, Any], editor: Optional[str]) -> Tuple[str, Optional[str]]:
     """Resolve editor argument to a valid editor key."""
     editors = cfg.get("editors", {}) or {}
+
+    def _pick_fallback() -> str:
+        if not editors:
+            return ""
+        if "windsurf" in editors:
+            return "windsurf"
+        for key, meta in editors.items():
+            try:
+                modules = (meta or {}).get("modules", []) if isinstance(meta, dict) else []
+                if any(isinstance(m, dict) and m.get("enabled") for m in (modules or [])):
+                    return key
+            except Exception:
+                continue
+        return sorted([str(k) for k in editors.keys() if str(k)])[:1][0]
+
     if not editor:
-        if len(editors) == 1:
-            return list(editors.keys())[0], None
-        return "", f"Доступні редактори: {', '.join(editors.keys())}. Вкажіть --editor."
+        fallback = _pick_fallback()
+        if len(editors) == 1 and fallback:
+            return fallback, None
+        if fallback:
+            note = f"Editor not specified. Доступні редактори: {', '.join(editors.keys())}. Вкажіть --editor."
+            return fallback, note
+        return "", f"Editor not specified. Доступні редактори: {', '.join(editors.keys())}. Вкажіть --editor."
 
     low = editor.strip().lower()
     aliases = {
@@ -98,7 +117,14 @@ def resolve_editor_arg(cfg: Dict[str, Any], editor: Optional[str]) -> Tuple[str,
         "curs": "cursor",
         "cur": "cursor",
     }
-    return aliases.get(low, low), None
+    resolved = aliases.get(low, low)
+    if resolved in editors:
+        return resolved, None
+    fallback = _pick_fallback()
+    if fallback:
+        note = f"Editor not specified. Доступні редактори: {', '.join(editors.keys())}. Вкажіть --editor."
+        return fallback, note
+    return resolved, None
 
 
 def find_module(cfg: Dict[str, Any], editor: str, module_id: str) -> Optional[ModuleRef]:

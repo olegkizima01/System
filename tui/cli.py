@@ -1613,35 +1613,10 @@ def run_tui() -> None:
     get_agent_menu_items_cb = globals().get("_get_agent_menu_items") or (lambda: [])
     get_automation_permissions_menu_items_cb = globals().get("_get_automation_permissions_menu_items") or (lambda: [])
 
-    show_menu, get_menu_content = build_menu(
+    kb, handle_menu_enter = build_keybindings(
         state=state,
         MenuLevel=MenuLevel,
-        tr=lambda k, l: tr(k, l),
-        lang_name=lang_name,
-        MAIN_MENU_ITEMS=MAIN_MENU_ITEMS,
-        get_custom_tasks_menu_items=get_custom_tasks_menu_items_cb,
-        get_monitoring_menu_items=get_monitoring_menu_items_cb,
-        get_settings_menu_items=get_settings_menu_items_cb,
-        get_llm_menu_items=get_llm_menu_items_cb,
-        get_agent_menu_items=get_agent_menu_items_cb,
-        get_automation_permissions_menu_items=get_automation_permissions_menu_items_cb,
-        get_editors_list=_get_editors_list,
-        get_cleanup_cfg=_get_cleanup_cfg,
-        AVAILABLE_LOCALES=AVAILABLE_LOCALES,
-        localization=localization,
-        get_monitor_menu_items=_get_monitor_menu_items,
-        normalize_menu_index=_normalize_menu_index,
-        MONITOR_TARGETS_PATH=MONITOR_TARGETS_PATH,
-        MONITOR_EVENTS_DB_PATH=MONITOR_EVENTS_DB_PATH,
-        CLEANUP_CONFIG_PATH=CLEANUP_CONFIG_PATH,
-        LOCALIZATION_CONFIG_PATH=LOCALIZATION_CONFIG_PATH,
-        force_ui_update=force_ui_update,
-    )
-
-    kb = build_keybindings(
-        state=state,
-        MenuLevel=MenuLevel,
-        show_menu=show_menu,
+        show_menu=Condition(lambda: state.menu_level != MenuLevel.NONE), # Temporary placeholder
         MAIN_MENU_ITEMS=MAIN_MENU_ITEMS,
         get_custom_tasks_menu_items=get_custom_tasks_menu_items_cb,
         TOP_LANGS=TOP_LANGS,
@@ -1674,6 +1649,32 @@ def run_tui() -> None:
         monitor_service=monitor_service,
         fs_usage_service=fs_usage_service,
         opensnoop_service=opensnoop_service,
+    )
+
+    show_menu, get_menu_content = build_menu(
+        state=state,
+        MenuLevel=MenuLevel,
+        tr=lambda k, l: tr(k, l),
+        lang_name=lang_name,
+        MAIN_MENU_ITEMS=MAIN_MENU_ITEMS,
+        get_custom_tasks_menu_items=get_custom_tasks_menu_items_cb,
+        get_monitoring_menu_items=get_monitoring_menu_items_cb,
+        get_settings_menu_items=get_settings_menu_items_cb,
+        get_llm_menu_items=get_llm_menu_items_cb,
+        get_agent_menu_items=get_agent_menu_items_cb,
+        get_automation_permissions_menu_items=get_automation_permissions_menu_items_cb,
+        get_editors_list=_get_editors_list,
+        get_cleanup_cfg=_get_cleanup_cfg,
+        AVAILABLE_LOCALES=AVAILABLE_LOCALES,
+        localization=localization,
+        get_monitor_menu_items=_get_monitor_menu_items,
+        normalize_menu_index=_normalize_menu_index,
+        MONITOR_TARGETS_PATH=MONITOR_TARGETS_PATH,
+        MONITOR_EVENTS_DB_PATH=MONITOR_EVENTS_DB_PATH,
+        CLEANUP_CONFIG_PATH=CLEANUP_CONFIG_PATH,
+        LOCALIZATION_CONFIG_PATH=LOCALIZATION_CONFIG_PATH,
+        force_ui_update=force_ui_update,
+        on_enter=handle_menu_enter,
     )
 
     input_kb = KeyBindings()

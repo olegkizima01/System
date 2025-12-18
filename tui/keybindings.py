@@ -381,7 +381,7 @@ def build_keybindings(
         log(f"Monitoring sudo: {'ON' if state.monitor_use_sudo else 'OFF'}", "action")
 
     @kb.add("enter", filter=show_menu)
-    def _(event):
+    def handle_menu_enter(event=None):
         if state.menu_level == MenuLevel.MAIN:
             _, lvl = MAIN_MENU_ITEMS[state.menu_index]
             state.menu_level = lvl
@@ -548,4 +548,4 @@ def build_keybindings(
             log(msg, "action" if ok else "error")
             return
 
-    return kb
+    return kb, handle_menu_enter

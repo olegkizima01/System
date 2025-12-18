@@ -4,9 +4,9 @@
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 119
-- **Files Skipped**: 13485
+- **Files Skipped**: 13496
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-18 02:47:41
+- **Generated**: 2025-12-18 02:48:36
 
 ---
 
@@ -153,23 +153,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 37249 +-----------------------------------------
- tui/cleanup.py              |    34 +-
- tui/cli.py                  |    55 +-
- tui/keybindings.py          |     4 +-
- tui/layout.py               |    31 +-
- tui/menu.py                 |    48 +-
- 6 files changed, 216 insertions(+), 37205 deletions(-)
+ project_structure_final.txt | 37139 +-----------------------------------------
+ 1 file changed, 2 insertions(+), 37137 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-aa16cf9 Update: Add latest response
+44a5f1b feat: Implement double-click menu activation, improve editor fallback logic, and refine UI button behavior and input buffer display.
+09807d9 Update: Add latest response
 b13d020 feat: Implement detailed workflow tracing and replan count tracking, and streamline logger access.
 6d2c7e4 feat: Add telemetry tracing for tetyana agent flow and update CLI newline keybindings.
 01e53fb feat: Add `json` module import to logger and update CLI key binding from `s-enter` to `shift-enter`.
-d74c634 feat: add detailed tracing for Atlas agent lifecycle events and remove direct LLM invocation for step announcements
 ```
 
 ---
@@ -11339,7 +11334,7 @@ if __name__ == "__main__":
 test content
 ```
 
-### `project_structure_final.txt` (516.3 KB)
+### `project_structure_final.txt` (516.1 KB)
 
 ```text
 # System — Project Structure
@@ -11348,9 +11343,9 @@ test content
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 119
-- **Files Skipped**: 13485
+- **Files Skipped**: 13496
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-18 02:47:41
+- **Generated**: 2025-12-18 02:48:36
 
 ---
 
@@ -11497,23 +11492,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 37249 +-----------------------------------------
- tui/cleanup.py              |    34 +-
- tui/cli.py                  |    55 +-
- tui/keybindings.py          |     4 +-
- tui/layout.py               |    31 +-
- tui/menu.py                 |    48 +-
- 6 files changed, 216 insertions(+), 37205 deletions(-)
+ project_structure_final.txt | 37139 +-----------------------------------------
+ 1 file changed, 2 insertions(+), 37137 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-aa16cf9 Update: Add latest response
+44a5f1b feat: Implement double-click menu activation, improve editor fallback logic, and refine UI button behavior and input buffer display.
+09807d9 Update: Add latest response
 b13d020 feat: Implement detailed workflow tracing and replan count tracking, and streamline logger access.
 6d2c7e4 feat: Add telemetry tracing for tetyana agent flow and update CLI newline keybindings.
 01e53fb feat: Add `json` module import to logger and update CLI key binding from `s-enter` to `shift-enter`.
-d74c634 feat: add detailed tracing for Atlas agent lifecycle events and remove direct LLM invocation for step announcements
 ```
 
 ---
@@ -33650,7 +33640,7 @@ def get_log_files_info() -> dict:
 _default_logger = setup_logging(verbose=False)
 ```
 
-### `tui/menu.py` (18.9 KB)
+### `tui/menu.py` (19.0 KB)
 
 ```python
 from __future__ import annotations
@@ -33871,7 +33861,8 @@ def build_menu(
             for i, (label, key) in enumerate(items):
                 prefix = " > " if i == state.menu_index else "   "
                 style_cls = "class:menu.selected" if i == state.menu_index else "class:menu.item"
-                result.append((style_cls, f"{prefix}{label} "))
+                handler = make_click(i)
+                result.append((style_cls, f"{prefix}{label} ", handler))
                 
                 if key == "ui_execution_mode":
                     mode = str(getattr(state, "ui_execution_mode", "native")).upper()
@@ -33893,7 +33884,8 @@ def build_menu(
             for i, (label, key) in enumerate(items):
                 prefix = " > " if i == state.menu_index else "   "
                 style_cls = "class:menu.selected" if i == state.menu_index else "class:menu.item"
-                result.append((style_cls, f"{prefix}{label} "))
+                handler = make_click(i)
+                result.append((style_cls, f"{prefix}{label} ", handler))
                 
                 if key == "ratio":
                     val = float(getattr(state, "ui_left_panel_ratio", 0.6))
@@ -37247,4 +37239,4 @@ graph TD
 ## Summary
 
 - **Total Files**: 119
-- **Skipped**: 13485
+- **Skipped**: 13496
