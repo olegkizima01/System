@@ -792,6 +792,20 @@ class TrinityRuntime:
 
         gui_mode = str(state.get("gui_mode") or "auto").strip().lower()
         execution_mode = str(state.get("execution_mode") or "native").strip().lower()
+
+        try:
+            plan_preview = state.get("plan")
+            trace(self.logger, "grisha_enter", {
+                "step_count": state.get("step_count"),
+                "replan_count": state.get("replan_count"),
+                "plan_len": len(plan_preview) if isinstance(plan_preview, list) else 0,
+                "task_type": state.get("task_type"),
+                "gui_mode": gui_mode,
+                "execution_mode": execution_mode,
+                "last_msg_preview": str(last_msg)[:200],
+            })
+        except Exception:
+            pass
         
         # Check for code changes in critical directories and run tests
         test_results = ""
@@ -812,8 +826,7 @@ class TrinityRuntime:
             )
             
             try:
-                from tui.logger import get_logger, trace
-                trace(get_logger("core.trinity"), "grisha_verification_check", {
+                trace(self.logger, "grisha_verification_check", {
                     "task_type": task_type,
                     "critical_changes": has_critical_changes,
                     "changed_files": changed_files,
@@ -851,6 +864,14 @@ class TrinityRuntime:
             response = self.llm.invoke(prompt.format_messages())
             content = response.content
             tool_calls = response.tool_calls if hasattr(response, 'tool_calls') else []
+            
+            try:
+                trace(self.logger, "grisha_llm", {
+                    "tool_calls": len(tool_calls) if isinstance(tool_calls, list) else 0,
+                    "content_preview": str(content)[:200],
+                })
+            except Exception:
+                pass
             
             # Execute Tools
             results = []
@@ -969,17 +990,34 @@ class TrinityRuntime:
 
         # Preserve existing messages and add new one
         updated_messages = list(context) + [AIMessage(content=content)]
-        return {
+
+        try:
+            trace(self.logger, "grisha_decision", {"next_agent": next_agent, "last_step_status": step_status})
+        except Exception:
+            pass
+
+        out = {
             "current_agent": next_agent, 
             "messages": updated_messages,
             "last_step_status": step_status,
         }
+        if next_agent == "atlas" and step_status in {"failed", "uncertain"}:
+            try:
+                current_replan = int(state.get("replan_count") or 0)
+            except Exception:
+                current_replan = 0
+            out["replan_count"] = current_replan + 1
+            out["plan"] = None
+            try:
+                trace(self.logger, "replan_triggered", {"replan_count": out["replan_count"], "status": step_status})
+            except Exception:
+                pass
+        return out
 
     def _router(self, state: TrinityState):
         current = state["current_agent"]
         try:
-            from tui.logger import get_logger, trace
-            trace(get_logger("core.trinity"), "router_decision", {"current": current, "next": current})  # Router typically just returns current agent for StateGraph? No, state graph edge logic uses this.
+            trace(self.logger, "router_decision", {"current": current, "next": current})  # Router typically just returns current agent for StateGraph? No, state graph edge logic uses this.
         except Exception:
             pass
         return current
@@ -1299,6 +1337,7 @@ class TrinityRuntime:
         repo_changes: Dict[str, Any],
         last_agent: str,
         last_message: str,
+        replan_count: int = 0,
         commit_hash: Optional[str] = None,
     ) -> str:
         lines: List[str] = []
@@ -1306,6 +1345,7 @@ class TrinityRuntime:
         lines.append("")
         lines.append(f"Task: {str(task or '').strip()}")
         lines.append(f"Outcome: {outcome}")
+        lines.append(f"Replans: {replan_count}")
         if commit_hash:
             lines.append(f"Зміни закомічені: {commit_hash}")
         lines.append(f"Last agent: {last_agent}")
@@ -1445,18 +1485,47 @@ class TrinityRuntime:
         last_state_update: Dict[str, Any] = {}
         last_agent_message: str = ""
         last_agent_label: str = ""
+        last_replan_count: int = 0
 
+        try:
+            trace(self.logger, "trinity_run_start", {
+                "task_type": task_type,
+                "requires_windsurf": bool(requires_windsurf),
+                "gui_mode": gm,
+                "execution_mode": em,
+                "recursion_limit": recursion_limit,
+                "input_preview": str(input_text)[:200],
+            })
+        except Exception:
+            pass
+ 
         for event in self.workflow.stream(initial_state, config={"recursion_limit": recursion_limit}):
             try:
                 # Keep track of the last emitted node/message for the final report.
                 for node_name, state_update in (event or {}).items():
                     last_node_name = str(node_name or "")
                     last_state_update = state_update if isinstance(state_update, dict) else {}
+                    if isinstance(last_state_update, dict) and "replan_count" in last_state_update:
+                        try:
+                            last_replan_count = int(last_state_update.get("replan_count") or 0)
+                        except Exception:
+                            pass
                     msgs = last_state_update.get("messages", []) if isinstance(last_state_update, dict) else []
                     if msgs:
                         m = msgs[-1]
                         last_agent_message = str(getattr(m, "content", "") or "")
                     last_agent_label = str(node_name or "")
+
+                    try:
+                        trace(self.logger, "trinity_graph_event", {
+                            "node": last_node_name,
+                            "current_agent": last_state_update.get("current_agent") if isinstance(last_state_update, dict) else None,
+                            "last_step_status": last_state_update.get("last_step_status") if isinstance(last_state_update, dict) else None,
+                            "step_count": last_state_update.get("step_count") if isinstance(last_state_update, dict) else None,
+                            "replan_count": last_replan_count,
+                        })
+                    except Exception:
+                        pass
             except Exception:
                 pass
             yield event
@@ -1533,6 +1602,7 @@ class TrinityRuntime:
             repo_changes=repo_changes,
             last_agent=last_agent_label or last_node_name or "unknown",
             last_message=last_agent_message,
+            replan_count=last_replan_count,
         )
 
         if outcome in {"completed", "success"}:
@@ -1547,8 +1617,18 @@ class TrinityRuntime:
             repo_changes=repo_changes,
             last_agent=last_agent_label or last_node_name or "unknown",
             last_message=last_agent_message,
+            replan_count=last_replan_count,
             commit_hash=commit_hash,
         )
+
+        try:
+            trace(self.logger, "trinity_run_end", {
+                "outcome": outcome,
+                "last_agent": last_agent_label or last_node_name or "unknown",
+                "replan_count": last_replan_count,
+            })
+        except Exception:
+            pass
 
         if commit_hash is None:
             try:
