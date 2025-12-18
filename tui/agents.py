@@ -457,6 +457,15 @@ def run_graph_agent_task(
         )
         
         log("[ATLAS] Initializing NeuroMac System (Atlas/Tetyana/Grisha)...", "info")
+
+        # Initial message for Agents panel
+        try:
+            from tui.render import get_agent_messages_buffer
+            buf = get_agent_messages_buffer()
+            # Clear previous context if needed, or just append
+            buf.add(AgentType.ATLAS, "[VOICE] Розпочинаю виконання...", is_technical=False)
+        except Exception:
+            pass
         
         use_stream = bool(getattr(state, "ui_streaming", True))
         accumulated_by_agent: Dict[str, str] = {}

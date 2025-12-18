@@ -42,6 +42,10 @@ class MessageFilter:
         "bytes_written:",
         "error_type:",
         "permission_required",
+        "tool_calls",
+        '"tool_calls":',
+        "final_answer",
+        "\"final_answer\":",
     ]
     
     @staticmethod
@@ -81,6 +85,10 @@ class MessageFilter:
             
             # Skip pure JSON lines
             if line.strip().startswith("{") or line.strip().startswith("["):
+                continue
+            if line.strip().startswith('"'):  # e.g. "tool_calls": [...]
+                continue
+            if line.strip() in ("}", "]", "},", "],"):
                 continue
             
             clean_lines.append(line)

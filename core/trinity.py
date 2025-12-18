@@ -209,7 +209,7 @@ class TrinityRuntime:
         builder.add_conditional_edges(
             "tetyana", 
             self._router, 
-            {"grisha": "grisha", "atlas": "atlas", "end": END}
+            {"grisha": "grisha", "atlas": "atlas", "tetyana": "tetyana", "end": END}
         )
         builder.add_conditional_edges(
             "grisha", 
