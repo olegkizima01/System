@@ -384,8 +384,8 @@ class TrinityRuntime:
                 
                 planning_messages.extend(history)
                 
-                # Add a strong reminder of the current objective based on context
-                reminder_msg = f"Проаналізуй історію вище. Поточний стан/контекст: {rag_context + routing_hint}\nЗараз ми на кроці {step_count}. Які наступні кроки згідно з оригінальним запитом? Поверни JSON."
+                # Add a strong reminder of the current objective based on context (ACTION-ORIENTED)
+                reminder_msg = f"ПРІОРИТЕТ: Дія (Tools). УНИКАЙ мета-планування та 'аналізу'. Якщо потрібен пошук — РОБИ ПОШУК. Якщо CAPTCHA — Hybrid Physical Solver (vision_analyze, mouse). Поточний контекст: {rag_context + routing_hint}\nЗараз ми на кроці {step_count}. Наступні кроки? JSON."
                 planning_messages.append(HumanMessage(content=reminder_msg))
 
                 plan_resp = self.llm.invoke(planning_messages)
@@ -565,6 +565,18 @@ class TrinityRuntime:
             content = response.content
             tool_calls = response.tool_calls if hasattr(response, 'tool_calls') else []
             
+            # Anti-acknowledgment check: if no tools and content looks like "I understand/will do"
+            if not tool_calls and content:
+                lower_content = content.lower()
+                acknowledgment_patterns = ["зрозуміла", "зрозумів", "ок", "добре", "починаю", "буду використовувати"]
+                if any(p in lower_content for p in acknowledgment_patterns) and len(lower_content) < 300:
+                    if self.verbose: print("⚠️ [Tetyana] Acknowledgment loop detected. Forcing retry...")
+                    new_msg = AIMessage(content=f"[VOICE] Error: No tool call provided. STOP TALKING, USE A TOOL. {content}")
+                    return {
+                        "messages": context + [new_msg],
+                        "last_step_status": "failed" # This will trigger replan or retry
+                    }
+
             try:
                 trace(self.logger, "tetyana_llm", {
                     "tool_calls": len(tool_calls) if isinstance(tool_calls, list) else 0,
@@ -858,6 +870,8 @@ class TrinityRuntime:
         if not context:
             return {"current_agent": "end", "messages": [AIMessage(content="[VOICE] Немає контексту для перевірки.")]}
         last_msg = context[-1].content
+        if isinstance(last_msg, str) and len(last_msg) > 50000:
+            last_msg = last_msg[:45000] + "\n\n[... TRUNCATED DUE TO SIZE ...]\n\n" + last_msg[-5000:]
         tool_calls = [] # Initialize for scope safety
 
         gui_mode = str(state.get("gui_mode") or "auto").strip().lower()
@@ -1033,7 +1047,10 @@ class TrinityRuntime:
         
         # 5. Success / Failure / Indecision
         # LLM Markers [VERIFIED] have HIGHEST priority
-        if has_test_failure:
+        if "[captcha]" in lower_content:
+            step_status = "uncertain"
+            next_agent = "atlas"
+        elif has_test_failure:
             step_status = "failed"
             next_agent = "atlas"
         elif has_tool_error_in_context:
@@ -1099,7 +1116,8 @@ class TrinityRuntime:
             current_streak = 0  # Reset on definite decision (success)
         
         # If 3+ consecutive uncertain decisions, force to success with warning
-        if step_status == "uncertain" and current_streak >= 3:
+        # CRITICAL: Do NOT force success if CAPTCHA is active!
+        if step_status == "uncertain" and current_streak >= 3 and "[captcha]" not in lower_content:
             if self.verbose:
                 print(f"⚠️ [Grisha] Uncertainty streak ({current_streak}) reached limit → forcing SUCCESS")
             try:
@@ -1595,16 +1613,15 @@ class TrinityRuntime:
         em = str(execution_mode or "native").strip().lower() or "native"
         if em not in {"native", "gui"}:
             em = "native"
-
         if recursion_limit is None:
             try:
-                recursion_limit = int(os.getenv("TRINITY_RECURSION_LIMIT", "100"))
+                recursion_limit = int(os.getenv("TRINITY_RECURSION_LIMIT", "200"))
             except Exception:
-                recursion_limit = 100
+                recursion_limit = 200
         try:
             recursion_limit = int(recursion_limit)
         except Exception:
-            recursion_limit = 100
+            recursion_limit = 200
         if recursion_limit < 25:
             recursion_limit = 25
 

@@ -83,12 +83,17 @@ def load_image_png_b64(image_path: str) -> Optional[str]:
 
     return None
 
-def analyze_with_copilot(image_path: str, prompt: str = "Describe the user interface state in detail.") -> Dict[str, Any]:
+def analyze_with_copilot(image_path: str = None, prompt: str = "Describe the user interface state in detail.") -> Dict[str, Any]:
     """
     Uses CopilotLLM (GPT-4-Vision) to analyze a local image file.
+    If image_path is none or doesn't exist, takes a fresh screenshot first.
     """
     if not image_path or not os.path.exists(image_path):
-        return {"status": "error", "error": f"Image not found: {image_path}"}
+        from system_ai.tools.screenshot import take_screenshot
+        res = take_screenshot()
+        if res.get("status") != "success":
+            return {"status": "error", "error": f"Image not found and failed to take screenshot: {res.get('error')}"}
+        image_path = res.get("path")
         
     try:
         from providers.copilot import CopilotLLM

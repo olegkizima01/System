@@ -90,28 +90,33 @@ class AdaptiveVerifier:
     
     def _ensure_verify_steps(self, plan: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """
-        Fallback: manually ensure verify steps after critical actions.
+        Fallback: manually ensure verify steps ONLY after high-risk actions.
         """
+        # Reduced set of truly critical keywords to avoid plan bloat
         critical_keywords = [
-            "create", "write", "delete", "remove", "modify", "change",
-            "shell", "run", "execute", "git", "commit", "push", "pull",
-            "click", "press", "type", "open", "close", "navigate"
+            "create", "delete", "remove", "git", "commit", "push", "pull",
+            "shell", "run", "execute", "sudo"
         ]
         
         enhanced_plan = []
         for step in plan:
             enhanced_plan.append(step)
             
-            # Check if this is a critical step that needs verification
             step_type = step.get("type", "execute").lower()
             description = step.get("description", "").lower()
             
-            is_critical = (
-                step_type == "execute" and
-                any(kw in description for kw in critical_keywords)
-            )
+            # Don't add verify if it's already a verify step or similar
+            if step_type != "execute":
+                continue
+                
+            is_critical = any(kw in description for kw in critical_keywords)
             
-            # Add verify step after critical actions
+            # Only add verify if it's NOT already followed by one
+            if is_critical and plan.index(step) + 1 < len(plan):
+                next_step = plan[plan.index(step) + 1]
+                if next_step.get("type") == "verify":
+                    continue
+
             if is_critical:
                 verify_step = {
                     "type": "verify",
