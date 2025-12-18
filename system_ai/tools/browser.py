@@ -26,7 +26,12 @@ class BrowserManager:
             self._playwright = sync_playwright().start()
         
         if not self._browser:
-            self._browser = self._playwright.chromium.launch(headless=headless)
+            try:
+                self._browser = self._playwright.chromium.launch(headless=headless)
+            except Exception as e:
+                if "Executable doesn't exist" in str(e):
+                    raise Exception(f"Browser executables not found. Please run 'playwright install' in the terminal. Original error: {e}")
+                raise e
             self._context = self._browser.new_context()
             self._page = self._context.new_page()
 
