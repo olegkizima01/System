@@ -146,16 +146,16 @@ def browser_get_content() -> str:
         return json.dumps({"status": "error", "error": str(e)})
 
 def browser_snapshot() -> str:
-    """Capture accessibility snapshot of the current page (better than screenshot for LLM)."""
+    """Capture accessibility snapshot of the current page (legacy)."""
     try:
         manager = BrowserManager.get_instance()
         page = manager.get_page()
-        snapshot = page.accessibility.snapshot()
+        # accessibility.snapshot() was removed in v1.50+ 
         return json.dumps({
             "status": "success",
-            "snapshot": snapshot,
             "url": page.url,
-            "title": page.title()
+            "title": page.title(),
+            "note": "A11y snapshot is not available in v1.50+. Use browser_get_content."
         }, ensure_ascii=False)
     except Exception as e:
         return json.dumps({"status": "error", "error": str(e)})

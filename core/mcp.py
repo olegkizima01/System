@@ -38,7 +38,10 @@ from system_ai.tools.browser import (
     browser_execute_script,
     browser_ensure_ready,
     browser_press_key,
-    browser_screenshot
+    browser_screenshot,
+    browser_snapshot,
+    browser_navigate,
+    browser_close
 )
 
 class ExternalMCPProvider:

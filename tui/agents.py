@@ -634,7 +634,9 @@ def run_graph_agent_task(
         event_count = 0
         for event in runtime.run(user_text, gui_mode=gui_mode_val, execution_mode=exec_mode):
             event_count += 1
+            print(f"DEBUG: Event {event_count} received")
             for node_name, state_update in event.items():
+                print(f"DEBUG: Processing node {node_name}")
                 agent_name = node_name.capitalize()
                 tag = str(node_name or agent_name or "TRINITY").strip().upper() or "TRINITY"
                 messages = state_update.get("messages", [])
@@ -680,6 +682,8 @@ def run_graph_agent_task(
     except Exception as e:
         tail_active.clear()
         err_msg = traceback.format_exc()
+        print(f"DEBUG ERROR: {e}")
+        print(err_msg)
         log(f"[TRINITY] Runtime error: {e}", "error")
         # Log to hidden debug log if needed, or just standard log
         # For now, let's put it in the info log so we can see it
