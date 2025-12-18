@@ -9,17 +9,7 @@ Last message:
 [VOICE] Ліміт перепланувань (10) досягнуто. Потрібна допомога.
 
 Changed files:
-- core/trinity.py
-- tests/test_grisha_routing.py
-- tests/test_intent_routing.py
-- tui/layout.py
-
-Diff stat:
-core/trinity.py              |  7 ++++---
- tests/test_grisha_routing.py | 11 ++++++++++-
- tests/test_intent_routing.py |  3 +++
- tui/layout.py                | 12 ++----------
- 4 files changed, 19 insertions(+), 14 deletions(-)
+- (no uncommitted changes detected)
 
 Verification:
 - status: unknown (no explicit signal)
