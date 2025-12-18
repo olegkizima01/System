@@ -4,19 +4,15 @@
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 119
-- **Files Skipped**: 13520
+- **Files Skipped**: 13527
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-18 03:19:42
+- **Generated**: 2025-12-18 03:23:51
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-2025-12-18 02:49:03 | INFO     | MainThread | system_cli.cli | cli_main:2460 | Starting TUI mode
-2025-12-18 02:49:03 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in TUI mode
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2462, in cli_main
     run_tui()
   File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1619, in run_tui
     show_menu=Condition(lambda: state.menu_level != MenuLevel.NONE), # Temporary placeholder
@@ -113,6 +109,10 @@ NameError: name 'Condition' is not defined
 2025-12-18 03:11:12 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:67 | [Verifier] Plan optimized: 20 → 10 steps (added -10 verify steps)
 2025-12-18 03:11:12 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generated", "steps": 10, "step_count": 1, "replan_count": 0}
 2025-12-18 03:11:12 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_dispatch", "next_agent": "grisha", "step_type": "verify", "step_count": 1, "replan_count": 0, "description_preview": "Перевірити, що система стабільна і готова до взаємодії"}
+2025-12-18 03:19:49 | INFO     | MainThread | system_cli.cli | cli_main:2464 | TUI mode exited successfully
+2025-12-18 03:19:52 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: []
+2025-12-18 03:19:52 | DEBUG    | MainThread | system_cli.cli | cli_main:2458 | Parsed command: None
+2025-12-18 03:19:52 | INFO     | MainThread | system_cli.cli | cli_main:2461 | Starting TUI mode
 ```
 
 ---
@@ -144,18 +144,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 37246 +-----------------------------------------
- 1 file changed, 58 insertions(+), 37188 deletions(-)
+ project_structure_final.txt | 37261 +-----------------------------------------
+ 1 file changed, 6 insertions(+), 37255 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-6c42661 feat: Implement real-time TUI log streaming with categorized tool execution feedback, refine menu click handling, and enhance Trinity's plan context.
+6cdc4e2 tui: implement auto-switching to agents panel on menu exit and fix mouse interaction
+f94778b feat: Implement real-time TUI log streaming with categorized tool execution feedback, refine menu click handling, and enhance Trinity's plan context.
 a5dbf4f Trinity task completed: Привіт
 031eba4 feat: Add prompt_toolkit Condition import to cli.py
 c315869 feat: Implement double-click menu activation, improve editor fallback logic, and refine UI button behavior and input buffer display.
-09807d9 Update: Add latest response
 ```
 
 ---
@@ -11320,7 +11320,7 @@ if __name__ == "__main__":
 test content
 ```
 
-### `project_structure_final.txt` (505.2 KB)
+### `project_structure_final.txt` (505.3 KB)
 
 ```text
 # System — Project Structure
@@ -11329,19 +11329,15 @@ test content
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 119
-- **Files Skipped**: 13520
+- **Files Skipped**: 13527
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-18 03:19:42
+- **Generated**: 2025-12-18 03:23:51
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-2025-12-18 02:49:03 | INFO     | MainThread | system_cli.cli | cli_main:2460 | Starting TUI mode
-2025-12-18 02:49:03 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in TUI mode
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2462, in cli_main
     run_tui()
   File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1619, in run_tui
     show_menu=Condition(lambda: state.menu_level != MenuLevel.NONE), # Temporary placeholder
@@ -11438,6 +11434,10 @@ NameError: name 'Condition' is not defined
 2025-12-18 03:11:12 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:67 | [Verifier] Plan optimized: 20 → 10 steps (added -10 verify steps)
 2025-12-18 03:11:12 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generated", "steps": 10, "step_count": 1, "replan_count": 0}
 2025-12-18 03:11:12 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_dispatch", "next_agent": "grisha", "step_type": "verify", "step_count": 1, "replan_count": 0, "description_preview": "Перевірити, що система стабільна і готова до взаємодії"}
+2025-12-18 03:19:49 | INFO     | MainThread | system_cli.cli | cli_main:2464 | TUI mode exited successfully
+2025-12-18 03:19:52 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: []
+2025-12-18 03:19:52 | DEBUG    | MainThread | system_cli.cli | cli_main:2458 | Parsed command: None
+2025-12-18 03:19:52 | INFO     | MainThread | system_cli.cli | cli_main:2461 | Starting TUI mode
 ```
 
 ---
@@ -11469,18 +11469,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 37246 +-----------------------------------------
- 1 file changed, 58 insertions(+), 37188 deletions(-)
+ project_structure_final.txt | 37261 +-----------------------------------------
+ 1 file changed, 6 insertions(+), 37255 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-6c42661 feat: Implement real-time TUI log streaming with categorized tool execution feedback, refine menu click handling, and enhance Trinity's plan context.
+6cdc4e2 tui: implement auto-switching to agents panel on menu exit and fix mouse interaction
+f94778b feat: Implement real-time TUI log streaming with categorized tool execution feedback, refine menu click handling, and enhance Trinity's plan context.
 a5dbf4f Trinity task completed: Привіт
 031eba4 feat: Add prompt_toolkit Condition import to cli.py
 c315869 feat: Implement double-click menu activation, improve editor fallback logic, and refine UI button behavior and input buffer display.
-09807d9 Update: Add latest response
 ```
 
 ---
@@ -32584,7 +32584,7 @@ def normalize_lang(code: Optional[str]) -> str:
     return c
 ```
 
-### `tui/keybindings.py` (22.1 KB)
+### `tui/keybindings.py` (22.2 KB)
 
 ```python
 from __future__ import annotations
@@ -32777,6 +32777,7 @@ def build_keybindings(
         else:
             state.menu_level = MenuLevel.NONE
             state.menu_index = 0
+            state.ui_scroll_target = "agents"
 
     @kb.add("escape")
     @kb.add("q")
@@ -32784,6 +32785,7 @@ def build_keybindings(
         if state.menu_level == MenuLevel.MAIN:
             state.menu_level = MenuLevel.NONE
             state.menu_index = 0
+            state.ui_scroll_target = "agents"
         elif state.menu_level in {
             MenuLevel.CUSTOM_TASKS,
             MenuLevel.CLEANUP_EDITORS,
@@ -37361,4 +37363,4 @@ graph TD
 ## Summary
 
 - **Total Files**: 119
-- **Skipped**: 13520
+- **Skipped**: 13527

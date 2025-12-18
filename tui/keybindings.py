@@ -188,6 +188,7 @@ def build_keybindings(
         else:
             state.menu_level = MenuLevel.NONE
             state.menu_index = 0
+            state.ui_scroll_target = "agents"
 
     @kb.add("escape")
     @kb.add("q")
@@ -195,6 +196,7 @@ def build_keybindings(
         if state.menu_level == MenuLevel.MAIN:
             state.menu_level = MenuLevel.NONE
             state.menu_index = 0
+            state.ui_scroll_target = "agents"
         elif state.menu_level in {
             MenuLevel.CUSTOM_TASKS,
             MenuLevel.CLEANUP_EDITORS,
