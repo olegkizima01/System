@@ -364,8 +364,21 @@ class TrinityRuntime:
                 except Exception:
                     routing_hint = ""
 
-                plan_prompt = get_atlas_plan_prompt(last_msg, context=(rag_context + routing_hint))
-                plan_resp = self.llm.invoke(plan_prompt.format_messages())
+                # Use specific planning prompt with HISTORY
+                from core.agents.atlas import ATLAS_PLANNING_PROMPT
+                
+                # Construct messages: System Prompt + History + Context/Instruction
+                planning_messages = [SystemMessage(content=ATLAS_PLANNING_PROMPT)]
+                
+                # Add history (excluding the very last one if it's identical to what we'd append, but usually safe)
+                # We want the planner to see the whole conversation to know what was done and what was asked.
+                planning_messages.extend(state.get("messages", []))
+                
+                # Add a strong reminder of the current objective based on context
+                reminder_msg = f"Проаналізуй історію вище. Поточний стан/контекст: {rag_context + routing_hint}\nЗараз ми на кроці {step_count}. Які наступні кроки згідно з оригінальним запитом? Поверни JSON."
+                planning_messages.append(HumanMessage(content=reminder_msg))
+
+                plan_resp = self.llm.invoke(planning_messages)
                 
                 import re
                 json_str = plan_resp.content
