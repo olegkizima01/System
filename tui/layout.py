@@ -175,27 +175,27 @@ def build_app(
     def make_scroll_handler(name: str):
         def _handler(mouse_event: Any):
             from prompt_toolkit.mouse_events import MouseEventType
+            # Scroll multiple lines for better UX
             if mouse_event.event_type == MouseEventType.SCROLL_UP:
-                for _ in range(3):
-                    from prompt_toolkit.application.current import get_app
-                    app = get_app()
-                    for w in app.layout.find_all_windows():
-                        if getattr(w, "name", None) == name:
-                            info = w.render_info
-                            if info:
-                                w.vertical_scroll = max(0, w.vertical_scroll - 1)
+                from prompt_toolkit.application.current import get_app
+                app = get_app()
+                for w in app.layout.find_all_windows():
+                    if getattr(w, "name", None) == name:
+                        w.vertical_scroll = max(0, w.vertical_scroll - 3)
                 force_ui_update()
                 return None # Handled
             elif mouse_event.event_type == MouseEventType.SCROLL_DOWN:
-                for _ in range(3):
-                    from prompt_toolkit.application.current import get_app
-                    app = get_app()
-                    for w in app.layout.find_all_windows():
-                        if getattr(w, "name", None) == name:
-                            info = w.render_info
-                            if info:
-                                max_scroll = max(0, info.content_height - info.window_height)
-                                w.vertical_scroll = min(max_scroll, w.vertical_scroll + 1)
+                from prompt_toolkit.application.current import get_app
+                app = get_app()
+                for w in app.layout.find_all_windows():
+                    if getattr(w, "name", None) == name:
+                        info = w.render_info
+                        if info:
+                            max_scroll = max(0, info.content_height - info.window_height)
+                            w.vertical_scroll = min(max_scroll, w.vertical_scroll + 3)
+                        else:
+                            # Fallback if no render info yet
+                            w.vertical_scroll += 3
                 force_ui_update()
                 return None # Handled
             return NotImplemented
@@ -205,14 +205,14 @@ def build_app(
     log_control = FormattedTextControl(
         safe_get_logs, 
         get_cursor_position=_safe_cursor_position(safe_get_logs, get_log_cursor_position),
-        show_cursor=True,
+        show_cursor=False, # Disable to allow free mouse scrolling
         focusable=True,
     )
     log_control.mouse_handler = make_scroll_handler("log")
 
     log_window = Window(
         log_control,
-        wrap_lines=False,
+        wrap_lines=True,
         right_margins=[ScrollbarMargin(display_arrows=True)],
         style="class:log.window", # ensure background
     )
@@ -226,14 +226,14 @@ def build_app(
         agent_control = FormattedTextControl(
             safe_get_agent_messages,
             get_cursor_position=_safe_cursor_position(safe_get_agent_messages, get_agent_cursor_position) if get_agent_cursor_position else None,
-            show_cursor=True,
+            show_cursor=False, # Disable to allow free mouse scrolling
             focusable=True,
         )
         agent_control.mouse_handler = make_scroll_handler("agents")
 
         agent_messages_window = Window(
             agent_control,
-            wrap_lines=False,
+            wrap_lines=True,
             style="class:agent.panel",
             right_margins=[ScrollbarMargin(display_arrows=True)],
         )

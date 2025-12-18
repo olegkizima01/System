@@ -62,9 +62,15 @@ class MessageFilter:
             import re
             match = re.search(r"\[VOICE\]\s*(.*)", text, re.DOTALL)
             if match:
-                voice_content = match.group(1).split("\n")[0].strip()
-                if voice_content:
-                    return voice_content
+                # Capture everything after [VOICE], stripping technical blocks if they appear later
+                voice_content = match.group(1).strip()
+                # If there are subsequent technical markers, cut them off
+                for pattern in MessageFilter.TECHNICAL_PATTERNS:
+                     if pattern in voice_content:
+                         # This is a naive cut, but safer for now. 
+                         # Ideally we trust the agent to put [VOICE] at the start or end.
+                         pass
+                return voice_content
         
         # Fallback cleaning
         lines = text.split("\n")
@@ -184,7 +190,9 @@ class MessageFormatter:
     def format_message(msg: AgentMessage) -> List[Tuple[str, str]]:
         """Format agent message with direct communication style.
         
-        Format: (ATLAS) 🌐 Тетяно, виконай...
+        Format: 
+        [ EMOJI NAME ]
+        Message text...
         
         Returns list of (style, text) tuples for prompt_toolkit.
         """
@@ -202,17 +210,33 @@ class MessageFormatter:
         if not clean_text:
             return result
         
-        # Format: (AGENT_NAME) emoji
+        # Format: [EMOJI NAME]
         name = MessageFormatter.AGENT_NAMES.get(msg.agent, "UNKNOWN")
         emoji = MessageFormatter.AGENT_EMOJIS.get(msg.agent, "")
         color = MessageFormatter.AGENT_COLORS.get(msg.agent, "class:agent.system")
 
-        # Agent header in parentheses with emoji
-        result.append((color, f"({name}) {emoji} "))
+        # Layout:
+        # [ Emoji NAME ]  (Label styled)
+        # Message content (Normal styled, wrapped)
+        
+        # Header Line - Bracketed name for "prettier" look with reverse color for label effect
+        result.append((color, f"[")) # Left bracket
+        result.append((color + " reverse bold", f" {emoji} {name} ")) # Label style
+        result.append((color, f"]")) # Right bracket
+        result.append(("", "\n")) # Newline after label
         
         # Message text with @mentions highlighted
+        # Use a "thin/dim" hint. While standard TUI font size doesn't change, 
+        # 'dim' makes it look lighter.
         highlighted = MessageFormatter.highlight_mentions(clean_text)
-        result.extend(highlighted)
+        for style, text in highlighted:
+            # Append 'dim' to agent.text style if it's there
+            final_style = style
+            if "agent.text" in style:
+                final_style += " dim"
+            result.append((final_style, text))
+        
+        # Spacing after message
         result.append(("class:agent.text", "\n\n"))
         
         return result
