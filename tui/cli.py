@@ -1684,9 +1684,8 @@ def run_tui() -> None:
         if buff.text.strip():
             buff.validate_and_handle()
 
-    @input_kb.add("shift-enter")
-    @input_kb.add("c-enter")
     @input_kb.add("escape", "enter")
+    @input_kb.add("c-j")  # Often Ctrl+Enter in some terminals
     def _(event):
         event.current_buffer.insert_text("\n")
 

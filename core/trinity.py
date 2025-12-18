@@ -455,6 +455,20 @@ class TrinityRuntime:
         requires_windsurf = bool(state.get("requires_windsurf") or False)
         dev_edit_mode = str(state.get("dev_edit_mode") or ("windsurf" if requires_windsurf else "cli")).strip().lower()
         
+        try:
+            plan_preview = state.get("plan")
+            trace(self.logger, "tetyana_enter", {
+                "task_type": task_type,
+                "requires_windsurf": requires_windsurf,
+                "dev_edit_mode": dev_edit_mode,
+                "execution_mode": execution_mode,
+                "gui_mode": gui_mode,
+                "gui_fallback_attempted": gui_fallback_attempted,
+                "plan_len": len(plan_preview) if isinstance(plan_preview, list) else 0,
+                "last_msg_preview": str(last_msg)[:200],
+            })
+        except Exception:
+            pass
         
         routing_hint = ""
         try:
@@ -483,6 +497,14 @@ class TrinityRuntime:
             response = bound_llm.invoke(prompt.format_messages())
             content = response.content
             tool_calls = response.tool_calls if hasattr(response, 'tool_calls') else []
+            
+            try:
+                trace(self.logger, "tetyana_llm", {
+                    "tool_calls": len(tool_calls) if isinstance(tool_calls, list) else 0,
+                    "content_preview": str(content)[:200],
+                })
+            except Exception:
+                pass
             
             results = []
             had_failure = False
@@ -647,6 +669,11 @@ class TrinityRuntime:
                             updated_messages = list(context) + [
                                 AIMessage(content="[Tetyana] Windsurf tool failed. Switching DEV editing fallback to CLI mode.")
                             ]
+                            
+                            try:
+                                trace(self.logger, "tetyana_windsurf_fallback", {"tool": name, "dev_edit_mode": dev_edit_mode})
+                            except Exception:
+                                pass
                             return {
                                 "current_agent": "atlas",
                                 "messages": updated_messages,
@@ -700,6 +727,11 @@ class TrinityRuntime:
             ):
                 # Tell the graph to retry this step in GUI mode.
                 updated_messages = list(context) + [AIMessage(content=f"[Tetyana] Native execution had failures. Switching to GUI fallback mode.")]
+                
+                try:
+                    trace(self.logger, "tetyana_gui_fallback", {"from": execution_mode, "to": "gui"})
+                except Exception:
+                    pass
                 return {
                     "current_agent": "tetyana",
                     "messages": updated_messages,
@@ -717,6 +749,11 @@ class TrinityRuntime:
         # If paused, return to atlas with pause_info
         if pause_info:
             updated_messages = list(context) + [AIMessage(content=f"[ПАУЗОВАНО] {pause_info['message']}")]
+            
+            try:
+                trace(self.logger, "tetyana_paused", {"pause_info": pause_info})
+            except Exception:
+                pass
             return {
                 "current_agent": "atlas",
                 "messages": updated_messages,
@@ -725,6 +762,17 @@ class TrinityRuntime:
         
         # Preserve existing messages and add new one
         updated_messages = list(context) + [AIMessage(content=content)]
+        
+        try:
+            trace(self.logger, "tetyana_exit", {
+                "next_agent": "grisha",
+                "last_step_status": "success",
+                "execution_mode": execution_mode,
+                "gui_mode": gui_mode,
+                "dev_edit_mode": dev_edit_mode,
+            })
+        except Exception:
+            pass
         return {
             "current_agent": "grisha", 
             "messages": updated_messages,

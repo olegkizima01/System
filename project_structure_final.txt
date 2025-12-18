@@ -4,32 +4,31 @@
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 119
-- **Files Skipped**: 13463
+- **Files Skipped**: 13472
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-18 02:30:11
+- **Generated**: 2025-12-18 02:34:04
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-    keys = tuple(_parse_key(k) for k in keys)
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in <genexpr>
     keys = tuple(_parse_key(k) for k in keys)
                  ^^^^^^^^^^^^^
   File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 455, in _parse_key
     raise ValueError(f"Invalid key: {key}")
-ValueError: Invalid key: s-enter
-2025-12-18 02:27:17 | ERROR    | MainThread | system_cli.cli | log_exception:192 | Exception occurred in main()
+ValueError: Invalid key: shift-enter
+2025-12-18 02:30:25 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in main()
 Traceback (most recent call last):
   File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2624, in main
     cli_main(sys.argv[1:])
   File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2462, in cli_main
     run_tui()
   File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1687, in run_tui
-    @input_kb.add("s-enter")
-     ^^^^^^^^^^^^^^^^^^^^^^^
+    @input_kb.add("shift-enter")
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
   File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in add
     keys = tuple(_parse_key(k) for k in keys)
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -38,17 +37,17 @@ Traceback (most recent call last):
                  ^^^^^^^^^^^^^
   File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 455, in _parse_key
     raise ValueError(f"Invalid key: {key}")
-ValueError: Invalid key: s-enter
-2025-12-18 02:27:27 | INFO     | MainThread | system_cli.cli | cli_main:2415 | CLI started with arguments: []
-2025-12-18 02:27:27 | DEBUG    | MainThread | system_cli.cli | cli_main:2457 | Parsed command: None
-2025-12-18 02:27:27 | INFO     | MainThread | system_cli.cli | cli_main:2460 | Starting TUI mode
-2025-12-18 02:27:27 | ERROR    | MainThread | system_cli.cli | log_exception:192 | Exception occurred in TUI mode
+ValueError: Invalid key: shift-enter
+2025-12-18 02:30:45 | INFO     | MainThread | system_cli.cli | cli_main:2415 | CLI started with arguments: []
+2025-12-18 02:30:45 | DEBUG    | MainThread | system_cli.cli | cli_main:2457 | Parsed command: None
+2025-12-18 02:30:45 | INFO     | MainThread | system_cli.cli | cli_main:2460 | Starting TUI mode
+2025-12-18 02:30:45 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in TUI mode
 Traceback (most recent call last):
   File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2462, in cli_main
     run_tui()
   File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1687, in run_tui
-    @input_kb.add("s-enter")
-     ^^^^^^^^^^^^^^^^^^^^^^^
+    @input_kb.add("shift-enter")
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
   File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in add
     keys = tuple(_parse_key(k) for k in keys)
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -57,53 +56,16 @@ Traceback (most recent call last):
                  ^^^^^^^^^^^^^
   File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 455, in _parse_key
     raise ValueError(f"Invalid key: {key}")
-ValueError: Invalid key: s-enter
-2025-12-18 02:27:27 | ERROR    | MainThread | system_cli.cli | log_exception:192 | Exception occurred in main()
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2624, in main
-    cli_main(sys.argv[1:])
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2462, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1687, in run_tui
-    @input_kb.add("s-enter")
-     ^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in add
-    keys = tuple(_parse_key(k) for k in keys)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in <genexpr>
-    keys = tuple(_parse_key(k) for k in keys)
-                 ^^^^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 455, in _parse_key
-    raise ValueError(f"Invalid key: {key}")
-ValueError: Invalid key: s-enter
-2025-12-18 02:27:45 | INFO     | MainThread | system_cli.cli | cli_main:2415 | CLI started with arguments: []
-2025-12-18 02:27:45 | DEBUG    | MainThread | system_cli.cli | cli_main:2457 | Parsed command: None
-2025-12-18 02:27:45 | INFO     | MainThread | system_cli.cli | cli_main:2460 | Starting TUI mode
-2025-12-18 02:27:45 | ERROR    | MainThread | system_cli.cli | log_exception:192 | Exception occurred in TUI mode
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2462, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1687, in run_tui
-    @input_kb.add("s-enter")
-     ^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in add
-    keys = tuple(_parse_key(k) for k in keys)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in <genexpr>
-    keys = tuple(_parse_key(k) for k in keys)
-                 ^^^^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 455, in _parse_key
-    raise ValueError(f"Invalid key: {key}")
-ValueError: Invalid key: s-enter
-2025-12-18 02:27:45 | ERROR    | MainThread | system_cli.cli | log_exception:192 | Exception occurred in main()
+ValueError: Invalid key: shift-enter
+2025-12-18 02:30:45 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in main()
 Traceback (most recent call last):
   File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2624, in main
     cli_main(sys.argv[1:])
   File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2462, in cli_main
     run_tui()
   File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1687, in run_tui
-    @input_kb.add("s-enter")
-     ^^^^^^^^^^^^^^^^^^^^^^^
+    @input_kb.add("shift-enter")
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
   File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in add
     keys = tuple(_parse_key(k) for k in keys)
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -112,7 +74,45 @@ Traceback (most recent call last):
                  ^^^^^^^^^^^^^
   File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 455, in _parse_key
     raise ValueError(f"Invalid key: {key}")
-ValueError: Invalid key: s-enter
+ValueError: Invalid key: shift-enter
+2025-12-18 02:31:35 | INFO     | MainThread | system_cli.cli | cli_main:2415 | CLI started with arguments: []
+2025-12-18 02:31:35 | DEBUG    | MainThread | system_cli.cli | cli_main:2457 | Parsed command: None
+2025-12-18 02:31:35 | INFO     | MainThread | system_cli.cli | cli_main:2460 | Starting TUI mode
+2025-12-18 02:31:35 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in TUI mode
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2462, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1687, in run_tui
+    @input_kb.add("shift-enter")
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in add
+    keys = tuple(_parse_key(k) for k in keys)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in <genexpr>
+    keys = tuple(_parse_key(k) for k in keys)
+                 ^^^^^^^^^^^^^
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 455, in _parse_key
+    raise ValueError(f"Invalid key: {key}")
+ValueError: Invalid key: shift-enter
+2025-12-18 02:31:35 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in main()
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2624, in main
+    cli_main(sys.argv[1:])
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2462, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1687, in run_tui
+    @input_kb.add("shift-enter")
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in add
+    keys = tuple(_parse_key(k) for k in keys)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in <genexpr>
+    keys = tuple(_parse_key(k) for k in keys)
+                 ^^^^^^^^^^^^^
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 455, in _parse_key
+    raise ValueError(f"Invalid key: {key}")
+ValueError: Invalid key: shift-enter
+2025-12-18 02:32:29 | INFO     | MainThread | system_cli.cli | cli_main:2414 | CLI started with arguments: ['--help']
 ```
 
 ---
@@ -147,18 +147,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 36838 +-----------------------------------------
- 1 file changed, 38 insertions(+), 36800 deletions(-)
+ project_structure_final.txt | 36835 +-----------------------------------------
+ 1 file changed, 36 insertions(+), 36799 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-fe701a6 feat: Add `json` module import to logger and update CLI key binding from `s-enter` to `shift-enter`.
+415d118 feat: Add telemetry tracing for tetyana agent flow and update CLI newline keybindings.
+01e53fb feat: Add `json` module import to logger and update CLI key binding from `s-enter` to `shift-enter`.
 d74c634 feat: add detailed tracing for Atlas agent lifecycle events and remove direct LLM invocation for step announcements
 77c9407 feat: Enhance TUI input keybindings, enable clickable menu items, add dynamic panel titles, and introduce a JSON logger for AI events.
 b60dddf feat: Add initial project README and implement browser and desktop automation tools.
-479922a Fix TUI startup: NameError resolution and list-editors bugfix
 ```
 
 ---
@@ -8402,7 +8402,7 @@ def query_memory_tool(category: str, query: str) -> Dict[str, Any]:
     return {"status": "success", "results": results}
 ```
 
-### `core/trinity.py` (67.6 KB)
+### `core/trinity.py` (69.5 KB)
 
 ```python
 from typing import Annotated, TypedDict, Literal, List, Dict, Any, Optional, Callable
@@ -8862,6 +8862,20 @@ class TrinityRuntime:
         requires_windsurf = bool(state.get("requires_windsurf") or False)
         dev_edit_mode = str(state.get("dev_edit_mode") or ("windsurf" if requires_windsurf else "cli")).strip().lower()
         
+        try:
+            plan_preview = state.get("plan")
+            trace(self.logger, "tetyana_enter", {
+                "task_type": task_type,
+                "requires_windsurf": requires_windsurf,
+                "dev_edit_mode": dev_edit_mode,
+                "execution_mode": execution_mode,
+                "gui_mode": gui_mode,
+                "gui_fallback_attempted": gui_fallback_attempted,
+                "plan_len": len(plan_preview) if isinstance(plan_preview, list) else 0,
+                "last_msg_preview": str(last_msg)[:200],
+            })
+        except Exception:
+            pass
         
         routing_hint = ""
         try:
@@ -8890,6 +8904,14 @@ class TrinityRuntime:
             response = bound_llm.invoke(prompt.format_messages())
             content = response.content
             tool_calls = response.tool_calls if hasattr(response, 'tool_calls') else []
+            
+            try:
+                trace(self.logger, "tetyana_llm", {
+                    "tool_calls": len(tool_calls) if isinstance(tool_calls, list) else 0,
+                    "content_preview": str(content)[:200],
+                })
+            except Exception:
+                pass
             
             results = []
             had_failure = False
@@ -9054,6 +9076,11 @@ class TrinityRuntime:
                             updated_messages = list(context) + [
                                 AIMessage(content="[Tetyana] Windsurf tool failed. Switching DEV editing fallback to CLI mode.")
                             ]
+                            
+                            try:
+                                trace(self.logger, "tetyana_windsurf_fallback", {"tool": name, "dev_edit_mode": dev_edit_mode})
+                            except Exception:
+                                pass
                             return {
                                 "current_agent": "atlas",
                                 "messages": updated_messages,
@@ -9107,6 +9134,11 @@ class TrinityRuntime:
             ):
                 # Tell the graph to retry this step in GUI mode.
                 updated_messages = list(context) + [AIMessage(content=f"[Tetyana] Native execution had failures. Switching to GUI fallback mode.")]
+                
+                try:
+                    trace(self.logger, "tetyana_gui_fallback", {"from": execution_mode, "to": "gui"})
+                except Exception:
+                    pass
                 return {
                     "current_agent": "tetyana",
                     "messages": updated_messages,
@@ -9124,6 +9156,11 @@ class TrinityRuntime:
         # If paused, return to atlas with pause_info
         if pause_info:
             updated_messages = list(context) + [AIMessage(content=f"[ПАУЗОВАНО] {pause_info['message']}")]
+            
+            try:
+                trace(self.logger, "tetyana_paused", {"pause_info": pause_info})
+            except Exception:
+                pass
             return {
                 "current_agent": "atlas",
                 "messages": updated_messages,
@@ -9132,6 +9169,17 @@ class TrinityRuntime:
         
         # Preserve existing messages and add new one
         updated_messages = list(context) + [AIMessage(content=content)]
+        
+        try:
+            trace(self.logger, "tetyana_exit", {
+                "next_agent": "grisha",
+                "last_step_status": "success",
+                "execution_mode": execution_mode,
+                "gui_mode": gui_mode,
+                "dev_edit_mode": dev_edit_mode,
+            })
+        except Exception:
+            pass
         return {
             "current_agent": "grisha", 
             "messages": updated_messages,
@@ -11194,7 +11242,7 @@ if __name__ == "__main__":
 test content
 ```
 
-### `project_structure_final.txt` (498.0 KB)
+### `project_structure_final.txt` (499.9 KB)
 
 ```text
 # System — Project Structure
@@ -11203,32 +11251,31 @@ test content
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 119
-- **Files Skipped**: 13463
+- **Files Skipped**: 13472
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-18 02:30:11
+- **Generated**: 2025-12-18 02:34:04
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-    keys = tuple(_parse_key(k) for k in keys)
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in <genexpr>
     keys = tuple(_parse_key(k) for k in keys)
                  ^^^^^^^^^^^^^
   File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 455, in _parse_key
     raise ValueError(f"Invalid key: {key}")
-ValueError: Invalid key: s-enter
-2025-12-18 02:27:17 | ERROR    | MainThread | system_cli.cli | log_exception:192 | Exception occurred in main()
+ValueError: Invalid key: shift-enter
+2025-12-18 02:30:25 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in main()
 Traceback (most recent call last):
   File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2624, in main
     cli_main(sys.argv[1:])
   File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2462, in cli_main
     run_tui()
   File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1687, in run_tui
-    @input_kb.add("s-enter")
-     ^^^^^^^^^^^^^^^^^^^^^^^
+    @input_kb.add("shift-enter")
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
   File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in add
     keys = tuple(_parse_key(k) for k in keys)
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -11237,17 +11284,17 @@ Traceback (most recent call last):
                  ^^^^^^^^^^^^^
   File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 455, in _parse_key
     raise ValueError(f"Invalid key: {key}")
-ValueError: Invalid key: s-enter
-2025-12-18 02:27:27 | INFO     | MainThread | system_cli.cli | cli_main:2415 | CLI started with arguments: []
-2025-12-18 02:27:27 | DEBUG    | MainThread | system_cli.cli | cli_main:2457 | Parsed command: None
-2025-12-18 02:27:27 | INFO     | MainThread | system_cli.cli | cli_main:2460 | Starting TUI mode
-2025-12-18 02:27:27 | ERROR    | MainThread | system_cli.cli | log_exception:192 | Exception occurred in TUI mode
+ValueError: Invalid key: shift-enter
+2025-12-18 02:30:45 | INFO     | MainThread | system_cli.cli | cli_main:2415 | CLI started with arguments: []
+2025-12-18 02:30:45 | DEBUG    | MainThread | system_cli.cli | cli_main:2457 | Parsed command: None
+2025-12-18 02:30:45 | INFO     | MainThread | system_cli.cli | cli_main:2460 | Starting TUI mode
+2025-12-18 02:30:45 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in TUI mode
 Traceback (most recent call last):
   File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2462, in cli_main
     run_tui()
   File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1687, in run_tui
-    @input_kb.add("s-enter")
-     ^^^^^^^^^^^^^^^^^^^^^^^
+    @input_kb.add("shift-enter")
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
   File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in add
     keys = tuple(_parse_key(k) for k in keys)
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -11256,53 +11303,16 @@ Traceback (most recent call last):
                  ^^^^^^^^^^^^^
   File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 455, in _parse_key
     raise ValueError(f"Invalid key: {key}")
-ValueError: Invalid key: s-enter
-2025-12-18 02:27:27 | ERROR    | MainThread | system_cli.cli | log_exception:192 | Exception occurred in main()
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2624, in main
-    cli_main(sys.argv[1:])
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2462, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1687, in run_tui
-    @input_kb.add("s-enter")
-     ^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in add
-    keys = tuple(_parse_key(k) for k in keys)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in <genexpr>
-    keys = tuple(_parse_key(k) for k in keys)
-                 ^^^^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 455, in _parse_key
-    raise ValueError(f"Invalid key: {key}")
-ValueError: Invalid key: s-enter
-2025-12-18 02:27:45 | INFO     | MainThread | system_cli.cli | cli_main:2415 | CLI started with arguments: []
-2025-12-18 02:27:45 | DEBUG    | MainThread | system_cli.cli | cli_main:2457 | Parsed command: None
-2025-12-18 02:27:45 | INFO     | MainThread | system_cli.cli | cli_main:2460 | Starting TUI mode
-2025-12-18 02:27:45 | ERROR    | MainThread | system_cli.cli | log_exception:192 | Exception occurred in TUI mode
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2462, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1687, in run_tui
-    @input_kb.add("s-enter")
-     ^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in add
-    keys = tuple(_parse_key(k) for k in keys)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in <genexpr>
-    keys = tuple(_parse_key(k) for k in keys)
-                 ^^^^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 455, in _parse_key
-    raise ValueError(f"Invalid key: {key}")
-ValueError: Invalid key: s-enter
-2025-12-18 02:27:45 | ERROR    | MainThread | system_cli.cli | log_exception:192 | Exception occurred in main()
+ValueError: Invalid key: shift-enter
+2025-12-18 02:30:45 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in main()
 Traceback (most recent call last):
   File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2624, in main
     cli_main(sys.argv[1:])
   File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2462, in cli_main
     run_tui()
   File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1687, in run_tui
-    @input_kb.add("s-enter")
-     ^^^^^^^^^^^^^^^^^^^^^^^
+    @input_kb.add("shift-enter")
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
   File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in add
     keys = tuple(_parse_key(k) for k in keys)
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -11311,7 +11321,45 @@ Traceback (most recent call last):
                  ^^^^^^^^^^^^^
   File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 455, in _parse_key
     raise ValueError(f"Invalid key: {key}")
-ValueError: Invalid key: s-enter
+ValueError: Invalid key: shift-enter
+2025-12-18 02:31:35 | INFO     | MainThread | system_cli.cli | cli_main:2415 | CLI started with arguments: []
+2025-12-18 02:31:35 | DEBUG    | MainThread | system_cli.cli | cli_main:2457 | Parsed command: None
+2025-12-18 02:31:35 | INFO     | MainThread | system_cli.cli | cli_main:2460 | Starting TUI mode
+2025-12-18 02:31:35 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in TUI mode
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2462, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1687, in run_tui
+    @input_kb.add("shift-enter")
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in add
+    keys = tuple(_parse_key(k) for k in keys)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in <genexpr>
+    keys = tuple(_parse_key(k) for k in keys)
+                 ^^^^^^^^^^^^^
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 455, in _parse_key
+    raise ValueError(f"Invalid key: {key}")
+ValueError: Invalid key: shift-enter
+2025-12-18 02:31:35 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in main()
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2624, in main
+    cli_main(sys.argv[1:])
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2462, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1687, in run_tui
+    @input_kb.add("shift-enter")
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in add
+    keys = tuple(_parse_key(k) for k in keys)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in <genexpr>
+    keys = tuple(_parse_key(k) for k in keys)
+                 ^^^^^^^^^^^^^
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 455, in _parse_key
+    raise ValueError(f"Invalid key: {key}")
+ValueError: Invalid key: shift-enter
+2025-12-18 02:32:29 | INFO     | MainThread | system_cli.cli | cli_main:2414 | CLI started with arguments: ['--help']
 ```
 
 ---
@@ -11346,18 +11394,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 36838 +-----------------------------------------
- 1 file changed, 38 insertions(+), 36800 deletions(-)
+ project_structure_final.txt | 36835 +-----------------------------------------
+ 1 file changed, 36 insertions(+), 36799 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-fe701a6 feat: Add `json` module import to logger and update CLI key binding from `s-enter` to `shift-enter`.
+415d118 feat: Add telemetry tracing for tetyana agent flow and update CLI newline keybindings.
+01e53fb feat: Add `json` module import to logger and update CLI key binding from `s-enter` to `shift-enter`.
 d74c634 feat: add detailed tracing for Atlas agent lifecycle events and remove direct LLM invocation for step announcements
 77c9407 feat: Enhance TUI input keybindings, enable clickable menu items, add dynamic panel titles, and introduce a JSON logger for AI events.
 b60dddf feat: Add initial project README and implement browser and desktop automation tools.
-479922a Fix TUI startup: NameError resolution and list-editors bugfix
 ```
 
 ---
@@ -19601,7 +19649,7 @@ def query_memory_tool(category: str, query: str) -> Dict[str, Any]:
     return {"status": "success", "results": results}
 ```
 
-### `core/trinity.py` (67.6 KB)
+### `core/trinity.py` (69.5 KB)
 
 ```python
 from typing import Annotated, TypedDict, Literal, List, Dict, Any, Optional, Callable
@@ -20061,6 +20109,20 @@ class TrinityRuntime:
         requires_windsurf = bool(state.get("requires_windsurf") or False)
         dev_edit_mode = str(state.get("dev_edit_mode") or ("windsurf" if requires_windsurf else "cli")).strip().lower()
         
+        try:
+            plan_preview = state.get("plan")
+            trace(self.logger, "tetyana_enter", {
+                "task_type": task_type,
+                "requires_windsurf": requires_windsurf,
+                "dev_edit_mode": dev_edit_mode,
+                "execution_mode": execution_mode,
+                "gui_mode": gui_mode,
+                "gui_fallback_attempted": gui_fallback_attempted,
+                "plan_len": len(plan_preview) if isinstance(plan_preview, list) else 0,
+                "last_msg_preview": str(last_msg)[:200],
+            })
+        except Exception:
+            pass
         
         routing_hint = ""
         try:
@@ -20089,6 +20151,14 @@ class TrinityRuntime:
             response = bound_llm.invoke(prompt.format_messages())
             content = response.content
             tool_calls = response.tool_calls if hasattr(response, 'tool_calls') else []
+            
+            try:
+                trace(self.logger, "tetyana_llm", {
+                    "tool_calls": len(tool_calls) if isinstance(tool_calls, list) else 0,
+                    "content_preview": str(content)[:200],
+                })
+            except Exception:
+                pass
             
             results = []
             had_failure = False
@@ -20253,6 +20323,11 @@ class TrinityRuntime:
                             updated_messages = list(context) + [
                                 AIMessage(content="[Tetyana] Windsurf tool failed. Switching DEV editing fallback to CLI mode.")
                             ]
+                            
+                            try:
+                                trace(self.logger, "tetyana_windsurf_fallback", {"tool": name, "dev_edit_mode": dev_edit_mode})
+                            except Exception:
+                                pass
                             return {
                                 "current_agent": "atlas",
                                 "messages": updated_messages,
@@ -20306,6 +20381,11 @@ class TrinityRuntime:
             ):
                 # Tell the graph to retry this step in GUI mode.
                 updated_messages = list(context) + [AIMessage(content=f"[Tetyana] Native execution had failures. Switching to GUI fallback mode.")]
+                
+                try:
+                    trace(self.logger, "tetyana_gui_fallback", {"from": execution_mode, "to": "gui"})
+                except Exception:
+                    pass
                 return {
                     "current_agent": "tetyana",
                     "messages": updated_messages,
@@ -20323,6 +20403,11 @@ class TrinityRuntime:
         # If paused, return to atlas with pause_info
         if pause_info:
             updated_messages = list(context) + [AIMessage(content=f"[ПАУЗОВАНО] {pause_info['message']}")]
+            
+            try:
+                trace(self.logger, "tetyana_paused", {"pause_info": pause_info})
+            except Exception:
+                pass
             return {
                 "current_agent": "atlas",
                 "messages": updated_messages,
@@ -20331,6 +20416,17 @@ class TrinityRuntime:
         
         # Preserve existing messages and add new one
         updated_messages = list(context) + [AIMessage(content=content)]
+        
+        try:
+            trace(self.logger, "tetyana_exit", {
+                "next_agent": "grisha",
+                "last_step_status": "success",
+                "execution_mode": execution_mode,
+                "gui_mode": gui_mode,
+                "dev_edit_mode": dev_edit_mode,
+            })
+        except Exception:
+            pass
         return {
             "current_agent": "grisha", 
             "messages": updated_messages,
@@ -30672,9 +30768,8 @@ def run_tui() -> None:
         if buff.text.strip():
             buff.validate_and_handle()
 
-    @input_kb.add("shift-enter")
-    @input_kb.add("c-enter")
     @input_kb.add("escape", "enter")
+    @input_kb.add("c-j")  # Often Ctrl+Enter in some terminals
     def _(event):
         event.current_buffer.insert_text("\n")
 
@@ -36902,4 +36997,4 @@ graph TD
 ## Summary
 
 - **Total Files**: 119
-- **Skipped**: 13463
+- **Skipped**: 13472
