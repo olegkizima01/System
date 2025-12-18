@@ -36,7 +36,7 @@ class AdaptiveVerifier:
 Вхідний план:
 {plan_json}
 
-Поверни ТІЛЬКИ JSON список з обов'язковими VERIFY кроками після критичних дій.
+Поверни повний оновлений JSON список кроків (оригінальні кроки + вставлені VERIFY кроки).
 """
 
         content = ""
@@ -61,16 +61,25 @@ class AdaptiveVerifier:
                 content = match.group(0)
                 
             optimized = json.loads(content)
-            if isinstance(optimized, list):
-                # Fallback: if LLM didn't add verify steps, add them manually for critical steps
-                enhanced = self._ensure_verify_steps(optimized)
-                self.logger.debug(
-                    f"[Verifier] Plan optimized: {len(raw_plan)} → {len(enhanced)} steps (added {len(enhanced) - len(raw_plan)} verify steps)"
-                )
-                return enhanced
+            
+            # Safety checks
+            if not isinstance(optimized, list):
+                raise ValueError("Optimized plan is not a list")
+                
+            # If the optimizer removed steps or returned empty (and raw wasn't), treat as failure
+            if len(optimized) < len(raw_plan):
+                 self.logger.warning(f"[Verifier] Optimization reduced step count ({len(raw_plan)} -> {len(optimized)}). Use raw plan fallback.")
+                 raise ValueError("Optimized plan unexpectedly shorter than raw plan")
+
+            # Fallback: if LLM didn't add verify steps, add them manually for critical steps
+            enhanced = self._ensure_verify_steps(optimized)
+            self.logger.debug(
+                f"[Verifier] Plan optimized: {len(raw_plan)} → {len(enhanced)} steps (added {len(enhanced) - len(raw_plan)} verify steps)"
+            )
+            return enhanced
                 
         except Exception as e:
-            self.logger.warning(f"[Verifier] LLM JSON parsing error: {e}")
+            self.logger.warning(f"[Verifier] LLM JSON parsing/optimization error: {e}")
             self.logger.debug(f"[Verifier] Raw response: {content[:200]}...")
             # Fallback: ensure verify steps manually
             enhanced = self._ensure_verify_steps(raw_plan)
