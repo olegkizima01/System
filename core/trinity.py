@@ -1004,8 +1004,8 @@ class TrinityRuntime:
             
         elif (has_explicit_complete or (has_positive and (not has_uncertainty) and (not has_question))) and not tool_calls:
             # Case D: VERIFICATION PASSED and no new tools called.
-            # TASK IS COMPLETE!
-            next_agent = "end"
+            # TASK IS COMPLETE! (Only this step is complete, return to Atlas to check plan)
+            next_agent = "atlas"
             step_status = "success"
             
         else:
