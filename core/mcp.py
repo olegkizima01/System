@@ -230,7 +230,9 @@ class MCPToolRegistry:
         # Browser Tools
         self.register_tool("browser_open_url", browser_open_url, "Open URL in generic browser. Args: url (str), headless (bool)")
         self.register_tool("browser_click_element", browser_click_element, "Click element in browser. Args: selector (str)")
-        self.register_tool("browser_type_text", browser_type_text, "Type text in browser. Args: selector (str), text (str)")
+        self.register_tool("browser_type_text", browser_type_text, "Type text in browser. Args: selector (str), text (str), press_enter (bool)")
+        self.register_tool("browser_press_key", browser_press_key, "Press a key (Enter, Tab, etc.) in browser. Args: key (str), selector (optional str)")
+        self.register_tool("browser_screenshot", browser_screenshot, "Take a high-quality screenshot of the current browser page. Args: path (optional str)")
         self.register_tool("browser_get_content", browser_get_content, "Get page/element text. Args: selector (optional str)")
         self.register_tool("browser_execute_script", browser_execute_script, "Run JS in browser. Args: script (str)")
         self.register_tool("browser_ensure_ready", browser_ensure_ready, "Check if browser is ready (Playwright installed). Returns setup instructions if not. Args: none")

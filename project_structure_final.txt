@@ -4,115 +4,115 @@
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 119
-- **Files Skipped**: 13748
+- **Files Skipped**: 13770
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-18 19:15:31
+- **Generated**: 2025-12-18 19:25:40
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-2025-12-18 19:13:40 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "[VOICE] Зрозуміло. [VERIFIED]"}
-2025-12-18 19:13:51 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "atlas", "last_step_status": "success", "uncertain_streak": 0}
-2025-12-18 19:13:51 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
-2025-12-18 19:13:51 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "atlas", "last_step_status": "success", "step_count": null, "replan_count": 1}
-2025-12-18 19:13:51 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 9, "replan_count": 1, "last_step_status": "success", "plan_len": 2, "task_type": "GENERAL", "execution_mode": "gui", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "[VOICE] Зрозуміло. [VERIFIED]\n\n[GUI_VERIFY] capture_screen:\n{\n  \"tool\": \"take_screenshot\",\n  \"status\": \"success\",\n  \"path\": \"/Users/dev/.antigravity/vision_cache/diff_1766078020.jpg\",\n  \"vision_mode\":"}
-2025-12-18 19:13:53 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_step_consumed", "remaining_steps": 1, "step_count": 9}
-2025-12-18 19:13:53 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_dispatch", "next_agent": "grisha", "step_type": "verify", "step_count": 9, "replan_count": 1, "description_preview": "Перевірити, що опис містить інформацію про інструменти, виконані дії та можливі збої"}
-2025-12-18 19:13:53 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
-2025-12-18 19:13:53 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "grisha", "last_step_status": null, "step_count": 9, "replan_count": 1}
-2025-12-18 19:13:53 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 9, "replan_count": 1, "plan_len": 1, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "gui", "last_msg_preview": "[VOICE] Гріша, перевір: Перевірити, що опис містить інформацію про інструменти, виконані дії та можливі збої.\n\n[Atlas Debug] Plan: 1 steps. Current: Перевірити, що опис містить інформацію про інструме"}
-2025-12-18 19:13:53 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": true, "changed_files": ["core/trinity.py"], "skip": true}
-2025-12-18 19:13:53 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 9390}
-2025-12-18 19:13:55 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "[VOICE] Перевіряю опис на відповідність вимогам."}
-2025-12-18 19:14:15 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "atlas", "last_step_status": "failed", "uncertain_streak": 1}
-2025-12-18 19:14:15 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "retry_without_replan", "status": "failed", "streak": 1}
-2025-12-18 19:14:15 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
-2025-12-18 19:14:15 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "atlas", "last_step_status": "failed", "step_count": null, "replan_count": 1}
-2025-12-18 19:14:15 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 10, "replan_count": 1, "last_step_status": "failed", "plan_len": 1, "task_type": "GENERAL", "execution_mode": "gui", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "[VOICE] Перевіряю опис на відповідність вимогам.\n\n[GUI_VERIFY] capture_screen:\n{\n  \"tool\": \"take_screenshot\",\n  \"status\": \"success\",\n  \"path\": \"/Users/dev/.antigravity/vision_cache/diff_1766078035.jpg"}
-2025-12-18 19:14:15 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_step_failed", "step_count": 10, "replan_count": 1, "fail_count": 1}
-2025-12-18 19:14:15 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_dispatch", "next_agent": "grisha", "step_type": "verify", "step_count": 10, "replan_count": 1, "description_preview": "Перевірити, що опис містить інформацію про інструменти, виконані дії та можливі збої"}
-2025-12-18 19:14:15 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
-2025-12-18 19:14:15 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "grisha", "last_step_status": null, "step_count": 10, "replan_count": 1}
-2025-12-18 19:14:15 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 10, "replan_count": 1, "plan_len": 1, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "gui", "last_msg_preview": "[VOICE] Гріша, перевір: Перевірити, що опис містить інформацію про інструменти, виконані дії та можливі збої.\n\n[Atlas Debug] Plan: 1 steps. Current: Перевірити, що опис містить інформацію про інструме"}
-2025-12-18 19:14:15 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": true, "changed_files": ["core/trinity.py"], "skip": true}
-2025-12-18 19:14:15 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 9390}
-2025-12-18 19:14:17 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "[VOICE] Перевіряю опис на відповідність вимогам."}
-2025-12-18 19:14:26 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "atlas", "last_step_status": "failed", "uncertain_streak": 2}
-2025-12-18 19:14:26 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "replan_triggered", "replan_count": 2, "status": "failed", "streak": 2}
-2025-12-18 19:14:26 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
-2025-12-18 19:14:26 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "atlas", "last_step_status": "failed", "step_count": null, "replan_count": 2}
-2025-12-18 19:14:26 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 11, "replan_count": 2, "last_step_status": "failed", "plan_len": 0, "task_type": "GENERAL", "execution_mode": "gui", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "[VOICE] Перевіряю опис на відповідність вимогам.\n\n[GUI_VERIFY] capture_screen:\n{\n  \"tool\": \"take_screenshot\",\n  \"status\": \"success\",\n  \"path\": \"/Users/dev/.antigravity/vision_cache/diff_1766078058.jpg"}
-2025-12-18 19:14:26 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generate_start", "step_count": 11, "replan_count": 2}
-2025-12-18 19:14:32 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:76 | [Verifier] Plan optimized: 4 → 4 steps (added 0 verify steps)
-2025-12-18 19:14:32 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generated", "steps": 4, "step_count": 11, "replan_count": 2}
-2025-12-18 19:14:32 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_dispatch", "next_agent": "tetyana", "step_type": "execute", "step_count": 11, "replan_count": 2, "description_preview": "Скопіювати текстове резюме зі сторінки в clipboard"}
-2025-12-18 19:14:32 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "tetyana", "next": "tetyana"}
-2025-12-18 19:14:32 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "tetyana", "last_step_status": null, "step_count": 11, "replan_count": 2}
-2025-12-18 19:14:32 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "GENERAL", "requires_windsurf": false, "dev_edit_mode": "cli", "execution_mode": "gui", "gui_mode": "auto", "gui_fallback_attempted": true, "plan_len": 4, "last_msg_preview": "[VOICE] Тетяно, Скопіювати текстове резюме зі сторінки в clipboard. Виконуй.\n\n[Atlas Debug] Plan: 4 steps. Current: Скопіювати текстове резюме зі сторінки в clipboard. Next: tetyana"}
-2025-12-18 19:14:35 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 1, "content_preview": "Текстове резюме скопійовано в clipboard. Ви можете вставити його в потрібне місце."}
-2025-12-18 19:14:35 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "gui", "gui_mode": "auto", "dev_edit_mode": "cli"}
-2025-12-18 19:14:35 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
-2025-12-18 19:14:35 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "tetyana", "current_agent": "grisha", "last_step_status": "success", "step_count": null, "replan_count": 2}
-2025-12-18 19:14:35 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 11, "replan_count": 2, "plan_len": 4, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "gui", "last_msg_preview": "Текстове резюме скопійовано в clipboard. Ви можете вставити його в потрібне місце.\n\nTool Results:\nResult for get_clipboard: {\n  \"tool\": \"get_clipboard\",\n  \"status\": \"success\",\n  \"content\": \"Витягнуте "}
-2025-12-18 19:14:35 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": true, "changed_files": ["core/trinity.py"], "skip": true}
-2025-12-18 19:14:35 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 9411}
-2025-12-18 19:14:37 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "[VOICE] Усе чисто. [VERIFIED]"}
-2025-12-18 19:14:44 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "atlas", "last_step_status": "success", "uncertain_streak": 0}
-2025-12-18 19:14:44 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
-2025-12-18 19:14:44 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "atlas", "last_step_status": "success", "step_count": null, "replan_count": 2}
-2025-12-18 19:14:44 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 12, "replan_count": 2, "last_step_status": "success", "plan_len": 4, "task_type": "GENERAL", "execution_mode": "gui", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "[VOICE] Усе чисто. [VERIFIED]\n\n[GUI_VERIFY] capture_screen:\n{\n  \"tool\": \"take_screenshot\",\n  \"status\": \"success\",\n  \"path\": \"/Users/dev/.antigravity/vision_cache/diff_1766078077.jpg\",\n  \"vision_mode\":"}
-2025-12-18 19:14:46 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_step_consumed", "remaining_steps": 3, "step_count": 12}
-2025-12-18 19:14:46 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_dispatch", "next_agent": "grisha", "step_type": "verify", "step_count": 12, "replan_count": 2, "description_preview": "Перевірити, що clipboard містить текстове резюме"}
-2025-12-18 19:14:46 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
-2025-12-18 19:14:46 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "grisha", "last_step_status": null, "step_count": 12, "replan_count": 2}
-2025-12-18 19:14:46 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 12, "replan_count": 2, "plan_len": 3, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "gui", "last_msg_preview": "[VOICE] Гріша, перевір: Перевірити, що clipboard містить текстове резюме.\n\n[Atlas Debug] Plan: 3 steps. Current: Перевірити, що clipboard містить текстове резюме. Next: grisha"}
-2025-12-18 19:14:46 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": true, "changed_files": ["core/trinity.py"], "skip": true}
-2025-12-18 19:14:46 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 9318}
-2025-12-18 19:14:48 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 1, "content_preview": ""}
-2025-12-18 19:14:56 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "atlas", "last_step_status": "success", "uncertain_streak": 0}
-2025-12-18 19:14:56 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
-2025-12-18 19:14:56 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "atlas", "last_step_status": "success", "step_count": null, "replan_count": 2}
-2025-12-18 19:14:56 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 13, "replan_count": 2, "last_step_status": "success", "plan_len": 3, "task_type": "GENERAL", "execution_mode": "gui", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "\n\nVerification Tools Results:\nResult for get_clipboard: {\n  \"tool\": \"get_clipboard\",\n  \"status\": \"success\",\n  \"content\": \"Витягнуте резюме\"\n}\n\n[GUI_VERIFY] capture_screen:\n{\n  \"tool\": \"take_screenshot"}
-2025-12-18 19:14:56 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_step_consumed", "remaining_steps": 2, "step_count": 13}
-2025-12-18 19:14:56 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_dispatch", "next_agent": "tetyana", "step_type": "execute", "step_count": 13, "replan_count": 2, "description_preview": "Коротко описати, які інструменти були задіяні, що саме було виконано, чи виникли обмеження або збої"}
-2025-12-18 19:14:56 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "tetyana", "next": "tetyana"}
-2025-12-18 19:14:56 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "tetyana", "last_step_status": null, "step_count": 13, "replan_count": 2}
-2025-12-18 19:14:56 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "GENERAL", "requires_windsurf": false, "dev_edit_mode": "cli", "execution_mode": "gui", "gui_mode": "auto", "gui_fallback_attempted": true, "plan_len": 2, "last_msg_preview": "[VOICE] Тетяно, Коротко описати, які інструменти були задіяні, що саме було виконано, чи виникли обмеження або збої. Виконуй.\n\n[Atlas Debug] Plan: 2 steps. Current: Коротко описати, які інструменти бу"}
-2025-12-18 19:14:58 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 0, "content_preview": "[VOICE] Описую використані інструменти, виконані дії та можливі обмеження. \n\nЖодні інструменти не були задіяні, оскільки завдання стосується лише текстового опису. Обмежень або збоїв не виникло."}
-2025-12-18 19:14:58 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "gui", "gui_mode": "auto", "dev_edit_mode": "cli"}
-2025-12-18 19:14:58 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
-2025-12-18 19:14:58 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "tetyana", "current_agent": "grisha", "last_step_status": "success", "step_count": null, "replan_count": 2}
-2025-12-18 19:14:58 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 13, "replan_count": 2, "plan_len": 2, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "gui", "last_msg_preview": "[VOICE] Описую використані інструменти, виконані дії та можливі обмеження. \n\nЖодні інструменти не були задіяні, оскільки завдання стосується лише текстового опису. Обмежень або збоїв не виникло."}
-2025-12-18 19:14:59 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": true, "changed_files": ["core/trinity.py"], "skip": true}
-2025-12-18 19:14:59 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 9337}
-2025-12-18 19:15:00 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "[VOICE] Зрозуміло. [VERIFIED]"}
-2025-12-18 19:15:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "atlas", "last_step_status": "success", "uncertain_streak": 0}
-2025-12-18 19:15:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
-2025-12-18 19:15:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "atlas", "last_step_status": "success", "step_count": null, "replan_count": 2}
-2025-12-18 19:15:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 14, "replan_count": 2, "last_step_status": "success", "plan_len": 2, "task_type": "GENERAL", "execution_mode": "gui", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "[VOICE] Зрозуміло. [VERIFIED]\n\n[GUI_VERIFY] capture_screen:\n{\n  \"tool\": \"take_screenshot\",\n  \"status\": \"success\",\n  \"path\": \"/Users/dev/.antigravity/vision_cache/diff_1766078101.jpg\",\n  \"vision_mode\":"}
-2025-12-18 19:15:08 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_step_consumed", "remaining_steps": 1, "step_count": 14}
-2025-12-18 19:15:08 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_dispatch", "next_agent": "grisha", "step_type": "verify", "step_count": 14, "replan_count": 2, "description_preview": "Перевірити, що опис містить інформацію про інструменти, виконані дії та можливі збої"}
-2025-12-18 19:15:08 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
-2025-12-18 19:15:08 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "grisha", "last_step_status": null, "step_count": 14, "replan_count": 2}
-2025-12-18 19:15:08 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 14, "replan_count": 2, "plan_len": 1, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "gui", "last_msg_preview": "[VOICE] Гріша, перевір: Перевірити, що опис містить інформацію про інструменти, виконані дії та можливі збої.\n\n[Atlas Debug] Plan: 1 steps. Current: Перевірити, що опис містить інформацію про інструме"}
-2025-12-18 19:15:08 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": true, "changed_files": ["core/trinity.py", "tui/layout.py"], "skip": true}
-2025-12-18 19:15:08 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 9390}
-2025-12-18 19:15:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "[VOICE] Перевіряю опис на наявність інформації про інструменти, дії та збої."}
-2025-12-18 19:15:20 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "atlas", "last_step_status": "failed", "uncertain_streak": 1}
-2025-12-18 19:15:21 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "retry_without_replan", "status": "failed", "streak": 1}
-2025-12-18 19:15:21 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
-2025-12-18 19:15:21 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "atlas", "last_step_status": "failed", "step_count": null, "replan_count": 2}
-2025-12-18 19:15:21 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 15, "replan_count": 2, "last_step_status": "failed", "plan_len": 1, "task_type": "GENERAL", "execution_mode": "gui", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "[VOICE] Перевіряю опис на наявність інформації про інструменти, дії та збої.\n\n[GUI_VERIFY] capture_screen:\n{\n  \"tool\": \"take_screenshot\",\n  \"status\": \"success\",\n  \"path\": \"/Users/dev/.antigravity/visi"}
-2025-12-18 19:15:24 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_step_failed", "step_count": 15, "replan_count": 2, "fail_count": 1}
-2025-12-18 19:15:24 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_dispatch", "next_agent": "grisha", "step_type": "verify", "step_count": 15, "replan_count": 2, "description_preview": "Перевірити, що опис містить інформацію про інструменти, виконані дії та можливі збої"}
-2025-12-18 19:15:24 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
-2025-12-18 19:15:24 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "grisha", "last_step_status": null, "step_count": 15, "replan_count": 2}
-2025-12-18 19:15:24 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 15, "replan_count": 2, "plan_len": 1, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "gui", "last_msg_preview": "[VOICE] Гріша, перевір: Перевірити, що опис містить інформацію про інструменти, виконані дії та можливі збої.\n\n[Atlas Debug] Plan: 1 steps. Current: Перевірити, що опис містить інформацію про інструме"}
-2025-12-18 19:15:24 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": true, "changed_files": ["core/agents/grisha.py", "core/trinity.py", "tui/layout.py"], "skip": true}
-2025-12-18 19:15:24 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 9390}
-2025-12-18 19:15:26 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "[VOICE] Перевіряю опис на відповідність критеріям."}
+2025-12-18 19:18:57 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
+2025-12-18 19:18:57 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
+2025-12-18 19:19:26 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_start", "task_type": "GENERAL", "requires_windsurf": false, "gui_mode": "auto", "execution_mode": "native", "recursion_limit": 100, "input_preview": "відкрий браузер хроміум і зайди в гугл, а в гуглі найди фільм хатіко"}
+2025-12-18 19:19:26 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 1, "replan_count": 0, "last_step_status": null, "plan_len": 0, "task_type": "GENERAL", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "відкрий браузер хроміум і зайди в гугл, а в гуглі найди фільм хатіко"}
+2025-12-18 19:19:27 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generate_start", "step_count": 1, "replan_count": 0}
+2025-12-18 19:19:34 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:76 | [Verifier] Plan optimized: 6 → 6 steps (added 0 verify steps)
+2025-12-18 19:19:34 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generated", "steps": 6, "step_count": 1, "replan_count": 0}
+2025-12-18 19:19:34 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_dispatch", "next_agent": "tetyana", "step_type": "execute", "step_count": 1, "replan_count": 0, "description_preview": "Відкрити браузер Chromium"}
+2025-12-18 19:19:34 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "tetyana", "next": "tetyana"}
+2025-12-18 19:19:34 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "tetyana", "last_step_status": null, "step_count": 1, "replan_count": 0}
+2025-12-18 19:19:34 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "GENERAL", "requires_windsurf": false, "dev_edit_mode": "cli", "execution_mode": "native", "gui_mode": "auto", "gui_fallback_attempted": false, "plan_len": 6, "last_msg_preview": "[VOICE] Тетяно, Відкрити браузер Chromium. Виконуй.\n\n[Atlas Debug] Plan: 6 steps. Current: Відкрити браузер Chromium. Next: tetyana"}
+2025-12-18 19:19:36 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 1, "content_preview": "Відкриваю браузер Chromium, як наказано."}
+2025-12-18 19:19:36 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli"}
+2025-12-18 19:19:36 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
+2025-12-18 19:19:36 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "tetyana", "current_agent": "grisha", "last_step_status": "success", "step_count": null, "replan_count": 0}
+2025-12-18 19:19:36 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 1, "replan_count": 0, "plan_len": 6, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "native", "last_msg_preview": "Відкриваю браузер Chromium, як наказано.\n\nTool Results:\nResult for open_app: {\n  \"ok\": true,\n  \"app\": \"Chromium\"\n}\n\n[STEP_COMPLETED] Всі інструменти виконано успішно."}
+2025-12-18 19:19:36 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": false, "changed_files": [], "skip": true}
+2025-12-18 19:19:36 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 9529}
+2025-12-18 19:19:38 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "[VOICE] Перевіряю, чи Chromium дійсно відкрито."}
+2025-12-18 19:19:38 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_forcing_verification", "reason": "no_tools_uncertain"}
+2025-12-18 19:19:50 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "atlas", "last_step_status": "success", "uncertain_streak": 0}
+2025-12-18 19:19:50 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
+2025-12-18 19:19:50 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "atlas", "last_step_status": "success", "step_count": null, "replan_count": 0}
+2025-12-18 19:19:50 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 2, "replan_count": 0, "last_step_status": "success", "plan_len": 6, "task_type": "GENERAL", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "[VOICE] Перевіряю, чи Chromium дійсно відкрито.\n\n[FORCED_VERIFY] capture_screen:\n{\n  \"tool\": \"take_screenshot\",\n  \"status\": \"success\",\n  \"path\": \"/Users/dev/.antigravity/vision_cache/snap_1766078378.j"}
+2025-12-18 19:19:50 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_step_consumed", "remaining_steps": 5, "step_count": 2}
+2025-12-18 19:19:50 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_dispatch", "next_agent": "grisha", "step_type": "verify", "step_count": 2, "replan_count": 0, "description_preview": "Перевірити, що браузер Chromium успішно відкрився (скріншот + аналіз)"}
+2025-12-18 19:19:50 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
+2025-12-18 19:19:50 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "grisha", "last_step_status": null, "step_count": 2, "replan_count": 0}
+2025-12-18 19:19:50 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 2, "replan_count": 0, "plan_len": 5, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "native", "last_msg_preview": "[VOICE] Гріша, перевір: Перевірити, що браузер Chromium успішно відкрився (скріншот + аналіз).\n\n[Atlas Debug] Plan: 5 steps. Current: Перевірити, що браузер Chromium успішно відкрився (скріншот + анал"}
+2025-12-18 19:19:50 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": false, "changed_files": [], "skip": true}
+2025-12-18 19:19:50 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 9574}
+2025-12-18 19:19:53 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 1, "content_preview": "Знімаю скріншот для перевірки."}
+2025-12-18 19:19:53 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "atlas", "last_step_status": "success", "uncertain_streak": 0}
+2025-12-18 19:19:53 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
+2025-12-18 19:19:53 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "atlas", "last_step_status": "success", "step_count": null, "replan_count": 0}
+2025-12-18 19:19:53 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 3, "replan_count": 0, "last_step_status": "success", "plan_len": 5, "task_type": "GENERAL", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "Знімаю скріншот для перевірки.\n\nVerification Tools Results:\nResult for capture_screen: {\n  \"tool\": \"take_screenshot\",\n  \"status\": \"success\",\n  \"path\": \"/Users/dev/.antigravity/vision_cache/diff_176607"}
+2025-12-18 19:19:53 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_step_consumed", "remaining_steps": 4, "step_count": 3}
+2025-12-18 19:19:53 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_dispatch", "next_agent": "tetyana", "step_type": "execute", "step_count": 3, "replan_count": 0, "description_preview": "Перейти на сайт google.com"}
+2025-12-18 19:19:53 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "tetyana", "next": "tetyana"}
+2025-12-18 19:19:53 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "tetyana", "last_step_status": null, "step_count": 3, "replan_count": 0}
+2025-12-18 19:19:53 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "GENERAL", "requires_windsurf": false, "dev_edit_mode": "cli", "execution_mode": "native", "gui_mode": "auto", "gui_fallback_attempted": false, "plan_len": 4, "last_msg_preview": "[VOICE] Тетяно, Перейти на сайт google.com. Виконуй.\n\n[Atlas Debug] Plan: 4 steps. Current: Перейти на сайт google.com. Next: tetyana"}
+2025-12-18 19:19:55 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 1, "content_preview": "Відкриваю сайт google.com у браузері."}
+2025-12-18 19:19:59 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli"}
+2025-12-18 19:19:59 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
+2025-12-18 19:19:59 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "tetyana", "current_agent": "grisha", "last_step_status": "success", "step_count": null, "replan_count": 0}
+2025-12-18 19:19:59 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 3, "replan_count": 0, "plan_len": 4, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "native", "last_msg_preview": "Відкриваю сайт google.com у браузері.\n\nTool Results:\nResult for browser_open_url: {\n  \"tool\": \"browser_open_url\",\n  \"status\": \"success\",\n  \"title\": \"Google\",\n  \"url\": \"https://www.google.com/\"\n}\n\n[STE"}
+2025-12-18 19:19:59 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": false, "changed_files": [], "skip": true}
+2025-12-18 19:19:59 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 9611}
+2025-12-18 19:20:01 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "[VOICE] Сайт Google успішно відкрито. [VERIFIED]"}
+2025-12-18 19:20:01 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "atlas", "last_step_status": "success", "uncertain_streak": 0}
+2025-12-18 19:20:01 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
+2025-12-18 19:20:01 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "atlas", "last_step_status": "success", "step_count": null, "replan_count": 0}
+2025-12-18 19:20:01 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 4, "replan_count": 0, "last_step_status": "success", "plan_len": 4, "task_type": "GENERAL", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "[VOICE] Сайт Google успішно відкрито. [VERIFIED]"}
+2025-12-18 19:20:01 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_step_consumed", "remaining_steps": 3, "step_count": 4}
+2025-12-18 19:20:01 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_dispatch", "next_agent": "grisha", "step_type": "verify", "step_count": 4, "replan_count": 0, "description_preview": "Перевірити, що сайт google.com успішно завантажився (скріншот + аналіз)"}
+2025-12-18 19:20:01 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
+2025-12-18 19:20:01 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "grisha", "last_step_status": null, "step_count": 4, "replan_count": 0}
+2025-12-18 19:20:01 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 4, "replan_count": 0, "plan_len": 3, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "native", "last_msg_preview": "[VOICE] Гріша, перевір: Перевірити, що сайт google.com успішно завантажився (скріншот + аналіз).\n\n[Atlas Debug] Plan: 3 steps. Current: Перевірити, що сайт google.com успішно завантажився (скріншот + "}
+2025-12-18 19:20:01 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": false, "changed_files": [], "skip": true}
+2025-12-18 19:20:01 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 9578}
+2025-12-18 19:20:04 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 1, "content_preview": "Відкриваю сайт google.com для перевірки."}
+2025-12-18 19:20:04 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "atlas", "last_step_status": "success", "uncertain_streak": 0}
+2025-12-18 19:20:04 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
+2025-12-18 19:20:04 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "atlas", "last_step_status": "success", "step_count": null, "replan_count": 0}
+2025-12-18 19:20:04 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 5, "replan_count": 0, "last_step_status": "success", "plan_len": 3, "task_type": "GENERAL", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "Відкриваю сайт google.com для перевірки.\n\nVerification Tools Results:\nResult for browser_open_url: {\n  \"tool\": \"browser_open_url\",\n  \"status\": \"success\",\n  \"title\": \"Google\",\n  \"url\": \"https://www.goo"}
+2025-12-18 19:20:04 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_step_consumed", "remaining_steps": 2, "step_count": 5}
+2025-12-18 19:20:04 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_dispatch", "next_agent": "tetyana", "step_type": "execute", "step_count": 5, "replan_count": 0, "description_preview": "Ввести в пошуковий рядок запит 'фільм Хатіко' і натиснути Enter"}
+2025-12-18 19:20:04 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "tetyana", "next": "tetyana"}
+2025-12-18 19:20:04 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "tetyana", "last_step_status": null, "step_count": 5, "replan_count": 0}
+2025-12-18 19:20:04 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "GENERAL", "requires_windsurf": false, "dev_edit_mode": "cli", "execution_mode": "native", "gui_mode": "auto", "gui_fallback_attempted": false, "plan_len": 2, "last_msg_preview": "[VOICE] Тетяно, Ввести в пошуковий рядок запит 'фільм Хатіко' і натиснути Enter. Виконуй.\n\n[Atlas Debug] Plan: 2 steps. Current: Ввести в пошуковий рядок запит 'фільм Хатіко' і натиснути Enter. Next: "}
+2025-12-18 19:20:06 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 2, "content_preview": ""}
+2025-12-18 19:20:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli"}
+2025-12-18 19:20:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
+2025-12-18 19:20:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "tetyana", "current_agent": "grisha", "last_step_status": "success", "step_count": null, "replan_count": 0}
+2025-12-18 19:20:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 5, "replan_count": 0, "plan_len": 2, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "native", "last_msg_preview": "\n\nTool Results:\nResult for type_text: {\n  \"tool\": \"type_text\",\n  \"status\": \"success\",\n  \"text_length\": 12\n}\nResult for press_key: {\n  \"tool\": \"press_key\",\n  \"status\": \"success\",\n  \"key\": \"enter\",\n  \"m"}
+2025-12-18 19:20:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": false, "changed_files": [], "skip": true}
+2025-12-18 19:20:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 9637}
+2025-12-18 19:20:09 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "[VOICE] Перевіряю результат виконання."}
+2025-12-18 19:20:09 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_forcing_verification", "reason": "no_tools_uncertain"}
+2025-12-18 19:20:18 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "atlas", "last_step_status": "success", "uncertain_streak": 0}
+2025-12-18 19:20:18 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
+2025-12-18 19:20:18 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "atlas", "last_step_status": "success", "step_count": null, "replan_count": 0}
+2025-12-18 19:20:18 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 6, "replan_count": 0, "last_step_status": "success", "plan_len": 2, "task_type": "GENERAL", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "[VOICE] Перевіряю результат виконання.\n\n[FORCED_VERIFY] capture_screen:\n{\n  \"tool\": \"take_screenshot\",\n  \"status\": \"success\",\n  \"path\": \"/Users/dev/.antigravity/vision_cache/diff_1766078409.jpg\",\n  \"v"}
+2025-12-18 19:20:20 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_step_consumed", "remaining_steps": 1, "step_count": 6}
+2025-12-18 19:20:20 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_dispatch", "next_agent": "grisha", "step_type": "verify", "step_count": 6, "replan_count": 0, "description_preview": "Перевірити, що результати пошуку за запитом 'фільм Хатіко' з'явилися (скріншот + аналіз)"}
+2025-12-18 19:20:20 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
+2025-12-18 19:20:20 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "grisha", "last_step_status": null, "step_count": 6, "replan_count": 0}
+2025-12-18 19:20:20 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 6, "replan_count": 0, "plan_len": 1, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "native", "last_msg_preview": "[VOICE] Гріша, перевір: Перевірити, що результати пошуку за запитом 'фільм Хатіко' з'явилися (скріншот + аналіз).\n\n[Atlas Debug] Plan: 1 steps. Current: Перевірити, що результати пошуку за запитом 'фі"}
+2025-12-18 19:20:20 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": false, "changed_files": [], "skip": true}
+2025-12-18 19:20:20 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 9612}
+2025-12-18 19:20:22 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 1, "content_preview": "[VOICE] Перевіряю знімок екрану."}
+2025-12-18 19:20:22 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "atlas", "last_step_status": "success", "uncertain_streak": 0}
+2025-12-18 19:20:22 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
+2025-12-18 19:20:22 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "atlas", "last_step_status": "success", "step_count": null, "replan_count": 0}
+2025-12-18 19:20:22 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 7, "replan_count": 0, "last_step_status": "success", "plan_len": 1, "task_type": "GENERAL", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "[VOICE] Перевіряю знімок екрану.\n\nVerification Tools Results:\nResult for capture_screen: {\n  \"tool\": \"take_screenshot\",\n  \"status\": \"success\",\n  \"path\": \"/Users/dev/.antigravity/vision_cache/diff_1766"}
+2025-12-18 19:20:23 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_step_consumed", "remaining_steps": 0, "step_count": 7}
+2025-12-18 19:20:23 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_completed", "step_count": 7, "replan_count": 0}
+2025-12-18 19:20:23 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "end", "next": "end"}
+2025-12-18 19:20:23 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "end", "last_step_status": null, "step_count": null, "replan_count": 0}
+2025-12-18 19:20:23 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_end", "outcome": "completed", "last_agent": "atlas", "replan_count": 0}
 ```
 
 ---
@@ -121,9 +121,9 @@
 
 [Atlas] Final report
 
-Task: Атлас, виконай практичну перевірку нових можливостей системи як єдиний сценарій. 1. Почни з аналізу стану системи • Отримай базову інформацію про систему (CPU, RAM, uptime). • Переконайся, що система стабільна і готова до взаємодії. 2. Подивись на поточний робочий простір • Визнач, які вікна зараз відкриті. • З’ясуй, скільки активних моніторів і яка їх конфігурація. 3. Перейди до браузерної дії • Відкрий браузер. • Зайди на google.com. • Знайди інформацію за запитом “macOS automation”. 4. Використай результат пошуку • Відкрий один з релевантних результатів. • Витягни коротке текстове резюме зі сторінки (2–3 речення). 5. Підтвердь керування контекстом • Скопіюй це резюме в clipboard. • Перевір, що clipboard дійсно містить цей текст. 6. Заверши перевірку • Коротко опиши: • які інструменти були задіяні, • що саме було виконано, • чи виникли обмеження або збої.
+Task: відкрий браузер хроміум і зайди в гугл, а в гуглі найди фільм хатіко
 Outcome: completed
-Replans: 4
+Replans: 0
 Last agent: atlas
 
 Last message:
@@ -144,18 +144,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 38158 +-----------------------------------------
- 1 file changed, 102 insertions(+), 38056 deletions(-)
+ project_structure_final.txt | 38156 +-----------------------------------------
+ 1 file changed, 102 insertions(+), 38054 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-dc0c657 fix(tui): fix Window TypeError and improve Grisha skepticism
+9267505 fix(browser): improve browser automation and verification logic
+08cf5d1 Trinity task completed: відкрий браузер хроміум і зайди в гугл, а в гуглі найди фільм хатіко
+4bdf8ba Trinity task completed: відкрий гугл у браузері
+16d7bad fix(tui): fix Window TypeError and improve Grisha skepticism
 6c16159 fix(trinity): improve Grisha success detection and add Tetyana completion markers
-f2c40c3 fix(trinity): improve plan preservation and step retry logic
-b5c1c04 Trinity task completed: Атлас, виконай практичну перевірку нових можливостей системи як єдиний…
-519f44a fix(trinity): resolve Grisha uncertainty loop and add browser dependency check
 ```
 
 ---
@@ -673,14 +673,14 @@ Windsurf*.app/
 kinotavr.md
 ```
 
-### `.last_response.txt` (1.8 KB)
+### `.last_response.txt` (0.4 KB)
 
 ```text
 [Atlas] Final report
 
-Task: Атлас, виконай практичну перевірку нових можливостей системи як єдиний сценарій. 1. Почни з аналізу стану системи • Отримай базову інформацію про систему (CPU, RAM, uptime). • Переконайся, що система стабільна і готова до взаємодії. 2. Подивись на поточний робочий простір • Визнач, які вікна зараз відкриті. • З’ясуй, скільки активних моніторів і яка їх конфігурація. 3. Перейди до браузерної дії • Відкрий браузер. • Зайди на google.com. • Знайди інформацію за запитом “macOS automation”. 4. Використай результат пошуку • Відкрий один з релевантних результатів. • Витягни коротке текстове резюме зі сторінки (2–3 речення). 5. Підтвердь керування контекстом • Скопіюй це резюме в clipboard. • Перевір, що clipboard дійсно містить цей текст. 6. Заверши перевірку • Коротко опиши: • які інструменти були задіяні, • що саме було виконано, • чи виникли обмеження або збої.
+Task: відкрий браузер хроміум і зайди в гугл, а в гуглі найди фільм хатіко
 Outcome: completed
-Replans: 4
+Replans: 0
 Last agent: atlas
 
 Last message:
@@ -7923,7 +7923,7 @@ def run_atlas(llm, state):
     pass
 ```
 
-### `core/agents/grisha.py` (6.0 KB)
+### `core/agents/grisha.py` (6.6 KB)
 
 ```python
 from langchain_core.prompts import ChatPromptTemplate
@@ -7935,10 +7935,11 @@ GRISHA_SYSTEM_PROMPT = """Ти - Grisha, Офіцер Безпеки та QA к�
 
 ⚠️ КРИТИЧНІ ПРАВИЛА ВЕРИФІКАЦІЇ:
 1. Тобі ЗАБОРОНЕНО вірити Тетяні "на слово". Якщо вона каже "я скопіювала текст" або "я створила файл", ти НЕ МАЄШ права додавати [VERIFIED] без перевірки відповідним інструментом (get_clipboard, read_file, ls і т.д.).
-2. Ти ОБОВ'ЯЗКОВО повинен використати хоча б один інструмент верифікації (capture_screen, analyze_screen, read_file, run_shell, get_clipboard) ПЕРЕД тим, як звітувати про успіх або невизначеність.
+2. Ти ОБОВ'ЯЗКОВО повинен використати хоча б один інструмент верифікації (browser_screenshot, capture_screen, analyze_screen, read_file, run_shell, get_clipboard) ПЕРЕД тим, як звітувати про успіх або невизначеність.
 3. Якщо у повідомленні Тетяни є помилка tool execution ("status": "error") — це ЗАВЖДИ FAILED, НЕ uncertain!
-4. Якщо tool результат показує успіх та результати відповідають очікуванням — це SUCCESS.
-5. Тільки якщо після використання інструментів ти все ще не впевнений — можна звітувати про невизначеність.
+4. УВАГА НА ПОЛЯ ВВОДУ: Якщо ти бачиш на скріншоті, що Тетяна ввела текст з помилкою (наприклад, "фільм Хатікоenter" замість "фільм Хатіко"), ти ПОВИНЕН повернути FAILED. Це помилка автоматизації.
+5. Якщо tool результат показує успіх та результати відповідають очікуванням — це SUCCESS.
+6. Тільки якщо після використання інструментів ти все ще не впевнений — можна звітувати про невизначеність.
 
 Твої обов'язки:
 - Аналізувати плани Тетяни ДО їх виконання.
@@ -7948,8 +7949,9 @@ GRISHA_SYSTEM_PROMPT = """Ти - Grisha, Офіцер Безпеки та QA к�
 - ОБОВ'ЯЗКОВО: Якщо виявлено зміни у файлах core/, system_ai/, tui/, providers/ — запусти pytest для перевірки.
 
 Правило верифікації:
-- Після кожного GUI-кроку (mouse/keyboard) ти зобов'язаний зробити capture_screen або capture_screen_region,
-  потім ocr_region або analyze_screen, і лише після цього можна підтвердити успіх.
+- Після кожного GUI-кроку (mouse/keyboard) ти зобов'язаний зробити capture_screen або capture_screen_region.
+- Пріоритет БРАУЗЕРА: Якщо Тетяна працювала в браузері, використовуй `browser_screenshot` для кращої якості та деталізації.
+- Після знімку використай ocr_region або analyze_screen, і лише після цього можна підтвердити успіх.
 - Якщо завдання текстове/інформаційне (наприклад, "описати", "перевірити файл", "буфер обміну"), використовуй відповідні інструменти (read_file, ls, get_clipboard, git status).
 - ВАЖЛИВО: Ти НЕ МОЖЕШ підтверджувати успіх, просто прочитавши опис Тетяни. Ти маєш САМ переконатися через інструменти.
 - Тільки якщо інструменти НЕ дали відповіді (наприклад, завдання чисто "мовне"), можна покладатися на контекст чату.
@@ -7995,7 +7997,7 @@ def run_grisha(llm, state):
     pass
 ```
 
-### `core/agents/tetyana.py` (4.5 KB)
+### `core/agents/tetyana.py` (6.0 KB)
 
 ```python
 from langchain_core.prompts import ChatPromptTemplate
@@ -8042,11 +8044,20 @@ TETYANA_SYSTEM_PROMPT = """Ти - Tetyana, Головний Оператор т�
 - Звітувати про виконання.
 - ВАЖЛИВО: Якщо завданням є "описати", "пояснити" або "підсумувати", ти ПОВИННА надати цей опис/пояснення прямо у тексті після [VOICE], щоб Grisha міг його верифікувати. Не просто кажи "я виконую", а давай результат.
 
+⚠️ ПРАВИЛА ВЗАЄМОДІЇ ТА БРАУЗЕРА:
+1. ДЛЯ БРАУЗЕРА: Якщо задача стосується веб-сайтів, використовуй `browser_open_url` ВІДРАЗУ. НЕ використовуй `open_app("Chromium")`, бо це створить дублікат вікна.
+2. КЛАВІШІ: НІКОЛИ не дописуй слово "enter" або "Enter" у текст для `browser_type_text` чи `type_text`. 
+   - Використовуй `browser_press_key("Enter")` або параметр `press_enter=True`. 
+   - Для GUI використовуй `press_key("enter")`.
+3. ВЕРИФІКАЦІЯ: Після кожної дії в браузері (type/click) роби `browser_screenshot` або `browser_get_content`, щоб переконатися, що сторінка змінилася.
+4. ПРІОРИТЕТ [VOICE]: Якщо ти знайшла інформацію (наприклад, "фільм Хатіко вийшов у..."), ти ПОВИННА написати це у тексті після [VOICE]. Гріша не бачить твоїх думок, він бачить тільки текст і скріншоти.
+
 Стиль спілкування (STRICT):
 - ЗАВЖДИ починай відповідь з тегу [VOICE].
-- Формат: "[VOICE] <Коротка фраза адресована іншим агентам>."
+- Формат: "[VOICE] <Коротка фраза або РЕЗУЛЬТАТ виконання>."
 - Після цього — tool calls.
-- Приклад: "[VOICE] Відкриваю браузер Safari, як наказано."
+- Якщо ти отримала результат від інструменту (наприклад, текст зі сторінки), ОБОВ'ЯЗКОВО процитуй головне у наступному [VOICE].
+- Приклад: "[VOICE] Знайшла інформацію: Фільм Хатіко вийшов у 2009 році. Переходжу до наступного кроку."
 """
 
 def get_tetyana_prompt(task_context: str, tools_desc: str = ""):
@@ -8061,7 +8072,7 @@ def run_tetyana(llm, state):
     pass
 ```
 
-### `core/mcp.py` (17.2 KB)
+### `core/mcp.py` (17.5 KB)
 
 ```python
 from typing import Dict, Any, Callable, List, Optional
@@ -8296,7 +8307,9 @@ class MCPToolRegistry:
         # Browser Tools
         self.register_tool("browser_open_url", browser_open_url, "Open URL in generic browser. Args: url (str), headless (bool)")
         self.register_tool("browser_click_element", browser_click_element, "Click element in browser. Args: selector (str)")
-        self.register_tool("browser_type_text", browser_type_text, "Type text in browser. Args: selector (str), text (str)")
+        self.register_tool("browser_type_text", browser_type_text, "Type text in browser. Args: selector (str), text (str), press_enter (bool)")
+        self.register_tool("browser_press_key", browser_press_key, "Press a key (Enter, Tab, etc.) in browser. Args: key (str), selector (optional str)")
+        self.register_tool("browser_screenshot", browser_screenshot, "Take a high-quality screenshot of the current browser page. Args: path (optional str)")
         self.register_tool("browser_get_content", browser_get_content, "Get page/element text. Args: selector (optional str)")
         self.register_tool("browser_execute_script", browser_execute_script, "Run JS in browser. Args: script (str)")
         self.register_tool("browser_ensure_ready", browser_ensure_ready, "Check if browser is ready (Playwright installed). Returns setup instructions if not. Args: none")
@@ -8535,7 +8548,7 @@ def query_memory_tool(category: str, query: str) -> Dict[str, Any]:
     return {"status": "success", "results": results}
 ```
 
-### `core/trinity.py` (79.4 KB)
+### `core/trinity.py` (80.7 KB)
 
 ```python
 from typing import Annotated, TypedDict, Literal, List, Dict, Any, Optional, Callable
@@ -9482,23 +9495,31 @@ class TrinityRuntime:
 
             # Deterministic verification hook for GUI mode: always capture + analyze.
             if gui_mode in {"auto", "on"} and execution_mode == "gui":
-                snap = self.registry.execute("capture_screen", {"app_name": None})
+                # NEW: Prefer browser_screenshot if browser tools were used
+                if "browser_" in lower_content or "браузер" in lower_content:
+                    snap = self.registry.execute("browser_screenshot", {})
+                    if '"status": "error"' in snap:
+                        # Fallback to global capture if browser screenshot fails
+                        snap = self.registry.execute("capture_screen", {"app_name": None})
+                else:
+                    snap = self.registry.execute("capture_screen", {"app_name": None})
+                
                 content += "\n\n[GUI_VERIFY] capture_screen:\n" + str(snap)
                 try:
                     snap_dict = json.loads(snap)
                     img_path = snap_dict.get("path") if isinstance(snap_dict, dict) else None
                 except Exception:
                     img_path = None
+                
                 if img_path:
                     analysis = self.registry.execute(
                         "analyze_screen",
-                        {"image_path": img_path, "prompt": "Verify the UI state. Describe what changed and whether the goal seems achieved."},
+                        {"image_path": img_path, "prompt": "Verify the UI state. Describe what changed and whether the goal seems achieved. Check for errors or typos."},
                     )
                     content += "\n\n[GUI_VERIFY] analyze_screen:\n" + str(analysis)
 
         except Exception as e:
             content = f"Error invoking Grisha: {e}"
-
 
         # If Grisha says "CONFIRMED" or "VERIFIED", we end. Else Atlas replans.
         lower_content = content.lower()
@@ -9508,33 +9529,51 @@ class TrinityRuntime:
         # 1. Check for explicit success markers (including Tetyana's [STEP_COMPLETED])
         explicit_complete_markers = [
             "[verified]", "[confirmed]", "[step_completed]", "[completed]",
-            "verification passed", "qa passed", 
-            "verdict: pass", "верифікація пройдена", "перевірку пройдено", "підтверджую"
+            "verification passed", "qa passed", "verdict: pass", "перевірку пройдено", "підтверджую"
         ]
         has_explicit_complete = any(m in lower_content for m in explicit_complete_markers)
         
-        # 2. Check for tool execution errors in context (status: error = FAILED, not uncertain)
+        # 2. Check for tool execution errors in context
         has_tool_error_in_context = '"status": "error"' in content or '"status":"error"' in content
         
         # 3. Check for test failures
         has_test_failure = "[test_verification]" in lower_content and ("failed" in lower_content or "error" in lower_content)
         
-        # 4. NEW: Check for successful tool results (tool returned data without error = SUCCESS)
-        # This is the key fix: if Tetyana executed tools and got results, that's success!
+        # 4. Successful tool results (technical success)
         has_successful_tool_result = (
             "tool results:" in lower_content and 
-            '"status": "success"' in content or
-            '"status":"success"' in content or
-            # Tool returned a JSON array or object with data (not an error)
-            ("result for " in lower_content and not has_tool_error_in_context)
+            (
+                '"status": "success"' in content or
+                '"status":"success"' in content or
+                ('"result for "' in lower_content and not has_tool_error_in_context)
+            )
         )
         
-        # 5. Success / Failure / Indecision (REORDERED for better priority)
+        # 5. Success / Failure / Indecision
+        # LLM Markers [VERIFIED] have HIGHEST priority
         if has_test_failure:
             step_status = "failed"
             next_agent = "atlas"
         elif has_tool_error_in_context:
-            # Tool execution error is a clear failure, not uncertain
+            step_status = "failed"
+            next_agent = "atlas"
+        elif has_explicit_complete:
+            # LLM explicitly said it's done or Tetyana finished all tools
+            step_status = "success"
+            next_agent = "atlas"
+        elif has_successful_tool_result and not has_tool_error_in_context:
+            # ONLY count technical success as SUCCESS if it's NOT a GUI task 
+            # (GUI tasks REQUIRE explicit LLM verification via [VERIFIED])
+            is_gui_task = (gui_mode in {"on", "auto"})
+            if not is_gui_task:
+                step_status = "success"
+                next_agent = "atlas"
+            else:
+                # For GUI, technical success is just UNCERTAIN until LLM confirms visually
+                step_status = "uncertain"
+                if any(kw in lower_content for kw in ["успішно", "працює", "готово", "виконано", "done"]):
+                     step_status = "success"
+        elif any(kw in lower_content for kw in ["failed", "error", "помилка", "не вдалося", "blocked"]):
             step_status = "failed"
             next_agent = "atlas"
             if self.verbose:
@@ -11564,7 +11603,7 @@ if __name__ == "__main__":
 test content
 ```
 
-### `project_structure_final.txt` (527.8 KB)
+### `project_structure_final.txt` (527.1 KB)
 
 ```text
 # System — Project Structure
@@ -11573,115 +11612,115 @@ test content
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 119
-- **Files Skipped**: 13748
+- **Files Skipped**: 13770
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-18 19:15:31
+- **Generated**: 2025-12-18 19:25:40
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-2025-12-18 19:13:40 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "[VOICE] Зрозуміло. [VERIFIED]"}
-2025-12-18 19:13:51 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "atlas", "last_step_status": "success", "uncertain_streak": 0}
-2025-12-18 19:13:51 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
-2025-12-18 19:13:51 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "atlas", "last_step_status": "success", "step_count": null, "replan_count": 1}
-2025-12-18 19:13:51 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 9, "replan_count": 1, "last_step_status": "success", "plan_len": 2, "task_type": "GENERAL", "execution_mode": "gui", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "[VOICE] Зрозуміло. [VERIFIED]\n\n[GUI_VERIFY] capture_screen:\n{\n  \"tool\": \"take_screenshot\",\n  \"status\": \"success\",\n  \"path\": \"/Users/dev/.antigravity/vision_cache/diff_1766078020.jpg\",\n  \"vision_mode\":"}
-2025-12-18 19:13:53 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_step_consumed", "remaining_steps": 1, "step_count": 9}
-2025-12-18 19:13:53 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_dispatch", "next_agent": "grisha", "step_type": "verify", "step_count": 9, "replan_count": 1, "description_preview": "Перевірити, що опис містить інформацію про інструменти, виконані дії та можливі збої"}
-2025-12-18 19:13:53 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
-2025-12-18 19:13:53 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "grisha", "last_step_status": null, "step_count": 9, "replan_count": 1}
-2025-12-18 19:13:53 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 9, "replan_count": 1, "plan_len": 1, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "gui", "last_msg_preview": "[VOICE] Гріша, перевір: Перевірити, що опис містить інформацію про інструменти, виконані дії та можливі збої.\n\n[Atlas Debug] Plan: 1 steps. Current: Перевірити, що опис містить інформацію про інструме"}
-2025-12-18 19:13:53 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": true, "changed_files": ["core/trinity.py"], "skip": true}
-2025-12-18 19:13:53 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 9390}
-2025-12-18 19:13:55 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "[VOICE] Перевіряю опис на відповідність вимогам."}
-2025-12-18 19:14:15 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "atlas", "last_step_status": "failed", "uncertain_streak": 1}
-2025-12-18 19:14:15 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "retry_without_replan", "status": "failed", "streak": 1}
-2025-12-18 19:14:15 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
-2025-12-18 19:14:15 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "atlas", "last_step_status": "failed", "step_count": null, "replan_count": 1}
-2025-12-18 19:14:15 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 10, "replan_count": 1, "last_step_status": "failed", "plan_len": 1, "task_type": "GENERAL", "execution_mode": "gui", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "[VOICE] Перевіряю опис на відповідність вимогам.\n\n[GUI_VERIFY] capture_screen:\n{\n  \"tool\": \"take_screenshot\",\n  \"status\": \"success\",\n  \"path\": \"/Users/dev/.antigravity/vision_cache/diff_1766078035.jpg"}
-2025-12-18 19:14:15 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_step_failed", "step_count": 10, "replan_count": 1, "fail_count": 1}
-2025-12-18 19:14:15 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_dispatch", "next_agent": "grisha", "step_type": "verify", "step_count": 10, "replan_count": 1, "description_preview": "Перевірити, що опис містить інформацію про інструменти, виконані дії та можливі збої"}
-2025-12-18 19:14:15 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
-2025-12-18 19:14:15 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "grisha", "last_step_status": null, "step_count": 10, "replan_count": 1}
-2025-12-18 19:14:15 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 10, "replan_count": 1, "plan_len": 1, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "gui", "last_msg_preview": "[VOICE] Гріша, перевір: Перевірити, що опис містить інформацію про інструменти, виконані дії та можливі збої.\n\n[Atlas Debug] Plan: 1 steps. Current: Перевірити, що опис містить інформацію про інструме"}
-2025-12-18 19:14:15 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": true, "changed_files": ["core/trinity.py"], "skip": true}
-2025-12-18 19:14:15 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 9390}
-2025-12-18 19:14:17 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "[VOICE] Перевіряю опис на відповідність вимогам."}
-2025-12-18 19:14:26 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "atlas", "last_step_status": "failed", "uncertain_streak": 2}
-2025-12-18 19:14:26 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "replan_triggered", "replan_count": 2, "status": "failed", "streak": 2}
-2025-12-18 19:14:26 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
-2025-12-18 19:14:26 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "atlas", "last_step_status": "failed", "step_count": null, "replan_count": 2}
-2025-12-18 19:14:26 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 11, "replan_count": 2, "last_step_status": "failed", "plan_len": 0, "task_type": "GENERAL", "execution_mode": "gui", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "[VOICE] Перевіряю опис на відповідність вимогам.\n\n[GUI_VERIFY] capture_screen:\n{\n  \"tool\": \"take_screenshot\",\n  \"status\": \"success\",\n  \"path\": \"/Users/dev/.antigravity/vision_cache/diff_1766078058.jpg"}
-2025-12-18 19:14:26 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generate_start", "step_count": 11, "replan_count": 2}
-2025-12-18 19:14:32 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:76 | [Verifier] Plan optimized: 4 → 4 steps (added 0 verify steps)
-2025-12-18 19:14:32 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generated", "steps": 4, "step_count": 11, "replan_count": 2}
-2025-12-18 19:14:32 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_dispatch", "next_agent": "tetyana", "step_type": "execute", "step_count": 11, "replan_count": 2, "description_preview": "Скопіювати текстове резюме зі сторінки в clipboard"}
-2025-12-18 19:14:32 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "tetyana", "next": "tetyana"}
-2025-12-18 19:14:32 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "tetyana", "last_step_status": null, "step_count": 11, "replan_count": 2}
-2025-12-18 19:14:32 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "GENERAL", "requires_windsurf": false, "dev_edit_mode": "cli", "execution_mode": "gui", "gui_mode": "auto", "gui_fallback_attempted": true, "plan_len": 4, "last_msg_preview": "[VOICE] Тетяно, Скопіювати текстове резюме зі сторінки в clipboard. Виконуй.\n\n[Atlas Debug] Plan: 4 steps. Current: Скопіювати текстове резюме зі сторінки в clipboard. Next: tetyana"}
-2025-12-18 19:14:35 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 1, "content_preview": "Текстове резюме скопійовано в clipboard. Ви можете вставити його в потрібне місце."}
-2025-12-18 19:14:35 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "gui", "gui_mode": "auto", "dev_edit_mode": "cli"}
-2025-12-18 19:14:35 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
-2025-12-18 19:14:35 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "tetyana", "current_agent": "grisha", "last_step_status": "success", "step_count": null, "replan_count": 2}
-2025-12-18 19:14:35 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 11, "replan_count": 2, "plan_len": 4, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "gui", "last_msg_preview": "Текстове резюме скопійовано в clipboard. Ви можете вставити його в потрібне місце.\n\nTool Results:\nResult for get_clipboard: {\n  \"tool\": \"get_clipboard\",\n  \"status\": \"success\",\n  \"content\": \"Витягнуте "}
-2025-12-18 19:14:35 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": true, "changed_files": ["core/trinity.py"], "skip": true}
-2025-12-18 19:14:35 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 9411}
-2025-12-18 19:14:37 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "[VOICE] Усе чисто. [VERIFIED]"}
-2025-12-18 19:14:44 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "atlas", "last_step_status": "success", "uncertain_streak": 0}
-2025-12-18 19:14:44 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
-2025-12-18 19:14:44 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "atlas", "last_step_status": "success", "step_count": null, "replan_count": 2}
-2025-12-18 19:14:44 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 12, "replan_count": 2, "last_step_status": "success", "plan_len": 4, "task_type": "GENERAL", "execution_mode": "gui", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "[VOICE] Усе чисто. [VERIFIED]\n\n[GUI_VERIFY] capture_screen:\n{\n  \"tool\": \"take_screenshot\",\n  \"status\": \"success\",\n  \"path\": \"/Users/dev/.antigravity/vision_cache/diff_1766078077.jpg\",\n  \"vision_mode\":"}
-2025-12-18 19:14:46 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_step_consumed", "remaining_steps": 3, "step_count": 12}
-2025-12-18 19:14:46 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_dispatch", "next_agent": "grisha", "step_type": "verify", "step_count": 12, "replan_count": 2, "description_preview": "Перевірити, що clipboard містить текстове резюме"}
-2025-12-18 19:14:46 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
-2025-12-18 19:14:46 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "grisha", "last_step_status": null, "step_count": 12, "replan_count": 2}
-2025-12-18 19:14:46 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 12, "replan_count": 2, "plan_len": 3, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "gui", "last_msg_preview": "[VOICE] Гріша, перевір: Перевірити, що clipboard містить текстове резюме.\n\n[Atlas Debug] Plan: 3 steps. Current: Перевірити, що clipboard містить текстове резюме. Next: grisha"}
-2025-12-18 19:14:46 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": true, "changed_files": ["core/trinity.py"], "skip": true}
-2025-12-18 19:14:46 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 9318}
-2025-12-18 19:14:48 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 1, "content_preview": ""}
-2025-12-18 19:14:56 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "atlas", "last_step_status": "success", "uncertain_streak": 0}
-2025-12-18 19:14:56 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
-2025-12-18 19:14:56 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "atlas", "last_step_status": "success", "step_count": null, "replan_count": 2}
-2025-12-18 19:14:56 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 13, "replan_count": 2, "last_step_status": "success", "plan_len": 3, "task_type": "GENERAL", "execution_mode": "gui", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "\n\nVerification Tools Results:\nResult for get_clipboard: {\n  \"tool\": \"get_clipboard\",\n  \"status\": \"success\",\n  \"content\": \"Витягнуте резюме\"\n}\n\n[GUI_VERIFY] capture_screen:\n{\n  \"tool\": \"take_screenshot"}
-2025-12-18 19:14:56 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_step_consumed", "remaining_steps": 2, "step_count": 13}
-2025-12-18 19:14:56 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_dispatch", "next_agent": "tetyana", "step_type": "execute", "step_count": 13, "replan_count": 2, "description_preview": "Коротко описати, які інструменти були задіяні, що саме було виконано, чи виникли обмеження або збої"}
-2025-12-18 19:14:56 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "tetyana", "next": "tetyana"}
-2025-12-18 19:14:56 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "tetyana", "last_step_status": null, "step_count": 13, "replan_count": 2}
-2025-12-18 19:14:56 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "GENERAL", "requires_windsurf": false, "dev_edit_mode": "cli", "execution_mode": "gui", "gui_mode": "auto", "gui_fallback_attempted": true, "plan_len": 2, "last_msg_preview": "[VOICE] Тетяно, Коротко описати, які інструменти були задіяні, що саме було виконано, чи виникли обмеження або збої. Виконуй.\n\n[Atlas Debug] Plan: 2 steps. Current: Коротко описати, які інструменти бу"}
-2025-12-18 19:14:58 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 0, "content_preview": "[VOICE] Описую використані інструменти, виконані дії та можливі обмеження. \n\nЖодні інструменти не були задіяні, оскільки завдання стосується лише текстового опису. Обмежень або збоїв не виникло."}
-2025-12-18 19:14:58 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "gui", "gui_mode": "auto", "dev_edit_mode": "cli"}
-2025-12-18 19:14:58 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
-2025-12-18 19:14:58 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "tetyana", "current_agent": "grisha", "last_step_status": "success", "step_count": null, "replan_count": 2}
-2025-12-18 19:14:58 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 13, "replan_count": 2, "plan_len": 2, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "gui", "last_msg_preview": "[VOICE] Описую використані інструменти, виконані дії та можливі обмеження. \n\nЖодні інструменти не були задіяні, оскільки завдання стосується лише текстового опису. Обмежень або збоїв не виникло."}
-2025-12-18 19:14:59 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": true, "changed_files": ["core/trinity.py"], "skip": true}
-2025-12-18 19:14:59 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 9337}
-2025-12-18 19:15:00 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "[VOICE] Зрозуміло. [VERIFIED]"}
-2025-12-18 19:15:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "atlas", "last_step_status": "success", "uncertain_streak": 0}
-2025-12-18 19:15:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
-2025-12-18 19:15:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "atlas", "last_step_status": "success", "step_count": null, "replan_count": 2}
-2025-12-18 19:15:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 14, "replan_count": 2, "last_step_status": "success", "plan_len": 2, "task_type": "GENERAL", "execution_mode": "gui", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "[VOICE] Зрозуміло. [VERIFIED]\n\n[GUI_VERIFY] capture_screen:\n{\n  \"tool\": \"take_screenshot\",\n  \"status\": \"success\",\n  \"path\": \"/Users/dev/.antigravity/vision_cache/diff_1766078101.jpg\",\n  \"vision_mode\":"}
-2025-12-18 19:15:08 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_step_consumed", "remaining_steps": 1, "step_count": 14}
-2025-12-18 19:15:08 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_dispatch", "next_agent": "grisha", "step_type": "verify", "step_count": 14, "replan_count": 2, "description_preview": "Перевірити, що опис містить інформацію про інструменти, виконані дії та можливі збої"}
-2025-12-18 19:15:08 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
-2025-12-18 19:15:08 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "grisha", "last_step_status": null, "step_count": 14, "replan_count": 2}
-2025-12-18 19:15:08 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 14, "replan_count": 2, "plan_len": 1, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "gui", "last_msg_preview": "[VOICE] Гріша, перевір: Перевірити, що опис містить інформацію про інструменти, виконані дії та можливі збої.\n\n[Atlas Debug] Plan: 1 steps. Current: Перевірити, що опис містить інформацію про інструме"}
-2025-12-18 19:15:08 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": true, "changed_files": ["core/trinity.py", "tui/layout.py"], "skip": true}
-2025-12-18 19:15:08 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 9390}
-2025-12-18 19:15:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "[VOICE] Перевіряю опис на наявність інформації про інструменти, дії та збої."}
-2025-12-18 19:15:20 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "atlas", "last_step_status": "failed", "uncertain_streak": 1}
-2025-12-18 19:15:21 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "retry_without_replan", "status": "failed", "streak": 1}
-2025-12-18 19:15:21 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
-2025-12-18 19:15:21 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "atlas", "last_step_status": "failed", "step_count": null, "replan_count": 2}
-2025-12-18 19:15:21 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 15, "replan_count": 2, "last_step_status": "failed", "plan_len": 1, "task_type": "GENERAL", "execution_mode": "gui", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "[VOICE] Перевіряю опис на наявність інформації про інструменти, дії та збої.\n\n[GUI_VERIFY] capture_screen:\n{\n  \"tool\": \"take_screenshot\",\n  \"status\": \"success\",\n  \"path\": \"/Users/dev/.antigravity/visi"}
-2025-12-18 19:15:24 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_step_failed", "step_count": 15, "replan_count": 2, "fail_count": 1}
-2025-12-18 19:15:24 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_dispatch", "next_agent": "grisha", "step_type": "verify", "step_count": 15, "replan_count": 2, "description_preview": "Перевірити, що опис містить інформацію про інструменти, виконані дії та можливі збої"}
-2025-12-18 19:15:24 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
-2025-12-18 19:15:24 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "grisha", "last_step_status": null, "step_count": 15, "replan_count": 2}
-2025-12-18 19:15:24 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 15, "replan_count": 2, "plan_len": 1, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "gui", "last_msg_preview": "[VOICE] Гріша, перевір: Перевірити, що опис містить інформацію про інструменти, виконані дії та можливі збої.\n\n[Atlas Debug] Plan: 1 steps. Current: Перевірити, що опис містить інформацію про інструме"}
-2025-12-18 19:15:24 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": true, "changed_files": ["core/agents/grisha.py", "core/trinity.py", "tui/layout.py"], "skip": true}
-2025-12-18 19:15:24 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 9390}
-2025-12-18 19:15:26 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "[VOICE] Перевіряю опис на відповідність критеріям."}
+2025-12-18 19:18:57 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
+2025-12-18 19:18:57 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
+2025-12-18 19:19:26 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_start", "task_type": "GENERAL", "requires_windsurf": false, "gui_mode": "auto", "execution_mode": "native", "recursion_limit": 100, "input_preview": "відкрий браузер хроміум і зайди в гугл, а в гуглі найди фільм хатіко"}
+2025-12-18 19:19:26 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 1, "replan_count": 0, "last_step_status": null, "plan_len": 0, "task_type": "GENERAL", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "відкрий браузер хроміум і зайди в гугл, а в гуглі найди фільм хатіко"}
+2025-12-18 19:19:27 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generate_start", "step_count": 1, "replan_count": 0}
+2025-12-18 19:19:34 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:76 | [Verifier] Plan optimized: 6 → 6 steps (added 0 verify steps)
+2025-12-18 19:19:34 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generated", "steps": 6, "step_count": 1, "replan_count": 0}
+2025-12-18 19:19:34 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_dispatch", "next_agent": "tetyana", "step_type": "execute", "step_count": 1, "replan_count": 0, "description_preview": "Відкрити браузер Chromium"}
+2025-12-18 19:19:34 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "tetyana", "next": "tetyana"}
+2025-12-18 19:19:34 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "tetyana", "last_step_status": null, "step_count": 1, "replan_count": 0}
+2025-12-18 19:19:34 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "GENERAL", "requires_windsurf": false, "dev_edit_mode": "cli", "execution_mode": "native", "gui_mode": "auto", "gui_fallback_attempted": false, "plan_len": 6, "last_msg_preview": "[VOICE] Тетяно, Відкрити браузер Chromium. Виконуй.\n\n[Atlas Debug] Plan: 6 steps. Current: Відкрити браузер Chromium. Next: tetyana"}
+2025-12-18 19:19:36 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 1, "content_preview": "Відкриваю браузер Chromium, як наказано."}
+2025-12-18 19:19:36 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli"}
+2025-12-18 19:19:36 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
+2025-12-18 19:19:36 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "tetyana", "current_agent": "grisha", "last_step_status": "success", "step_count": null, "replan_count": 0}
+2025-12-18 19:19:36 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 1, "replan_count": 0, "plan_len": 6, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "native", "last_msg_preview": "Відкриваю браузер Chromium, як наказано.\n\nTool Results:\nResult for open_app: {\n  \"ok\": true,\n  \"app\": \"Chromium\"\n}\n\n[STEP_COMPLETED] Всі інструменти виконано успішно."}
+2025-12-18 19:19:36 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": false, "changed_files": [], "skip": true}
+2025-12-18 19:19:36 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 9529}
+2025-12-18 19:19:38 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "[VOICE] Перевіряю, чи Chromium дійсно відкрито."}
+2025-12-18 19:19:38 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_forcing_verification", "reason": "no_tools_uncertain"}
+2025-12-18 19:19:50 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "atlas", "last_step_status": "success", "uncertain_streak": 0}
+2025-12-18 19:19:50 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
+2025-12-18 19:19:50 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "atlas", "last_step_status": "success", "step_count": null, "replan_count": 0}
+2025-12-18 19:19:50 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 2, "replan_count": 0, "last_step_status": "success", "plan_len": 6, "task_type": "GENERAL", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "[VOICE] Перевіряю, чи Chromium дійсно відкрито.\n\n[FORCED_VERIFY] capture_screen:\n{\n  \"tool\": \"take_screenshot\",\n  \"status\": \"success\",\n  \"path\": \"/Users/dev/.antigravity/vision_cache/snap_1766078378.j"}
+2025-12-18 19:19:50 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_step_consumed", "remaining_steps": 5, "step_count": 2}
+2025-12-18 19:19:50 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_dispatch", "next_agent": "grisha", "step_type": "verify", "step_count": 2, "replan_count": 0, "description_preview": "Перевірити, що браузер Chromium успішно відкрився (скріншот + аналіз)"}
+2025-12-18 19:19:50 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
+2025-12-18 19:19:50 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "grisha", "last_step_status": null, "step_count": 2, "replan_count": 0}
+2025-12-18 19:19:50 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 2, "replan_count": 0, "plan_len": 5, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "native", "last_msg_preview": "[VOICE] Гріша, перевір: Перевірити, що браузер Chromium успішно відкрився (скріншот + аналіз).\n\n[Atlas Debug] Plan: 5 steps. Current: Перевірити, що браузер Chromium успішно відкрився (скріншот + анал"}
+2025-12-18 19:19:50 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": false, "changed_files": [], "skip": true}
+2025-12-18 19:19:50 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 9574}
+2025-12-18 19:19:53 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 1, "content_preview": "Знімаю скріншот для перевірки."}
+2025-12-18 19:19:53 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "atlas", "last_step_status": "success", "uncertain_streak": 0}
+2025-12-18 19:19:53 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
+2025-12-18 19:19:53 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "atlas", "last_step_status": "success", "step_count": null, "replan_count": 0}
+2025-12-18 19:19:53 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 3, "replan_count": 0, "last_step_status": "success", "plan_len": 5, "task_type": "GENERAL", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "Знімаю скріншот для перевірки.\n\nVerification Tools Results:\nResult for capture_screen: {\n  \"tool\": \"take_screenshot\",\n  \"status\": \"success\",\n  \"path\": \"/Users/dev/.antigravity/vision_cache/diff_176607"}
+2025-12-18 19:19:53 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_step_consumed", "remaining_steps": 4, "step_count": 3}
+2025-12-18 19:19:53 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_dispatch", "next_agent": "tetyana", "step_type": "execute", "step_count": 3, "replan_count": 0, "description_preview": "Перейти на сайт google.com"}
+2025-12-18 19:19:53 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "tetyana", "next": "tetyana"}
+2025-12-18 19:19:53 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "tetyana", "last_step_status": null, "step_count": 3, "replan_count": 0}
+2025-12-18 19:19:53 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "GENERAL", "requires_windsurf": false, "dev_edit_mode": "cli", "execution_mode": "native", "gui_mode": "auto", "gui_fallback_attempted": false, "plan_len": 4, "last_msg_preview": "[VOICE] Тетяно, Перейти на сайт google.com. Виконуй.\n\n[Atlas Debug] Plan: 4 steps. Current: Перейти на сайт google.com. Next: tetyana"}
+2025-12-18 19:19:55 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 1, "content_preview": "Відкриваю сайт google.com у браузері."}
+2025-12-18 19:19:59 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli"}
+2025-12-18 19:19:59 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
+2025-12-18 19:19:59 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "tetyana", "current_agent": "grisha", "last_step_status": "success", "step_count": null, "replan_count": 0}
+2025-12-18 19:19:59 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 3, "replan_count": 0, "plan_len": 4, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "native", "last_msg_preview": "Відкриваю сайт google.com у браузері.\n\nTool Results:\nResult for browser_open_url: {\n  \"tool\": \"browser_open_url\",\n  \"status\": \"success\",\n  \"title\": \"Google\",\n  \"url\": \"https://www.google.com/\"\n}\n\n[STE"}
+2025-12-18 19:19:59 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": false, "changed_files": [], "skip": true}
+2025-12-18 19:19:59 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 9611}
+2025-12-18 19:20:01 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "[VOICE] Сайт Google успішно відкрито. [VERIFIED]"}
+2025-12-18 19:20:01 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "atlas", "last_step_status": "success", "uncertain_streak": 0}
+2025-12-18 19:20:01 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
+2025-12-18 19:20:01 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "atlas", "last_step_status": "success", "step_count": null, "replan_count": 0}
+2025-12-18 19:20:01 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 4, "replan_count": 0, "last_step_status": "success", "plan_len": 4, "task_type": "GENERAL", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "[VOICE] Сайт Google успішно відкрито. [VERIFIED]"}
+2025-12-18 19:20:01 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_step_consumed", "remaining_steps": 3, "step_count": 4}
+2025-12-18 19:20:01 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_dispatch", "next_agent": "grisha", "step_type": "verify", "step_count": 4, "replan_count": 0, "description_preview": "Перевірити, що сайт google.com успішно завантажився (скріншот + аналіз)"}
+2025-12-18 19:20:01 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
+2025-12-18 19:20:01 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "grisha", "last_step_status": null, "step_count": 4, "replan_count": 0}
+2025-12-18 19:20:01 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 4, "replan_count": 0, "plan_len": 3, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "native", "last_msg_preview": "[VOICE] Гріша, перевір: Перевірити, що сайт google.com успішно завантажився (скріншот + аналіз).\n\n[Atlas Debug] Plan: 3 steps. Current: Перевірити, що сайт google.com успішно завантажився (скріншот + "}
+2025-12-18 19:20:01 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": false, "changed_files": [], "skip": true}
+2025-12-18 19:20:01 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 9578}
+2025-12-18 19:20:04 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 1, "content_preview": "Відкриваю сайт google.com для перевірки."}
+2025-12-18 19:20:04 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "atlas", "last_step_status": "success", "uncertain_streak": 0}
+2025-12-18 19:20:04 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
+2025-12-18 19:20:04 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "atlas", "last_step_status": "success", "step_count": null, "replan_count": 0}
+2025-12-18 19:20:04 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 5, "replan_count": 0, "last_step_status": "success", "plan_len": 3, "task_type": "GENERAL", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "Відкриваю сайт google.com для перевірки.\n\nVerification Tools Results:\nResult for browser_open_url: {\n  \"tool\": \"browser_open_url\",\n  \"status\": \"success\",\n  \"title\": \"Google\",\n  \"url\": \"https://www.goo"}
+2025-12-18 19:20:04 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_step_consumed", "remaining_steps": 2, "step_count": 5}
+2025-12-18 19:20:04 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_dispatch", "next_agent": "tetyana", "step_type": "execute", "step_count": 5, "replan_count": 0, "description_preview": "Ввести в пошуковий рядок запит 'фільм Хатіко' і натиснути Enter"}
+2025-12-18 19:20:04 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "tetyana", "next": "tetyana"}
+2025-12-18 19:20:04 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "tetyana", "last_step_status": null, "step_count": 5, "replan_count": 0}
+2025-12-18 19:20:04 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "GENERAL", "requires_windsurf": false, "dev_edit_mode": "cli", "execution_mode": "native", "gui_mode": "auto", "gui_fallback_attempted": false, "plan_len": 2, "last_msg_preview": "[VOICE] Тетяно, Ввести в пошуковий рядок запит 'фільм Хатіко' і натиснути Enter. Виконуй.\n\n[Atlas Debug] Plan: 2 steps. Current: Ввести в пошуковий рядок запит 'фільм Хатіко' і натиснути Enter. Next: "}
+2025-12-18 19:20:06 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 2, "content_preview": ""}
+2025-12-18 19:20:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli"}
+2025-12-18 19:20:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
+2025-12-18 19:20:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "tetyana", "current_agent": "grisha", "last_step_status": "success", "step_count": null, "replan_count": 0}
+2025-12-18 19:20:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 5, "replan_count": 0, "plan_len": 2, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "native", "last_msg_preview": "\n\nTool Results:\nResult for type_text: {\n  \"tool\": \"type_text\",\n  \"status\": \"success\",\n  \"text_length\": 12\n}\nResult for press_key: {\n  \"tool\": \"press_key\",\n  \"status\": \"success\",\n  \"key\": \"enter\",\n  \"m"}
+2025-12-18 19:20:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": false, "changed_files": [], "skip": true}
+2025-12-18 19:20:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 9637}
+2025-12-18 19:20:09 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "[VOICE] Перевіряю результат виконання."}
+2025-12-18 19:20:09 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_forcing_verification", "reason": "no_tools_uncertain"}
+2025-12-18 19:20:18 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "atlas", "last_step_status": "success", "uncertain_streak": 0}
+2025-12-18 19:20:18 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
+2025-12-18 19:20:18 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "atlas", "last_step_status": "success", "step_count": null, "replan_count": 0}
+2025-12-18 19:20:18 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 6, "replan_count": 0, "last_step_status": "success", "plan_len": 2, "task_type": "GENERAL", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "[VOICE] Перевіряю результат виконання.\n\n[FORCED_VERIFY] capture_screen:\n{\n  \"tool\": \"take_screenshot\",\n  \"status\": \"success\",\n  \"path\": \"/Users/dev/.antigravity/vision_cache/diff_1766078409.jpg\",\n  \"v"}
+2025-12-18 19:20:20 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_step_consumed", "remaining_steps": 1, "step_count": 6}
+2025-12-18 19:20:20 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_dispatch", "next_agent": "grisha", "step_type": "verify", "step_count": 6, "replan_count": 0, "description_preview": "Перевірити, що результати пошуку за запитом 'фільм Хатіко' з'явилися (скріншот + аналіз)"}
+2025-12-18 19:20:20 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
+2025-12-18 19:20:20 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "grisha", "last_step_status": null, "step_count": 6, "replan_count": 0}
+2025-12-18 19:20:20 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 6, "replan_count": 0, "plan_len": 1, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "native", "last_msg_preview": "[VOICE] Гріша, перевір: Перевірити, що результати пошуку за запитом 'фільм Хатіко' з'явилися (скріншот + аналіз).\n\n[Atlas Debug] Plan: 1 steps. Current: Перевірити, що результати пошуку за запитом 'фі"}
+2025-12-18 19:20:20 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": false, "changed_files": [], "skip": true}
+2025-12-18 19:20:20 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 9612}
+2025-12-18 19:20:22 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 1, "content_preview": "[VOICE] Перевіряю знімок екрану."}
+2025-12-18 19:20:22 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "atlas", "last_step_status": "success", "uncertain_streak": 0}
+2025-12-18 19:20:22 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
+2025-12-18 19:20:22 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "atlas", "last_step_status": "success", "step_count": null, "replan_count": 0}
+2025-12-18 19:20:22 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 7, "replan_count": 0, "last_step_status": "success", "plan_len": 1, "task_type": "GENERAL", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "[VOICE] Перевіряю знімок екрану.\n\nVerification Tools Results:\nResult for capture_screen: {\n  \"tool\": \"take_screenshot\",\n  \"status\": \"success\",\n  \"path\": \"/Users/dev/.antigravity/vision_cache/diff_1766"}
+2025-12-18 19:20:23 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_step_consumed", "remaining_steps": 0, "step_count": 7}
+2025-12-18 19:20:23 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_completed", "step_count": 7, "replan_count": 0}
+2025-12-18 19:20:23 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "end", "next": "end"}
+2025-12-18 19:20:23 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "end", "last_step_status": null, "step_count": null, "replan_count": 0}
+2025-12-18 19:20:23 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_end", "outcome": "completed", "last_agent": "atlas", "replan_count": 0}
 ```
 
 ---
@@ -11690,9 +11729,9 @@ test content
 
 [Atlas] Final report
 
-Task: Атлас, виконай практичну перевірку нових можливостей системи як єдиний сценарій. 1. Почни з аналізу стану системи • Отримай базову інформацію про систему (CPU, RAM, uptime). • Переконайся, що система стабільна і готова до взаємодії. 2. Подивись на поточний робочий простір • Визнач, які вікна зараз відкриті. • З’ясуй, скільки активних моніторів і яка їх конфігурація. 3. Перейди до браузерної дії • Відкрий браузер. • Зайди на google.com. • Знайди інформацію за запитом “macOS automation”. 4. Використай результат пошуку • Відкрий один з релевантних результатів. • Витягни коротке текстове резюме зі сторінки (2–3 речення). 5. Підтвердь керування контекстом • Скопіюй це резюме в clipboard. • Перевір, що clipboard дійсно містить цей текст. 6. Заверши перевірку • Коротко опиши: • які інструменти були задіяні, • що саме було виконано, • чи виникли обмеження або збої.
+Task: відкрий браузер хроміум і зайди в гугл, а в гуглі найди фільм хатіко
 Outcome: completed
-Replans: 4
+Replans: 0
 Last agent: atlas
 
 Last message:
@@ -11713,18 +11752,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 38158 +-----------------------------------------
- 1 file changed, 102 insertions(+), 38056 deletions(-)
+ project_structure_final.txt | 38156 +-----------------------------------------
+ 1 file changed, 102 insertions(+), 38054 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-dc0c657 fix(tui): fix Window TypeError and improve Grisha skepticism
+9267505 fix(browser): improve browser automation and verification logic
+08cf5d1 Trinity task completed: відкрий браузер хроміум і зайди в гугл, а в гуглі найди фільм хатіко
+4bdf8ba Trinity task completed: відкрий гугл у браузері
+16d7bad fix(tui): fix Window TypeError and improve Grisha skepticism
 6c16159 fix(trinity): improve Grisha success detection and add Tetyana completion markers
-f2c40c3 fix(trinity): improve plan preservation and step retry logic
-b5c1c04 Trinity task completed: Атлас, виконай практичну перевірку нових можливостей системи як єдиний…
-519f44a fix(trinity): resolve Grisha uncertainty loop and add browser dependency check
 ```
 
 ---
@@ -12242,14 +12281,14 @@ Windsurf*.app/
 kinotavr.md
 ```
 
-### `.last_response.txt` (1.8 KB)
+### `.last_response.txt` (0.4 KB)
 
 ```text
 [Atlas] Final report
 
-Task: Атлас, виконай практичну перевірку нових можливостей системи як єдиний сценарій. 1. Почни з аналізу стану системи • Отримай базову інформацію про систему (CPU, RAM, uptime). • Переконайся, що система стабільна і готова до взаємодії. 2. Подивись на поточний робочий простір • Визнач, які вікна зараз відкриті. • З’ясуй, скільки активних моніторів і яка їх конфігурація. 3. Перейди до браузерної дії • Відкрий браузер. • Зайди на google.com. • Знайди інформацію за запитом “macOS automation”. 4. Використай результат пошуку • Відкрий один з релевантних результатів. • Витягни коротке текстове резюме зі сторінки (2–3 речення). 5. Підтвердь керування контекстом • Скопіюй це резюме в clipboard. • Перевір, що clipboard дійсно містить цей текст. 6. Заверши перевірку • Коротко опиши: • які інструменти були задіяні, • що саме було виконано, • чи виникли обмеження або збої.
+Task: відкрий браузер хроміум і зайди в гугл, а в гуглі найди фільм хатіко
 Outcome: completed
-Replans: 4
+Replans: 0
 Last agent: atlas
 
 Last message:
@@ -19492,7 +19531,7 @@ def run_atlas(llm, state):
     pass
 ```
 
-### `core/agents/grisha.py` (6.0 KB)
+### `core/agents/grisha.py` (6.6 KB)
 
 ```python
 from langchain_core.prompts import ChatPromptTemplate
@@ -19504,10 +19543,11 @@ GRISHA_SYSTEM_PROMPT = """Ти - Grisha, Офіцер Безпеки та QA к�
 
 ⚠️ КРИТИЧНІ ПРАВИЛА ВЕРИФІКАЦІЇ:
 1. Тобі ЗАБОРОНЕНО вірити Тетяні "на слово". Якщо вона каже "я скопіювала текст" або "я створила файл", ти НЕ МАЄШ права додавати [VERIFIED] без перевірки відповідним інструментом (get_clipboard, read_file, ls і т.д.).
-2. Ти ОБОВ'ЯЗКОВО повинен використати хоча б один інструмент верифікації (capture_screen, analyze_screen, read_file, run_shell, get_clipboard) ПЕРЕД тим, як звітувати про успіх або невизначеність.
+2. Ти ОБОВ'ЯЗКОВО повинен використати хоча б один інструмент верифікації (browser_screenshot, capture_screen, analyze_screen, read_file, run_shell, get_clipboard) ПЕРЕД тим, як звітувати про успіх або невизначеність.
 3. Якщо у повідомленні Тетяни є помилка tool execution ("status": "error") — це ЗАВЖДИ FAILED, НЕ uncertain!
-4. Якщо tool результат показує успіх та результати відповідають очікуванням — це SUCCESS.
-5. Тільки якщо після використання інструментів ти все ще не впевнений — можна звітувати про невизначеність.
+4. УВАГА НА ПОЛЯ ВВОДУ: Якщо ти бачиш на скріншоті, що Тетяна ввела текст з помилкою (наприклад, "фільм Хатікоenter" замість "фільм Хатіко"), ти ПОВИНЕН повернути FAILED. Це помилка автоматизації.
+5. Якщо tool результат показує успіх та результати відповідають очікуванням — це SUCCESS.
+6. Тільки якщо після використання інструментів ти все ще не впевнений — можна звітувати про невизначеність.
 
 Твої обов'язки:
 - Аналізувати плани Тетяни ДО їх виконання.
@@ -19517,8 +19557,9 @@ GRISHA_SYSTEM_PROMPT = """Ти - Grisha, Офіцер Безпеки та QA к�
 - ОБОВ'ЯЗКОВО: Якщо виявлено зміни у файлах core/, system_ai/, tui/, providers/ — запусти pytest для перевірки.
 
 Правило верифікації:
-- Після кожного GUI-кроку (mouse/keyboard) ти зобов'язаний зробити capture_screen або capture_screen_region,
-  потім ocr_region або analyze_screen, і лише після цього можна підтвердити успіх.
+- Після кожного GUI-кроку (mouse/keyboard) ти зобов'язаний зробити capture_screen або capture_screen_region.
+- Пріоритет БРАУЗЕРА: Якщо Тетяна працювала в браузері, використовуй `browser_screenshot` для кращої якості та деталізації.
+- Після знімку використай ocr_region або analyze_screen, і лише після цього можна підтвердити успіх.
 - Якщо завдання текстове/інформаційне (наприклад, "описати", "перевірити файл", "буфер обміну"), використовуй відповідні інструменти (read_file, ls, get_clipboard, git status).
 - ВАЖЛИВО: Ти НЕ МОЖЕШ підтверджувати успіх, просто прочитавши опис Тетяни. Ти маєш САМ переконатися через інструменти.
 - Тільки якщо інструменти НЕ дали відповіді (наприклад, завдання чисто "мовне"), можна покладатися на контекст чату.
@@ -19564,7 +19605,7 @@ def run_grisha(llm, state):
     pass
 ```
 
-### `core/agents/tetyana.py` (4.5 KB)
+### `core/agents/tetyana.py` (6.0 KB)
 
 ```python
 from langchain_core.prompts import ChatPromptTemplate
@@ -19611,11 +19652,20 @@ TETYANA_SYSTEM_PROMPT = """Ти - Tetyana, Головний Оператор т�
 - Звітувати про виконання.
 - ВАЖЛИВО: Якщо завданням є "описати", "пояснити" або "підсумувати", ти ПОВИННА надати цей опис/пояснення прямо у тексті після [VOICE], щоб Grisha міг його верифікувати. Не просто кажи "я виконую", а давай результат.
 
+⚠️ ПРАВИЛА ВЗАЄМОДІЇ ТА БРАУЗЕРА:
+1. ДЛЯ БРАУЗЕРА: Якщо задача стосується веб-сайтів, використовуй `browser_open_url` ВІДРАЗУ. НЕ використовуй `open_app("Chromium")`, бо це створить дублікат вікна.
+2. КЛАВІШІ: НІКОЛИ не дописуй слово "enter" або "Enter" у текст для `browser_type_text` чи `type_text`. 
+   - Використовуй `browser_press_key("Enter")` або параметр `press_enter=True`. 
+   - Для GUI використовуй `press_key("enter")`.
+3. ВЕРИФІКАЦІЯ: Після кожної дії в браузері (type/click) роби `browser_screenshot` або `browser_get_content`, щоб переконатися, що сторінка змінилася.
+4. ПРІОРИТЕТ [VOICE]: Якщо ти знайшла інформацію (наприклад, "фільм Хатіко вийшов у..."), ти ПОВИННА написати це у тексті після [VOICE]. Гріша не бачить твоїх думок, він бачить тільки текст і скріншоти.
+
 Стиль спілкування (STRICT):
 - ЗАВЖДИ починай відповідь з тегу [VOICE].
-- Формат: "[VOICE] <Коротка фраза адресована іншим агентам>."
+- Формат: "[VOICE] <Коротка фраза або РЕЗУЛЬТАТ виконання>."
 - Після цього — tool calls.
-- Приклад: "[VOICE] Відкриваю браузер Safari, як наказано."
+- Якщо ти отримала результат від інструменту (наприклад, текст зі сторінки), ОБОВ'ЯЗКОВО процитуй головне у наступному [VOICE].
+- Приклад: "[VOICE] Знайшла інформацію: Фільм Хатіко вийшов у 2009 році. Переходжу до наступного кроку."
 """
 
 def get_tetyana_prompt(task_context: str, tools_desc: str = ""):
@@ -19630,7 +19680,7 @@ def run_tetyana(llm, state):
     pass
 ```
 
-### `core/mcp.py` (17.2 KB)
+### `core/mcp.py` (17.5 KB)
 
 ```python
 from typing import Dict, Any, Callable, List, Optional
@@ -19865,7 +19915,9 @@ class MCPToolRegistry:
         # Browser Tools
         self.register_tool("browser_open_url", browser_open_url, "Open URL in generic browser. Args: url (str), headless (bool)")
         self.register_tool("browser_click_element", browser_click_element, "Click element in browser. Args: selector (str)")
-        self.register_tool("browser_type_text", browser_type_text, "Type text in browser. Args: selector (str), text (str)")
+        self.register_tool("browser_type_text", browser_type_text, "Type text in browser. Args: selector (str), text (str), press_enter (bool)")
+        self.register_tool("browser_press_key", browser_press_key, "Press a key (Enter, Tab, etc.) in browser. Args: key (str), selector (optional str)")
+        self.register_tool("browser_screenshot", browser_screenshot, "Take a high-quality screenshot of the current browser page. Args: path (optional str)")
         self.register_tool("browser_get_content", browser_get_content, "Get page/element text. Args: selector (optional str)")
         self.register_tool("browser_execute_script", browser_execute_script, "Run JS in browser. Args: script (str)")
         self.register_tool("browser_ensure_ready", browser_ensure_ready, "Check if browser is ready (Playwright installed). Returns setup instructions if not. Args: none")
@@ -20104,7 +20156,7 @@ def query_memory_tool(category: str, query: str) -> Dict[str, Any]:
     return {"status": "success", "results": results}
 ```
 
-### `core/trinity.py` (79.4 KB)
+### `core/trinity.py` (80.7 KB)
 
 ```python
 from typing import Annotated, TypedDict, Literal, List, Dict, Any, Optional, Callable
@@ -21051,23 +21103,31 @@ class TrinityRuntime:
 
             # Deterministic verification hook for GUI mode: always capture + analyze.
             if gui_mode in {"auto", "on"} and execution_mode == "gui":
-                snap = self.registry.execute("capture_screen", {"app_name": None})
+                # NEW: Prefer browser_screenshot if browser tools were used
+                if "browser_" in lower_content or "браузер" in lower_content:
+                    snap = self.registry.execute("browser_screenshot", {})
+                    if '"status": "error"' in snap:
+                        # Fallback to global capture if browser screenshot fails
+                        snap = self.registry.execute("capture_screen", {"app_name": None})
+                else:
+                    snap = self.registry.execute("capture_screen", {"app_name": None})
+                
                 content += "\n\n[GUI_VERIFY] capture_screen:\n" + str(snap)
                 try:
                     snap_dict = json.loads(snap)
                     img_path = snap_dict.get("path") if isinstance(snap_dict, dict) else None
                 except Exception:
                     img_path = None
+                
                 if img_path:
                     analysis = self.registry.execute(
                         "analyze_screen",
-                        {"image_path": img_path, "prompt": "Verify the UI state. Describe what changed and whether the goal seems achieved."},
+                        {"image_path": img_path, "prompt": "Verify the UI state. Describe what changed and whether the goal seems achieved. Check for errors or typos."},
                     )
                     content += "\n\n[GUI_VERIFY] analyze_screen:\n" + str(analysis)
 
         except Exception as e:
             content = f"Error invoking Grisha: {e}"
-
 
         # If Grisha says "CONFIRMED" or "VERIFIED", we end. Else Atlas replans.
         lower_content = content.lower()
@@ -21077,33 +21137,51 @@ class TrinityRuntime:
         # 1. Check for explicit success markers (including Tetyana's [STEP_COMPLETED])
         explicit_complete_markers = [
             "[verified]", "[confirmed]", "[step_completed]", "[completed]",
-            "verification passed", "qa passed", 
-            "verdict: pass", "верифікація пройдена", "перевірку пройдено", "підтверджую"
+            "verification passed", "qa passed", "verdict: pass", "перевірку пройдено", "підтверджую"
         ]
         has_explicit_complete = any(m in lower_content for m in explicit_complete_markers)
         
-        # 2. Check for tool execution errors in context (status: error = FAILED, not uncertain)
+        # 2. Check for tool execution errors in context
         has_tool_error_in_context = '"status": "error"' in content or '"status":"error"' in content
         
         # 3. Check for test failures
         has_test_failure = "[test_verification]" in lower_content and ("failed" in lower_content or "error" in lower_content)
         
-        # 4. NEW: Check for successful tool results (tool returned data without error = SUCCESS)
-        # This is the key fix: if Tetyana executed tools and got results, that's success!
+        # 4. Successful tool results (technical success)
         has_successful_tool_result = (
             "tool results:" in lower_content and 
-            '"status": "success"' in content or
-            '"status":"success"' in content or
-            # Tool returned a JSON array or object with data (not an error)
-            ("result for " in lower_content and not has_tool_error_in_context)
+            (
+                '"status": "success"' in content or
+                '"status":"success"' in content or
+                ('"result for "' in lower_content and not has_tool_error_in_context)
+            )
         )
         
-        # 5. Success / Failure / Indecision (REORDERED for better priority)
+        # 5. Success / Failure / Indecision
+        # LLM Markers [VERIFIED] have HIGHEST priority
         if has_test_failure:
             step_status = "failed"
             next_agent = "atlas"
         elif has_tool_error_in_context:
-            # Tool execution error is a clear failure, not uncertain
+            step_status = "failed"
+            next_agent = "atlas"
+        elif has_explicit_complete:
+            # LLM explicitly said it's done or Tetyana finished all tools
+            step_status = "success"
+            next_agent = "atlas"
+        elif has_successful_tool_result and not has_tool_error_in_context:
+            # ONLY count technical success as SUCCESS if it's NOT a GUI task 
+            # (GUI tasks REQUIRE explicit LLM verification via [VERIFIED])
+            is_gui_task = (gui_mode in {"on", "auto"})
+            if not is_gui_task:
+                step_status = "success"
+                next_agent = "atlas"
+            else:
+                # For GUI, technical success is just UNCERTAIN until LLM confirms visually
+                step_status = "uncertain"
+                if any(kw in lower_content for kw in ["успішно", "працює", "готово", "виконано", "done"]):
+                     step_status = "success"
+        elif any(kw in lower_content for kw in ["failed", "error", "помилка", "не вдалося", "blocked"]):
             step_status = "failed"
             next_agent = "atlas"
             if self.verbose:
@@ -24691,7 +24769,7 @@ Tools are designed to be callable from an LLM-driven runtime.
 """
 ```
 
-### `system_ai/tools/browser.py` (6.4 KB)
+### `system_ai/tools/browser.py` (9.6 KB)
 
 ```python
 """Browser Tools Module
@@ -24717,22 +24795,51 @@ class BrowserManager:
             cls._instance = cls()
         return cls._instance
 
+    def _ensure_page_valid(self):
+        """Check if page is still open and valid, recreate if needed."""
+        try:
+            if self._page and not self._page.is_closed():
+                return True
+        except Exception:
+            pass
+        
+        if self._context and not self._context.pages:
+            self._page = self._context.new_page()
+            return True
+        elif self._context and self._context.pages:
+            self._page = self._context.pages[0]
+            return True
+        
+        # If everything is gone, restart
+        self.start()
+        return True
+
     def start(self, headless: bool = False):
         if not self._playwright:
             self._playwright = sync_playwright().start()
         
         if not self._browser:
             try:
-                self._browser = self._playwright.chromium.launch(headless=headless)
+                # Use a more stable launch configuration
+                self._browser = self._playwright.chromium.launch(
+                    headless=headless,
+                    args=["--no-sandbox", "--disable-setuid-sandbox"]
+                )
             except Exception as e:
                 if "Executable doesn't exist" in str(e):
-                    raise Exception(f"Browser executables not found. Please run 'playwright install' in the terminal. Original error: {e}")
+                    raise Exception(f"Browser executables not found. Please run 'playwright install chromium' in the terminal. Original error: {e}")
                 raise e
-            self._context = self._browser.new_context()
+            self._context = self._browser.new_context(
+                viewport={'width': 1280, 'height': 800}
+            )
             self._page = self._context.new_page()
+        else:
+            # If already started, just ensure we have a page
+            self._ensure_page_valid()
 
     def get_page(self) -> Page:
         self.start()
+        self._ensure_page_valid()
         return self._page
 
     def stop(self):
@@ -24840,28 +24947,103 @@ def browser_click_element(selector: str) -> Dict[str, Any]:
             "error": str(e)
         }
 
-def browser_type_text(selector: str, text: str) -> Dict[str, Any]:
+def browser_type_text(selector: str, text: str, press_enter: bool = False) -> Dict[str, Any]:
     """Type text into an element
     
     Args:
         selector: CSS or XPath selector
         text: Text to type
+        press_enter: Whether to press Enter after typing (default False)
         
     Returns:
         Dict with status
     """
     try:
         page = _manager.get_page()
-        page.fill(selector, text)
+        # Ensure focus first
+        page.focus(selector)
+        # Clear existing text if any and type
+        page.fill(selector, "")
+        page.type(selector, text, delay=50) # Use type with small delay for realism
+        
+        if press_enter:
+            page.press(selector, "Enter")
+            
         return {
             "tool": "browser_type_text",
             "status": "success",
             "selector": selector,
-            "text_length": len(text)
+            "text_length": len(text),
+            "pressed_enter": press_enter
         }
     except Exception as e:
         return {
             "tool": "browser_type_text",
+            "status": "error",
+            "error": str(e)
+        }
+
+def browser_press_key(key: str, selector: Optional[str] = None) -> Dict[str, Any]:
+    """Press a key (Enter, Escape, ArrowDown, etc.)
+    
+    Args:
+        key: Key name (e.g., 'Enter', 'Escape', 'Tab', 'ArrowDown')
+        selector: Optional selector to target the keypress. If None, presses on global page.
+        
+    Returns:
+        Dict with status
+    """
+    try:
+        page = _manager.get_page()
+        if selector:
+            page.press(selector, key)
+        else:
+            page.keyboard.press(key)
+            
+        return {
+            "tool": "browser_press_key",
+            "status": "success",
+            "key": key,
+            "selector": selector
+        }
+    except Exception as e:
+        return {
+            "tool": "browser_press_key",
+            "status": "error",
+            "error": str(e)
+        }
+
+def browser_screenshot(path: Optional[str] = None) -> Dict[str, Any]:
+    """Take a screenshot of the current browser page
+    
+    Args:
+        path: Optional path to save. If None, saves to vision_cache.
+        
+    Returns:
+        Dict with status and file path
+    """
+    try:
+        import os
+        from datetime import datetime
+        
+        page = _manager.get_page()
+        
+        if not path:
+            cache_dir = os.path.expanduser("~/.antigravity/vision_cache")
+            os.makedirs(cache_dir, exist_ok=True)
+            filename = f"browser_{int(datetime.now().timestamp())}.png"
+            path = os.path.join(cache_dir, filename)
+            
+        page.screenshot(path=path, full_page=False)
+        
+        return {
+            "tool": "browser_screenshot",
+            "status": "success",
+            "path": path
+        }
+    except Exception as e:
+        return {
+            "tool": "browser_screenshot",
             "status": "error",
             "error": str(e)
         }
@@ -38064,4 +38246,4 @@ graph TD
 ## Summary
 
 - **Total Files**: 119
-- **Skipped**: 13748
+- **Skipped**: 13770

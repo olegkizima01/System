@@ -21,22 +21,51 @@ class BrowserManager:
             cls._instance = cls()
         return cls._instance
 
+    def _ensure_page_valid(self):
+        """Check if page is still open and valid, recreate if needed."""
+        try:
+            if self._page and not self._page.is_closed():
+                return True
+        except Exception:
+            pass
+        
+        if self._context and not self._context.pages:
+            self._page = self._context.new_page()
+            return True
+        elif self._context and self._context.pages:
+            self._page = self._context.pages[0]
+            return True
+        
+        # If everything is gone, restart
+        self.start()
+        return True
+
     def start(self, headless: bool = False):
         if not self._playwright:
             self._playwright = sync_playwright().start()
         
         if not self._browser:
             try:
-                self._browser = self._playwright.chromium.launch(headless=headless)
+                # Use a more stable launch configuration
+                self._browser = self._playwright.chromium.launch(
+                    headless=headless,
+                    args=["--no-sandbox", "--disable-setuid-sandbox"]
+                )
             except Exception as e:
                 if "Executable doesn't exist" in str(e):
-                    raise Exception(f"Browser executables not found. Please run 'playwright install' in the terminal. Original error: {e}")
+                    raise Exception(f"Browser executables not found. Please run 'playwright install chromium' in the terminal. Original error: {e}")
                 raise e
-            self._context = self._browser.new_context()
+            self._context = self._browser.new_context(
+                viewport={'width': 1280, 'height': 800}
+            )
             self._page = self._context.new_page()
+        else:
+            # If already started, just ensure we have a page
+            self._ensure_page_valid()
 
     def get_page(self) -> Page:
         self.start()
+        self._ensure_page_valid()
         return self._page
 
     def stop(self):
@@ -144,28 +173,103 @@ def browser_click_element(selector: str) -> Dict[str, Any]:
             "error": str(e)
         }
 
-def browser_type_text(selector: str, text: str) -> Dict[str, Any]:
+def browser_type_text(selector: str, text: str, press_enter: bool = False) -> Dict[str, Any]:
     """Type text into an element
     
     Args:
         selector: CSS or XPath selector
         text: Text to type
+        press_enter: Whether to press Enter after typing (default False)
         
     Returns:
         Dict with status
     """
     try:
         page = _manager.get_page()
-        page.fill(selector, text)
+        # Ensure focus first
+        page.focus(selector)
+        # Clear existing text if any and type
+        page.fill(selector, "")
+        page.type(selector, text, delay=50) # Use type with small delay for realism
+        
+        if press_enter:
+            page.press(selector, "Enter")
+            
         return {
             "tool": "browser_type_text",
             "status": "success",
             "selector": selector,
-            "text_length": len(text)
+            "text_length": len(text),
+            "pressed_enter": press_enter
         }
     except Exception as e:
         return {
             "tool": "browser_type_text",
+            "status": "error",
+            "error": str(e)
+        }
+
+def browser_press_key(key: str, selector: Optional[str] = None) -> Dict[str, Any]:
+    """Press a key (Enter, Escape, ArrowDown, etc.)
+    
+    Args:
+        key: Key name (e.g., 'Enter', 'Escape', 'Tab', 'ArrowDown')
+        selector: Optional selector to target the keypress. If None, presses on global page.
+        
+    Returns:
+        Dict with status
+    """
+    try:
+        page = _manager.get_page()
+        if selector:
+            page.press(selector, key)
+        else:
+            page.keyboard.press(key)
+            
+        return {
+            "tool": "browser_press_key",
+            "status": "success",
+            "key": key,
+            "selector": selector
+        }
+    except Exception as e:
+        return {
+            "tool": "browser_press_key",
+            "status": "error",
+            "error": str(e)
+        }
+
+def browser_screenshot(path: Optional[str] = None) -> Dict[str, Any]:
+    """Take a screenshot of the current browser page
+    
+    Args:
+        path: Optional path to save. If None, saves to vision_cache.
+        
+    Returns:
+        Dict with status and file path
+    """
+    try:
+        import os
+        from datetime import datetime
+        
+        page = _manager.get_page()
+        
+        if not path:
+            cache_dir = os.path.expanduser("~/.antigravity/vision_cache")
+            os.makedirs(cache_dir, exist_ok=True)
+            filename = f"browser_{int(datetime.now().timestamp())}.png"
+            path = os.path.join(cache_dir, filename)
+            
+        page.screenshot(path=path, full_page=False)
+        
+        return {
+            "tool": "browser_screenshot",
+            "status": "success",
+            "path": path
+        }
+    except Exception as e:
+        return {
+            "tool": "browser_screenshot",
             "status": "error",
             "error": str(e)
         }
