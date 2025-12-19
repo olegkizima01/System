@@ -1,6 +1,6 @@
 [Atlas] Final report
 
-Task: Найди через гугл фильм Атлас 2024 и включи его на весь экран
+Task: Найди через гугл фільм сучасний якийсь про штучний інтелект для перегляду його онлайн. Після того включи його на весь екран для перегляду, пересвідчись що він запущений і на весь екран.
 Outcome: completed
 Replans: 1
 Last agent: atlas
@@ -9,25 +9,11 @@ Last message:
 [VOICE] Не вдалося створити план.
 
 Changed files:
-- core/agents/atlas.py
-- core/agents/tetyana.py
-- core/trinity.py
-- movie_task_v5.out
-- system_ai/tools/browser.py
-- tui/agents.py
-- movie_task_v6.out
 - movie_task_v7.out
-- screenshot_20251219_021607.png
-- test_playwright_mcp.py
 
 Diff stat:
-core/agents/atlas.py       |  26 +++-------
- core/agents/tetyana.py     |   2 +-
- core/trinity.py            |  38 +++++++++++---
- movie_task_v5.out          | 120 +++++++++++++++++++++++++++++++++++++++++++++
- system_ai/tools/browser.py |  14 ++++--
- tui/agents.py              |   3 --
- 6 files changed, 170 insertions(+), 33 deletions(-)
+movie_task_v7.out | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
 
 Verification:
 - status: failed (heuristic)
