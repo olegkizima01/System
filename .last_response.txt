@@ -1,6 +1,6 @@
 [Atlas] Final report
 
-Task: Найди через гугл фільм сучасний якийсь про штучний інтелект для перегляду його онлайн. Після того включи його на весь екран для перегляду, пересвідчись що він запущений і на весь екран.
+Task: Найди через гугл сучасний фільм про штучний інтелект і запусти його онлайн на весь екран. Переконайся що фільм грає у повноекранному режимі.
 Outcome: completed
 Replans: 1
 Last agent: knowledge
@@ -9,25 +9,27 @@ Last message:
 [VOICE] Досвід збережено. Завдання завершено.
 
 Changed files:
-- .agent/workflows/atlas.md
-- .agent/workflows/data/screenshots/browser_1766129764.png
-- .agent/workflows/data/screenshots/browser_1766129765.png
-- .agent/workflows/data/screenshots/browser_1766129767.png
-- .agent/workflows/data/screenshots/snap_1766129735.jpg
-- .agent/workflows/data/screenshots/snap_1766129744.jpg
-- .agent/workflows/data/screenshots/snap_1766129751.jpg
-- .agent/workflows/data/screenshots/snap_1766129775.jpg
-- .agent/workflows/data/screenshots/snap_1766129784.jpg
-- .agent/workflows/data/screenshots/snap_1766129793.jpg
-- .agent/workflows/data/screenshots/snap_1766129804.jpg
-- .agent/workflows/data/screenshots/snap_1766129814.jpg
-- .agent/workflows/data/screenshots/snap_1766129822.jpg
-- .agent/workflows/data/screenshots/snap_1766129832.jpg
-- run_trinity_task.py
+- system_ai/tools/browser.py
+- .agent/workflows/data/screenshots/browser_1766129972.png
+- .agent/workflows/data/screenshots/browser_1766129974.png
+- .agent/workflows/data/screenshots/browser_1766129979.png
+- .agent/workflows/data/screenshots/browser_1766130105.png
+- .agent/workflows/data/screenshots/browser_1766130107.png
+- .agent/workflows/data/screenshots/browser_1766130108.png
+- .agent/workflows/data/screenshots/browser_1766130115.png
+- .agent/workflows/data/screenshots/browser_1766130122.png
+- .agent/workflows/data/screenshots/browser_1766130124.png
+- .agent/workflows/data/screenshots/browser_1766130129.png
+- .agent/workflows/data/screenshots/snap_1766129986.jpg
+- .agent/workflows/data/screenshots/snap_1766129995.jpg
+- .agent/workflows/data/screenshots/snap_1766130003.jpg
+- .agent/workflows/data/screenshots/snap_1766130115.jpg
+- .agent/workflows/data/screenshots/snap_1766130135.jpg
+- .agent/workflows/data/screenshots/snap_1766130150.jpg
 
 Diff stat:
-.agent/workflows/atlas.md | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+system_ai/tools/browser.py | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
 
 Verification:
 - status: unknown (no explicit signal)

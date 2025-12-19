@@ -33,6 +33,22 @@ class BrowserManager:
                 
                 self._last_headless = headless
                 
+                # Try to connect to existing Chrome via CDP first
+                cdp_url = os.environ.get("CHROME_CDP_URL", "http://127.0.0.1:9222")
+                try:
+                    self.browser = self.pw.chromium.connect_over_cdp(cdp_url)
+                    # Get the first page or create one
+                    pages = self.browser.contexts[0].pages if self.browser.contexts else []
+                    if pages:
+                        self.page = pages[0]
+                    else:
+                        self.page = self.browser.contexts[0].new_page() if self.browser.contexts else self.browser.new_context().new_page()
+                    self._connected_via_cdp = True
+                    return self.page
+                except Exception:
+                    # CDP connection failed, fall back to launching new browser
+                    self._connected_via_cdp = False
+                
                 # Chromium args
                 args = ["--disable-blink-features=AutomationControlled"]
                 # Only add sandbox flags if not on macOS (to avoid warning banner)
@@ -53,6 +69,7 @@ class BrowserManager:
                 raise
 
         return self.page
+
 
     def close(self):
         if self.browser:
