@@ -312,12 +312,11 @@ class TrinityRuntime:
                 if self.verbose: print(f"🧠 [Meta-Planner] Step uncertain ({current_step_fail_count}/3).")
                 # After 3 uncertain attempts, assume step completed and move on
                 if current_step_fail_count >= 3:
-                    plan.pop(0)
-                    current_step_fail_count = 0
-                    if self.verbose: print(f"🧠 [Meta-Planner] Forcing step completion after uncertainty limit. Remaining: {len(plan)}")
-                    if not plan:
-                        msg = "All plan steps completed (uncertainty limit reached)." if self.preferred_language != "uk" else "Усі кроки плану завершено (ліміт невизначеності досягнуто)."
-                        return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] {msg}")]}
+                    # After 3 uncertain attempts, we MUST treat this as a failure to force replanning.
+                    # Previously this was "forcing step completion", which caused false positives.
+                    if self.verbose: print(f"🧠 [Meta-Planner] Uncertainty limit reached ({current_step_fail_count}). Marking step as FAILED.")
+                    last_step_status = "failed"
+                    # Do NOT pop the plan. Let the decision logic below handle 'failed' -> 'replan'.
 
         # 3. Decision Logic
         action = "proceed" # Default: continue to tetyana with current plan
