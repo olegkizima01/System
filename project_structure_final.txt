@@ -4,9 +4,9 @@
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 125
-- **Files Skipped**: 16125
+- **Files Skipped**: 16132
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-19 06:17:15
+- **Generated**: 2025-12-19 06:18:15
 
 ---
 
@@ -148,18 +148,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 39351 ------------------------------------------
- 1 file changed, 39351 deletions(-)
+ project_structure_final.txt | 39089 ------------------------------------------
+ 1 file changed, 39089 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-2980651 chore: remove unused files and update agent workflow configuration.
+78603c4 docs(atlas): Document Context7 integration as Explicit Context Manager
+b0a73bc chore: remove unused files and update agent workflow configuration.
 2465645 feat(core): Integrate Context7 Layer for explicit context management
 2ce5833 chore(setup): Ensure dependencies (pyautogui) and verify setup.sh
 fc453e6 docs(atlas): Explicitly list external MCP servers (PyAutoGUI, Playwright)
-afc6358 docs(atlas): Update tools section to reflect new architecture (Automation, Cleanup, Recorder)
 ```
 
 ---
@@ -11901,7 +11901,7 @@ if __name__ == "__main__":
     main()
 ```
 
-### `docs/atlas.md` (6.7 KB)
+### `docs/atlas.md` (6.8 KB)
 
 ```markdown
 ---
@@ -11939,7 +11939,8 @@ Atlas — це не просто автоматизатор, а **автоном
 ```mermaid
 graph TD
     START((START)) --> MP[meta_planner<br/>Голова/Стратег/Контролер]
-    MP -->|Active Retrieval| A[atlas<br/>Архітектор Плану]
+    MP -->|Policy & Strategy| C7[context7<br/>Контекст-Менеджер]
+    C7 -->|Normalized Context| A[atlas<br/>Архітектор Плану]
     MP -->|план готовий| T[tetyana<br/>Виконавець]
     MP -->|план готовий| G[grisha<br/>Верифікатор]
     A --> MP
@@ -11949,13 +11950,14 @@ graph TD
     K --> END((END))
 ```
 
-### 2.1 Trinity Agents
+### 2.1 Trinity Agents & Layers
 
--   **Meta-Planner** (`_meta_planner_node`): Головний оркестратор. Виконує **Active Retrieval** та фільтрує спогади (пріоритезує успіхи, враховує анти-патерни).
--   **Atlas** (`_atlas_node`): Архітектор тактичного плану. Отримує повний список доступних інструментів динамічно та використовує контекст від Meta-Planner для формування кроків.
+-   **Meta-Planner** (`_meta_planner_node`): Головний оркестратор. Виконує **Active Retrieval** та фільтрує спогади.
+-   **Context7** (`context7`): **Explicit Context Manager**. Готує контекст, керує бюджетом токенів та ін'єктує стратегічні політики перед плануванням.
+-   **Atlas** (`_atlas_node`): Архітектор тактичного плану. Отримує *нормалізований* контекст від Context7 для розробки кроків.
 -   **Tetyana** (`_tetyana_node`): Виконавець (Native/GUI/Playwright).
 -   **Grisha** (`_grisha_node`): Верифікатор. У разі успіху або критичного провалу ініціює перехід до навчання.
--   **Knowledge** (`_knowledge_node`): **Етап рефлексії**. Зберігає досвід (`success`/`failed`), додаючи метадані про джерело (`source`) та впевненість (`confidence`).
+-   **Knowledge** (`_knowledge_node`): **Етап рефлексії**. Зберігає досвід (`success`/`failed`).
 
 ---
 
@@ -12417,9 +12419,9 @@ test content
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 125
-- **Files Skipped**: 16125
+- **Files Skipped**: 16132
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-19 06:17:15
+- **Generated**: 2025-12-19 06:18:15
 
 ---
 
@@ -12561,18 +12563,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 39351 ------------------------------------------
- 1 file changed, 39351 deletions(-)
+ project_structure_final.txt | 39089 ------------------------------------------
+ 1 file changed, 39089 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-2980651 chore: remove unused files and update agent workflow configuration.
+78603c4 docs(atlas): Document Context7 integration as Explicit Context Manager
+b0a73bc chore: remove unused files and update agent workflow configuration.
 2465645 feat(core): Integrate Context7 Layer for explicit context management
 2ce5833 chore(setup): Ensure dependencies (pyautogui) and verify setup.sh
 fc453e6 docs(atlas): Explicitly list external MCP servers (PyAutoGUI, Playwright)
-afc6358 docs(atlas): Update tools section to reflect new architecture (Automation, Cleanup, Recorder)
 ```
 
 ---
@@ -24314,7 +24316,7 @@ if __name__ == "__main__":
     main()
 ```
 
-### `docs/atlas.md` (6.7 KB)
+### `docs/atlas.md` (6.8 KB)
 
 ```markdown
 ---
@@ -24352,7 +24354,8 @@ Atlas — це не просто автоматизатор, а **автоном
 ```mermaid
 graph TD
     START((START)) --> MP[meta_planner<br/>Голова/Стратег/Контролер]
-    MP -->|Active Retrieval| A[atlas<br/>Архітектор Плану]
+    MP -->|Policy & Strategy| C7[context7<br/>Контекст-Менеджер]
+    C7 -->|Normalized Context| A[atlas<br/>Архітектор Плану]
     MP -->|план готовий| T[tetyana<br/>Виконавець]
     MP -->|план готовий| G[grisha<br/>Верифікатор]
     A --> MP
@@ -24362,13 +24365,14 @@ graph TD
     K --> END((END))
 ```
 
-### 2.1 Trinity Agents
+### 2.1 Trinity Agents & Layers
 
--   **Meta-Planner** (`_meta_planner_node`): Головний оркестратор. Виконує **Active Retrieval** та фільтрує спогади (пріоритезує успіхи, враховує анти-патерни).
--   **Atlas** (`_atlas_node`): Архітектор тактичного плану. Отримує повний список доступних інструментів динамічно та використовує контекст від Meta-Planner для формування кроків.
+-   **Meta-Planner** (`_meta_planner_node`): Головний оркестратор. Виконує **Active Retrieval** та фільтрує спогади.
+-   **Context7** (`context7`): **Explicit Context Manager**. Готує контекст, керує бюджетом токенів та ін'єктує стратегічні політики перед плануванням.
+-   **Atlas** (`_atlas_node`): Архітектор тактичного плану. Отримує *нормалізований* контекст від Context7 для розробки кроків.
 -   **Tetyana** (`_tetyana_node`): Виконавець (Native/GUI/Playwright).
 -   **Grisha** (`_grisha_node`): Верифікатор. У разі успіху або критичного провалу ініціює перехід до навчання.
--   **Knowledge** (`_knowledge_node`): **Етап рефлексії**. Зберігає досвід (`success`/`failed`), додаючи метадані про джерело (`source`) та впевненість (`confidence`).
+-   **Knowledge** (`_knowledge_node`): **Етап рефлексії**. Зберігає досвід (`success`/`failed`).
 
 ---
 
@@ -39086,4 +39090,4 @@ _tool_ui_theme_set = tool_ui_theme_set
 ## Summary
 
 - **Total Files**: 125
-- **Skipped**: 16125
+- **Skipped**: 16132
