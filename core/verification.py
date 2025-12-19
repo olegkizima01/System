@@ -11,30 +11,31 @@ class AdaptiveVerifier:
         self.llm = llm
         self.logger = logging.getLogger("system_cli.verifier")
 
-    def optimize_plan(self, raw_plan: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def optimize_plan(self, raw_plan: List[Dict[str, Any]], meta_config: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
         """
         Analyzes a raw execution plan using LLM to insert 'VERIFY' steps dynamically.
-        Ensures mandatory verification after critical steps.
+        Ensures mandatory verification after critical steps, respecting the 'verification_rigor' policy.
         """
         from langchain_core.prompts import ChatPromptTemplate
         from langchain_core.messages import SystemMessage, HumanMessage
         import json
         import re
 
-        VERIFIER_PROMPT = """Ти — Grisha, агент безпеки та верифікації.
-Твоє завдання: Проаналізувати план дій та ОБОВ'ЯЗКОВО вставити кроки перевірки (VERIFY) після кожного критичного кроку.
+        rigor = (meta_config or {}).get("verification_rigor", "medium")
+        
+        VERIFIER_PROMPT = f"""Ти — Grisha, агент безпеки та верифікації.
+Твоє завдання: Проаналізувати план дій та вставити кроки перевірки (VERIFY).
 
-ОБОВ'ЯЗКОВІ VERIFY після:
-1. Файлових операцій (create, modify, delete) — перевіри, що файл існує/змінено
-2. Shell-команд (особливо rm, git, sudo) — перевіри return code та результат
-3. GUI-дій (натискання кнопок, введення) — перевіри скріншот або результат
-4. Код-змін (git commits, рефакторинг) — перевіри git diff та статус
+ПОЛІТИКА ВЕРИФІКАЦІЇ (Rigor: {rigor}):
+- Якщо rigor="high": Вставляй VERIFY після КОЖНОГО кроку без винятку.
+- Якщо rigor="medium": Вставляй VERIFY після критичних кроків (файли, shell, GUI, git).
+- Якщо rigor="low": Вставляй VERIFY тільки один раз у самому кінці плану.
 
 Формат VERIFY кроку:
 {{"type": "verify", "description": "Перевірити, що [результат дії]"}}
 
 Вхідний план:
-{plan_json}
+{{plan_json}}
 
 Поверни повний оновлений JSON список кроків (оригінальні кроки + вставлені VERIFY кроки).
 """
@@ -45,7 +46,7 @@ class AdaptiveVerifier:
             plan_json = json.dumps(raw_plan, ensure_ascii=False)
             prompt = ChatPromptTemplate.from_messages([
                 SystemMessage(content=VERIFIER_PROMPT.format(plan_json=plan_json)),
-                HumanMessage(content="Оптимізуй план, додавши ОБОВ'ЯЗКОВІ перевірки після критичних кроків.")
+                HumanMessage(content=f"Оптимізуй план згідно з політикою Rigor: {rigor}")
             ])
             
             response = self.llm.invoke(prompt.format_messages())
@@ -71,10 +72,10 @@ class AdaptiveVerifier:
                  self.logger.warning(f"[Verifier] Optimization reduced step count ({len(raw_plan)} -> {len(optimized)}). Use raw plan fallback.")
                  raise ValueError("Optimized plan unexpectedly shorter than raw plan")
 
-            # Fallback: if LLM didn't add verify steps, add them manually for critical steps
-            enhanced = self._ensure_verify_steps(optimized)
+            # Fallback: if LLM didn't add verify steps, add them manually
+            enhanced = self._ensure_verify_steps(optimized, rigor=rigor)
             self.logger.debug(
-                f"[Verifier] Plan optimized: {len(raw_plan)} → {len(enhanced)} steps (added {len(enhanced) - len(raw_plan)} verify steps)"
+                f"[Verifier] Plan optimized (Rigor: {rigor}): {len(raw_plan)} → {len(enhanced)} steps"
             )
             return enhanced
                 
@@ -82,47 +83,56 @@ class AdaptiveVerifier:
             self.logger.warning(f"[Verifier] LLM JSON parsing/optimization error: {e}")
             self.logger.debug(f"[Verifier] Raw response: {content[:200]}...")
             # Fallback: ensure verify steps manually
-            enhanced = self._ensure_verify_steps(raw_plan)
+            enhanced = self._ensure_verify_steps(raw_plan, rigor=rigor)
             self.logger.debug(
                 f"[Verifier] Plan fallback: {len(raw_plan)} → {len(enhanced)} steps (added {len(enhanced) - len(raw_plan)} verify steps)"
             )
             return enhanced
     
-    def _ensure_verify_steps(self, plan: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def _ensure_verify_steps(self, plan: List[Dict[str, Any]], rigor: str = "medium") -> List[Dict[str, Any]]:
         """
-        Fallback: manually ensure verify steps ONLY after high-risk actions.
+        Fallback: manually ensure verify steps according to rigor.
         """
-        # Reduced set of truly critical keywords to avoid plan bloat
+        if rigor == "low":
+            # Only ensure one verify at the very end
+            if not plan:
+                return []
+            if plan[-1].get("type") == "verify":
+                return plan
+            return plan + [{"type": "verify", "description": "Фінальна перевірка результату задачі"}]
+
         critical_keywords = [
             "create", "delete", "remove", "git", "commit", "push", "pull",
-            "shell", "run", "execute", "sudo"
+            "shell", "run", "execute", "sudo", "write", "copy", "click", "type", "press"
         ]
         
         enhanced_plan = []
-        for step in plan:
+        for i, step in enumerate(plan):
             enhanced_plan.append(step)
             
             step_type = step.get("type", "execute").lower()
             description = step.get("description", "").lower()
             
-            # Don't add verify if it's already a verify step or similar
             if step_type != "execute":
                 continue
                 
             is_critical = any(kw in description for kw in critical_keywords)
             
-            # Only add verify if it's NOT already followed by one
-            if is_critical and plan.index(step) + 1 < len(plan):
-                next_step = plan[plan.index(step) + 1]
-                if next_step.get("type") == "verify":
-                    continue
-
-            if is_critical:
-                verify_step = {
-                    "type": "verify",
-                    "description": f"Перевірити результат: {step.get('description', 'дії')}"
-                }
-                enhanced_plan.append(verify_step)
+            # Decide if we need to add verify
+            need_verify = (rigor == "high") or (rigor == "medium" and is_critical)
+            
+            if need_verify:
+                # Check if next step is already verify
+                next_is_verify = False
+                if i + 1 < len(plan):
+                    next_is_verify = plan[i+1].get("type") == "verify"
+                
+                if not next_is_verify:
+                    verify_step = {
+                        "type": "verify",
+                        "description": f"Перевірити результат: {step.get('description', 'дії')}"
+                    }
+                    enhanced_plan.append(verify_step)
         
         return enhanced_plan
 

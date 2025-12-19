@@ -49,6 +49,7 @@ class TrinityState(TypedDict):
     last_step_status: Optional[str] # success|failed|uncertain
     uncertain_streak: Optional[int]  # Count of consecutive uncertain decisions (anti-loop)
     current_step_fail_count: Optional[int]  # Count of consecutive failures on the same step
+    meta_config: Optional[Dict[str, Any]]  # Meta-planning: strategy, verification_rigor, recovery_mode
 
 class TrinityRuntime:
     MAX_REPLANS = 10
@@ -197,336 +198,209 @@ class TrinityRuntime:
     def _build_graph(self):
         builder = StateGraph(TrinityState)
 
+        builder.add_node("meta_planner", self._meta_planner_node)
         builder.add_node("atlas", self._atlas_node)
         builder.add_node("tetyana", self._tetyana_node)
         builder.add_node("grisha", self._grisha_node)
 
-        builder.set_entry_point("atlas")
+        builder.set_entry_point("meta_planner")
         
+        builder.add_conditional_edges(
+            "meta_planner",
+            self._router,
+            {"atlas": "atlas", "tetyana": "tetyana", "end": END}
+        )
         builder.add_conditional_edges(
             "atlas", 
             self._router, 
-            {"tetyana": "tetyana", "grisha": "grisha", "end": END}
+            {"tetyana": "tetyana", "grisha": "grisha", "meta_planner": "meta_planner", "end": END}
         )
         builder.add_conditional_edges(
             "tetyana", 
             self._router, 
-            {"grisha": "grisha", "atlas": "atlas", "tetyana": "tetyana", "end": END}
+            {"grisha": "grisha", "meta_planner": "meta_planner", "tetyana": "tetyana", "end": END}
         )
         builder.add_conditional_edges(
             "grisha", 
             self._router, 
-            {"atlas": "atlas", "end": END}
+            {"meta_planner": "meta_planner", "end": END}
         )
 
         return builder.compile()
 
-    def _atlas_node(self, state: TrinityState):
-        if self.verbose: print("🌐 [Atlas] Strategizing...")
+    def _meta_planner_node(self, state: TrinityState):
+        """The 'Controller Brain' that sets policies and manages replanning strategy."""
+        if self.verbose: print("🧠 [Meta-Planner] Analyzing strategy...")
         context = state.get("messages", [])
         last_msg = context[-1].content if context else "Start"
-         
-        # Check step/replan limits
-        step_count = state.get("step_count", 0) + 1
+        step_count = state.get("step_count", 0)
         replan_count = state.get("replan_count", 0)
+        last_step_status = state.get("last_step_status", "success")
+        plan = state.get("plan") or []
+        meta_config = state.get("meta_config") or {}
+        current_step_fail_count = int(state.get("current_step_fail_count") or 0)
 
-        try:
-            plan_preview = state.get("plan")
-            trace(self.logger, "atlas_enter", {
-                "step_count": step_count,
-                "replan_count": replan_count,
-                "last_step_status": state.get("last_step_status"),
-                "plan_len": len(plan_preview) if isinstance(plan_preview, list) else 0,
-                "task_type": state.get("task_type"),
-                "execution_mode": state.get("execution_mode"),
-                "gui_mode": state.get("gui_mode"),
-                "dev_edit_mode": state.get("dev_edit_mode"),
-                "last_msg_preview": str(last_msg)[:200],
-            })
-        except Exception:
-            pass
-         
-        if step_count > self.MAX_STEPS:
-            try:
-                trace(self.logger, "atlas_limit_reached", {"step_count": step_count, "max_steps": self.MAX_STEPS})
-            except Exception:
-                pass
-            return {"current_agent": "end", "messages": [AIMessage(content=f"[VOICE] Ліміт кроків ({self.MAX_STEPS}) досягнуто. Завершую.")]}
-         
-        if replan_count > self.MAX_REPLANS:
-            try:
-                trace(self.logger, "atlas_replan_limit_reached", {"replan_count": replan_count, "max_replans": self.MAX_REPLANS})
-            except Exception:
-                pass
-            return {"current_agent": "end", "messages": [AIMessage(content=f"[VOICE] Ліміт перепланувань ({self.MAX_REPLANS}) досягнуто. Потрібна допомога.")]}
-         
-        # Check for pause (permission required)
-        pause_info = state.get("pause_info")
-        if pause_info:
-            msg = pause_info.get("message", "Permission required")
-            if self.verbose:
-                print(f"⚠️ [Atlas] PAUSED: {msg}")
-            try:
-                trace(self.logger, "atlas_paused", {"message": str(msg)[:200], "pause_info": pause_info})
-            except Exception:
-                pass
-            return {
-                "current_agent": "end",
-                "task_status": "paused",
-                "messages": [AIMessage(content=f"[VOICE] ПАУЗА. {msg}")],
-                "pause_info": pause_info
-            }
-        
-        # 1. Query RAG for relevant past experiences
-        rag_context = ""
-        try:
-            strategies = self.memory.query_memory("strategies", last_msg, n_results=2)
-            if strategies:
-                rag_context = "Relevante минулі стратегії:\n" + "\n".join([s["content"][:200] for s in strategies])
-                if self.verbose: print(f"🌐 [Atlas] RAG found {len(strategies)} relevant strategies.")
-        except Exception:
-            pass
-        
-        # 1b. Read project structure context for continual development
-        structure_context = self._get_project_structure_context()
-        if structure_context:
-            rag_context += f"\n\n## Контекст репозиторію (Last Response, Git Log, Recent Changes):\n{structure_context}"
-            if self.verbose: print(f"🌐 [Atlas] Loaded project structure context ({len(structure_context)} chars)")
-
-        # Update Summary Memory if context is getting long
+        # 1. Update Summary Memory periodically
         summary = state.get("summary", "")
         if len(context) > 6 and step_count % 3 == 0:
              try:
-                # Simple summarization using LLM
                 summary_prompt = [
-                    SystemMessage(content="Ти — архіваріус. Створи стислий підсумок (2-3 речення) поточного стану виконання задачі на основі історії повідомлень. Збережи ключові деталі (що зроблено, що залишилось)."),
-                    HumanMessage(content=f"Поточний підсумок: {summary}\n\nОстанні повідомлення:\n" + "\n".join([m.content[:500] for m in context[-4:]]))
+                    SystemMessage(content="Ти — архіваріус Trinity. Створи стислий підсумок (2-3 речення) поточного стану задачі. Що зроблено? Що залишилось?"),
+                    HumanMessage(content=f"Поточний підсумок: {summary}\n\nОстанні події:\n" + "\n".join([m.content[:500] for m in context[-4:]]))
                 ]
                 sum_resp = self.llm.invoke(summary_prompt)
                 summary = sum_resp.content
-                if self.verbose: print(f"🌐 [Atlas] Memory Updated: {summary[:50]}...")
+                if self.verbose: print(f"🧠 [Meta-Planner] Summary update: {summary[:50]}...")
              except Exception:
                 pass
-        
-        # 2. Manage Plan State (Consumption)
-        plan = state.get("plan")
-        last_step_status = state.get("last_step_status", "success") # Default to success for first run
-        current_step_fail_count = int(state.get("current_step_fail_count") or 0)
 
-        if plan and step_count > 1:
+        # 1b. Check Master Limits
+        if step_count >= self.MAX_STEPS:
+            return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] Досягнуто ліміту кроків ({self.MAX_STEPS}).")]}
+        if replan_count >= self.MAX_REPLANS:
+            return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] Досягнуто ліміту перепланувань ({self.MAX_REPLANS}).")]}
+
+        # 2. Plan Maintenance (Consumption)
+        if plan:
             if last_step_status == "success":
-                # Only pop if the previous agent explicitly succeeded
-                if len(plan) > 0:
-                    plan.pop(0)
-                    current_step_fail_count = 0  # Reset fail count on success
-                    if self.verbose: print(f"🌐 [Atlas] Step completed successfully. Remaining steps: {len(plan)}")
-                    try:
-                        trace(self.logger, "atlas_step_consumed", {"remaining_steps": len(plan), "step_count": step_count})
-                    except Exception:
-                        pass
-                    # If plan is now empty, we are done!
-                    if not plan:
-                        try:
-                            trace(self.logger, "atlas_plan_completed", {"step_count": step_count, "replan_count": replan_count})
-                        except Exception:
-                            pass
-                        return {"current_agent": "end", "messages": [AIMessage(content="[VOICE] Всі кроки плану виконано успішно.")]}
+                plan.pop(0)
+                current_step_fail_count = 0
+                if self.verbose: print(f"🧠 [Meta-Planner] Step succeeded. Remaining: {len(plan)}")
+                if not plan:
+                     return {"current_agent": "end", "messages": list(context) + [AIMessage(content="[VOICE] Всі кроки плану виконано успішно. Задача завершена.")]}
             elif last_step_status == "failed":
                 current_step_fail_count += 1
-                if self.verbose: print(f"🌐 [Atlas] Step failed (attempt {current_step_fail_count}). Retrying...")
-                try:
-                    trace(self.logger, "atlas_step_failed", {"step_count": step_count, "replan_count": replan_count, "fail_count": current_step_fail_count})
-                except Exception:
-                    pass
-                # If 3+ failures on the same step, force replan
-                if current_step_fail_count >= 3:
-                    if self.verbose: print(f"🌐 [Atlas] 3+ failures on same step. Forcing replan.")
-                    plan = None  # Force new plan generation
-                    current_step_fail_count = 0
+                if self.verbose: print(f"🧠 [Meta-Planner] Step failed ({current_step_fail_count}/3).")
             else:
-                if self.verbose: print(f"🌐 [Atlas] Step status uncertain ({last_step_status}). Continuing current step...")
-                try:
-                    trace(self.logger, "atlas_step_uncertain", {"step_count": step_count, "replan_count": replan_count})
-                except Exception:
-                    pass
-
-        # 3. Generate New Plan if empty
-        if not plan:
-            if self.verbose: print("🌐 [Atlas] Generating new plan...")
-            try:
-                trace(self.logger, "atlas_plan_generate_start", {"step_count": step_count, "replan_count": replan_count})
-            except Exception:
+                # Uncertain - usually keep the step and let Atlas/Meta decide
                 pass
+
+        # 3. Decision Logic
+        action = "proceed" # Default: continue to tetyana with current plan
+        
+        if not meta_config:
+            action = "initialize"
+        elif not plan:
+            action = "replan" # out of steps
+        elif last_step_status == "failed":
+            if current_step_fail_count >= 3:
+                 action = "replan"
+            else:
+                 recovery_mode = meta_config.get("recovery_mode", "local_fix")
+                 action = "replan" if recovery_mode == "full_replan" else "repair"
+        
+        # 4. Meta-Reasoning (LLM)
+        if action in ["initialize", "replan", "repair"]:
+            from core.agents.atlas import get_meta_planner_prompt
             
-            # Use LLM to generate structured plan
-            plan_resp = None
+            task_context = f"Задача: {last_msg}\nКрок: {step_count}\nСтатус: {last_step_status}\nПоточний конфіг: {meta_config}\nПлан (залишок): {len(plan)} кроків."
+            prompt = get_meta_planner_prompt(task_context)
+            
             try:
-                routing_hint = ""
-                try:
-                    tt = str(state.get("task_type") or "").strip()
-                    rw = state.get("requires_windsurf")
-                    dem = str(state.get("dev_edit_mode") or "").strip()
-                    if tt or (rw is not None) or dem:
-                        routing_hint = f"\n\n[ROUTING] task_type={tt} requires_windsurf={rw} dev_edit_mode={dem}"
-                except Exception:
-                    routing_hint = ""
-
-                # Use specific planning prompt with HISTORY
-                from core.agents.atlas import ATLAS_PLANNING_PROMPT
-                
-                # Construct messages: System Prompt + History + Context/Instruction
-                planning_messages = [SystemMessage(content=ATLAS_PLANNING_PROMPT)]
-                
-                # Filter/Trim history: Keep system prompt, initial user request, and last 8 messages.
-                # This prevents old 'success' messages or failures from polluting current state.
-                history = state.get("messages", [])
-                if len(history) > 10:
-                    history = [history[0], history[1]] + history[-8:]
-                
-                planning_messages.extend(history)
-                
-                # Add a strong reminder of the current objective based on context (ACTION-ORIENTED)
-                reminder_msg = f"ПРІОРИТЕТ: Дія (Tools). УНИКАЙ мета-планування та 'аналізу'. Якщо потрібен пошук — РОБИ ПОШУК. Якщо CAPTCHA — Hybrid Physical Solver (vision_analyze, mouse). Поточний контекст: {rag_context + routing_hint}\nЗараз ми на кроці {step_count}. Наступні кроки? JSON."
-                planning_messages.append(HumanMessage(content=reminder_msg))
-
-                plan_resp = self.llm.invoke(planning_messages)
-                
-                import re
-                json_str = plan_resp.content
-                
-                # Robust JSON extraction
-                raw_plan = []
-                try:
-                    # Try to find a list first
-                    match = re.search(r"(\[.*\])", json_str, re.DOTALL)
-                    if match:
-                        raw_plan = json.loads(match.group(1))
-                    else:
-                        # Try to find an object that might contain a "plan" or "steps" key
-                        match = re.search(r"(\{.*\})", json_str, re.DOTALL)
-                        if match:
-                            data = json.loads(match.group(1))
-                            if isinstance(data, list):
-                                raw_plan = data
-                            elif isinstance(data, dict):
-                                raw_plan = data.get("plan") or data.get("steps") or data.get("tasks") or []
-                    
-                    if not isinstance(raw_plan, list) or not raw_plan:
-                        # Fallback for extreme cases where LLM output is messy
-                        try:
-                            maybe_list = json.loads(json_str)
-                            raw_plan = maybe_list if isinstance(maybe_list, list) else []
-                        except:
-                            raw_plan = []
-                except Exception:
-                    # If all regex fails, try direct load
-                    try:
-                        raw_plan = json.loads(json_str)
-                    except:
-                        raise ValueError(f"Could not parse plan JSON: {json_str[:100]}...")
-
-                # New check: Did Atlas say we are done in JSON format?
-                if isinstance(raw_plan, list) and len(raw_plan) == 1:
-                    status = raw_plan[0].get("status")
-                    if status == "completed":
-                        msg = raw_plan[0].get("message", "Задача виконана.")
-                        return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] {msg}")]}
-
+                resp = self.llm.invoke(prompt.format_messages())
+                data = self._extract_json_object(resp.content)
+                if data and "meta_config" in data:
+                    meta_config.update(data["meta_config"])
+                    if self.verbose: print(f"🧠 [Meta-Planner] Reasoning: {meta_config.get('reasoning')}")
+                    if self.verbose: print(f"🧠 [Meta-Planner] Updated policy: {meta_config.get('strategy')}, rigor={meta_config.get('verification_rigor')}")
             except Exception as e:
-                # Log raw response for debugging
-                try:
-                    raw_content = str(plan_resp.content)[:1000] if 'plan_resp' in locals() else "N/A"
-                    print(f"DEBUG: Atlas raw plan generation failed or signal caught. Content: {raw_content}")
-                    trace(self.logger, "atlas_plan_raw_response", {"content": raw_content})
-                except Exception:
-                    pass
+                if self.verbose: print(f"⚠️ [Meta-Planner] Error: {e}")
 
-                # HEURISTIC: Did Atlas use natural language to say it's done?
-                raw_content = str(plan_resp.content).lower() if 'plan_resp' in locals() else ""
-                success_keywords = ["виконано", "запущено", "готово", "done", "success", "film is playing", "фільм грає"]
-                if any(k in raw_content for k in success_keywords) and len(raw_content) < 300:
-                    if self.verbose: print(f"✅ [Atlas] Heuristic completion detected: {raw_content[:50]}...")
-                    return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] {raw_content}")]}
+            # Signal Atlas if we need plan changes
+            return {
+                "current_agent": "atlas",
+                "meta_config": meta_config,
+                "plan": None if action == "replan" else plan,
+                "current_step_fail_count": current_step_fail_count,
+                "summary": summary
+            }
 
-                if self.verbose: print(f"⚠️ [Atlas] Smart Planning failed ({e}). Fallback to 1-step.")
-                try:
-                    trace(self.logger, "atlas_plan_generate_error", {"error": str(e)[:200]})
-                except Exception:
-                    pass
-                # Improved fallback: if captcha detected, force captcha solve instructions
-                fallback_desc = last_msg
-                if "[captcha]" in str(last_msg).lower():
-                    fallback_desc = "Виявлено CAPTCHA! Використовуй 'browser_open_url' з 'headless=False' та 'vision_analyze' для вирішення через Hybrid Physical Solver."
-                
-                raw_plan = [{
-                    "id": 1, 
-                    "type": "execute", 
-                    "description": fallback_desc,
-                    "agent": "tetyana"
-                }]
-            
-            # Optimize Plan (Adaptive Verification)
-            plan = self.verifier.optimize_plan(raw_plan)
+        # 5. Default flow
+        out = self._atlas_dispatch(state, plan)
+        out["summary"] = summary
+        return out
 
-            try:
-                trace(self.logger, "atlas_plan_generated", {"steps": len(plan) if isinstance(plan, list) else 0, "step_count": step_count, "replan_count": replan_count})
-            except Exception:
-                pass
-            
-            if self.verbose:
-                print(f"🌐 [Atlas] Plan Optimized: {len(plan)} steps.")
-                for step in plan:
-                    print(f"   - {step['type'].upper()}: {step['description']}")
+    def _atlas_node(self, state: TrinityState):
+        """Generates the plan based on Meta-Planner policy."""
+        if self.verbose: print("🌐 [Atlas] Generating steps...")
+        context = state.get("messages", [])
+        last_msg = context[-1].content if context else "Start"
+        step_count = state.get("step_count", 0) + 1
+        replan_count = state.get("replan_count", 0)
+        plan = state.get("plan")
+        meta_config = state.get("meta_config") or {}
 
-        # 3. Dispatch Logic
-        current_step = plan[0] if plan else None
+        # If we already have a plan (e.g. from Meta 'repair' mode), we just dispatch
+        if plan:
+            return self._atlas_dispatch(state, plan)
+
+        # Generate new plan
+        replan_count += 1
+        if self.verbose: print(f"🔄 [Atlas] Replan #{replan_count}")
         
-        if not current_step:
-            return {"current_agent": "end", "messages": [AIMessage(content="[VOICE] Не вдалося створити план.")]}
+        from core.agents.atlas import get_atlas_plan_prompt
+        rag_context = self.memory.query_memory("strategies", last_msg)
+        structure_context = self._get_project_structure_context()
+        routing_hint = f"\nСТРАТЕГІЯ: {meta_config.get('strategy', 'linear')}\nRIGOR: {meta_config.get('verification_rigor', 'medium')}"
         
-        # Router Logic based on Plan Step Type
-        step_type = current_step.get("type", "execute")
-        if step_type == "verify":
-            next_agent = "grisha"
-        elif step_type == "bootstrap":
-            # Bootstrap steps are executed by Tetyana with special handling
-            next_agent = "tetyana"
-        else:
-            next_agent = "tetyana"
-
+        prompt = get_atlas_plan_prompt(last_msg, context=rag_context + "\n\n" + structure_context + routing_hint)
+        
         try:
-            trace(self.logger, "atlas_dispatch", {
-                "next_agent": next_agent,
-                "step_type": step_type,
-                "step_count": step_count,
-                "replan_count": replan_count,
-                "description_preview": str(current_step.get("description", ""))[:200],
-            })
-        except Exception:
-            pass
+            plan_resp = self.llm.invoke(prompt.format_messages())
+            data = self._extract_json_object(plan_resp.content)
             
-        # Update state with the plan and counters
-        # Build content from plan result or current step description
-        desc = current_step.get('description', '')
-        if next_agent == "tetyana":
-            voice = f"[VOICE] Тетяно, {desc}. Виконуй."
-        elif next_agent == "grisha":
-            voice = f"[VOICE] Гріша, перевір: {desc}."
-        else:
-            voice = f"[VOICE] Наступний крок: {desc}."
+            raw_plan = []
+            if isinstance(data, list): raw_plan = data
+            elif isinstance(data, dict):
+                if data.get("status") == "completed":
+                    return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] {data.get('message', 'Готово.')}")]}
+                raw_plan = data.get("steps") or data.get("plan") or []
+                if data.get("meta_config"):
+                    meta_config.update(data["meta_config"])
+                    if self.verbose: print(f"🌐 [Atlas] Strategy Justification: {meta_config.get('reasoning')}")
+                    if self.verbose: print(f"🌐 [Atlas] Preferences: tool_pref={meta_config.get('tool_preference', 'hybrid')}")
 
-        content = f"{voice}\n\n[Atlas Debug] Plan: {len(plan)} steps. Current: {desc}. Next: {next_agent}"
+            if not raw_plan: raise ValueError("No steps generated")
+
+            # Optimize with Grisha (Verifier)
+            optimized_plan = self.verifier.optimize_plan(raw_plan, meta_config=meta_config)
+            
+            return self._atlas_dispatch(state, optimized_plan, replan_count=replan_count)
+
+        except Exception as e:
+            if self.verbose: print(f"⚠️ [Atlas] Error: {e}")
+            # Minimal fallback plan
+            fallback = [{"id": 1, "type": "execute", "description": last_msg, "agent": "tetyana"}]
+            return self._atlas_dispatch(state, fallback, replan_count=replan_count)
+
+    def _atlas_dispatch(self, state, plan, replan_count=None):
+        """Internal helper to format the dispatch message and return state."""
+        context = state.get("messages", [])
+        step_count = state.get("step_count", 0) + 1
+        replan_count = replan_count or state.get("replan_count", 0)
         
-        # Preserve existing messages and add new one
-        updated_messages = list(context) + [AIMessage(content=content)]
+        current_step = plan[0] if plan else None
+        if not current_step:
+            return {"current_agent": "end", "messages": list(context) + [AIMessage(content="[VOICE] План порожній.")]}
+
+        desc = current_step.get('description', '')
+        step_type = current_step.get("type", "execute")
+        next_agent = "grisha" if step_type == "verify" else "tetyana"
+        
+        voice = f"[VOICE] {next_agent.capitalize()}, {desc}."
+        content = f"{voice}\n\n[Atlas Debug] Step: {desc}. Next: {next_agent}"
+        
         return {
-            "current_agent": next_agent, 
-            "messages": updated_messages,
+            "current_agent": next_agent,
+            "messages": list(context) + [AIMessage(content=content)],
             "plan": plan,
             "step_count": step_count,
             "replan_count": replan_count,
-            "summary": summary,
-            "current_step_fail_count": current_step_fail_count,
+            "meta_config": state.get("meta_config"),
+            "current_step_fail_count": state.get("current_step_fail_count"),
+            "gui_mode": state.get("gui_mode"),
+            "execution_mode": state.get("execution_mode"),
+            "task_type": state.get("task_type")
         }
 
     def _tetyana_node(self, state: TrinityState):
@@ -1211,6 +1085,18 @@ class TrinityRuntime:
         except Exception:
             pass
         return current
+
+    def _extract_json_object(self, text: str) -> Any:
+        """Helper to extract the first JSON object or list from a string."""
+        import re
+        import json
+        try:
+            match = re.search(r"(\{.*\}|\[.*\])", text, re.DOTALL)
+            if match:
+                return json.loads(match.group(1))
+        except (json.JSONDecodeError, ValueError, Exception):
+            pass
+        return None
 
     def _get_git_root(self) -> Optional[str]:
         try:
