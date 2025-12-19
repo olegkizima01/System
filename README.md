@@ -23,6 +23,7 @@ The system runs on **Trinity Runtime**, a cyclic graph (LangGraph) of specialize
 | Agent / Layer | Role | Description |
 | :--- | :--- | :--- |
 | **Meta-Planner** | *Orchestrator* | The "Head". Performs Active Retrieval and filters memories. |
+| **Context7** | *Context Manager* | **Explicit Layer**. Budgets tokens, injects policy, and normalizes context. |
 | **Atlas** | *Architect* | Generates tactical plans based on normalized context. |
 | **Tetyana** | *Executor* | Universal operator. Executes tools (Shell, AppleScript, Browser). |
 | **Grisha** | *Verifier* | QA. Verifies actions via visual feedback and logic. |
