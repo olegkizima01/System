@@ -163,8 +163,9 @@ class TrinityRuntime:
             sys = (
                 "You are a task router for a macOS developer assistant. "
                 "Classify the user request into one of: DEV, GENERAL. "
-                "DEV means software development work or dev-support operations (debugging, checking permissions/disk space/processes for dev tools, git, tests, repo files). "
-                "GENERAL means unrelated household/media/personal tasks. "
+                "DEV means software development work or dev-support operations (debugging, code analysis, checking permissions/disk space/processes, git, tests, repo files, browser-based research for dev purposes). "
+                "GENERAL means completely unrelated non-technical/personal tasks. "
+                "Default to DEV if there is any technical context."
                 "Also decide whether the task requires using Windsurf IDE for code generation/editing. "
                 "Return STRICT JSON only with keys: task_type (DEV|GENERAL), requires_windsurf (bool), confidence (0..1), reason (string)."
             )
@@ -1713,7 +1714,7 @@ class TrinityRuntime:
             "task_type": task_type,
             "is_dev": bool(is_dev),
             "requires_windsurf": bool(requires_windsurf),
-            "dev_edit_mode": "windsurf" if bool(requires_windsurf) else "cli",
+            "dev_edit_mode": "cli", # User Preference: Continue CLI priority
             "intent_reason": intent_reason,
         }
 
