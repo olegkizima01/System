@@ -385,7 +385,7 @@ class TrinityRuntime:
         
         # Check for repeated failures that might need human intervention
         current_step_fail_count = state.get("current_step_fail_count", 0)
-        if current_step_fail_count >= 2:
+        if current_step_fail_count >= 3:
             pause_context = {
                 "reason": "repeated_failures",
                 "message": "Doctor Vibe: Атлас виявив повторювані помилки. Система призупинена для аналізу.",

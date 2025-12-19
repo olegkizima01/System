@@ -85,6 +85,7 @@ def browser_open_url(url: str, headless: bool = True) -> str:
         manager = BrowserManager.get_instance()
         page = manager.get_page(headless=headless)
         page.goto(url, wait_until="domcontentloaded", timeout=60000)
+        time.sleep(2) # Give page some time to settle
         
         content = page.content().lower()
         # Refined detection: avoid false positives on 'robot' or 'sorry' in footer/about pages
@@ -120,9 +121,13 @@ def browser_click_element(selector: str) -> str:
 
 def browser_type_text(selector: str, text: str, press_enter: bool = False) -> str:
     try:
+        # Smart Selector Mapping: Google changed input[name="q"] to textarea[name="q"]
+        if selector == "input[name='q']" or selector == 'input[name="q"]':
+            selector = 'textarea[name="q"]'
+            
         manager = BrowserManager.get_instance()
         page = manager.get_page()
-        page.fill(selector, text, timeout=5000)
+        page.fill(selector, text, timeout=10000)
         if press_enter:
             page.press(selector, "Enter")
         return json.dumps({"status": "success"})
@@ -180,9 +185,13 @@ def browser_get_content() -> str:
         # Use existing session's headless mode if available
         headless_mode = manager._last_headless if manager._last_headless is not None else True
         page = manager.get_page(headless=headless_mode)
+        
+        # Extract visible text instead of raw HTML to reduce noise and fit more useful info
+        text_content = page.inner_text("body")
+        
         return json.dumps({
             "status": "success",
-            "content": page.content()[:5000],
+            "content": text_content[:15000],  # Increased limit and switched to text
             "url": page.url,
             "title": page.title()
         }, ensure_ascii=False)
@@ -216,7 +225,7 @@ def browser_snapshot() -> str:
             "url": page.url,
             "title": page.title(),
             "has_captcha": has_captcha,
-            "content_preview": content[:10000] # Return more content for verification
+            "content_preview": content[:30000] # Return much more content for verification
         }, ensure_ascii=False)
     except Exception as e:
         return json.dumps({"status": "error", "error": str(e)})
@@ -224,6 +233,34 @@ def browser_snapshot() -> str:
 def browser_navigate(url: str, headless: bool = True) -> str:
     """Alias for browser_open_url."""
     return browser_open_url(url, headless=headless)
+
+def browser_get_links() -> str:
+    """Extract all clickable links from the current page."""
+    try:
+        manager = BrowserManager.get_instance()
+        page = manager.get_page()
+        
+        links = page.evaluate("""
+            () => {
+                const results = [];
+                const anchors = document.querySelectorAll('a[href]');
+                anchors.forEach(a => {
+                    const text = a.innerText.trim();
+                    const href = a.href;
+                    if (text && href && !href.startsWith('javascript:')) {
+                        results.push({text, href});
+                    }
+                });
+                return results;
+            }
+        """)
+        
+        return json.dumps({
+            "status": "success",
+            "links": links[:50] # Top 50 links
+        }, ensure_ascii=False)
+    except Exception as e:
+        return json.dumps({"status": "error", "error": str(e)})
 
 def browser_close() -> str:
     try:

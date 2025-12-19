@@ -39,6 +39,7 @@ from system_ai.tools.browser import (
     browser_screenshot,
     browser_snapshot,
     browser_navigate,
+    browser_get_links,
     browser_close
 )
 
@@ -353,6 +354,7 @@ class MCPToolRegistry:
         self.register_tool("browser_screenshot", browser_screenshot, "Take screenshot of browser. Args: path (optional str)")
         self.register_tool("browser_snapshot", browser_snapshot, "Accessibility tree snapshot (best for navigation). Args: none")
         self.register_tool("browser_get_content", browser_get_content, "Get page/element text. Args: none")
+        self.register_tool("browser_get_links", browser_get_links, "Extract all clickable links from the current page. Args: none")
         self.register_tool("browser_execute_script", browser_execute_script, "Run JS in browser. Args: script (str)")
         self.register_tool("browser_ensure_ready", browser_ensure_ready, "Check if browser is ready. Args: none")
         self.register_tool("browser_close", browser_close, "Close browser. Args: none")
