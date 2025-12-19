@@ -267,7 +267,8 @@ def build_app(
         BufferControl(buffer=input_buffer, key_bindings=input_key_bindings), 
         style="class:input",
         wrap_lines=True, # Ensure long pastes are visible
-        height=Dimension(min=1, max=10) # Dynamic height
+        height=Dimension(min=1, preferred=1, max=10), # Dynamic height
+        dont_extend_height=True,
     )
     setattr(input_window, "name", "input")
 
@@ -336,7 +337,7 @@ def build_app(
                 ],
                 height=Dimension(weight=1) 
             ),
-            Frame(input_area, style="class:frame.border", height=Dimension(min=3, preferred=3, max=12)), # Dynamic area height
+            Frame(input_area, style="class:frame.border", height=Dimension(min=3, max=12), dont_extend_height=True), # Dynamic area height
             status_window,
         ]
     )

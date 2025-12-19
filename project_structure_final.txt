@@ -4,27 +4,15 @@
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 127
-- **Files Skipped**: 16011
+- **Files Skipped**: 16018
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-19 04:40:00
+- **Generated**: 2025-12-19 04:43:11
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-2025-12-19 02:35:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": false, "changed_files": [], "skip": true}
-2025-12-19 02:35:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 9325}
-2025-12-19 02:35:09 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 1, "content_preview": ""}
-2025-12-19 02:35:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "atlas", "last_step_status": "uncertain", "uncertain_streak": 1}
-2025-12-19 02:35:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "retry_without_replan", "status": "uncertain", "streak": 1}
-2025-12-19 02:35:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
-2025-12-19 02:35:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "atlas", "last_step_status": "uncertain", "step_count": null, "replan_count": 0}
-2025-12-19 02:35:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 3, "replan_count": 0, "last_step_status": "uncertain", "plan_len": 14, "task_type": "GENERAL", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "\n\nVerification Tools Results:\nResult for browser_snapshot: \"{\\\"status\\\": \\\"success\\\", \\\"url\\\": \\\"about:blank\\\", \\\"title\\\": \\\"\\\", \\\"has_captcha\\\": false, \\\"content_preview\\\": \\\"<html><head></head><body"}
-2025-12-19 02:35:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_step_uncertain", "step_count": 3, "replan_count": 0}
-2025-12-19 02:35:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_dispatch", "next_agent": "grisha", "step_type": "verify", "step_count": 3, "replan_count": 0, "description_preview": "Перевірити, що сторінка завантажена за URL https://www.google.com"}
-2025-12-19 02:35:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
-2025-12-19 02:35:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "grisha", "last_step_status": null, "step_count": 3, "replan_count": 0}
 2025-12-19 02:35:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 3, "replan_count": 0, "plan_len": 14, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "native", "last_msg_preview": "[VOICE] Гріша, перевір: Перевірити, що сторінка завантажена за URL https://www.google.com.\n\n[Atlas Debug] Plan: 14 steps. Current: Перевірити, що сторінка завантажена за URL https://www.google.com. Ne"}
 2025-12-19 02:35:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": false, "changed_files": [], "skip": true}
 2025-12-19 02:35:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 9325}
@@ -113,6 +101,18 @@
 2025-12-19 04:37:40 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
 2025-12-19 04:37:40 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
 2025-12-19 04:37:40 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
+2025-12-19 04:41:24 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
+2025-12-19 04:41:26 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
+2025-12-19 04:41:26 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
+2025-12-19 04:41:26 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
+2025-12-19 04:41:34 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
+2025-12-19 04:41:36 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
+2025-12-19 04:41:36 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
+2025-12-19 04:41:36 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
+2025-12-19 04:41:45 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
+2025-12-19 04:41:47 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
+2025-12-19 04:41:47 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
+2025-12-19 04:41:47 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
 ```
 
 ---
@@ -148,18 +148,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 39364 +-----------------------------------------
- 1 file changed, 10 insertions(+), 39354 deletions(-)
+ project_structure_final.txt | 39359 +-----------------------------------------
+ 1 file changed, 14 insertions(+), 39345 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-89f53f2 feat(tui): refine UX with auto-expanding input, balanced layout, and restored streaming
+f0cfb44 fix(tui): strict control over input field height at startup
+acddfde feat(tui): refine UX with auto-expanding input, balanced layout, and restored streaming
 a95df1f feat(i18n): transition system internals to English with localized user output
 e377006 feat(prompts): centralize strategic logic in Meta-Planner and streamline agent prompts
 c060549 docs: update Atlas workflow documentation
-8966f5e docs: finalize Cognitive 2.0 documentation with anti-pattern learning and reflective routing
 ```
 
 ---
@@ -12232,7 +12232,7 @@ cli.py: error: unrecognized arguments: Найди через гугл фільм
 test content
 ```
 
-### `project_structure_final.txt` (555.6 KB)
+### `project_structure_final.txt` (554.1 KB)
 
 ```text
 # System — Project Structure
@@ -12241,27 +12241,15 @@ test content
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 127
-- **Files Skipped**: 16011
+- **Files Skipped**: 16018
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-19 04:40:00
+- **Generated**: 2025-12-19 04:43:11
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-2025-12-19 02:35:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": false, "changed_files": [], "skip": true}
-2025-12-19 02:35:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 9325}
-2025-12-19 02:35:09 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 1, "content_preview": ""}
-2025-12-19 02:35:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "atlas", "last_step_status": "uncertain", "uncertain_streak": 1}
-2025-12-19 02:35:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "retry_without_replan", "status": "uncertain", "streak": 1}
-2025-12-19 02:35:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
-2025-12-19 02:35:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "atlas", "last_step_status": "uncertain", "step_count": null, "replan_count": 0}
-2025-12-19 02:35:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 3, "replan_count": 0, "last_step_status": "uncertain", "plan_len": 14, "task_type": "GENERAL", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "\n\nVerification Tools Results:\nResult for browser_snapshot: \"{\\\"status\\\": \\\"success\\\", \\\"url\\\": \\\"about:blank\\\", \\\"title\\\": \\\"\\\", \\\"has_captcha\\\": false, \\\"content_preview\\\": \\\"<html><head></head><body"}
-2025-12-19 02:35:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_step_uncertain", "step_count": 3, "replan_count": 0}
-2025-12-19 02:35:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_dispatch", "next_agent": "grisha", "step_type": "verify", "step_count": 3, "replan_count": 0, "description_preview": "Перевірити, що сторінка завантажена за URL https://www.google.com"}
-2025-12-19 02:35:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
-2025-12-19 02:35:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "grisha", "last_step_status": null, "step_count": 3, "replan_count": 0}
 2025-12-19 02:35:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 3, "replan_count": 0, "plan_len": 14, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "native", "last_msg_preview": "[VOICE] Гріша, перевір: Перевірити, що сторінка завантажена за URL https://www.google.com.\n\n[Atlas Debug] Plan: 14 steps. Current: Перевірити, що сторінка завантажена за URL https://www.google.com. Ne"}
 2025-12-19 02:35:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": false, "changed_files": [], "skip": true}
 2025-12-19 02:35:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 9325}
@@ -12350,6 +12338,18 @@ test content
 2025-12-19 04:37:40 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
 2025-12-19 04:37:40 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
 2025-12-19 04:37:40 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
+2025-12-19 04:41:24 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
+2025-12-19 04:41:26 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
+2025-12-19 04:41:26 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
+2025-12-19 04:41:26 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
+2025-12-19 04:41:34 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
+2025-12-19 04:41:36 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
+2025-12-19 04:41:36 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
+2025-12-19 04:41:36 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
+2025-12-19 04:41:45 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
+2025-12-19 04:41:47 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
+2025-12-19 04:41:47 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
+2025-12-19 04:41:47 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
 ```
 
 ---
@@ -12385,18 +12385,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 39364 +-----------------------------------------
- 1 file changed, 10 insertions(+), 39354 deletions(-)
+ project_structure_final.txt | 39359 +-----------------------------------------
+ 1 file changed, 14 insertions(+), 39345 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-89f53f2 feat(tui): refine UX with auto-expanding input, balanced layout, and restored streaming
+f0cfb44 fix(tui): strict control over input field height at startup
+acddfde feat(tui): refine UX with auto-expanding input, balanced layout, and restored streaming
 a95df1f feat(i18n): transition system internals to English with localized user output
 e377006 feat(prompts): centralize strategic logic in Meta-Planner and streamline agent prompts
 c060549 docs: update Atlas workflow documentation
-8966f5e docs: finalize Cognitive 2.0 documentation with anti-pattern learning and reflective routing
 ```
 
 ---
@@ -35375,7 +35375,8 @@ def build_app(
         BufferControl(buffer=input_buffer, key_bindings=input_key_bindings), 
         style="class:input",
         wrap_lines=True, # Ensure long pastes are visible
-        height=Dimension(min=1, max=10) # Dynamic height
+        height=Dimension(min=1, preferred=1, max=10), # Dynamic height
+        dont_extend_height=True,
     )
     setattr(input_window, "name", "input")
 
@@ -35444,7 +35445,7 @@ def build_app(
                 ],
                 height=Dimension(weight=1) 
             ),
-            Frame(input_area, style="class:frame.border", height=Dimension(min=3, preferred=3, max=12)), # Dynamic area height
+            Frame(input_area, style="class:frame.border", height=Dimension(min=3, max=12), dont_extend_height=True), # Dynamic area height
             status_window,
         ]
     )
@@ -39443,4 +39444,4 @@ graph TD
 ## Summary
 
 - **Total Files**: 127
-- **Skipped**: 16011
+- **Skipped**: 16018
