@@ -1030,7 +1030,10 @@ class TrinityRuntime:
         
         # 5. Success / Failure / Indecision
         # LLM Markers [VERIFIED] have HIGHEST priority
-        if "[captcha]" in lower_content or "captcha" in lower_content or "капча" in lower_content:
+        if has_explicit_complete:
+            step_status = "success"
+            next_agent = "meta_planner"
+        elif "[captcha]" in lower_content or "captcha detected" in lower_content or "found captcha" in lower_content:
             step_status = "uncertain"
             next_agent = "meta_planner"
         elif has_test_failure:
@@ -1040,9 +1043,7 @@ class TrinityRuntime:
             # Technically, if the LATEST tool failed, it's a failure.
             step_status = "failed"
             next_agent = "meta_planner"
-        elif has_explicit_complete:
-            step_status = "success"
-            next_agent = "meta_planner"
+
         elif has_successful_tool_result and not has_tool_error_in_context:
             step_status = "success"
             next_agent = "meta_planner"

@@ -26,24 +26,32 @@ class BrowserManager:
         if self.pw and self.browser and self._last_headless != headless:
             self.close()
 
-        if not self.pw:
-            self.pw = sync_playwright().start()
-            self._last_headless = headless
-            
-            # Chromium args
-            args = ["--disable-blink-features=AutomationControlled"]
-            # Only add sandbox flags if not on macOS (to avoid warning banner)
-            import platform
-            if platform.system() != "Darwin":
-                args.extend(["--no-sandbox", "--disable-setuid-sandbox"])
-            
-            self.browser = self.pw.chromium.launch_persistent_context(
-                user_data_dir=self.user_data_dir,
-                headless=headless,
-                args=args,
-                viewport={"width": 1280, "height": 720}
-            )
-            self.page = self.browser.pages[0]
+        if not self.browser:
+            try:
+                if not self.pw:
+                    self.pw = sync_playwright().start()
+                
+                self._last_headless = headless
+                
+                # Chromium args
+                args = ["--disable-blink-features=AutomationControlled"]
+                # Only add sandbox flags if not on macOS (to avoid warning banner)
+                import platform
+                if platform.system() != "Darwin":
+                    args.extend(["--no-sandbox", "--disable-setuid-sandbox"])
+                
+                self.browser = self.pw.chromium.launch_persistent_context(
+                    user_data_dir=self.user_data_dir,
+                    headless=headless,
+                    args=args,
+                    viewport={"width": 1280, "height": 720}
+                )
+                self.page = self.browser.pages[0]
+            except Exception:
+                # If launch fails, ensure we cleanup to allow fresh retry
+                self.close()
+                raise
+
         return self.page
 
     def close(self):

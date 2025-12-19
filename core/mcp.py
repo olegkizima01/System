@@ -136,6 +136,9 @@ class MCPToolRegistry:
         self.register_tool("check_permissions", lambda: {"tool": "check_permissions", "status": "success", "permissions": {k: vars(v) for k, v in pm.check_all().items()}}, "Check macOS permissions (accessibility/screen_recording/automation). Args: none")
         self.register_tool("permission_help", lambda lang="en": {"tool": "permission_help", "status": "success", "text": pm.get_permission_help_text(lang=str(lang or 'en').strip().lower())}, "Get permissions help text. Args: lang (en|uk)")
 
+        # Log confirmation of low-level tool availability (User Request)
+        print("✅ [MCP] Low-level tools available: run_shell, run_applescript, open_app, run_shortcut")
+
         def _get_recorder_service() -> Any:
             # Optional integration with TUI recorder if running under that environment.
             # Keep this import local to avoid hard dependency from core -> tui.

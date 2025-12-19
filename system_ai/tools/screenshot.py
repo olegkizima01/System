@@ -47,11 +47,29 @@ class VisionDiffManager:
             "bbox": bbox
         }
 
-def take_screenshot(app_name: Optional[str] = None) -> Dict[str, Any]:
-    """Takes a smart screenshot of an app or the full screen."""
+def take_screenshot(app_name: Optional[str] = None, window_title: Optional[str] = None, activate: bool = False) -> Dict[str, Any]:
+    """Takes a smart screenshot of an app or the full screen.
+    
+    Args:
+        app_name: Name of the application (e.g. "Safari")
+        window_title: Optional substring to filter specific windows (e.g. "Google")
+        activate: If True, brings the application/window to the front before capturing.
+    """
     try:
+        if activate and app_name:
+            # Dynamic Focus: Bring app to front
+            # If window_title is specific, we could try to raise just that window, but raising the App is safer/standard.
+            # We use ignoring application responses to avoid blocking if the app is hung, though basic activate is usually fine.
+            script = f'tell application "{app_name}" to activate'
+            subprocess.run(["osascript", "-e", script], capture_output=True, timeout=2)
+            time.sleep(0.5) # Wait for animation
+            
         manager = VisionDiffManager.get_instance()
-        focus_id = "FULL" if not app_name else f"APP_{app_name}"
+        focus_id = "FULL"
+        if app_name:
+            focus_id = f"APP_{app_name}"
+            if window_title:
+                focus_id += f"_{window_title}"
         
         with mss.mss() as sct:
             # Multi-monitor support: monitor 0 is the union of all monitors
@@ -60,7 +78,7 @@ def take_screenshot(app_name: Optional[str] = None) -> Dict[str, Any]:
             # If app_name, try to get its window geometry
             region = None
             if app_name:
-                region = _get_app_geometry(app_name)
+                region = _get_app_geometry(app_name, window_title)
             
             sct_img = sct.grab(region or monitor)
             img = Image.frombytes("RGB", sct_img.size, sct_img.bgra, "raw", "BGRX")
@@ -78,19 +96,27 @@ def take_screenshot(app_name: Optional[str] = None) -> Dict[str, Any]:
     except Exception as e:
         return {"tool": "take_screenshot", "status": "error", "error": str(e)}
 
-def _get_app_geometry(app_name: str) -> Optional[Dict[str, int]]:
-    script = f'tell application "System Events" to tell process "{app_name}" to get {{position, size}} of window 1'
+def _get_app_geometry(app_name: str, window_title: Optional[str] = None) -> Optional[Dict[str, int]]:
+    # If window_title provided, filter by it. otherwise get window 1.
+    if window_title:
+        # Get first window where name contains title
+        script = f'tell application "System Events" to tell process "{app_name}" to get {{position, size}} of first window where name contains "{window_title}"'
+    else:
+        # Default to first window
+        script = f'tell application "System Events" to tell process "{app_name}" to get {{position, size}} of window 1'
+        
     try:
         proc = subprocess.run(["osascript", "-e", script], capture_output=True, text=True, timeout=2)
         if proc.returncode == 0:
             # Format: 100, 100, 800, 600
             parts = proc.stdout.strip().replace(" ", "").split(",")
-            return {
-                "left": int(parts[0]),
-                "top": int(parts[1]),
-                "width": int(parts[2]),
-                "height": int(parts[3])
-            }
+            if len(parts) >= 4:
+                return {
+                    "left": int(parts[0]),
+                    "top": int(parts[1]),
+                    "width": int(parts[2]),
+                    "height": int(parts[3])
+                }
     except Exception:
         pass
     return None

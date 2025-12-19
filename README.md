@@ -68,6 +68,7 @@ The `setup.sh` script will:
 3.  Install Playwright browsers.
 4.  Patch `mcp-pyautogui-server`.
 5.  Set execution permissions for cleanup scripts.
+6.  Install git hooks (post-commit) for automatic project structure generation.
 
 ### Usage
 
