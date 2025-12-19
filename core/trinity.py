@@ -1123,7 +1123,10 @@ class TrinityRuntime:
             "завдання не виконано", "goal not achieved",
             "no movie playing", "not playing", "nothing playing",
             "in windowed mode", "not in fullscreen", "not in full-screen",
-            "no active video", "відео не знайдено", "немає відео"
+            "no active video", "відео не знайдено", "немає відео",
+            "no video is playing", "no movie is playing", 
+            "no evidence of", "does not show",
+            "no clear indication", "google search"
         ])
         
         if step_status == "uncertain" and current_streak >= 3 and "[captcha]" not in lower_content:

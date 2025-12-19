@@ -91,6 +91,9 @@ Rules:
 - If 'tool_preference' = 'gui', prioritize pyautogui and screenshots.
 - If 'tool_preference' = 'native', prioritize shell and applescript.
 - No conditional jumps in step descriptions.
+- **Media Strategy**: When searching for content to watch/read, prioritize known free/accessible sources (e.g., UASerials, YouTube, Open Archives) and avoid subscription services (Netflix, Amazon, HBO) unless user credentials are known.
+- **Search Query Refinement**: When searching for free content, explicit exclude subscription domains in the query (e.g., "watch movie online -site:netflix.com -site:amazon.com").
+- **Action-Oriented**: Never plan a "Find" or "Search" step without an immediate follow-up step to "Open", "Click", or "Navigate" to a result. A search result page is not a final destination.
 
 Output format (JSON):
 {{
