@@ -87,6 +87,7 @@ AVAILABLE TOOLS:
 
 Rules:
 - Steps must be actionable (Tool Calls). Use ONLY the tools listed above.
+- ⚠️ NO REDUNDANT VERIFICATION: Do not plan steps like "Verify the previous step succeeded" or "Confirm that X was checked". Trinity already verifies every step automatically via Grisha. Only plan a 'verify' step if it requires a specific check NOT covered by the action itself (e.g. status code, file content).
 - If 'tool_preference' = 'gui', prioritize pyautogui and screenshots.
 - If 'tool_preference' = 'native', prioritize shell and applescript.
 - No conditional jumps in step descriptions.
