@@ -86,6 +86,179 @@ def resume_paused_agent() -> None:
     """Resume a paused agent session."""
     if not state.agent_paused:
         return
+
+def check_self_healing_status() -> None:
+    """Check the status of the self-healing module."""
+    try:
+        from tui.render import log
+        from tui.agents import get_current_runtime
+        
+        runtime = get_current_runtime()
+        if not runtime:
+            # Create a temporary runtime for status check
+            from core.trinity import TrinityRuntime
+            runtime = TrinityRuntime(enable_self_healing=True)
+        
+        status = runtime.get_self_healing_status()
+        if status is None:
+            print("Self-healing module is disabled")
+            return
+        
+        print("Self-Healing Status:")
+        print(f"  Detected Issues: {status['detected_issues']}")
+        print(f"  Repairs Attempted: {status['repairs_attempted']}")
+        print(f"  Repairs Successful: {status['repairs_successful']}")
+        print(f"  Last Check Position: {status['last_check_position']}")
+    except Exception as e:
+        print(f"Error checking self-healing status: {e}")
+
+def trigger_self_healing_scan() -> None:
+    """Trigger an immediate scan for code issues."""
+    try:
+        from tui.render import log
+        from tui.agents import get_current_runtime
+        
+        runtime = get_current_runtime()
+        if not runtime:
+            # Create a temporary runtime for scanning
+            from core.trinity import TrinityRuntime
+            runtime = TrinityRuntime(enable_self_healing=True)
+        
+        issues = runtime.trigger_self_healing_scan()
+        if issues is None:
+            print("Self-healing module is disabled")
+            return
+        
+        if not issues:
+            print("No issues detected")
+            return
+        
+        print(f"Detected {len(issues)} issues:")
+        for i, issue in enumerate(issues, 1):
+            print(f"  {i}. {issue['type']} in {issue['file']}:{issue['line'] or '?'}")
+            print(f"     Severity: {issue['severity']}")
+            print(f"     Message: {issue['message'][:100]}...")
+    except Exception as e:
+        print(f"Error during self-healing scan: {e}")
+
+def check_vibe_assistant_status() -> None:
+    """Check the status of Vibe CLI Assistant."""
+    try:
+        from tui.agents import get_current_runtime
+        
+        runtime = get_current_runtime()
+        if not runtime:
+            print("No active Trinity runtime found")
+            return
+        
+        status = runtime.get_vibe_assistant_status()
+        print("Vibe CLI Assistant Status:")
+        print(f"  Name: {status['name']}")
+        print(f"  Total Interventions: {status['interventions_total']}")
+        print(f"  Active: {status['interventions_active']}")
+        print(f"  Resolved: {status['interventions_resolved']}")
+        print(f"  Cancelled: {status['interventions_cancelled']}")
+        
+        if status['current_pause']:
+            print(f"\n⚠️  Current Pause Active:")
+            print(f"  Reason: {status['current_pause'].get('reason', 'unknown')}")
+            print(f"  Message: {status['current_pause'].get('message', 'no message')}")
+        else:
+            print("\n✅ No active pauses")
+            
+    except Exception as e:
+        print(f"Error checking Vibe CLI Assistant status: {e}")
+
+def handle_vibe_continue_command() -> None:
+    """Handle continue command for Vibe CLI Assistant."""
+    try:
+        from tui.agents import get_current_runtime
+        
+        runtime = get_current_runtime()
+        if not runtime:
+            print("No active Trinity runtime found")
+            return
+        
+        result = runtime.handle_vibe_assistant_command("/continue")
+        print(result["message"])
+        
+        if result["action"] == "resume":
+            print("✅ Execution will continue...")
+        elif result["action"] == "error":
+            print(f"❌ Error: {result['message']}")
+            
+    except Exception as e:
+        print(f"Error handling continue command: {e}")
+
+def handle_vibe_cancel_command() -> None:
+    """Handle cancel command for Vibe CLI Assistant."""
+    try:
+        from tui.agents import get_current_runtime
+        
+        runtime = get_current_runtime()
+        if not runtime:
+            print("No active Trinity runtime found")
+            return
+        
+        result = runtime.handle_vibe_assistant_command("/cancel")
+        print(result["message"])
+        
+        if result["action"] == "cancel":
+            print("✅ Task has been cancelled")
+        elif result["action"] == "error":
+            print(f"❌ Error: {result['message']}")
+            
+    except Exception as e:
+        print(f"Error handling cancel command: {e}")
+
+def handle_vibe_help_command() -> None:
+    """Handle help command for Vibe CLI Assistant."""
+    try:
+        from tui.agents import get_current_runtime
+        
+        runtime = get_current_runtime()
+        if not runtime:
+            print("No active Trinity runtime found")
+            return
+        
+        result = runtime.handle_vibe_assistant_command("/help")
+        print(result["message"])
+        
+    except Exception as e:
+        print(f"Error handling help command: {e}")
+
+def start_eternal_engine_mode(task: str, hyper_mode: bool = False) -> None:
+    """Start the system in eternal engine mode with Doctor Vibe."""
+    try:
+        from core.trinity import TrinityRuntime
+        from tui.agents import set_current_runtime
+        
+        print(f"🚀 Starting Eternal Engine Mode with Doctor Vibe")
+        print(f"   Task: {task}")
+        print(f"   Hyper Mode: {'✅ ENABLED' if hyper_mode else '❌ DISABLED'}")
+        
+        # Create Trinity runtime with eternal engine settings
+        runtime = TrinityRuntime(
+            verbose=True,
+            enable_self_healing=True,
+            hyper_mode=hyper_mode
+        )
+        
+        # Set as current runtime
+        set_current_runtime(runtime)
+        
+        # Start eternal engine mode
+        result = runtime.start_eternal_engine_mode(task)
+        
+        print(f"✅ Eternal engine completed successfully")
+        if result and result.get("messages"):
+            final_message = result["messages"][-1].content if result["messages"] else "Task completed"
+            print(f"   Result: {final_message}")
+        
+    except Exception as e:
+        print(f"❌ Eternal engine failed: {e}")
+        import traceback
+        traceback.print_exc()
     
     from tui.render import log
     text = str(state.agent_pause_pending_text or "").strip()

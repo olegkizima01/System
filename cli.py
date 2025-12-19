@@ -31,7 +31,10 @@ def main() -> None:
             known_commands = {
                 "tui", "list-editors", "list-modules", "run", "enable", "disable", 
                 "install", "smart-plan", "ask", "agent-chat", "agent-reset", 
-                "agent-on", "agent-off", "-h", "--help"
+                "agent-on", "agent-off", "self-healing-status", "self-healing-scan",
+                "vibe-status", "vibe-continue", "vibe-cancel", "vibe-help",
+                "eternal-engine",
+                "-h", "--help"
             }
             if first_arg not in known_commands and not first_arg.startswith("-"):
                 # Treat as agent-chat message

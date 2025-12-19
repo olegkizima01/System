@@ -2478,6 +2478,18 @@ def cli_main(argv: List[str]) -> None:
     p_agent_chat = sub.add_parser("agent-chat", help="Agent chat (single-shot)")
     p_agent_chat.add_argument("--message", required=True)
 
+    p_self_healing_status = sub.add_parser("self-healing-status", help="Check self-healing status")
+    p_self_healing_scan = sub.add_parser("self-healing-scan", help="Trigger immediate self-healing scan")
+    
+    p_vibe_status = sub.add_parser("vibe-status", help="Check Vibe CLI Assistant status")
+    p_vibe_continue = sub.add_parser("vibe-continue", help="Continue execution after Vibe CLI Assistant pause")
+    p_vibe_cancel = sub.add_parser("vibe-cancel", help="Cancel current task from Vibe CLI Assistant pause")
+    p_vibe_help = sub.add_parser("vibe-help", help="Show Vibe CLI Assistant help")
+    
+    p_eternal_engine = sub.add_parser("eternal-engine", help="Start eternal engine mode with Doctor Vibe")
+    p_eternal_engine.add_argument("--task", required=True, help="Task to execute in eternal engine mode")
+    p_eternal_engine.add_argument("--hyper", action="store_true", help="Enable hyper mode (unlimited permissions)")
+
     sub.add_parser("agent-reset", help="Reset in-memory agent session")
     sub.add_parser("agent-on", help="Enable agent chat")
     sub.add_parser("agent-off", help="Disable agent chat")
@@ -2605,6 +2617,48 @@ def cli_main(argv: List[str]) -> None:
         print("OK")
         return
 
+    if args.command == "self-healing-status":
+        logger.info("Checking self-healing status")
+        from tui.commands import check_self_healing_status
+        check_self_healing_status()
+        return
+    
+    if args.command == "self-healing-scan":
+        logger.info("Triggering self-healing scan")
+        from tui.commands import trigger_self_healing_scan
+        trigger_self_healing_scan()
+        return
+    
+    if args.command == "vibe-status":
+        logger.info("Checking Vibe CLI Assistant status")
+        from tui.commands import check_vibe_assistant_status
+        check_vibe_assistant_status()
+        return
+    
+    if args.command == "vibe-continue":
+        logger.info("Vibe CLI Assistant continue command")
+        from tui.commands import handle_vibe_continue_command
+        handle_vibe_continue_command()
+        return
+    
+    if args.command == "vibe-cancel":
+        logger.info("Vibe CLI Assistant cancel command")
+        from tui.commands import handle_vibe_cancel_command
+        handle_vibe_cancel_command()
+        return
+    
+    if args.command == "vibe-help":
+        logger.info("Vibe CLI Assistant help command")
+        from tui.commands import handle_vibe_help_command
+        handle_vibe_help_command()
+        return
+    
+    if args.command == "eternal-engine":
+        logger.info(f"Starting eternal engine mode with task: {args.task}")
+        from tui.commands import start_eternal_engine_mode
+        start_eternal_engine_mode(args.task, args.hyper)
+        return
+    
     if args.command == "agent-chat":
         logger.info(f"Agent chat message: {args.message}")
         msg = str(args.message or "").strip()

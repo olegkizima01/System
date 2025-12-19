@@ -188,11 +188,10 @@ class MessageFormatter:
     
     @staticmethod
     def format_message(msg: AgentMessage) -> List[Tuple[str, str]]:
-        """Format agent message with direct communication style.
+        """Format agent message with compact direct communication style for TTS.
         
         Format: 
-        [ EMOJI NAME ]
-        Message text...
+        [EMOJI NAME] Message text...
         
         Returns list of (style, text) tuples for prompt_toolkit.
         """
@@ -206,48 +205,100 @@ class MessageFormatter:
         if msg.agent not in {AgentType.ATLAS, AgentType.TETYANA, AgentType.GRISHA}:
             return result
         
-        # Clean the message
+        # Clean the message for TTS - remove unnecessary tags and make it more natural
         clean_text = MessageFilter.clean_message(msg.text)
-        if not clean_text:
+        
+        # Remove [VOICE] tag for display, keep it for TTS processing
+        display_text = clean_text.replace("[VOICE]", "").strip()
+        if not display_text:
             return result
         
-        # Format: [EMOJI NAME]
+        # Format: [EMOJI NAME] Message (compact, single line for short messages)
         name = MessageFormatter.AGENT_NAMES.get(msg.agent, "UNKNOWN")
         emoji = MessageFormatter.AGENT_EMOJIS.get(msg.agent, "")
         color = MessageFormatter.AGENT_COLORS.get(msg.agent, "class:agent.system")
 
-        # Layout:
-        # [ Emoji NAME ]  (Label styled)
-        # Message content (Normal styled, wrapped)
+        # Compact layout - single line for short messages, minimal spacing
+        # [EMOJI NAME] Message text...
+        result.append((color, f"[{emoji} {name}]")) # Compact header
+        result.append((" ", " ")) # Single space separator
         
-        # Header Line - Bracketed name for "prettier" look with reverse color for label effect
-        result.append((color, f"[")) # Left bracket
-        result.append((color + " reverse bold", f" {emoji} {name} ")) # Label style
-        result.append((color, f"]")) # Right bracket
-        result.append(("", "\n")) # Newline after label
-        
-        # Message text with @mentions highlighted
-        # Use a "thin/dim" hint. While standard TUI font size doesn't change, 
-        # 'dim' makes it look lighter.
-        highlighted = MessageFormatter.highlight_mentions(clean_text)
+        # Message text with @mentions highlighted - optimized for TTS
+        # Keep text clean and natural for voice synthesis
+        highlighted = MessageFormatter.highlight_mentions(display_text)
         for style, text in highlighted:
-            # Append 'dim' to agent.text style if it's there
+            # For TTS compatibility, use cleaner styles
             final_style = style
             if "agent.text" in style:
-                final_style += " dim"
+                final_style = final_style.replace(" dim", "")  # Remove dim for better TTS
             result.append((final_style, text))
         
-        # Spacing after message
-        result.append(("class:agent.text", "\n\n"))
+        # Minimal spacing after message - single newline
+        result.append(("class:agent.text", "\n"))
         
         return result
     
     @staticmethod
-    def format_messages(messages: List[AgentMessage]) -> List[Tuple[str, str]]:
-        """Format multiple messages."""
+    def format_message_compact(msg: AgentMessage) -> List[Tuple[str, str]]:
+        """Format agent message in ultra-compact style for TTS and streaming.
+        
+        Format: EMOJI Message text (no brackets, minimal formatting)
+        
+        Returns list of (style, text) tuples for prompt_toolkit.
+        """
+        result: List[Tuple[str, str]] = []
+        
+        # Skip technical messages unless they contain [VOICE]
+        if "[VOICE]" not in msg.text:
+            if msg.is_technical or MessageFilter.is_technical(msg.text):
+                return result
+
+        if msg.agent not in {AgentType.ATLAS, AgentType.TETYANA, AgentType.GRISHA}:
+            return result
+        
+        # Clean the message for TTS - remove unnecessary tags and make it more natural
+        clean_text = MessageFilter.clean_message(msg.text)
+        
+        # Remove [VOICE] tag for display, keep it for TTS processing
+        display_text = clean_text.replace("[VOICE]", "").strip()
+        if not display_text:
+            return result
+        
+        # Ultra-compact format: EMOJI Message (no brackets, minimal spacing)
+        emoji = MessageFormatter.AGENT_EMOJIS.get(msg.agent, "")
+        color = MessageFormatter.AGENT_COLORS.get(msg.agent, "class:agent.system")
+
+        # Format: EMOJI Message text (single line, no extra spacing)
+        result.append((color, f"{emoji} ")) # Just emoji as prefix
+        
+        # Message text with @mentions highlighted - optimized for TTS
+        highlighted = MessageFormatter.highlight_mentions(display_text)
+        for style, text in highlighted:
+            # For TTS compatibility, use cleaner styles
+            final_style = style
+            if "agent.text" in style:
+                final_style = final_style.replace(" dim", "")  # Remove dim for better TTS
+            result.append((final_style, text))
+        
+        # Minimal spacing after message - single space
+        result.append(("class:agent.text", " "))
+        
+        return result
+    
+    @staticmethod
+    def format_messages(messages: List[AgentMessage], compact: bool = False) -> List[Tuple[str, str]]:
+        """Format multiple messages.
+        
+        Args:
+            messages: List of agent messages
+            compact: If True, use ultra-compact format for TTS streaming
+        """
         result: List[Tuple[str, str]] = []
         for msg in messages:
-            result.extend(MessageFormatter.format_message(msg))
+            if compact:
+                result.extend(MessageFormatter.format_message_compact(msg))
+            else:
+                result.extend(MessageFormatter.format_message(msg))
         return result
 
 

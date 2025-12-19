@@ -4,6 +4,7 @@ import os
 import subprocess
 import re
 import time
+from datetime import datetime
 from langgraph.graph import StateGraph, END
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage
 
@@ -16,6 +17,8 @@ from core.mcp import MCPToolRegistry
 from core.context7 import Context7
 from core.verification import AdaptiveVerifier
 from core.memory import get_memory
+from core.self_healing import IssueSeverity
+from core.vibe_assistant import VibeCLIAssistant
 from dataclasses import dataclass
 from tui.logger import get_logger, trace
 
@@ -54,6 +57,8 @@ class TrinityState(TypedDict):
     meta_config: Optional[Dict[str, Any]]  # Meta-planning: strategy, verification_rigor, recovery_mode, tool_preference, reasoning
     retrieved_context: Optional[str]  # Structured findings from RAG
     original_task: Optional[str]  # The original user request (Golden Goal)
+    vibe_assistant_pause: Optional[Dict[str, Any]]  # Vibe CLI Assistant pause state
+    vibe_assistant_context: Optional[str]  # Context for Vibe CLI Assistant
 
 class TrinityRuntime:
     MAX_REPLANS = 10
@@ -100,7 +105,9 @@ class TrinityRuntime:
         verbose: bool = True,
         permissions: TrinityPermissions = None,
         on_stream: Optional[Callable[[str, str], None]] = None,
-        preferred_language: str = "en"
+        preferred_language: str = "en",
+        enable_self_healing: bool = True,
+        hyper_mode: bool = False
     ):
         self.llm = CopilotLLM()
         self.verbose = verbose
@@ -114,7 +121,44 @@ class TrinityRuntime:
         # Callback for streaming deltas: (agent_name, text_delta)
         self.on_stream = on_stream
         self.workflow = self._build_graph()
+        
+        # Hyper mode for unlimited permissions during testing
+        self.hyper_mode = hyper_mode
+        if self.hyper_mode:
+            self.logger.info("🚀 HYPER MODE ACTIVATED: Unlimited permissions for Doctor Vibe")
+            # Override permissions to allow everything
+            self.permissions.allow_shell = True
+            self.permissions.allow_applescript = True
+            self.permissions.allow_file_write = True
+            self.permissions.allow_gui = True
+            self.permissions.allow_shortcuts = True
+            self.permissions.hyper_mode = True
+        
+        # Initialize self-healing module
+        self.self_healing_enabled = enable_self_healing
+        self.self_healer = None
+        if self.self_healing_enabled:
+            self._initialize_self_healing()
+        
+        # Initialize Vibe CLI Assistant
+        self.vibe_assistant = VibeCLIAssistant(name="Doctor Vibe")
 
+    def _initialize_self_healing(self) -> None:
+        """Initialize the self-healing module."""
+        try:
+            from core.self_healing import CodeSelfHealer
+            self.self_healer = CodeSelfHealer(on_stream=self.on_stream)
+            self.self_healer.integrate_with_trinity(self)
+            
+            # Start background monitoring
+            self.self_healing_thread = self.self_healer.start_background_monitoring(interval=60.0)
+            
+            if self.verbose:
+                self.logger.info("Self-healing module initialized and monitoring started")
+        except Exception as e:
+            self.logger.error(f"Failed to initialize self-healing: {e}")
+            self.self_healing_enabled = False
+    
     def _extract_json_object(self, text: str) -> Any:
         """Helper to extract any JSON object or list from a string."""
         if not text:
@@ -239,6 +283,291 @@ class TrinityRuntime:
         task_type = str(fb.get("task_type") or "").strip().upper()
         return (task_type, task_type != "GENERAL")
     
+    def get_self_healing_status(self) -> Optional[Dict[str, Any]]:
+        """
+        Get the current status of the self-healing module.
+        
+        Returns:
+            Dictionary with self-healing status or None if disabled
+        """
+        if not self.self_healing_enabled or not self.self_healer:
+            return None
+        
+        return self.self_healer.get_status()
+    
+    def trigger_self_healing_scan(self) -> Optional[List[Dict[str, Any]]]:
+        """
+        Trigger an immediate scan for issues.
+        
+        Returns:
+            List of detected issues or None if disabled
+        """
+        if not self.self_healing_enabled or not self.self_healer:
+            return None
+        
+        issues = self.self_healer.trigger_immediate_scan()
+        return [issue.to_dict() for issue in issues]
+    
+    def _check_for_vibe_assistant_intervention(self, state: TrinityState) -> Optional[Dict[str, Any]]:
+        """
+        Check if Doctor Vibe intervention is needed based on current state.
+        This method integrates with Atlas meta-planning to create a seamless workflow.
+        
+        Args:
+            state: Current Trinity state
+            
+        Returns:
+            Dict with pause information if intervention needed, None otherwise
+        """
+        # Check if we already have an active pause
+        if state.get("vibe_assistant_pause"):
+            return state["vibe_assistant_pause"]
+        
+        # Check if self-healing detected critical issues that need human attention
+        if self.self_healing_enabled and self.self_healer:
+            issues = self.self_healer.detected_issues
+            critical_issues = [issue for issue in issues if issue.severity in {IssueSeverity.CRITICAL, IssueSeverity.HIGH}]
+            
+            if critical_issues:
+                # Create pause context for Doctor Vibe with Atlas integration
+                pause_context = {
+                    "reason": "critical_issues_detected",
+                    "issues": [issue.to_dict() for issue in critical_issues[:5]],  # Top 5 most critical
+                    "message": f"Doctor Vibe: Виявлено {len(critical_issues)} критичних помилок. Атлас призупинив виконання для вашого втручання.",
+                    "timestamp": datetime.now().isoformat(),
+                    "suggested_action": "Будь ласка, виправте помилки. Атлас автоматично продовжить після /continue",
+                    "atlas_status": "paused_waiting_for_human",
+                    "auto_resume_available": True
+                }
+                return pause_context
+        
+        # Check for repeated failures that might need human intervention
+        current_step_fail_count = state.get("current_step_fail_count", 0)
+        if current_step_fail_count >= 2:
+            pause_context = {
+                "reason": "repeated_failures",
+                "message": "Doctor Vibe: Атлас виявив повторювані помилки. Система призупинена для аналізу.",
+                "timestamp": datetime.now().isoformat(),
+                "suggested_action": "Будь ласка, проаналізуйте проблему. Використовуйте /continue або /cancel",
+                "atlas_status": "paused_analyzing_failures",
+                "auto_resume_available": True
+            }
+            return pause_context
+        
+        # Check for complex dev tasks that might need Doctor Vibe's attention
+        task_type = state.get("task_type", "UNKNOWN")
+        is_dev_task = state.get("is_dev", False)
+        
+        if task_type == "DEV" and is_dev_task:
+            # For dev tasks, Doctor Vibe works in parallel thread for error correction
+            # Check if there are any unresolved issues that need attention
+            if self.self_healing_enabled and self.self_healer:
+                unresolved_issues = [issue for issue in self.self_healer.detected_issues 
+                                   if issue.severity in {IssueSeverity.MEDIUM, IssueSeverity.HIGH}]
+                
+                if unresolved_issues and len(unresolved_issues) > 2:
+                    # Doctor Vibe works in background mode for dev tasks
+                    pause_context = {
+                        "reason": "background_error_correction_needed",
+                        "issues": [issue.to_dict() for issue in unresolved_issues[:3]],
+                        "message": f"Doctor Vibe: Виявлено {len(unresolved_issues)} помилок в фоновому режимі. Атлас продовжує основне завдання.",
+                        "timestamp": datetime.now().isoformat(),
+                        "suggested_action": "Помилки виправляються автоматично. Ви можете продовжувати роботу",
+                        "atlas_status": "running_with_background_fixes",
+                        "auto_resume_available": False,  # No pause needed, just notification
+                        "background_mode": True
+                    }
+                    return pause_context
+        
+        return None
+    
+    def _create_vibe_assistant_pause_state(self, state: TrinityState, pause_reason: str, message: str) -> TrinityState:
+        """
+        Create a pause state for Vibe CLI Assistant intervention.
+        
+        Args:
+            state: Current Trinity state
+            pause_reason: Reason for pause
+            message: Message to display to user
+            
+        Returns:
+            Updated state with pause information
+        """
+        pause_info = {
+            "reason": pause_reason,
+            "message": message,
+            "timestamp": datetime.now().isoformat(),
+            "initiated_by": "Vibe CLI Assistant",
+            "status": "awaiting_human_input"
+        }
+        
+        # Add context about current task
+        if state.get("original_task"):
+            pause_info["original_task"] = state["original_task"]
+        
+        if state.get("plan"):
+            pause_info["current_step"] = state["plan"][0] if state["plan"] else None
+        
+        # If we have critical issues from self-healing, add them to the context
+        if self.self_healing_enabled and self.self_healer:
+            issues = self.self_healer.detected_issues
+            critical_issues = [issue for issue in issues if issue.severity in {IssueSeverity.CRITICAL, IssueSeverity.HIGH}]
+            if critical_issues:
+                pause_info["issues"] = [issue.to_dict() for issue in critical_issues[:5]]  # Top 5 most critical
+        
+        # Notify Vibe CLI Assistant about the pause
+        self.vibe_assistant.handle_pause_request(pause_info)
+        
+        return {
+            **state,
+            "vibe_assistant_pause": pause_info,
+            "vibe_assistant_context": f"PAUSED: {message}"
+        }
+    
+    def _resume_from_vibe_assistant_pause(self, state: TrinityState) -> TrinityState:
+        """
+        Resume execution from Vibe CLI Assistant pause.
+        
+        Args:
+            state: Current Trinity state with pause information
+            
+        Returns:
+            Updated state with pause cleared
+        """
+        # Clear pause state but keep context for logging
+        pause_context = state.get("vibe_assistant_context", "")
+        
+        # Clear Vibe CLI Assistant pause state
+        self.vibe_assistant.clear_pause_state()
+        
+        return {
+            **state,
+            "vibe_assistant_pause": None,
+            "vibe_assistant_context": f"RESUMED: {pause_context}"
+        }
+    
+    def handle_vibe_assistant_command(self, command: str) -> Dict[str, Any]:
+        """
+        Handle commands from Vibe CLI Assistant during pause state.
+        
+        Args:
+            command: User command (e.g., /continue, /cancel, /help)
+            
+        Returns:
+            Dict with action result
+        """
+        return self.vibe_assistant.handle_user_command(command)
+    
+    def get_vibe_assistant_status(self) -> Dict[str, Any]:
+        """
+        Get current status of Vibe CLI Assistant.
+        
+        Returns:
+            Dict with status information
+        """
+        current_pause = self.vibe_assistant.get_current_pause_status()
+        intervention_history = self.vibe_assistant.get_intervention_history()
+        
+        return {
+            "name": self.vibe_assistant.name,
+            "current_pause": current_pause,
+            "interventions_total": len(intervention_history),
+            "interventions_active": sum(1 for record in intervention_history if record["status"] == "active"),
+            "interventions_resolved": sum(1 for record in intervention_history if record["status"] == "resolved"),
+            "interventions_cancelled": sum(1 for record in intervention_history if record["status"] == "cancelled")
+        }
+    
+    def start_eternal_engine_mode(self, task: str) -> None:
+        """
+        Start the system in eternal engine mode with Doctor Vibe.
+        
+        This mode:
+        1. Automatically detects task type (DEV or GENERAL)
+        2. For DEV tasks: Doctor Vibe works in background for error correction
+        3. For GENERAL tasks: Doctor Vibe only intervenes on critical errors
+        4. System continues until task is completed or manually cancelled
+        
+        Args:
+            task: The task to execute in eternal engine mode
+        """
+        if self.verbose:
+            self.logger.info("🚀 ETERNAL ENGINE MODE ACTIVATED with Doctor Vibe")
+        
+        # Classify the task
+        task_type, is_dev = self._classify_task(task)
+        
+        if self.verbose:
+            self.logger.info(f"📝 Task classified as: {task_type} (DEV: {is_dev})")
+        
+        # Set up initial state with Doctor Vibe context
+        initial_state = {
+            "messages": [HumanMessage(content=task)],
+            "current_agent": "meta_planner",
+            "task_status": "starting",
+            "final_response": None,
+            "plan": [],
+            "summary": "",
+            "step_count": 0,
+            "replan_count": 0,
+            "pause_info": None,
+            "gui_mode": "auto",
+            "execution_mode": "native",
+            "gui_fallback_attempted": False,
+            "task_type": task_type,
+            "is_dev": is_dev,
+            "requires_windsurf": is_dev,
+            "dev_edit_mode": "cli",
+            "intent_reason": "eternal_engine_mode",
+            "last_step_status": "success",
+            "uncertain_streak": 0,
+            "current_step_fail_count": 0,
+            "meta_config": {
+                "strategy": "linear",
+                "verification_rigor": "medium",
+                "recovery_mode": "local_fix",
+                "tool_preference": "hybrid",
+                "doctor_vibe_mode": "background" if is_dev else "intervention"
+            },
+            "retrieved_context": "",
+            "original_task": task,
+            "vibe_assistant_pause": None,
+            "vibe_assistant_context": "eternal_engine_mode: Doctor Vibe monitoring activated"
+        }
+        
+        if self.verbose:
+            mode_desc = "background error correction" if is_dev else "critical error intervention"
+            self.logger.info(f"🤖 Doctor Vibe mode: {mode_desc}")
+        
+        # Start background monitoring if in hyper mode
+        if self.hyper_mode and self.self_healing_enabled:
+            if self.verbose:
+                self.logger.info("🔄 Starting self-healing background monitoring...")
+            # Self-healing already started in __init__
+        
+        # Execute the workflow
+        try:
+            final_state = self.workflow.invoke(initial_state)
+            
+            if self.verbose:
+                self.logger.info("✅ Eternal engine mode completed successfully")
+            
+            return final_state
+            
+        except Exception as e:
+            if self.verbose:
+                self.logger.error(f"❌ Eternal engine mode failed: {e}")
+            
+            # Doctor Vibe handles the error
+            error_context = {
+                "reason": "eternal_engine_failure",
+                "message": f"Doctor Vibe: Eternal engine encountered error: {str(e)}",
+                "timestamp": datetime.now().isoformat(),
+                "suggested_action": "Please check logs and restart with corrected parameters"
+            }
+            
+            self.vibe_assistant.handle_pause_request(error_context)
+            raise
+    
     def _build_graph(self):
         builder = StateGraph(TrinityState)
 
@@ -337,7 +666,7 @@ class TrinityRuntime:
                     last_step_status = "failed"
                     # Do NOT pop the plan. Let the decision logic below handle 'failed' -> 'replan'.
 
-        # 3. Decision Logic
+        # 3. Decision Logic with Doctor Vibe integration
         action = "proceed" # Default: continue to tetyana with current plan
         
         if not meta_config:
@@ -350,6 +679,14 @@ class TrinityRuntime:
             else:
                  recovery_mode = meta_config.get("recovery_mode", "local_fix")
                  action = "replan" if recovery_mode == "full_replan" else "repair"
+        
+        # Doctor Vibe integration: Check if we're in background error correction mode
+        vibe_assistant_context = state.get("vibe_assistant_context", "")
+        if "background_mode" in vibe_assistant_context or (self.self_healing_enabled and self.self_healer):
+            # If Doctor Vibe is working in background, let him continue
+            if self.verbose:
+                self.logger.info("🧠 [Meta-Planner] Doctor Vibe working in background mode - continuing execution")
+            action = "proceed"
         # NOTE: Removed the old "uncertain -> replan" logic. Uncertain is now handled above as a soft failure.
         
         # 4. Meta-Reasoning (LLM)
@@ -1203,6 +1540,29 @@ class TrinityRuntime:
 
     def _router(self, state: TrinityState):
         current = state["current_agent"]
+        
+        # Check for Vibe CLI Assistant pause state
+        if state.get("vibe_assistant_pause"):
+            # If we're paused, stay in the current agent but don't proceed
+            # This allows the system to wait for human intervention
+            if self.verbose:
+                pause_info = state["vibe_assistant_pause"]
+                self.logger.info(f"Vibe CLI Assistant PAUSE: {pause_info.get('message', 'No reason provided')}")
+            return current
+        
+        # Check if Vibe CLI Assistant intervention is needed
+        pause_context = self._check_for_vibe_assistant_intervention(state)
+        if pause_context:
+            # Create pause state and return to current agent
+            new_state = self._create_vibe_assistant_pause_state(state, 
+                                                               pause_context["reason"], 
+                                                               pause_context["message"])
+            # Update the state in the workflow
+            # We'll handle this in the node functions
+            if self.verbose:
+                self.logger.info(f"Vibe CLI Assistant INTERVENTION: {pause_context['message']}")
+            return current
+        
         try:
             # Check for completion to trigger learning
             # If current is 'end', we check if we should go to 'knowledge' first

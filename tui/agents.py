@@ -65,6 +65,19 @@ agent_session = AgentSession()
 # Chat mode flag
 agent_chat_mode: bool = True
 
+# Global Trinity runtime reference
+_current_runtime: Optional[Any] = None
+
+def get_current_runtime() -> Optional[Any]:
+    """Get the current Trinity runtime instance."""
+    global _current_runtime
+    return _current_runtime
+
+def set_current_runtime(runtime: Any) -> None:
+    """Set the current Trinity runtime instance."""
+    global _current_runtime
+    _current_runtime = runtime
+
 
 def load_env() -> None:
     """Load environment variables from .env file."""
@@ -604,7 +617,18 @@ def run_graph_agent_task(
         tail_thread.start()
 
         chat_lang = getattr(state, "chat_lang", "en")
-        runtime = TrinityRuntime(verbose=False, permissions=permissions, on_stream=on_stream_callback, preferred_language=chat_lang)
+        # Enable self-healing by default
+        enable_self_healing = not getattr(state, "disable_self_healing", False)
+        runtime = TrinityRuntime(
+            verbose=False, 
+            permissions=permissions, 
+            on_stream=on_stream_callback, 
+            preferred_language=chat_lang,
+            enable_self_healing=enable_self_healing
+        )
+        
+        # Set the current runtime for global access
+        set_current_runtime(runtime)
         
         # Enrich Trinity Registry with TUI tools
         if not agent_session.tools:

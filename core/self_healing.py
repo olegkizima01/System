@@ -18,6 +18,7 @@ import os
 import re
 import subprocess
 import time
+import threading
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
@@ -37,6 +38,9 @@ class IssueType(Enum):
     ATTRIBUTE_ERROR = "attribute_error"
     KEY_ERROR = "key_error"
     LOGIC_ERROR = "logic_error"
+    DEPENDENCY_ERROR = "dependency_error"
+    CONFIGURATION_ERROR = "configuration_error"
+    PERMISSION_ERROR = "permission_error"
 
 
 class IssueSeverity(Enum):
@@ -118,6 +122,18 @@ class CodeSelfHealer:
         (r"json\.decoder\.JSONDecodeError: (.+)", IssueType.JSON_PARSE_ERROR),
         (r"JSONDecodeError: (.+)", IssueType.JSON_PARSE_ERROR),
         (r"\[.*\] LLM JSON parsing.*error: (.+)", IssueType.JSON_PARSE_ERROR),
+        # Dependency errors
+        (r"pip.*install.*failed", IssueType.DEPENDENCY_ERROR),
+        (r"requirements.*not.*found", IssueType.DEPENDENCY_ERROR),
+        (r"package.*not.*installed", IssueType.DEPENDENCY_ERROR),
+        # Configuration errors
+        (r"config.*file.*not.*found", IssueType.CONFIGURATION_ERROR),
+        (r"configuration.*error", IssueType.CONFIGURATION_ERROR),
+        (r"settings.*invalid", IssueType.CONFIGURATION_ERROR),
+        # Permission errors
+        (r"Permission denied", IssueType.PERMISSION_ERROR),
+        (r"Operation not permitted", IssueType.PERMISSION_ERROR),
+        (r"access denied", IssueType.PERMISSION_ERROR),
         # File/path related
         (r"File \"([^\"]+)\", line (\d+)", None),  # Stack trace pattern
     ]
@@ -163,6 +179,21 @@ class CodeSelfHealer:
     def set_trinity_runtime(self, runtime) -> None:
         """Set the Trinity runtime for executing repairs."""
         self._trinity_runtime = runtime
+    
+    def integrate_with_trinity(self, trinity_runtime) -> None:
+        """
+        Integrate self-healing with Trinity runtime.
+        
+        This method sets up the self-healing module to work with Trinity
+        by setting the runtime reference and configuring callbacks.
+        """
+        self.set_trinity_runtime(trinity_runtime)
+        
+        # Set up streaming callback if available
+        if hasattr(trinity_runtime, 'on_stream') and trinity_runtime.on_stream:
+            self.on_stream = trinity_runtime.on_stream
+        
+        self._stream("Self-healing module integrated with Trinity runtime", "info")
     
     def _get_git_root(self) -> str:
         """Get the git repository root."""
@@ -836,3 +867,34 @@ Output your repair plan as JSON with this structure:
             "project_root": self.project_root,
             "log_path": self.log_path,
         }
+    
+    def start_background_monitoring(self, interval: float = 30.0) -> threading.Thread:
+        """
+        Start self-healing monitoring in a background thread.
+        
+        Args:
+            interval: Seconds between monitoring cycles
+            
+        Returns:
+            Thread object running the healing loop
+        """
+        def monitoring_loop():
+            try:
+                self.healing_loop(interval=interval, auto_repair=True)
+            except Exception as e:
+                self._stream(f"Background monitoring failed: {e}", "error")
+        
+        monitor_thread = threading.Thread(target=monitoring_loop, daemon=True)
+        monitor_thread.start()
+        self._stream(f"Started background monitoring with {interval}s interval", "info")
+        return monitor_thread
+    
+    def trigger_immediate_scan(self) -> List[CodeIssue]:
+        """
+        Trigger an immediate scan for issues without waiting for the next cycle.
+        
+        Returns:
+            List of detected issues
+        """
+        self._stream("Triggering immediate error scan", "info")
+        return self.detect_errors()
