@@ -1,62 +1,85 @@
-# Project Atlas (Kinotavr)
+# Project Atlas: Cognitive 2.0 Identity
 
-**Vision-Augmented Agentic OS Controller for macOS**
+**Autonomous Multi-Agent macOS Operator built on Trinity Runtime.**
 
-Atlas is a local "neural operator" for macOS that sees the screen, plans actions, and executes them through a strict low-level tool interface. It is designed to act as a high-level cognitive layer over the OS, capable of complex tasks ranging from system management to web automation.
+Atlas is not just an automation script. It is a local "neural operator" for macOS that perceives the screen (Vision-First), plans implicitly (Meta-Planning), and executes actions through a strict low-level tool interface (MCP). It is designed to act as a high-level cognitive layer over the OS, capable of complex tasks ranging from system management to web automation and coding.
 
-## Core Architecture: The Trinity
+---
 
-The system operates via a graph of specialized agents ("The Trinity"):
+## 🧠 Core Principles (Cognitive 2.0)
 
-1.  **Atlas (Architect):** Strategist and planner. Decomposes user requests into execution plans.
-2.  **Tetyana (Executor):** Universal operator. Executes tools for OS control, browser automation, and development.
-3.  **Grisha (Visor/Security):** Quality assurance and security. Verifies actions via visual feedback (Vision) and enforces safety rules.
+1.  **Autonomous Navigation**: Self-correction loop: *Perception → Planning → Action → Verification*.
+2.  **Meta-Planning**: The agent manages its own strategy (e.g., "Aggressive" vs "Careful") and budgets its own attention (Context7).
+3.  **Vision-First**: Uses screenshots and Computer Vision as the "Ground Truth".
+4.  **Privacy & Stealth**: Built-in system for cleaning traces (`cleanup_scripts`) and spoofing identifiers.
+5.  **Continuous Learning**: Every mission result (Success/Failure) is analyzed and stored in the **Knowledge Base** to improve future plans.
 
-## Capabilities
+---
 
-### 1. System Control
-- **Process Management:** Real-time visibility of running processes (`psutil`). Ability to list and terminate applications.
-- **System Stats:** Monitoring of CPU, RAM, and Disk usage.
-- **Native Automation:** AppleScript and shell integration for low-level OS interaction.
+## 🏗 Architecture: The Trinity Graph
 
-### 2. Desktop Awareness
-- **Vision:** "Sees" open windows, their titles, positions, and sizes (`Quartz`).
-- **Multi-Monitor:** Understands multi-display layouts.
-- **Clipboard:** Bidirectional clipboard access (`NSPasteboard`).
+The system runs on **Trinity Runtime**, a cyclic graph (LangGraph) of specialized nodes:
 
-### 3. Browser Automation
-- **Playwright engine:** Robust, selector-based web interaction.
-- **Features:** Open URLs, click elements, type text, execute JavaScript, and read DOM content.
-- **No "Blind Clicks":** Interacts with the web page structure directly for reliability.
+| Agent / Layer | Role | Description |
+| :--- | :--- | :--- |
+| **Meta-Planner** | *Orchestrator* | The "Head". Performs Active Retrieval and filters memories. |
+| **Context7** | *Context Manager* | **Implicit Layer**. Budgets tokens, injects policy, and normalizes context. |
+| **Atlas** | *Architect* | Generates tactical plans based on normalized context. |
+| **Tetyana** | *Executor* | Universal operator. Executes tools (Shell, AppleScript, Browser). |
+| **Grisha** | *Verifier* | QA. Verifies actions via visual feedback and logic. |
+| **Knowledge** | *Learner* | Reflection phase. Extracts lessons and updates the vector DB. |
 
-### 4. Code & Development
-- **Dev Subsystem:** Integration with Windsurf IDE and CLI for coding tasks.
-- **RAG Memory:** Learns from past actions and stores successful strategies.
+---
 
-## Installation & Setup
+## 🛠 Tooling (MCP Foundation)
 
-1.  **Environment:**
-    ```bash
-    python3 -m venv .venv
-    source .venv/bin/activate
-    ```
+Atlas accesses the world through the **Model Context Protocol (MCP)** registry:
 
-2.  **Dependencies:**
-    ```bash
-    pip install -r requirements.txt
-    playwright install
-    ```
+-   **Unified Automation**: Internal module for Shell, AppleScript, Mouse/Keyboard, and Shortcuts.
+-   **System Cleanup**: Advanced privacy tools (logs wiping, hardware spoofing).
+-   **Recorder Control**: Semantic session recording.
+-   **External MCPs**:
+    -   **Playwright**: Full browser automation.
+    -   **PyAutoGUI**: Fallback input emulation.
 
-3.  **Permissions:**
-    The terminal/IDE running Atlas must have the following macOS permissions:
-    - Accessibility
-    - Screen Recording
-    - Automation
+---
 
-## Usage
+## 🚀 Quick Start
 
-Run the system CLI:
+### Prerequisites
+-   macOS (Silicon recommended)
+-   Python 3.12+ (managed by setup)
+-   Node.js (for Playwright MCP)
+
+### Installation
 
 ```bash
-python3 main.py
+git clone https://github.com/your-repo/system.git
+cd system
+chmod +x setup.sh
+./setup.sh
 ```
+
+The `setup.sh` script will:
+1.  Create a Python 3.12 virtual environment.
+2.  Install all Python dependencies (`requirements.txt`).
+3.  Install Playwright browsers.
+4.  Patch `mcp-pyautogui-server`.
+5.  Set execution permissions for cleanup scripts.
+
+### Usage
+
+Run the TUI (Text User Interface):
+
+```bash
+./cli.sh
+```
+
+**Commands:**
+-   `/trinity <task>`: Start a standard agent assignment.
+-   `/autopilot <task>`: Run in fully autonomous mode.
+-   `/help`: Show all commands.
+
+---
+
+*For deep architectural details, see [docs/atlas.md](docs/atlas.md).*
