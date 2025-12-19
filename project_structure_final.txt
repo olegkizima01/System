@@ -4,9 +4,9 @@
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 126
-- **Files Skipped**: 15945
+- **Files Skipped**: 15953
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-19 03:45:24
+- **Generated**: 2025-12-19 03:48:28
 
 ---
 
@@ -148,18 +148,20 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 38981 +-----------------------------------------
- 1 file changed, 3 insertions(+), 38978 deletions(-)
+ core/agents/atlas.py        |    19 +-
+ core/trinity.py             |    34 +-
+ project_structure_final.txt | 39123 +-----------------------------------------
+ 3 files changed, 44 insertions(+), 39132 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-c3e77a1 feat(cognitive): implement selective RAG, knowledge extraction node, and continuous learning cycle
+aa0ab2f docs(atlas): update authoritative workflow to Cognitive 2.0 with Active Retrieval and Confidence scoring
+2469d84 feat(cognitive): implement selective RAG, knowledge extraction node, and continuous learning cycle
 f1e271c feat(meta): implement advanced meta-planning architecture and authoritative documentation rebase
 d5edc6c Trinity task completed: Найди через гугл фільм сучасний якийсь про штучний інтелект для перегля…
 2c4de4a Trinity task completed: Найди через гугл фільм сучасний якийсь про штучний інтелект для перегля…
-43e4d01 feat: enhance TUI scrolling by increasing speed and adding state management for log and agent panel follow behavior.
 ```
 
 ---
@@ -327,7 +329,7 @@ System/
 
 ## File Contents
 
-### `.agent/workflows/atlas.md` (7.4 KB)
+### `.agent/workflows/atlas.md` (5.5 KB)
 
 ```markdown
 ---
@@ -335,7 +337,7 @@ description: Authoritative guide for Project Atlas architecture, meta-planning l
 ---
 
 # Project Atlas: Архітектура, Workflow та Основні Принципи  
-**Актуальний стан на грудень 2025 року**
+**Актуальний стан на грудень 2025 року (Cognitive 2.0)**
 
 Цей документ є **єдиним джерелом правди** про фундаментальні принципи роботи системи Atlas (Trinity Runtime).
 
@@ -348,24 +350,24 @@ Atlas — це не просто автоматизатор, а **автоном
 1.  **Автономна Навігація (Autonomous Navigation)**  
     Здатність самостійно приймати рішення в умовах невизначеності, використовуючи цикл "Сприйняття → Планування → Дія → Верифікація".
 2.  **Управління Мисленням (Meta-Planning)**  
-    Агент не просто виконує кроки, він керує власною стратегією: обирає рівень строгості перевірок (`rigor`), режим відновлення (`recovery_mode`) та тип плану.
+    Агент не просто виконує кроки, він керує власною стратегією: обирає рівень верифікації, режим відновлення та тип плану.
 3.  **Візуальне Сприйняття (Vision-First)**  
-    Використання скріншотів та Computer Vision як основного джерела істини (Ground Truth) для підтвердження результатів, особливо в умовах блокувань або відсутності API.
+    Використання скріншотів та Computer Vision як основного джерела істини (Ground Truth).
 4.  **Конфіденційність та Стелс-режим (Privacy & Stealth)**  
-    Потужна система очищення слідів перебування ШІ на macOS, підміна ідентифікаторів (`spoofing`) та режим "Fresh Install" для безпечної роботи.
+    Система очищення слідів та підміна ідентифікаторів (`spoofing`).
 5.  **Постійне Навчання (Continuous Learning)**  
-    Після завершення кожного успішного завдання система витягує досвід та зберігає його у векторну пам'ять (Knowledge Base) для майбутнього використання.
+    Після успіху система витягує досвід та зберігає його у **Knowledge Base** з оцінкою впевненості (**Confidence Score**).
 
 ---
 
 ## 2. Архітектура Trinity Runtime (LangGraph)
 
-Центральна нервова система Atlas базується на циклічному графі, де кожен вузол має вузьку спеціалізацію:
+Центральна нервова система Atlas базується на циклічному графі:
 
 ```mermaid
 graph TD
     START((START)) --> MP[meta_planner<br/>Голова/Стратег/Контролер]
-    MP -->|Selective RAG| A[atlas<br/>Архітектор Плану]
+    MP -->|Active Retrieval| A[atlas<br/>Архітектор Плану]
     MP -->|план готовий| T[tetyana<br/>Виконавець]
     MP -->|план готовий| G[grisha<br/>Верифікатор]
     A --> MP
@@ -377,68 +379,54 @@ graph TD
 
 ### 2.1 Trinity Agents
 
--   **Meta-Planner** (`_meta_planner_node`): Встановлює **Execution Policy**. Виконує **Selective RAG** (вирішує, чи потрібен пошук у пам'яті). Також відповідає за:
-    -   **Strategic Reasoning**: Обґрунтування вибору стратегії.
-    -   **Summarization**: Кожні 3 кроки стискає історію.
-    -   **Step Consumption**: Маркування виконаних кроків.
--   **Atlas** (`_atlas_node`): Перетворює політику та **отриманий контекст** на кроки. Включає фазу **Self-Review**.
--   **Tetyana** (`_tetyana_node`): Виконавець команд.
--   **Grisha** (`_grisha_node`): Валідатор (success/failed/uncertain).
--   **Knowledge** (`_knowledge_node`): Витягує структурований досвід після успіху та зберігає у `knowledge_base` з тегами.
+-   **Meta-Planner** (`_meta_planner_node`): Встановлює **Execution Policy**. Виконує **Active Retrieval** (генерує `retrieval_query`).
+-   **Atlas** (`_atlas_node`): Перетворює політику на кроки. Виконує **Self-Review** плану.
+-   **Tetyana** (`_tetyana_node`): Виконує команди (Native/GUI).
+-   **Grisha** (`_grisha_node`): Верифікатор результатів.
+-   **Knowledge** (`_knowledge_node`): Аналізує ефективність виконання та зберігає досвід із розрахунком **Confidence** (0.0 - 1.0).
 
 ---
 
-## 3. Мета-планінг (Meta-planning)
-
-Мета-планінг — це "мозок" керування агентом. Atlas стає менеджером власного мислення.
+## 3. Мета-планінг (Meta-planning 2.0)
 
 | Параметр конфігу | Значення | Опис |
 | :--- | :--- | :--- |
-| **Strategy** | `linear`, `branching`, `aggressive` | Тип побудови плану. |
-| **Verification Rigor** | `low`, `medium`, `high` | Частота та глибина перевірок Grisha. |
-| **Recovery Mode** | `local_fix`, `full_replan` | Як реагувати на помилку окремого кроку. |
-| **Tool Preference** | `native`, `gui`, `hybrid` | Пріоритет типу інструментів для виконання. |
-| **Reasoning** | Текстове обґрунтування | **Strategic Justification**: Чому обрано саме таку політику. |
+| **Strategy** | `linear`, `rag_heavy`, `aggressive` | Тип побудови плану. |
+| **Retrieval Query** | Текстовий запит | **Active Retrieval**: Оптимізований запит для векторної пам'яті. |
+| **Memory Depth** | `1` ... `5` | Кількість фрагментів досвіду для вилучення (`n_results`). |
+| **Verification Rigor** | `low`, `medium`, `high` | Строгість перевірок Grisha. |
+| **Confidence Filter** | `> 0.4` | Система ігнорує спогади з низьким рівнем успішності. |
+| **Reasoning** | Обґрунтування | Чому обрано саме таку стратегію. |
 
 ---
 
 ## 4. MCP Фондація (Інструменти)
 
-Atlas взаємодіє зі світом через систему інструментів, що базуються на фундаментальних MCP-серверах:
-
--   **Playwright MCP**: Повний контроль браузера.
--   **PyAutoGUI MCP**: Фізична миша/клавіатура.
--   **Native macOS MCP**: AppleScript, UI Clicker, Shell Access.
+-   **Playwright MCP**: Контроль браузера.
+-   **PyAutoGUI MCP**: Емуляція миші/клавіатура.
+-   **Native macOS MCP**: Shell, AppleScript, File System.
 
 ---
 
 ## 5. Додаткові можливості та Інтеграції (Extensions)
 
-Ці модулі є допоміжними і розширюють можливості Atlas для специфічних середовищ:
-
 ### 5.1 AI-IDE Integrations
-Atlas може інтегруватися з редакторами коду для прискорення розробки:
--   **Windsurf**: Інструменти `send_to_windsurf`, `open_file_in_windsurf`.
--   **Antigravity / Cursor**: Спеціальні профілі очищення та налаштування оточення.
+-   **Windsurf**, **Antigravity**, **Cursor**: Спеціальні профілі для розробки.
 
 ### 5.2 Cleanup & Privacy System
-Система очищення слідів для обходу лімітів та захисту приватності:
--   Очищення `IndexedDB`, `keychain`, локальних сховищ IDE.
--   Спофінг `MAC-адреси` та `hostname` (revert через 4 години).
+-   Очищення `IndexedDB`, `keychain`.
+-   **Spoofing**: MAC, hostname (з авто-ревертом).
 
 ---
 
 ## 6. Система моніторингу та Трейси (Monitoring)
 
-Для діагностики системи використовуються спеціальні trace-події, які можна знайти в `ai.log.jsonl` та `cli.log`:
-
 | Event | Опис |
 | :--- | :--- |
-| `trinity_run_start` | Початок виконання всього графа. |
-| `trinity_graph_event` | Перехід між вузлами (node name, status, step_count). |
-| `atlas_plan_generated` | Подія створення нового плану (кількість кроків). |
-| `tetyana_llm` / `tetyana_exit` | Робота виконавця та статус завершення інструменту. |
-| `grisha_decision` | Вердикт верифікатора (success/failed/uncertain). |
+| `trinity_run_start` | Початок графа. |
+| `knowledge_stored` | Подія збереження нового досвіду та його `confidence`. |
+| `atlas_plan_generated` | Створення нового плану. |
+| `grisha_decision` | Вердикт (success/failed/uncertain). |
 
 ---
 
@@ -446,7 +434,7 @@ Atlas може інтегруватися з редакторами коду д�
 
 ```bash
 ./cli.sh                    # Запуск TUI
-/trinity <завдання>         # Запуск Trinity з Meta-Planner
+/trinity <завдання>         # Trinity з Meta-Planner
 /autopilot <завдання>       # Режим повної автономії
 ```
 
@@ -7684,7 +7672,7 @@ c0c61642-aff6-41cf-b182-10e49179bdf9
 {"name":"original","created":"2025-12-15 09:51:37","hostname":"Mini-Adam"}
 ```
 
-### `core/agents/atlas.py` (9.4 KB)
+### `core/agents/atlas.py` (9.7 KB)
 
 ```python
 from langchain_core.prompts import ChatPromptTemplate
@@ -7764,15 +7752,26 @@ def get_atlas_prompt(task_description: str):
 
 
 META_PLANNER_PROMPT = """Ти — Meta-Planner, стратегічний контролер системи Trinity.
-Твоя роль: Визначити оптимальну політику виконання (Execution Policy) та необхідність залучення пам'яті (Selective RAG).
+Твоя роль: Визначити оптимальну політику виконання (Execution Policy) та активну стратегію пошуку знань.
 
 Твої обов'язки:
 1. Аналізуй успіх/проввал останнього кроку.
 2. Встановлюй рівень верифікації (rigor).
-3. Вибирай Recovery Strategy.
-4. Selective RAG: Якщо задача вимагає досвіду, якого немає в поточному контексті, встанови стратегію 'rag_heavy' для активації пошуку в знаннях.
+3. Selective RAG: Якщо потрібен досвід, встанови:
+   - 'strategy': 'rag_heavy'.
+   - 'retrieval_query': оптимізований пошуковий запит (наприклад, "fix playwright timeout", а не "що робити").
+   - 'n_results': кількість спогадів (1-5).
 
-Обґрунтуй рішення в 'reasoning'.
+Твій вихід (JSON meta_config):
+{
+  "meta_config": {
+    "strategy": "linear" | "rag_heavy" | ...,
+    "retrieval_query": "search terms",
+    "n_results": 3,
+    "verification_rigor": "low" | "medium" | "high",
+    "reasoning": "Чому обрано таку політику?"
+  }
+}
 """
 
 ATLAS_PLANNING_PROMPT = """Ти — Atlas, стратегічний планувальник.
@@ -8525,7 +8524,7 @@ def query_memory_tool(category: str, query: str) -> Dict[str, Any]:
     return {"status": "success", "results": results}
 ```
 
-### `core/trinity.py` (81.5 KB)
+### `core/trinity.py` (82.6 KB)
 
 ```python
 from typing import Annotated, TypedDict, Literal, List, Dict, Any, Optional, Callable
@@ -8840,11 +8839,20 @@ class TrinityRuntime:
                     meta_config.update(data["meta_config"])
                     # Selective RAG: If Meta-Planner decides context is needed
                     if meta_config.get("strategy") == "rag_heavy" or action in ["initialize", "replan"]:
-                        if self.verbose: print("🧠 [Meta-Planner] Selective RAG lookup...")
-                        mem_res = self.memory.query_memory("knowledge_base", last_msg)
-                        if not mem_res:
-                            # fallback to strategies
-                            mem_res = self.memory.query_memory("strategies", last_msg)
+                        query = meta_config.get("retrieval_query", last_msg)
+                        limit = int(meta_config.get("n_results", 3))
+                        
+                        if self.verbose: print(f"🧠 [Meta-Planner] Selective RAG lookup: '{query}' (top {limit})...")
+                        mem_res = self.memory.query_memory("knowledge_base", query, n_results=limit)
+                        
+                        # Weighting: Filter low confidence if needed
+                        high_conf_res = [r for r in mem_res if float(r.get("metadata", {}).get("confidence", 1.0)) > 0.4]
+                        
+                        if not high_conf_res:
+                            # fallback to strategies with the same query
+                            mem_res = self.memory.query_memory("strategies", query, n_results=limit)
+                        else:
+                            mem_res = high_conf_res
                         
                         state["retrieved_context"] = "\n".join([r.get("content", "") for r in mem_res])
                     
@@ -9660,6 +9668,13 @@ class TrinityRuntime:
         context = state.get("messages", [])
         plan = state.get("plan") or []
         summary = state.get("summary", "")
+        replan_count = state.get("replan_count", 0)
+        
+        # Self-evaluation of confidence based on execution efficiency
+        # High confidence: success with few replans and steps
+        # Low confidence: success but with many failures or replans
+        confidence = 1.0 - (min(replan_count, 5) * 0.1) - (min(len(plan), 10) * 0.02)
+        confidence = max(0.1, round(confidence, 2))
         
         try:
             # Create a structured memory entry
@@ -9674,12 +9689,16 @@ class TrinityRuntime:
                 metadata={
                     "type": "successful_strategy",
                     "timestamp": int(time.time()),
-                    "complexity": len(plan)
+                    "complexity": len(plan),
+                    "confidence": confidence,
+                    "replan_count": replan_count
                 }
             )
             
+            if self.verbose: print(f"🧠 [Learning] Knowledge stored with confidence {confidence}")
+            
             try:
-                trace(self.logger, "knowledge_stored", {"plan_len": len(plan)})
+                trace(self.logger, "knowledge_stored", {"plan_len": len(plan), "confidence": confidence})
             except Exception:
                 pass
                 
@@ -12113,7 +12132,7 @@ cli.py: error: unrecognized arguments: Найди через гугл фільм
 test content
 ```
 
-### `project_structure_final.txt` (555.0 KB)
+### `project_structure_final.txt` (554.5 KB)
 
 ```text
 # System — Project Structure
@@ -12122,9 +12141,9 @@ test content
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 126
-- **Files Skipped**: 15945
+- **Files Skipped**: 15953
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-19 03:45:24
+- **Generated**: 2025-12-19 03:48:28
 
 ---
 
@@ -12266,18 +12285,20 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 38981 +-----------------------------------------
- 1 file changed, 3 insertions(+), 38978 deletions(-)
+ core/agents/atlas.py        |    19 +-
+ core/trinity.py             |    34 +-
+ project_structure_final.txt | 39123 +-----------------------------------------
+ 3 files changed, 44 insertions(+), 39132 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-c3e77a1 feat(cognitive): implement selective RAG, knowledge extraction node, and continuous learning cycle
+aa0ab2f docs(atlas): update authoritative workflow to Cognitive 2.0 with Active Retrieval and Confidence scoring
+2469d84 feat(cognitive): implement selective RAG, knowledge extraction node, and continuous learning cycle
 f1e271c feat(meta): implement advanced meta-planning architecture and authoritative documentation rebase
 d5edc6c Trinity task completed: Найди через гугл фільм сучасний якийсь про штучний інтелект для перегля…
 2c4de4a Trinity task completed: Найди через гугл фільм сучасний якийсь про штучний інтелект для перегля…
-43e4d01 feat: enhance TUI scrolling by increasing speed and adding state management for log and agent panel follow behavior.
 ```
 
 ---
@@ -12445,7 +12466,7 @@ System/
 
 ## File Contents
 
-### `.agent/workflows/atlas.md` (7.4 KB)
+### `.agent/workflows/atlas.md` (5.5 KB)
 
 ```markdown
 ---
@@ -12453,7 +12474,7 @@ description: Authoritative guide for Project Atlas architecture, meta-planning l
 ---
 
 # Project Atlas: Архітектура, Workflow та Основні Принципи  
-**Актуальний стан на грудень 2025 року**
+**Актуальний стан на грудень 2025 року (Cognitive 2.0)**
 
 Цей документ є **єдиним джерелом правди** про фундаментальні принципи роботи системи Atlas (Trinity Runtime).
 
@@ -12466,24 +12487,24 @@ Atlas — це не просто автоматизатор, а **автоном
 1.  **Автономна Навігація (Autonomous Navigation)**  
     Здатність самостійно приймати рішення в умовах невизначеності, використовуючи цикл "Сприйняття → Планування → Дія → Верифікація".
 2.  **Управління Мисленням (Meta-Planning)**  
-    Агент не просто виконує кроки, він керує власною стратегією: обирає рівень строгості перевірок (`rigor`), режим відновлення (`recovery_mode`) та тип плану.
+    Агент не просто виконує кроки, він керує власною стратегією: обирає рівень верифікації, режим відновлення та тип плану.
 3.  **Візуальне Сприйняття (Vision-First)**  
-    Використання скріншотів та Computer Vision як основного джерела істини (Ground Truth) для підтвердження результатів, особливо в умовах блокувань або відсутності API.
+    Використання скріншотів та Computer Vision як основного джерела істини (Ground Truth).
 4.  **Конфіденційність та Стелс-режим (Privacy & Stealth)**  
-    Потужна система очищення слідів перебування ШІ на macOS, підміна ідентифікаторів (`spoofing`) та режим "Fresh Install" для безпечної роботи.
+    Система очищення слідів та підміна ідентифікаторів (`spoofing`).
 5.  **Постійне Навчання (Continuous Learning)**  
-    Після завершення кожного успішного завдання система витягує досвід та зберігає його у векторну пам'ять (Knowledge Base) для майбутнього використання.
+    Після успіху система витягує досвід та зберігає його у **Knowledge Base** з оцінкою впевненості (**Confidence Score**).
 
 ---
 
 ## 2. Архітектура Trinity Runtime (LangGraph)
 
-Центральна нервова система Atlas базується на циклічному графі, де кожен вузол має вузьку спеціалізацію:
+Центральна нервова система Atlas базується на циклічному графі:
 
 ```mermaid
 graph TD
     START((START)) --> MP[meta_planner<br/>Голова/Стратег/Контролер]
-    MP -->|Selective RAG| A[atlas<br/>Архітектор Плану]
+    MP -->|Active Retrieval| A[atlas<br/>Архітектор Плану]
     MP -->|план готовий| T[tetyana<br/>Виконавець]
     MP -->|план готовий| G[grisha<br/>Верифікатор]
     A --> MP
@@ -12495,68 +12516,54 @@ graph TD
 
 ### 2.1 Trinity Agents
 
--   **Meta-Planner** (`_meta_planner_node`): Встановлює **Execution Policy**. Виконує **Selective RAG** (вирішує, чи потрібен пошук у пам'яті). Також відповідає за:
-    -   **Strategic Reasoning**: Обґрунтування вибору стратегії.
-    -   **Summarization**: Кожні 3 кроки стискає історію.
-    -   **Step Consumption**: Маркування виконаних кроків.
--   **Atlas** (`_atlas_node`): Перетворює політику та **отриманий контекст** на кроки. Включає фазу **Self-Review**.
--   **Tetyana** (`_tetyana_node`): Виконавець команд.
--   **Grisha** (`_grisha_node`): Валідатор (success/failed/uncertain).
--   **Knowledge** (`_knowledge_node`): Витягує структурований досвід після успіху та зберігає у `knowledge_base` з тегами.
+-   **Meta-Planner** (`_meta_planner_node`): Встановлює **Execution Policy**. Виконує **Active Retrieval** (генерує `retrieval_query`).
+-   **Atlas** (`_atlas_node`): Перетворює політику на кроки. Виконує **Self-Review** плану.
+-   **Tetyana** (`_tetyana_node`): Виконує команди (Native/GUI).
+-   **Grisha** (`_grisha_node`): Верифікатор результатів.
+-   **Knowledge** (`_knowledge_node`): Аналізує ефективність виконання та зберігає досвід із розрахунком **Confidence** (0.0 - 1.0).
 
 ---
 
-## 3. Мета-планінг (Meta-planning)
-
-Мета-планінг — це "мозок" керування агентом. Atlas стає менеджером власного мислення.
+## 3. Мета-планінг (Meta-planning 2.0)
 
 | Параметр конфігу | Значення | Опис |
 | :--- | :--- | :--- |
-| **Strategy** | `linear`, `branching`, `aggressive` | Тип побудови плану. |
-| **Verification Rigor** | `low`, `medium`, `high` | Частота та глибина перевірок Grisha. |
-| **Recovery Mode** | `local_fix`, `full_replan` | Як реагувати на помилку окремого кроку. |
-| **Tool Preference** | `native`, `gui`, `hybrid` | Пріоритет типу інструментів для виконання. |
-| **Reasoning** | Текстове обґрунтування | **Strategic Justification**: Чому обрано саме таку політику. |
+| **Strategy** | `linear`, `rag_heavy`, `aggressive` | Тип побудови плану. |
+| **Retrieval Query** | Текстовий запит | **Active Retrieval**: Оптимізований запит для векторної пам'яті. |
+| **Memory Depth** | `1` ... `5` | Кількість фрагментів досвіду для вилучення (`n_results`). |
+| **Verification Rigor** | `low`, `medium`, `high` | Строгість перевірок Grisha. |
+| **Confidence Filter** | `> 0.4` | Система ігнорує спогади з низьким рівнем успішності. |
+| **Reasoning** | Обґрунтування | Чому обрано саме таку стратегію. |
 
 ---
 
 ## 4. MCP Фондація (Інструменти)
 
-Atlas взаємодіє зі світом через систему інструментів, що базуються на фундаментальних MCP-серверах:
-
--   **Playwright MCP**: Повний контроль браузера.
--   **PyAutoGUI MCP**: Фізична миша/клавіатура.
--   **Native macOS MCP**: AppleScript, UI Clicker, Shell Access.
+-   **Playwright MCP**: Контроль браузера.
+-   **PyAutoGUI MCP**: Емуляція миші/клавіатура.
+-   **Native macOS MCP**: Shell, AppleScript, File System.
 
 ---
 
 ## 5. Додаткові можливості та Інтеграції (Extensions)
 
-Ці модулі є допоміжними і розширюють можливості Atlas для специфічних середовищ:
-
 ### 5.1 AI-IDE Integrations
-Atlas може інтегруватися з редакторами коду для прискорення розробки:
--   **Windsurf**: Інструменти `send_to_windsurf`, `open_file_in_windsurf`.
--   **Antigravity / Cursor**: Спеціальні профілі очищення та налаштування оточення.
+-   **Windsurf**, **Antigravity**, **Cursor**: Спеціальні профілі для розробки.
 
 ### 5.2 Cleanup & Privacy System
-Система очищення слідів для обходу лімітів та захисту приватності:
--   Очищення `IndexedDB`, `keychain`, локальних сховищ IDE.
--   Спофінг `MAC-адреси` та `hostname` (revert через 4 години).
+-   Очищення `IndexedDB`, `keychain`.
+-   **Spoofing**: MAC, hostname (з авто-ревертом).
 
 ---
 
 ## 6. Система моніторингу та Трейси (Monitoring)
 
-Для діагностики системи використовуються спеціальні trace-події, які можна знайти в `ai.log.jsonl` та `cli.log`:
-
 | Event | Опис |
 | :--- | :--- |
-| `trinity_run_start` | Початок виконання всього графа. |
-| `trinity_graph_event` | Перехід між вузлами (node name, status, step_count). |
-| `atlas_plan_generated` | Подія створення нового плану (кількість кроків). |
-| `tetyana_llm` / `tetyana_exit` | Робота виконавця та статус завершення інструменту. |
-| `grisha_decision` | Вердикт верифікатора (success/failed/uncertain). |
+| `trinity_run_start` | Початок графа. |
+| `knowledge_stored` | Подія збереження нового досвіду та його `confidence`. |
+| `atlas_plan_generated` | Створення нового плану. |
+| `grisha_decision` | Вердикт (success/failed/uncertain). |
 
 ---
 
@@ -12564,7 +12571,7 @@ Atlas може інтегруватися з редакторами коду д�
 
 ```bash
 ./cli.sh                    # Запуск TUI
-/trinity <завдання>         # Запуск Trinity з Meta-Planner
+/trinity <завдання>         # Trinity з Meta-Planner
 /autopilot <завдання>       # Режим повної автономії
 ```
 
@@ -19802,7 +19809,7 @@ c0c61642-aff6-41cf-b182-10e49179bdf9
 {"name":"original","created":"2025-12-15 09:51:37","hostname":"Mini-Adam"}
 ```
 
-### `core/agents/atlas.py` (9.4 KB)
+### `core/agents/atlas.py` (9.7 KB)
 
 ```python
 from langchain_core.prompts import ChatPromptTemplate
@@ -19882,15 +19889,26 @@ def get_atlas_prompt(task_description: str):
 
 
 META_PLANNER_PROMPT = """Ти — Meta-Planner, стратегічний контролер системи Trinity.
-Твоя роль: Визначити оптимальну політику виконання (Execution Policy) та необхідність залучення пам'яті (Selective RAG).
+Твоя роль: Визначити оптимальну політику виконання (Execution Policy) та активну стратегію пошуку знань.
 
 Твої обов'язки:
 1. Аналізуй успіх/проввал останнього кроку.
 2. Встановлюй рівень верифікації (rigor).
-3. Вибирай Recovery Strategy.
-4. Selective RAG: Якщо задача вимагає досвіду, якого немає в поточному контексті, встанови стратегію 'rag_heavy' для активації пошуку в знаннях.
+3. Selective RAG: Якщо потрібен досвід, встанови:
+   - 'strategy': 'rag_heavy'.
+   - 'retrieval_query': оптимізований пошуковий запит (наприклад, "fix playwright timeout", а не "що робити").
+   - 'n_results': кількість спогадів (1-5).
 
-Обґрунтуй рішення в 'reasoning'.
+Твій вихід (JSON meta_config):
+{
+  "meta_config": {
+    "strategy": "linear" | "rag_heavy" | ...,
+    "retrieval_query": "search terms",
+    "n_results": 3,
+    "verification_rigor": "low" | "medium" | "high",
+    "reasoning": "Чому обрано таку політику?"
+  }
+}
 """
 
 ATLAS_PLANNING_PROMPT = """Ти — Atlas, стратегічний планувальник.
@@ -20643,7 +20661,7 @@ def query_memory_tool(category: str, query: str) -> Dict[str, Any]:
     return {"status": "success", "results": results}
 ```
 
-### `core/trinity.py` (81.5 KB)
+### `core/trinity.py` (82.6 KB)
 
 ```python
 from typing import Annotated, TypedDict, Literal, List, Dict, Any, Optional, Callable
@@ -20958,11 +20976,20 @@ class TrinityRuntime:
                     meta_config.update(data["meta_config"])
                     # Selective RAG: If Meta-Planner decides context is needed
                     if meta_config.get("strategy") == "rag_heavy" or action in ["initialize", "replan"]:
-                        if self.verbose: print("🧠 [Meta-Planner] Selective RAG lookup...")
-                        mem_res = self.memory.query_memory("knowledge_base", last_msg)
-                        if not mem_res:
-                            # fallback to strategies
-                            mem_res = self.memory.query_memory("strategies", last_msg)
+                        query = meta_config.get("retrieval_query", last_msg)
+                        limit = int(meta_config.get("n_results", 3))
+                        
+                        if self.verbose: print(f"🧠 [Meta-Planner] Selective RAG lookup: '{query}' (top {limit})...")
+                        mem_res = self.memory.query_memory("knowledge_base", query, n_results=limit)
+                        
+                        # Weighting: Filter low confidence if needed
+                        high_conf_res = [r for r in mem_res if float(r.get("metadata", {}).get("confidence", 1.0)) > 0.4]
+                        
+                        if not high_conf_res:
+                            # fallback to strategies with the same query
+                            mem_res = self.memory.query_memory("strategies", query, n_results=limit)
+                        else:
+                            mem_res = high_conf_res
                         
                         state["retrieved_context"] = "\n".join([r.get("content", "") for r in mem_res])
                     
@@ -21778,6 +21805,13 @@ class TrinityRuntime:
         context = state.get("messages", [])
         plan = state.get("plan") or []
         summary = state.get("summary", "")
+        replan_count = state.get("replan_count", 0)
+        
+        # Self-evaluation of confidence based on execution efficiency
+        # High confidence: success with few replans and steps
+        # Low confidence: success but with many failures or replans
+        confidence = 1.0 - (min(replan_count, 5) * 0.1) - (min(len(plan), 10) * 0.02)
+        confidence = max(0.1, round(confidence, 2))
         
         try:
             # Create a structured memory entry
@@ -21792,12 +21826,16 @@ class TrinityRuntime:
                 metadata={
                     "type": "successful_strategy",
                     "timestamp": int(time.time()),
-                    "complexity": len(plan)
+                    "complexity": len(plan),
+                    "confidence": confidence,
+                    "replan_count": replan_count
                 }
             )
             
+            if self.verbose: print(f"🧠 [Learning] Knowledge stored with confidence {confidence}")
+            
             try:
-                trace(self.logger, "knowledge_stored", {"plan_len": len(plan)})
+                trace(self.logger, "knowledge_stored", {"plan_len": len(plan), "confidence": confidence})
             except Exception:
                 pass
                 
@@ -39231,4 +39269,4 @@ graph TD
 ## Summary
 
 - **Total Files**: 126
-- **Skipped**: 15945
+- **Skipped**: 15953
