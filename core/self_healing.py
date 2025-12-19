@@ -163,7 +163,9 @@ class CodeSelfHealer:
             on_stream: Optional callback for streaming status updates
         """
         self.project_root = project_root or self._get_git_root()
-        self.log_path = log_path or os.path.join(self.project_root, "logs", "cli.log")
+        # Log path: Use ~/.system_cli/logs/cli.log (where tui/logger.py writes logs)
+        default_log_path = os.path.join(os.path.expanduser("~"), ".system_cli", "logs", "cli.log")
+        self.log_path = log_path or default_log_path
         self.structure_path = os.path.join(self.project_root, "project_structure_final.txt")
         self.on_stream = on_stream
         self.logger = logging.getLogger("system_cli.self_healer")

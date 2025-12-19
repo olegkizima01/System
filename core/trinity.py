@@ -386,7 +386,8 @@ class TrinityRuntime:
             return None
         
         # Detect stall conditions
-        last_message = context[-1].content if context else ""
+        messages = state.get("messages", [])
+        last_message = messages[-1].content if messages and len(messages) > 0 else ""
         last_message_lower = last_message.lower()
         
         stall_conditions = [
@@ -646,7 +647,8 @@ class TrinityRuntime:
         """The 'Controller Brain' that sets policies and manages replanning strategy."""
         if self.verbose: print("🧠 [Meta-Planner] Analyzing strategy...")
         context = state.get("messages", [])
-        last_msg = context[-1].content if context else "Start"
+        # Safe access to last message - check if context is not empty first
+        last_msg = context[-1].content if context and len(context) > 0 else "Start"
         original_task = state.get("original_task") or "Unknown"
         step_count = state.get("step_count", 0)
         replan_count = state.get("replan_count", 0)
@@ -661,7 +663,7 @@ class TrinityRuntime:
              try:
                 summary_prompt = [
                     SystemMessage(content=f"You are the Trinity archivist. Create a concise summary (2-3 sentences) of the current task state in English. What has been done? What remains? However, ensure any specific instructions for user reporting remain compatible with {self.preferred_language}."),
-                    HumanMessage(content=f"Current summary: {summary}\n\nRecent events:\n" + "\n".join([m.content[:500] for m in context[-4:]]))
+                    HumanMessage(content=f"Current summary: {summary}\n\nRecent events:\n" + "\n".join([m.content[:500] for m in (context[-4:] if len(context) >= 4 else context)]))
                 ]
                 sum_resp = self.llm.invoke(summary_prompt)
                 summary = sum_resp.content
@@ -816,7 +818,7 @@ class TrinityRuntime:
         """Generates the plan based on Meta-Planner policy."""
         if self.verbose: print("🌐 [Atlas] Generating steps...")
         context = state.get("messages", [])
-        last_msg = context[-1].content if context else "Start"
+        last_msg = context[-1].content if context and len(context) > 0 else "Start"
         step_count = state.get("step_count", 0) + 1
         replan_count = state.get("replan_count", 0)
         plan = state.get("plan")
@@ -952,7 +954,7 @@ class TrinityRuntime:
         context = state.get("messages", [])
         if not context:
             return {"current_agent": "end", "messages": [AIMessage(content="[VOICE] Немає контексту для виконання.")]}
-        last_msg = context[-1].content
+        last_msg = context[-1].content  # Safe because we checked 'if not context' above
         original_task = state.get("original_task") or ""
 
         gui_mode = str(state.get("gui_mode") or "auto").strip().lower()
@@ -1321,7 +1323,7 @@ class TrinityRuntime:
         context = state.get("messages", [])
         if not context:
             return {"current_agent": "end", "messages": [AIMessage(content="[VOICE] Немає контексту для перевірки.")]}
-        last_msg = context[-1].content
+        last_msg = context[-1].content if context and len(context) > 0 else ""
         if isinstance(last_msg, str) and len(last_msg) > 50000:
             last_msg = last_msg[:45000] + "\n\n[... TRUNCATED DUE TO SIZE ...]\n\n" + last_msg[-5000:]
         tool_calls = [] # Initialize for scope safety

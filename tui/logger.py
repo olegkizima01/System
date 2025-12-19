@@ -26,6 +26,15 @@ CLI_LOG_FILE = LOGS_DIR / "cli.log"
 ERROR_LOG_FILE = LOGS_DIR / "errors.log"
 DEBUG_LOG_FILE = LOGS_DIR / "debug.log"
 
+# Backup log files (keep last 5 versions)
+CLI_LOG_BACKUP = LOGS_DIR / "cli_{}.log"
+ERROR_LOG_BACKUP = LOGS_DIR / "errors_{}.log"
+DEBUG_LOG_BACKUP = LOGS_DIR / "debug_{}.log"
+
+# Rotate logs if they exceed 5MB
+MAX_LOG_SIZE = 5 * 1024 * 1024  # 5MB
+MAX_BACKUPS = 5
+
 # Log format
 LOG_FORMAT = "%(asctime)s | %(levelname)-8s | %(name)s | %(funcName)s:%(lineno)d | %(message)s"
 LOG_FORMAT_SIMPLE = "%(asctime)s | %(levelname)-8s | %(message)s"
@@ -164,7 +173,17 @@ def setup_logging(verbose: bool = False, name: str = "system_cli") -> logging.Lo
     except Exception as e:
         print(f"Failed to setup AI JSON log file: {e}", file=sys.stderr)
 
-    # 5. Memory handler (for TUI display)
+    # 5. Console handler (if verbose)
+    if verbose:
+        try:
+            console_handler = logging.StreamHandler(sys.stdout)
+            console_handler.setLevel(logging.INFO)
+            console_handler.setFormatter(logging.Formatter(LOG_FORMAT_SIMPLE, datefmt=DATE_FORMAT))
+            logger.addHandler(console_handler)
+        except Exception as e:
+            print(f"Failed to setup console handler: {e}", file=sys.stderr)
+
+    # 6. Memory handler (for TUI display)
     _memory_handler.setLevel(logging.INFO) # Keep TUI display cleaner (INFO+), or DEBUG if preferred? User asked for detailed logs "for me" (likely file), but TUI shouldn't be spammed.
     _memory_handler.setFormatter(logging.Formatter(LOG_FORMAT_SIMPLE, datefmt=DATE_FORMAT))
     logger.addHandler(_memory_handler)
