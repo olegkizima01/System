@@ -4,23 +4,15 @@
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 127
-- **Files Skipped**: 15999
+- **Files Skipped**: 16011
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-19 04:18:41
+- **Generated**: 2025-12-19 04:40:00
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-2025-12-19 02:35:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
-2025-12-19 02:35:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "atlas", "last_step_status": "success", "step_count": null, "replan_count": 0}
-2025-12-19 02:35:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 2, "replan_count": 0, "last_step_status": "success", "plan_len": 15, "task_type": "GENERAL", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "[VOICE] Очікую завдання. [VERIFIED]"}
-2025-12-19 02:35:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_step_consumed", "remaining_steps": 14, "step_count": 2}
-2025-12-19 02:35:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_dispatch", "next_agent": "grisha", "step_type": "verify", "step_count": 2, "replan_count": 0, "description_preview": "Перевірити, що сторінка завантажена за URL https://www.google.com"}
-2025-12-19 02:35:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
-2025-12-19 02:35:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "grisha", "last_step_status": null, "step_count": 2, "replan_count": 0}
-2025-12-19 02:35:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 2, "replan_count": 0, "plan_len": 14, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "native", "last_msg_preview": "[VOICE] Гріша, перевір: Перевірити, що сторінка завантажена за URL https://www.google.com.\n\n[Atlas Debug] Plan: 14 steps. Current: Перевірити, що сторінка завантажена за URL https://www.google.com. Ne"}
 2025-12-19 02:35:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": false, "changed_files": [], "skip": true}
 2025-12-19 02:35:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 9325}
 2025-12-19 02:35:09 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 1, "content_preview": ""}
@@ -113,6 +105,14 @@
 2025-12-19 04:12:22 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
 2025-12-19 04:12:22 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
 2025-12-19 04:12:22 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
+2025-12-19 04:19:10 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
+2025-12-19 04:19:13 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
+2025-12-19 04:19:13 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
+2025-12-19 04:19:13 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
+2025-12-19 04:27:29 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
+2025-12-19 04:37:40 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
+2025-12-19 04:37:40 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
+2025-12-19 04:37:40 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
 ```
 
 ---
@@ -148,18 +148,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 39399 +-----------------------------------------
- 1 file changed, 5 insertions(+), 39394 deletions(-)
+ project_structure_final.txt | 39364 +-----------------------------------------
+ 1 file changed, 10 insertions(+), 39354 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-d042634 feat(i18n): transition system internals to English with localized user output
+89f53f2 feat(tui): refine UX with auto-expanding input, balanced layout, and restored streaming
+a95df1f feat(i18n): transition system internals to English with localized user output
 e377006 feat(prompts): centralize strategic logic in Meta-Planner and streamline agent prompts
 c060549 docs: update Atlas workflow documentation
 8966f5e docs: finalize Cognitive 2.0 documentation with anti-pattern learning and reflective routing
-3e24804 docs(atlas): update authoritative workflow to Cognitive 2.0 with Active Retrieval and Confidence scoring
 ```
 
 ---
@@ -8481,7 +8481,7 @@ def query_memory_tool(category: str, query: str) -> Dict[str, Any]:
     return {"status": "success", "results": results}
 ```
 
-### `core/trinity.py` (83.8 KB)
+### `core/trinity.py` (84.4 KB)
 
 ```python
 from typing import Annotated, TypedDict, Literal, List, Dict, Any, Optional, Callable
@@ -8751,9 +8751,11 @@ class TrinityRuntime:
 
         # 1b. Check Master Limits
         if step_count >= self.MAX_STEPS:
-            return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] Step limit reached ({self.MAX_STEPS}).")]}
+            msg = f"Step limit reached ({self.MAX_STEPS})." if self.preferred_language != "uk" else f"Ліміт кроків вичерпано ({self.MAX_STEPS})."
+            return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] {msg}")]}
         if replan_count >= self.MAX_REPLANS:
-            return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] Replan limit reached ({self.MAX_REPLANS}).")]}
+            msg = f"Replan limit reached ({self.MAX_REPLANS})." if self.preferred_language != "uk" else f"Ліміт перепланувань вичерпано ({self.MAX_REPLANS})."
+            return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] {msg}")]}
 
         # 2. Plan Maintenance (Consumption)
         if plan:
@@ -8762,7 +8764,8 @@ class TrinityRuntime:
                 current_step_fail_count = 0
                 if self.verbose: print(f"🧠 [Meta-Planner] Step succeeded. Remaining: {len(plan)}")
                 if not plan:
-                     return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] All plan steps completed successfully in {self.preferred_language}.")]}
+                     msg = "All plan steps completed successfully." if self.preferred_language != "uk" else "Усі кроки плану успішно виконано."
+                     return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] {msg}")]}
             elif last_step_status == "failed":
                 current_step_fail_count += 1
                 if self.verbose: print(f"🧠 [Meta-Planner] Step failed ({current_step_fail_count}/3).")
@@ -8870,7 +8873,11 @@ class TrinityRuntime:
         prompt = get_atlas_plan_prompt(last_msg, context=rag_context + "\n\n" + structure_context + routing_hint, preferred_language=self.preferred_language)
         
         try:
-            plan_resp = self.llm.invoke(prompt.format_messages())
+            def on_delta(chunk):
+                if self.on_stream:
+                    self.on_stream("atlas", chunk)
+
+            plan_resp = self.llm.invoke_with_stream(prompt.format_messages(), on_delta=on_delta)
             data = self._extract_json_object(plan_resp.content)
             
             raw_plan = []
@@ -12225,7 +12232,7 @@ cli.py: error: unrecognized arguments: Найди через гугл фільм
 test content
 ```
 
-### `project_structure_final.txt` (556.5 KB)
+### `project_structure_final.txt` (555.6 KB)
 
 ```text
 # System — Project Structure
@@ -12234,23 +12241,15 @@ test content
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 127
-- **Files Skipped**: 15999
+- **Files Skipped**: 16011
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-19 04:18:41
+- **Generated**: 2025-12-19 04:40:00
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-2025-12-19 02:35:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
-2025-12-19 02:35:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "atlas", "last_step_status": "success", "step_count": null, "replan_count": 0}
-2025-12-19 02:35:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 2, "replan_count": 0, "last_step_status": "success", "plan_len": 15, "task_type": "GENERAL", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "[VOICE] Очікую завдання. [VERIFIED]"}
-2025-12-19 02:35:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_step_consumed", "remaining_steps": 14, "step_count": 2}
-2025-12-19 02:35:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_dispatch", "next_agent": "grisha", "step_type": "verify", "step_count": 2, "replan_count": 0, "description_preview": "Перевірити, що сторінка завантажена за URL https://www.google.com"}
-2025-12-19 02:35:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
-2025-12-19 02:35:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "grisha", "last_step_status": null, "step_count": 2, "replan_count": 0}
-2025-12-19 02:35:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 2, "replan_count": 0, "plan_len": 14, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "native", "last_msg_preview": "[VOICE] Гріша, перевір: Перевірити, що сторінка завантажена за URL https://www.google.com.\n\n[Atlas Debug] Plan: 14 steps. Current: Перевірити, що сторінка завантажена за URL https://www.google.com. Ne"}
 2025-12-19 02:35:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": false, "changed_files": [], "skip": true}
 2025-12-19 02:35:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 9325}
 2025-12-19 02:35:09 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 1, "content_preview": ""}
@@ -12343,6 +12342,14 @@ test content
 2025-12-19 04:12:22 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
 2025-12-19 04:12:22 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
 2025-12-19 04:12:22 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
+2025-12-19 04:19:10 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
+2025-12-19 04:19:13 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
+2025-12-19 04:19:13 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
+2025-12-19 04:19:13 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
+2025-12-19 04:27:29 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
+2025-12-19 04:37:40 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
+2025-12-19 04:37:40 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
+2025-12-19 04:37:40 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
 ```
 
 ---
@@ -12378,18 +12385,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 39399 +-----------------------------------------
- 1 file changed, 5 insertions(+), 39394 deletions(-)
+ project_structure_final.txt | 39364 +-----------------------------------------
+ 1 file changed, 10 insertions(+), 39354 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-d042634 feat(i18n): transition system internals to English with localized user output
+89f53f2 feat(tui): refine UX with auto-expanding input, balanced layout, and restored streaming
+a95df1f feat(i18n): transition system internals to English with localized user output
 e377006 feat(prompts): centralize strategic logic in Meta-Planner and streamline agent prompts
 c060549 docs: update Atlas workflow documentation
 8966f5e docs: finalize Cognitive 2.0 documentation with anti-pattern learning and reflective routing
-3e24804 docs(atlas): update authoritative workflow to Cognitive 2.0 with Active Retrieval and Confidence scoring
 ```
 
 ---
@@ -20711,7 +20718,7 @@ def query_memory_tool(category: str, query: str) -> Dict[str, Any]:
     return {"status": "success", "results": results}
 ```
 
-### `core/trinity.py` (83.8 KB)
+### `core/trinity.py` (84.4 KB)
 
 ```python
 from typing import Annotated, TypedDict, Literal, List, Dict, Any, Optional, Callable
@@ -20981,9 +20988,11 @@ class TrinityRuntime:
 
         # 1b. Check Master Limits
         if step_count >= self.MAX_STEPS:
-            return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] Step limit reached ({self.MAX_STEPS}).")]}
+            msg = f"Step limit reached ({self.MAX_STEPS})." if self.preferred_language != "uk" else f"Ліміт кроків вичерпано ({self.MAX_STEPS})."
+            return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] {msg}")]}
         if replan_count >= self.MAX_REPLANS:
-            return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] Replan limit reached ({self.MAX_REPLANS}).")]}
+            msg = f"Replan limit reached ({self.MAX_REPLANS})." if self.preferred_language != "uk" else f"Ліміт перепланувань вичерпано ({self.MAX_REPLANS})."
+            return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] {msg}")]}
 
         # 2. Plan Maintenance (Consumption)
         if plan:
@@ -20992,7 +21001,8 @@ class TrinityRuntime:
                 current_step_fail_count = 0
                 if self.verbose: print(f"🧠 [Meta-Planner] Step succeeded. Remaining: {len(plan)}")
                 if not plan:
-                     return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] All plan steps completed successfully in {self.preferred_language}.")]}
+                     msg = "All plan steps completed successfully." if self.preferred_language != "uk" else "Усі кроки плану успішно виконано."
+                     return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] {msg}")]}
             elif last_step_status == "failed":
                 current_step_fail_count += 1
                 if self.verbose: print(f"🧠 [Meta-Planner] Step failed ({current_step_fail_count}/3).")
@@ -21100,7 +21110,11 @@ class TrinityRuntime:
         prompt = get_atlas_plan_prompt(last_msg, context=rag_context + "\n\n" + structure_context + routing_hint, preferred_language=self.preferred_language)
         
         try:
-            plan_resp = self.llm.invoke(prompt.format_messages())
+            def on_delta(chunk):
+                if self.on_stream:
+                    self.on_stream("atlas", chunk)
+
+            plan_resp = self.llm.invoke_with_stream(prompt.format_messages(), on_delta=on_delta)
             data = self._extract_json_object(plan_resp.content)
             
             raw_plan = []
@@ -30652,23 +30666,22 @@ def run_graph_agent_task(
             log_replace_at(idx, f"[{tag}] {curr}", "action")
             
             try:
+                # Update Agents clean display too
                 agent_type_map = {
                     "atlas": AgentType.ATLAS,
                     "tetyana": AgentType.TETYANA,
                     "grisha": AgentType.GRISHA,
                 }
                 agent_type = agent_type_map.get(agent_name.lower(), AgentType.SYSTEM)
-                from tui.render import get_agent_messages_buffer, get_agent_messages_lock
-                buf = get_agent_messages_buffer()
-                lock = get_agent_messages_lock()
-                with lock:
-                    try:
-                        buf.upsert_stream(agent_type, curr, is_technical=False)
-                    except Exception:
-                        buf.add(agent_type, curr, is_technical=False)
+                from tui.render import log_agent_message
+                
+                # Only log to agent panel if it has [VOICE] or if we want comprehensive stream
+                # For now, let's stream everything to the agent panel if it's not technical
+                # The MessageFilter will handle [VOICE] extraction.
+                log_agent_message(agent_type, curr)
             except Exception:
                 pass
-            
+
             try:
                 from tui.layout import force_ui_update
                 force_ui_update()
@@ -30820,22 +30833,24 @@ def run_graph_agent_task(
                 
                 if not use_stream:
                     log(f"[{tag}] {content}", "info")
-                    try:
-                        agent_type_map = {
-                            "atlas": AgentType.ATLAS,
-                            "tetyana": AgentType.TETYANA,
-                            "grisha": AgentType.GRISHA,
-                        }
-                        agent_type = agent_type_map.get(agent_name.lower(), AgentType.SYSTEM)
-                        log_agent_message(agent_type, content)
-                    except Exception:
-                        pass
                 else:
                     idx = stream_line_by_agent.get(agent_name)
                     if idx is None:
                         idx = log_reserve_line("action")
                         stream_line_by_agent[agent_name] = idx
                     log_replace_at(idx, f"[{tag}] {content}", "action")
+
+                # Always update agent message panel for the final state of the node
+                try:
+                    agent_type_map = {
+                        "atlas": AgentType.ATLAS,
+                        "tetyana": AgentType.TETYANA,
+                        "grisha": AgentType.GRISHA,
+                    }
+                    agent_type = agent_type_map.get(agent_name.lower(), AgentType.SYSTEM)
+                    log_agent_message(agent_type, content)
+                except Exception:
+                    pass
                 
                 pause_info = state_update.get("pause_info")
                 if pause_info:
@@ -35088,7 +35103,7 @@ def build_keybindings(
     return kb, handle_menu_enter
 ```
 
-### `tui/layout.py` (14.7 KB)
+### `tui/layout.py` (13.7 KB)
 
 ```python
 from __future__ import annotations
@@ -35360,7 +35375,7 @@ def build_app(
         BufferControl(buffer=input_buffer, key_bindings=input_key_bindings), 
         style="class:input",
         wrap_lines=True, # Ensure long pastes are visible
-        height=Dimension(min=1, preferred=2, max=10) # Dynamic height
+        height=Dimension(min=1, max=10) # Dynamic height
     )
     setattr(input_window, "name", "input")
 
@@ -35391,35 +35406,6 @@ def build_app(
     status_window = Window(FormattedTextControl(get_interactive_status), height=1, style="class:status")
 
     # Build right panel: either agent messages or context/menu
-    right_panel_items = [
-        ConditionalContainer(
-            Frame(
-                agent_messages_window,
-                title="АГЕНТИ",
-                style="class:frame.border",
-                width=Dimension(min=40, max=60),
-            ) if agent_messages_window else Window(),
-            filter=Condition(lambda: agent_messages_window is not None and not show_menu()),
-        ),
-        ConditionalContainer(
-            Frame(
-                context_window,
-                title="КОНТЕКСТ",
-                style="class:frame.border",
-                width=Dimension(min=40, max=55),
-            ),
-            filter=Condition(lambda: agent_messages_window is None and not show_menu()),
-        ),
-        ConditionalContainer(
-            Frame(
-                menu_window,
-                title="MENU",
-                style="class:frame.border",
-                width=Dimension(min=45, max=70),
-            ),
-            filter=show_menu,
-        ),
-    ]
 
     def get_log_title() -> str:
         return " LOG [ACTIVE] " if getattr(state, "ui_scroll_target", "log") == "log" else " LOG "
@@ -35447,7 +35433,6 @@ def build_app(
                             width=lambda: Dimension(
                                 weight=int((1.0 - getattr(state, "ui_left_panel_ratio", 0.6)) * 100),
                                 min=getattr(state, "ui_panel_min_width", 40),
-                                max=getattr(state, "ui_panel_max_width", 120),
                             )
                         ),
                         filter=filt
@@ -35456,9 +35441,10 @@ def build_app(
                         (context_window, "КОНТЕКСТ", Condition(lambda: agent_messages_window is None and state.menu_level == MenuLevel.NONE)),
                         (menu_window, "MENU", Condition(lambda: state.menu_level != MenuLevel.NONE))
                     ] if w is not None
-                ]
+                ],
+                height=Dimension(weight=1) 
             ),
-            Frame(input_area, style="class:frame.border", height=4), # Increased height for multiline Paste
+            Frame(input_area, style="class:frame.border", height=Dimension(min=3, preferred=3, max=12)), # Dynamic area height
             status_window,
         ]
     )
@@ -36144,7 +36130,7 @@ def build_menu(
     return show_menu, get_menu_content
 ```
 
-### `tui/messages.py` (10.3 KB)
+### `tui/messages.py` (10.4 KB)
 
 ```python
 """Clean agent messages display component.
@@ -36347,9 +36333,10 @@ class MessageFormatter:
         """
         result: List[Tuple[str, str]] = []
         
-        # Skip technical messages
-        if msg.is_technical or MessageFilter.is_technical(msg.text):
-            return result
+        # Skip technical messages unless they contain [VOICE]
+        if "[VOICE]" not in msg.text:
+            if msg.is_technical or MessageFilter.is_technical(msg.text):
+                return result
 
         if msg.agent not in {AgentType.ATLAS, AgentType.TETYANA, AgentType.GRISHA}:
             return result
@@ -37723,7 +37710,7 @@ _analyze_recording_bg = analyze_recording_bg
 _start_recording_analysis = start_recording_analysis
 ```
 
-### `tui/render.py` (16.5 KB)
+### `tui/render.py` (16.6 KB)
 
 ```python
 """Rendering and log management for TUI.
@@ -37757,10 +37744,10 @@ _agent_messages_lock = threading.RLock()
 
 # Render caches
 _render_log_cache: Dict[str, Any] = {"ts": 0.0, "logs": [], "cursor": Point(x=0, y=0)}
-_render_log_cache_ttl_s: float = 0.2
+_render_log_cache_ttl_s: float = 0.05
 
 _render_agents_cache: Dict[str, Any] = {"ts": 0.0, "messages": [], "cursor": Point(x=0, y=0)}
-_render_agents_cache_ttl_s: float = 0.2
+_render_agents_cache_ttl_s: float = 0.05
 
 # Style mapping
 STYLE_MAP = {
@@ -39456,4 +39443,4 @@ graph TD
 ## Summary
 
 - **Total Files**: 127
-- **Skipped**: 15999
+- **Skipped**: 16011

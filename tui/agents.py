@@ -487,23 +487,22 @@ def run_graph_agent_task(
             log_replace_at(idx, f"[{tag}] {curr}", "action")
             
             try:
+                # Update Agents clean display too
                 agent_type_map = {
                     "atlas": AgentType.ATLAS,
                     "tetyana": AgentType.TETYANA,
                     "grisha": AgentType.GRISHA,
                 }
                 agent_type = agent_type_map.get(agent_name.lower(), AgentType.SYSTEM)
-                from tui.render import get_agent_messages_buffer, get_agent_messages_lock
-                buf = get_agent_messages_buffer()
-                lock = get_agent_messages_lock()
-                with lock:
-                    try:
-                        buf.upsert_stream(agent_type, curr, is_technical=False)
-                    except Exception:
-                        buf.add(agent_type, curr, is_technical=False)
+                from tui.render import log_agent_message
+                
+                # Only log to agent panel if it has [VOICE] or if we want comprehensive stream
+                # For now, let's stream everything to the agent panel if it's not technical
+                # The MessageFilter will handle [VOICE] extraction.
+                log_agent_message(agent_type, curr)
             except Exception:
                 pass
-            
+
             try:
                 from tui.layout import force_ui_update
                 force_ui_update()
@@ -655,22 +654,24 @@ def run_graph_agent_task(
                 
                 if not use_stream:
                     log(f"[{tag}] {content}", "info")
-                    try:
-                        agent_type_map = {
-                            "atlas": AgentType.ATLAS,
-                            "tetyana": AgentType.TETYANA,
-                            "grisha": AgentType.GRISHA,
-                        }
-                        agent_type = agent_type_map.get(agent_name.lower(), AgentType.SYSTEM)
-                        log_agent_message(agent_type, content)
-                    except Exception:
-                        pass
                 else:
                     idx = stream_line_by_agent.get(agent_name)
                     if idx is None:
                         idx = log_reserve_line("action")
                         stream_line_by_agent[agent_name] = idx
                     log_replace_at(idx, f"[{tag}] {content}", "action")
+
+                # Always update agent message panel for the final state of the node
+                try:
+                    agent_type_map = {
+                        "atlas": AgentType.ATLAS,
+                        "tetyana": AgentType.TETYANA,
+                        "grisha": AgentType.GRISHA,
+                    }
+                    agent_type = agent_type_map.get(agent_name.lower(), AgentType.SYSTEM)
+                    log_agent_message(agent_type, content)
+                except Exception:
+                    pass
                 
                 pause_info = state_update.get("pause_info")
                 if pause_info:

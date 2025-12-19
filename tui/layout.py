@@ -267,7 +267,7 @@ def build_app(
         BufferControl(buffer=input_buffer, key_bindings=input_key_bindings), 
         style="class:input",
         wrap_lines=True, # Ensure long pastes are visible
-        height=Dimension(min=1, preferred=2, max=10) # Dynamic height
+        height=Dimension(min=1, max=10) # Dynamic height
     )
     setattr(input_window, "name", "input")
 
@@ -298,35 +298,6 @@ def build_app(
     status_window = Window(FormattedTextControl(get_interactive_status), height=1, style="class:status")
 
     # Build right panel: either agent messages or context/menu
-    right_panel_items = [
-        ConditionalContainer(
-            Frame(
-                agent_messages_window,
-                title="АГЕНТИ",
-                style="class:frame.border",
-                width=Dimension(min=40, max=60),
-            ) if agent_messages_window else Window(),
-            filter=Condition(lambda: agent_messages_window is not None and not show_menu()),
-        ),
-        ConditionalContainer(
-            Frame(
-                context_window,
-                title="КОНТЕКСТ",
-                style="class:frame.border",
-                width=Dimension(min=40, max=55),
-            ),
-            filter=Condition(lambda: agent_messages_window is None and not show_menu()),
-        ),
-        ConditionalContainer(
-            Frame(
-                menu_window,
-                title="MENU",
-                style="class:frame.border",
-                width=Dimension(min=45, max=70),
-            ),
-            filter=show_menu,
-        ),
-    ]
 
     def get_log_title() -> str:
         return " LOG [ACTIVE] " if getattr(state, "ui_scroll_target", "log") == "log" else " LOG "
@@ -354,7 +325,6 @@ def build_app(
                             width=lambda: Dimension(
                                 weight=int((1.0 - getattr(state, "ui_left_panel_ratio", 0.6)) * 100),
                                 min=getattr(state, "ui_panel_min_width", 40),
-                                max=getattr(state, "ui_panel_max_width", 120),
                             )
                         ),
                         filter=filt
@@ -363,9 +333,10 @@ def build_app(
                         (context_window, "КОНТЕКСТ", Condition(lambda: agent_messages_window is None and state.menu_level == MenuLevel.NONE)),
                         (menu_window, "MENU", Condition(lambda: state.menu_level != MenuLevel.NONE))
                     ] if w is not None
-                ]
+                ],
+                height=Dimension(weight=1) 
             ),
-            Frame(input_area, style="class:frame.border", height=4), # Increased height for multiline Paste
+            Frame(input_area, style="class:frame.border", height=Dimension(min=3, preferred=3, max=12)), # Dynamic area height
             status_window,
         ]
     )

@@ -29,10 +29,10 @@ _agent_messages_lock = threading.RLock()
 
 # Render caches
 _render_log_cache: Dict[str, Any] = {"ts": 0.0, "logs": [], "cursor": Point(x=0, y=0)}
-_render_log_cache_ttl_s: float = 0.2
+_render_log_cache_ttl_s: float = 0.05
 
 _render_agents_cache: Dict[str, Any] = {"ts": 0.0, "messages": [], "cursor": Point(x=0, y=0)}
-_render_agents_cache_ttl_s: float = 0.2
+_render_agents_cache_ttl_s: float = 0.05
 
 # Style mapping
 STYLE_MAP = {

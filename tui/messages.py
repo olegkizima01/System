@@ -198,9 +198,10 @@ class MessageFormatter:
         """
         result: List[Tuple[str, str]] = []
         
-        # Skip technical messages
-        if msg.is_technical or MessageFilter.is_technical(msg.text):
-            return result
+        # Skip technical messages unless they contain [VOICE]
+        if "[VOICE]" not in msg.text:
+            if msg.is_technical or MessageFilter.is_technical(msg.text):
+                return result
 
         if msg.agent not in {AgentType.ATLAS, AgentType.TETYANA, AgentType.GRISHA}:
             return result

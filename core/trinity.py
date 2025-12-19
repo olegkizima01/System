@@ -265,9 +265,11 @@ class TrinityRuntime:
 
         # 1b. Check Master Limits
         if step_count >= self.MAX_STEPS:
-            return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] Step limit reached ({self.MAX_STEPS}).")]}
+            msg = f"Step limit reached ({self.MAX_STEPS})." if self.preferred_language != "uk" else f"Ліміт кроків вичерпано ({self.MAX_STEPS})."
+            return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] {msg}")]}
         if replan_count >= self.MAX_REPLANS:
-            return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] Replan limit reached ({self.MAX_REPLANS}).")]}
+            msg = f"Replan limit reached ({self.MAX_REPLANS})." if self.preferred_language != "uk" else f"Ліміт перепланувань вичерпано ({self.MAX_REPLANS})."
+            return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] {msg}")]}
 
         # 2. Plan Maintenance (Consumption)
         if plan:
@@ -276,7 +278,8 @@ class TrinityRuntime:
                 current_step_fail_count = 0
                 if self.verbose: print(f"🧠 [Meta-Planner] Step succeeded. Remaining: {len(plan)}")
                 if not plan:
-                     return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] All plan steps completed successfully in {self.preferred_language}.")]}
+                     msg = "All plan steps completed successfully." if self.preferred_language != "uk" else "Усі кроки плану успішно виконано."
+                     return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] {msg}")]}
             elif last_step_status == "failed":
                 current_step_fail_count += 1
                 if self.verbose: print(f"🧠 [Meta-Planner] Step failed ({current_step_fail_count}/3).")
@@ -384,7 +387,11 @@ class TrinityRuntime:
         prompt = get_atlas_plan_prompt(last_msg, context=rag_context + "\n\n" + structure_context + routing_hint, preferred_language=self.preferred_language)
         
         try:
-            plan_resp = self.llm.invoke(prompt.format_messages())
+            def on_delta(chunk):
+                if self.on_stream:
+                    self.on_stream("atlas", chunk)
+
+            plan_resp = self.llm.invoke_with_stream(prompt.format_messages(), on_delta=on_delta)
             data = self._extract_json_object(plan_resp.content)
             
             raw_plan = []
