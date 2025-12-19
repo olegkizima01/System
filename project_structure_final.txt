@@ -4,9 +4,9 @@
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 127
-- **Files Skipped**: 16053
+- **Files Skipped**: 16058
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-19 04:54:01
+- **Generated**: 2025-12-19 04:54:20
 
 ---
 
@@ -148,19 +148,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- .agent/workflows/atlas.md   |     2 +-
- project_structure_final.txt | 39457 ------------------------------------------
- 2 files changed, 1 insertion(+), 39458 deletions(-)
+ project_structure_final.txt | 39452 ------------------------------------------
+ 1 file changed, 39452 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-718a275 fix(tui): remove invalid dont_extend_height from containers to fix crash
+9384c1b docs: update Atlas workflow definition
+26f7db3 fix(tui): remove invalid dont_extend_height from containers to fix crash
 de965b6 fix(tui): wrap input frame in non-extending HSplit to prevent vertical stretching
 c0a8dbd fix(tui): strictly force single-line height for input area when empty
 2f7f8b2 fix(tui): glue input to bottom and enable upward expansion
-ee6c2be fix(tui): remove invalid dont_extend_height argument from Frame
 ```
 
 ---
@@ -12233,7 +12232,7 @@ cli.py: error: unrecognized arguments: Найди через гугл фільм
 test content
 ```
 
-### `project_structure_final.txt` (540.6 KB)
+### `project_structure_final.txt` (540.5 KB)
 
 ```text
 # System — Project Structure
@@ -12242,9 +12241,9 @@ test content
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 127
-- **Files Skipped**: 16053
+- **Files Skipped**: 16058
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-19 04:54:01
+- **Generated**: 2025-12-19 04:54:20
 
 ---
 
@@ -12386,19 +12385,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- .agent/workflows/atlas.md   |     2 +-
- project_structure_final.txt | 39457 ------------------------------------------
- 2 files changed, 1 insertion(+), 39458 deletions(-)
+ project_structure_final.txt | 39452 ------------------------------------------
+ 1 file changed, 39452 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-718a275 fix(tui): remove invalid dont_extend_height from containers to fix crash
+9384c1b docs: update Atlas workflow definition
+26f7db3 fix(tui): remove invalid dont_extend_height from containers to fix crash
 de965b6 fix(tui): wrap input frame in non-extending HSplit to prevent vertical stretching
 c0a8dbd fix(tui): strictly force single-line height for input area when empty
 2f7f8b2 fix(tui): glue input to bottom and enable upward expansion
-ee6c2be fix(tui): remove invalid dont_extend_height argument from Frame
 ```
 
 ---
@@ -39449,4 +39447,4 @@ graph TD
 ## Summary
 
 - **Total Files**: 127
-- **Skipped**: 16053
+- **Skipped**: 16058
