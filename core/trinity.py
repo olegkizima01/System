@@ -234,7 +234,7 @@ class TrinityRuntime:
         builder.add_conditional_edges(
             "meta_planner",
             self._router,
-            {"atlas": "atlas", "tetyana": "tetyana", "knowledge": "knowledge", "end": END}
+            {"atlas": "atlas", "tetyana": "tetyana", "grisha": "grisha", "knowledge": "knowledge", "end": END}
         )
         builder.add_conditional_edges(
             "atlas", 
@@ -530,10 +530,7 @@ class TrinityRuntime:
         prompt = get_tetyana_prompt(str(last_msg or "") + routing_hint, tools_desc=tools_list)
         
         # Bind tools to LLM for structured tool_calls output.
-        tool_defs = []
-        for name, func in self.registry._tools.items():
-            desc = self.registry._descriptions.get(name, "")
-            tool_defs.append({"name": name, "description": desc})
+        tool_defs = self.registry.get_all_tool_definitions()
         
         bound_llm = self.llm.bind_tools(tool_defs)
         

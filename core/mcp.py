@@ -453,6 +453,33 @@ class MCPToolRegistry:
                 
         return "\n".join(lines)
 
+    def get_all_tool_definitions(self) -> List[Dict[str, str]]:
+        """Returns a list of tool definitions for LLM binding."""
+        defs = []
+        
+        # Local tools
+        for name, desc in self._descriptions.items():
+            defs.append({"name": name, "description": desc})
+            
+        # External tools
+        for p_name, provider in self._external_providers.items():
+            try:
+                # Ensure connected to get tools
+                if not provider._connected:
+                    provider.connect()
+                
+                for t_name, tool in provider._tools.items():
+                    prefixed_name = f"{p_name}.{t_name}"
+                    # Use schema if available, otherwise just description
+                    defs.append({
+                        "name": prefixed_name,
+                        "description": tool.description
+                    })
+            except Exception as e:
+                print(f"[MCP] Failed to get tools from provider {p_name}: {e}")
+                
+        return defs
+
     def execute(self, tool_name: str, args: Dict[str, Any]) -> str:
         """Executes a tool safely and returns a string result."""
         # Check external tools first

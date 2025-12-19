@@ -146,7 +146,9 @@ def browser_screenshot(path: Optional[str] = None) -> str:
 def browser_get_content() -> str:
     try:
         manager = BrowserManager.get_instance()
-        page = manager.get_page()
+        # Use existing session's headless mode if available
+        headless_mode = manager._last_headless if manager._last_headless is not None else True
+        page = manager.get_page(headless=headless_mode)
         return json.dumps({
             "status": "success",
             "content": page.content()[:5000],
