@@ -704,7 +704,7 @@ class TrinityRuntime:
         if len(context) > 6 and step_count % 3 == 0:
              try:
                 summary_prompt = [
-                    SystemMessage(content=f"You are the Trinity archivist. Create a concise summary (2-3 sentences) of the current task state in English. What has been done? What remains? However, ensure any specific instructions for user reporting remain compatible with {self.preferred_language}."),
+                    SystemMessage(content=f"You are the Trinity archivist. Create a concise summary (2-3 sentences) of the current task state in {self.preferred_language}. What has been done? What remains?"),
                     HumanMessage(content=f"Current summary: {summary}\n\nRecent events:\n" + "\n".join([m.content[:500] for m in (context[-4:] if len(context) >= 4 else context)]))
                 ]
                 sum_resp = self.llm.invoke(summary_prompt)
@@ -1019,7 +1019,7 @@ class TrinityRuntime:
         
         # Combined context: Goal + immediate request + hints + retry
         full_context = f"Global Goal: {original_task}\nRequest: {last_msg}{routing_hint}{retry_context}"
-        prompt = get_tetyana_prompt(full_context, tools_desc=tools_list)
+        prompt = get_tetyana_prompt(full_context, tools_desc=tools_list, preferred_language=self.preferred_language)
         
         # Bind tools to LLM for structured tool_calls output.
         tool_defs = self.registry.get_all_tool_definitions()
@@ -1418,7 +1418,7 @@ class TrinityRuntime:
         
         original_task = state.get("original_task") or ""
         verify_context = f"Global Goal: {original_task}\nVerify result of: {last_msg}"
-        prompt = get_grisha_prompt(verify_context, tools_desc=tools_list)
+        prompt = get_grisha_prompt(verify_context, tools_desc=tools_list, preferred_language=self.preferred_language)
         
         content = ""  # Initialize content variable
         executed_tools_results = [] # Keep track of results for verdict phase

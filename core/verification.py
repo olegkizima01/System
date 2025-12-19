@@ -153,7 +153,8 @@ class AdaptiveVerifier:
 
         critical_keywords = [
             "create", "delete", "remove", "git", "commit", "push", "pull",
-            "shell", "run", "execute", "sudo", "write", "copy", "click", "type", "press"
+            "shell", "run", "execute", "sudo", "write", "copy", "click", "type", "press",
+            "find", "search", "open", "navigate", "browser", "url"
         ]
         
         enhanced_plan = []
