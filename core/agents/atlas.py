@@ -84,7 +84,8 @@ AVAILABLE TOOLS:
 3. Decomposition: Break the global goal into atomic actions for Tetyana.
 3. Experience: Use provided context (RAG) to avoid errors.
 4. SELF-REVIEW: Ensure the plan covers all stages until full verification.
-5. Localization: Ensure the user-facing report (prefixed with [VOICE]) is in {preferred_language}.
+5. ANTI-LOOP: Check history. If 'Open Google' or 'Search' was just performed/failed, DO NOT repeat it. Proceed to the next logical step (e.g., Click result, Check different source).
+6. Localization: Ensure the user-facing report (prefixed with [VOICE]) is in {preferred_language}.
 
 Rules:
 - Steps must be actionable (Tool Calls). Use ONLY the tools listed above.
@@ -93,11 +94,13 @@ Rules:
 - If 'tool_preference' = 'native', prioritize shell and applescript.
 - No conditional jumps in step descriptions.
 - **Media Strategy**: When searching for content to watch/read, prioritize known free/accessible sources (e.g., UASerials, YouTube, Open Archives) and avoid subscription services (Netflix, Amazon, HBO) unless user credentials are known.
-- **Search Query Refinement**: When searching for free content, explicit exclude subscription domains in the query (e.g., "watch movie online -site:netflix.com -site:amazon.com").
+- **Site Rotation**: If a specific site (e.g., UASerials) fails to load or returns an error, plan to try a different known site or perform a broad Google search with exclusions.
+- **Search Query Refinement**: When searching for free content, explicit exclude subscription domains in the query (e.g., "watch movie online -site:netflix.com -site:amazon.com -site:kinopoisk.ru").
 - **Action-Oriented**: Never plan a "Find" or "Search" step without an immediate follow-up step to "Open", "Click", or "Navigate" to a result. A search result page is not a final destination.
-- **Linguistic Stability**: DO NOT alternate between languages (e.g., English then Ukrainian then English) if the first attempt provided any results. Stick to the language that returns the most relevant content. If you've already searched in Ukrainian and found results (even if they require verification), do not restart the search in English.
-- **Link Extraction**: When Tetyana needs to select a result from a list, suggest using `browser_get_links` to identify target URLs and text precisely.
+- **Navigation Enforcement**: When the goal is to select a result, explicitly specify a step to "Select" or "Click" a specific result. Do NOT just plan "Get links" and stop. You MUST plan the follow-up step: "Click the link with text '...' or the first relevant result".
+- **Link Extraction**: When Tetyana needs to select a result from a list, ALWAYS plan a `browser_get_links` step first to identify target URLs, followed IMMEDIATELY by a `browser_click` step.
 - **Google Selectors**: IMPORTANT: Instruct Tetyana to use `textarea[name="q"]` for the Google search box.
+- **Force Selection**: If a search was just performed, the NEXT step MUST be to select a result. Do not plan "Verify search" or "Check results" as a separate step if it delays clicking. Combined verification with the selection if needed, or simply trust the selection logic.
 
 Output format (JSON):
 {{
@@ -107,6 +110,10 @@ Output format (JSON):
     {{ "agent": "grisha", "description": "Verification report in {preferred_language}...", "tools": ["..."] }}
   ]
 }}
+
+FORBIDDEN ACTIONS (FATAL ERROR IF REPEATED):
+{forbidden_actions}
+
 """
 
 def get_meta_planner_prompt(task_context: str, preferred_language: str = "en"):
@@ -116,10 +123,11 @@ def get_meta_planner_prompt(task_context: str, preferred_language: str = "en"):
         HumanMessage(content=task_context),
     ])
 
-def get_atlas_plan_prompt(task_description: str, tools_desc: str = "", context: str = "", preferred_language: str = "en"):
+def get_atlas_plan_prompt(task_description: str, tools_desc: str = "", context: str = "", preferred_language: str = "en", forbidden_actions: str = ""):
     formatted_prompt = ATLAS_PLANNING_PROMPT.format(
         preferred_language=preferred_language,
-        tools_desc=tools_desc
+        tools_desc=tools_desc,
+        forbidden_actions=forbidden_actions or "None"
     )
     msg = f"Task: {task_description}"
     if context:

@@ -164,6 +164,21 @@ class AdaptiveVerifier:
             step_type = step.get("type", "execute").lower()
             description = step.get("description", "").lower()
             
+            # CRITICAL: Force verification after search/navigation to prevent blind loops
+            is_search_step = any(kw in description for kw in ["find", "search", "google", "navigate", "browser"])
+            if is_search_step and "verify" not in step_type:
+                 # Check if next step is already verify
+                 if i + 1 < len(plan) and plan[i+1].get("type") == "verify":
+                     continue
+                 enhanced_plan.append({
+                     "type": "verify",
+                     "description": f"Verify results of: {description[:50]}..."
+                 })
+                 continue
+
+            if step_type == "verify":
+                continue
+            
             if step_type != "execute":
                 continue
                 

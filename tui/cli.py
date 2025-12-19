@@ -660,6 +660,93 @@ def _get_llm_signature() -> str:
     )
 
 
+def _load_env() -> None:
+    return _load_env_new()
+
+
+def _reset_agent_llm() -> None:
+    return _reset_agent_llm_new()
+
+
+def _load_ui_settings() -> None:
+    # Logic to load UI settings from file if needed
+    pass
+
+
+def _save_ui_settings() -> None:
+    # Logic to save UI settings if needed
+    pass
+
+
+def _load_monitor_targets() -> None:
+    return _load_monitor_targets_new()
+
+
+def _save_monitor_targets() -> bool:
+    return _save_monitor_targets_new()
+
+
+def _load_monitor_settings() -> None:
+    return _load_monitor_settings_new()
+
+
+def _save_monitor_settings() -> bool:
+    return _save_monitor_settings_new()
+
+
+def _monitor_start_selected() -> Tuple[bool, str]:
+    return _monitor_start_selected_new()
+
+
+def _monitor_stop_selected() -> Tuple[bool, str]:
+    return _monitor_stop_selected_new()
+
+
+def _monitor_resolve_watch_items(targets: Set[str]) -> List[Tuple[str, str]]:
+    return _monitor_resolve_watch_items_new(targets)
+
+
+def _load_cleanup_config() -> Dict[str, Any]:
+    return _load_cleanup_config_new()
+
+
+def _save_cleanup_config(cfg: Dict[str, Any]) -> bool:
+    return _save_cleanup_config_new(cfg)
+
+
+def _find_module(cfg: Dict[str, Any], editor: str, mod_id: str) -> Optional[ModuleRef]:
+    return _find_module_new(cfg, editor, mod_id)
+
+
+def _set_module_enabled(cfg: Dict[str, Any], ref: ModuleRef, enabled: bool) -> bool:
+    return _set_module_enabled_new(cfg, ref, enabled)
+
+
+def _run_cleanup(cfg: Dict[str, Any], editor: str, dry_run: bool = False) -> Tuple[bool, str]:
+    return _run_cleanup_new(cfg, editor, dry_run=dry_run)
+
+
+def _perform_install(cfg: Dict[str, Any], editor: str) -> Tuple[bool, str]:
+    return _perform_install_new(cfg, editor)
+
+
+def _scan_traces(editor: str) -> Dict[str, List[str]]:
+    return _scan_traces_new(editor)
+
+
+def _list_editors(cfg: Dict[str, Any]) -> List[Tuple[str, str]]:
+    return _list_editors_new(cfg)
+
+
+def _get_editors_list() -> List[Tuple[str, str]]:
+    return _get_editors_list_new()
+
+
+def _apply_default_monitor_targets() -> None:
+    # Optional logic to add default targets
+    pass
+
+
 def _reset_agent_llm() -> None:
     agent_session.llm = None
     agent_session.llm_signature = ""
@@ -1540,51 +1627,88 @@ def _get_monitoring_menu_items() -> List[Tuple[str, Any]]:
     ]
 
 
-def _get_settings_menu_items() -> List[Tuple[str, Any]]:
+def _get_settings_menu_items() -> List[Tuple[str, Any, Optional[str]]]:
     return [
         ("menu.settings.section.appearance", None, "section"),
-        ("menu.settings.appearance", MenuLevel.APPEARANCE),
-        ("menu.settings.layout", MenuLevel.LAYOUT),
-        ("menu.settings.language", MenuLevel.LANGUAGE),
-        ("menu.settings.locales", MenuLevel.LOCALES),
+        ("menu.settings.appearance", MenuLevel.APPEARANCE, None),
+        ("menu.settings.layout", MenuLevel.LAYOUT, None),
+        ("menu.settings.language", MenuLevel.LANGUAGE, None),
+        ("menu.settings.locales", MenuLevel.LOCALES, None),
         ("menu.settings.section.agent", None, "section"),
-        ("menu.settings.llm", MenuLevel.LLM_SETTINGS),
-        ("menu.settings.agent", MenuLevel.AGENT_SETTINGS),
+        ("menu.settings.llm", MenuLevel.LLM_SETTINGS, None),
+        ("menu.settings.agent", MenuLevel.AGENT_SETTINGS, None),
         ("menu.settings.section.automation", None, "section"),
-        ("menu.settings.automation_permissions", MenuLevel.AUTOMATION_PERMISSIONS),
         ("menu.settings.section.dev", None, "section"),
-        ("menu.settings.dev_code_provider", MenuLevel.DEV_SETTINGS),
         ("menu.settings.section.experimental", None, "section"),
-        ("menu.settings.unsafe_mode", MenuLevel.UNSAFE_MODE),
+        ("menu.settings.unsafe_mode", MenuLevel.UNSAFE_MODE, None),
     ]
 
 
-def _get_llm_menu_items() -> List[Tuple[str, Any]]:
-    return [(f"Provider: {getattr(agent_session.llm, 'provider', 'copilot') if agent_session.llm else 'copilot'}", None)]
+def _get_llm_menu_items() -> List[Tuple[str, Any, Optional[str]]]:
+    return [
+        ("Global Defaults", MenuLevel.LLM_DEFAULTS, None),
+        ("Atlas (Planner)", MenuLevel.LLM_ATLAS, None),
+        ("Tetyana (Executor)", MenuLevel.LLM_TETYANA, None),
+        ("Grisha (Verifier)", MenuLevel.LLM_GRISHA, None),
+        ("System Vision", MenuLevel.LLM_VISION, None),
+    ]
 
 
-def _get_agent_menu_items() -> List[Tuple[str, Any]]:
+def _get_llm_sub_menu_items(level: Any) -> List[Tuple[str, Any]]:
+    # Determine section from level
+    section = ""
+    if level == MenuLevel.LLM_DEFAULTS:
+        section = ""
+    elif level == MenuLevel.LLM_ATLAS:
+        section = "atlas"
+    elif level == MenuLevel.LLM_TETYANA:
+        section = "tetyana"
+    elif level == MenuLevel.LLM_GRISHA:
+        section = "grisha"
+    elif level == MenuLevel.LLM_VISION:
+        section = "vision"
+    else:
+        return []
+
+    # Fetch status
+    from tui.tools import tool_llm_status
+    try:
+        status = tool_llm_status({"section": section})
+        if not isinstance(status, dict):
+            status = {}
+    except Exception:
+        status = {}
+
+    prov = status.get("provider", "copilot")
+    mod = status.get("model", "")
+
+    return [
+        (f"Provider: {prov}", "provider", None),
+        (f"Model: {mod}", "model", None),
+    ]
+
+def _get_agent_menu_items() -> List[Tuple[str, Any, Optional[str]]]:
     mode = "ON" if agent_chat_mode and agent_session.enabled else "OFF"
     unsafe = "ON" if bool(getattr(state, "ui_unsafe_mode", False)) else "OFF"
-    return [(f"Agent: {mode}", None), (f"Unsafe mode: {unsafe}", None)]
+    return [(f"Agent: {mode}", None, None), (f"Unsafe mode: {unsafe}", None, None)]
 
 
-def _get_automation_permissions_menu_items() -> List[Tuple[str, Any]]:
+def _get_automation_permissions_menu_items() -> List[Tuple[str, Any, Optional[str]]]:
     shortcuts = "ON" if bool(getattr(state, "automation_allow_shortcuts", False)) else "OFF"
     exec_mode = str(getattr(state, "ui_execution_mode", "native") or "native").strip().lower() or "native"
     exec_label = "NATIVE" if exec_mode == "native" else "GUI"
     return [
-        (f"Execution mode: {exec_label}", "ui_execution_mode"),
-        (f"Shortcuts: {shortcuts}", "automation_allow_shortcuts"),
+        (f"Execution mode: {exec_label}", "ui_execution_mode", None),
+        (f"Shortcuts: {shortcuts}", "automation_allow_shortcuts", None),
     ]
 
 
-def _get_dev_settings_menu_items() -> List[Tuple[str, Any]]:
+def _get_dev_settings_menu_items() -> List[Tuple[str, Any, Optional[str]]]:
     """Return dev settings menu items for code provider selection."""
     provider = str(getattr(state, "ui_dev_code_provider", "vibe-cli") or "vibe-cli").strip().lower()
     provider_label = "VIBE-CLI" if provider == "vibe-cli" else "CONTINUE"
     return [
-        (f"Code Provider: {provider_label}", "ui_dev_code_provider"),
+        (f"Code Provider: {provider_label}", "ui_dev_code_provider", None),
     ]
 
 
@@ -1601,6 +1725,7 @@ def run_tui() -> None:
     get_monitoring_menu_items_cb = globals().get("_get_monitoring_menu_items") or (lambda: [])
     get_settings_menu_items_cb = globals().get("_get_settings_menu_items") or (lambda: [])
     get_llm_menu_items_cb = globals().get("_get_llm_menu_items") or (lambda: [])
+    get_llm_sub_menu_items_cb = globals().get("_get_llm_sub_menu_items") or (lambda _: [])
     get_agent_menu_items_cb = globals().get("_get_agent_menu_items") or (lambda: [])
     get_automation_permissions_menu_items_cb = globals().get("_get_automation_permissions_menu_items") or (lambda: [])
 
@@ -1620,6 +1745,7 @@ def run_tui() -> None:
         get_monitoring_menu_items=get_monitoring_menu_items_cb,
         get_settings_menu_items=get_settings_menu_items_cb,
         get_llm_menu_items=get_llm_menu_items_cb,
+        get_llm_sub_menu_items=get_llm_sub_menu_items_cb,
         get_agent_menu_items=get_agent_menu_items_cb,
         get_automation_permissions_menu_items=_get_automation_permissions_menu_items,
         get_editors_list=_get_editors_list,
@@ -1652,6 +1778,7 @@ def run_tui() -> None:
         get_monitoring_menu_items=get_monitoring_menu_items_cb,
         get_settings_menu_items=get_settings_menu_items_cb,
         get_llm_menu_items=get_llm_menu_items_cb,
+        get_llm_sub_menu_items=get_llm_sub_menu_items_cb,
         get_agent_menu_items=get_agent_menu_items_cb,
         get_automation_permissions_menu_items=get_automation_permissions_menu_items_cb,
         get_editors_list=_get_editors_list,

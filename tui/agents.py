@@ -211,48 +211,94 @@ def load_llm_settings() -> None:
         from tui.agents import load_env
         load_env()
         
-        provider = str(os.getenv("LLM_PROVIDER") or "copilot").strip().lower() or "copilot"
-        main_model = str(os.getenv("COPILOT_MODEL") or "gpt-4o").strip() or "gpt-4o"
-        vision_model = str(os.getenv("COPILOT_VISION_MODEL") or "").strip()
-        if not vision_model:
-            vision_model = "gpt-4.1"
-        if vision_model == "gpt-4o":
-            vision_model = "gpt-4.1"
+        # Defaults
+        default_provider = str(os.getenv("LLM_PROVIDER") or "copilot").strip().lower() or "copilot"
+        default_main = str(os.getenv("COPILOT_MODEL") or "gpt-4o").strip() or "gpt-4o"
+        default_vision = str(os.getenv("COPILOT_VISION_MODEL") or "").strip()
+        if not default_vision or default_vision == "gpt-4o":
+            default_vision = "gpt-4.1"
 
+        data = {}
         if os.path.exists(LLM_SETTINGS_PATH):
             with open(LLM_SETTINGS_PATH, "r", encoding="utf-8") as f:
-                data = json.load(f)
-            p = str(data.get("provider") or "").strip().lower()
-            if p:
-                provider = p
-            mm = str(data.get("main_model") or "").strip()
-            if mm:
-                main_model = mm
-            vm = str(data.get("vision_model") or "").strip()
-            if vm:
-                vision_model = "gpt-4.1" if vm == "gpt-4o" else vm
+                data = json.load(f) or {}
+
+        # 1. Global Defaults
+        provider = str(data.get("provider") or default_provider).strip().lower()
+        main_model = str(data.get("main_model") or default_main).strip()
+        vision_model = str(data.get("vision_model") or default_vision).strip()
+        if vision_model == "gpt-4o": 
+            vision_model = "gpt-4.1"
 
         os.environ["LLM_PROVIDER"] = provider
         os.environ["COPILOT_MODEL"] = main_model
         os.environ["COPILOT_VISION_MODEL"] = vision_model
+
+        # 2. Per-Agent Config
+        # Helper to get setting with fallback
+        def _get_setting(section: str, key: str, fallback: str) -> str:
+            val = str((data.get(section) or {}).get(key) or "").strip()
+            return val if val else fallback
+
+        # Atlas
+        os.environ["ATLAS_PROVIDER"] = _get_setting("atlas", "provider", provider)
+        os.environ["ATLAS_MODEL"] = _get_setting("atlas", "model", "gpt-4.1") # Default Atlas to Smart model
+
+        # Tetyana (Executor - needs speed/reliability)
+        os.environ["TETYANA_PROVIDER"] = _get_setting("tetyana", "provider", provider)
+        os.environ["TETYANA_MODEL"] = _get_setting("tetyana", "model", "gpt-4o")
+
+        # Grisha (Verifier - needs reasoning)
+        os.environ["GRISHA_PROVIDER"] = _get_setting("grisha", "provider", provider)
+        os.environ["GRISHA_MODEL"] = _get_setting("grisha", "model", "gpt-4.1")
+
+        # Vision Tool (needs Vision model)
+        os.environ["VISION_TOOL_PROVIDER"] = _get_setting("vision", "provider", provider)
+        os.environ["VISION_TOOL_MODEL"] = _get_setting("vision", "model", vision_model)
+
     except Exception:
         return
 
 
-def save_llm_settings(provider: str, main_model: str, vision_model: str) -> bool:
-    """Save LLM settings to file and update environment variables."""
+def save_llm_settings(provider: str = None, main_model: str = None, vision_model: str = None, section: str = None, model: str = None) -> bool:
+    """
+    Save LLM settings.
+    If section is provided (atlas|tetyana|grisha|vision), updates that section.
+    Otherwise updates global defaults.
+    """
     try:
         os.makedirs(SYSTEM_CLI_DIR, exist_ok=True)
-        payload = {
-            "provider": str(provider or "copilot").strip().lower() or "copilot",
-            "main_model": str(main_model or "").strip() or "gpt-4o",
-            "vision_model": "gpt-4.1" if str(vision_model or "").strip() == "gpt-4o" else str(vision_model or "").strip() or "gpt-4.1",
-        }
+        data = {}
+        if os.path.exists(LLM_SETTINGS_PATH):
+            with open(LLM_SETTINGS_PATH, "r", encoding="utf-8") as f:
+                data = json.load(f) or {}
+
+        if section:
+            # Update specific section
+            sec_data = data.get(section) or {}
+            if provider:
+                sec_data["provider"] = str(provider).strip().lower()
+            if model:
+                 # Standardize model names
+                if model == "gpt-4o": val = "gpt-4o"
+                elif model == "gpt-4.1": val = "gpt-4.1"
+                else: val = str(model).strip()
+                sec_data["model"] = val
+            data[section] = sec_data
+        else:
+            # Update global defaults
+            if provider:
+                data["provider"] = str(provider).strip().lower()
+            if main_model:
+                data["main_model"] = str(main_model).strip()
+            if vision_model:
+                 data["vision_model"] = "gpt-4.1" if str(vision_model).strip() == "gpt-4o" else str(vision_model).strip()
+
         with open(LLM_SETTINGS_PATH, "w", encoding="utf-8") as f:
-            json.dump(payload, f, ensure_ascii=False, indent=2)
-        os.environ["LLM_PROVIDER"] = payload["provider"]
-        os.environ["COPILOT_MODEL"] = payload["main_model"]
-        os.environ["COPILOT_VISION_MODEL"] = payload["vision_model"]
+            json.dump(data, f, ensure_ascii=False, indent=2)
+            
+        # Refreshes env vars immediately
+        load_llm_settings()
         return True
     except Exception:
         return False

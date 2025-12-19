@@ -485,22 +485,56 @@ def tool_llm_status(args: Dict[str, Any] = None) -> Dict[str, Any]:
     """Get LLM configuration status."""
     from tui.agents import load_llm_settings
     load_llm_settings()
-    return {
+    
+    section = str((args or {}).get("section") or "").strip().lower()
+    
+    # Global defaults
+    result = {
         "ok": True,
         "provider": str(os.getenv("LLM_PROVIDER") or "copilot"),
         "main_model": str(os.getenv("COPILOT_MODEL") or ""),
         "vision_model": str(os.getenv("COPILOT_VISION_MODEL") or ""),
         "settings_path": LLM_SETTINGS_PATH,
     }
+    
+    if section:
+        # Override with section specific env vars if known
+        if section == "atlas":
+            result["provider"] = os.getenv("ATLAS_PROVIDER") or result["provider"]
+            result["model"] = os.getenv("ATLAS_MODEL") or "gpt-4.1"
+        elif section == "tetyana":
+            result["provider"] = os.getenv("TETYANA_PROVIDER") or result["provider"]
+            result["model"] = os.getenv("TETYANA_MODEL") or "gpt-4o"
+        elif section == "grisha":
+            result["provider"] = os.getenv("GRISHA_PROVIDER") or result["provider"]
+            result["model"] = os.getenv("GRISHA_MODEL") or "gpt-4.1"
+        elif section == "vision":
+            result["provider"] = os.getenv("VISION_TOOL_PROVIDER") or result["provider"]
+            result["model"] = os.getenv("VISION_TOOL_MODEL") or "gpt-4.1"
+            
+    return result
 
 
 def tool_llm_set(args: Dict[str, Any]) -> Dict[str, Any]:
     """Set LLM configuration."""
     from tui.agents import save_llm_settings, reset_agent_llm
+    
+    section = str(args.get("section") or "").strip().lower()
+    
+    if section in {"atlas", "tetyana", "grisha", "vision"}:
+        # Section update
+        provider = args.get("provider")
+        model = args.get("model")
+        ok = save_llm_settings(section=section, provider=provider, model=model)
+        if ok:
+            reset_agent_llm()
+        return {"ok": ok, "section": section, "provider": provider, "model": model}
+        
+    # Default global update
     provider = str(args.get("provider") or os.getenv("LLM_PROVIDER") or "copilot").strip().lower() or "copilot"
     main_model = str(args.get("main_model") or os.getenv("COPILOT_MODEL") or "gpt-4o").strip() or "gpt-4o"
     vision_model = str(args.get("vision_model") or os.getenv("COPILOT_VISION_MODEL") or "gpt-4.1").strip() or "gpt-4.1"
-    ok = save_llm_settings(provider, main_model, vision_model)
+    ok = save_llm_settings(provider=provider, main_model=main_model, vision_model=vision_model)
     if ok:
         reset_agent_llm()
     return {"ok": ok, "provider": provider, "main_model": main_model, "vision_model": vision_model}

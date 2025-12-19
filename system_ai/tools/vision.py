@@ -40,10 +40,11 @@ def load_image_b64(image_path: str) -> Optional[str]:
         return None
 
 
-def load_image_png_b64(image_path: str) -> Optional[str]:
-    """Return a PNG base64 payload.
+def load_image_png_b64(image_path: str, max_dimension: int = 1024) -> Optional[str]:
+    """Return a PNG base64 payload, resized if needed to avoid payload limits.
 
     Copilot Vision is picky about accepted media types; we normalize to PNG.
+    We also resize to max_dimension (default 1024px) to avoid HTTP 413 errors.
     """
     if not image_path or not os.path.exists(image_path):
         return None
@@ -52,6 +53,14 @@ def load_image_png_b64(image_path: str) -> Optional[str]:
         from PIL import Image  # type: ignore
 
         img = Image.open(image_path)
+        
+        # Resize if too large
+        width, height = img.size
+        if width > max_dimension or height > max_dimension:
+            ratio = min(max_dimension / width, max_dimension / height)
+            new_size = (int(width * ratio), int(height * ratio))
+            img = img.resize(new_size, Image.Resampling.LANCZOS)
+            
         with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as f:
             tmp_path = f.name
         try:
@@ -65,13 +74,18 @@ def load_image_png_b64(image_path: str) -> Optional[str]:
     except Exception:
         pass
 
-    # macOS fallback: sips conversion
+    # macOS fallback: sips conversion (only checks format, not resize for now, 
+    # but likely PIL is available in this env)
     try:
         with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as f:
             tmp_path = f.name
         try:
             subprocess.run(["sips", "-s", "format", "png", image_path, "--out", tmp_path], capture_output=True)
             if os.path.exists(tmp_path):
+                # Note: If PIL failed, we might still have a large image here. 
+                # Ideally we should resize with sips too if needed: 
+                # sips -Z 1024 ...
+                subprocess.run(["sips", "-Z", str(max_dimension), tmp_path], capture_output=True)
                 return load_image_b64(tmp_path)
         finally:
             try:

@@ -115,6 +115,12 @@ def browser_click_element(selector: str) -> str:
         manager = BrowserManager.get_instance()
         page = manager.get_page()
         page.click(selector, timeout=5000)
+        # Add basic wait for navigation/action
+        try:
+             page.wait_for_load_state("domcontentloaded", timeout=5000)
+             time.sleep(1.0)
+        except:
+             time.sleep(1.0)
         return json.dumps({"status": "success"})
     except Exception as e:
         return json.dumps({"status": "error", "error": str(e)})
@@ -130,6 +136,12 @@ def browser_type_text(selector: str, text: str, press_enter: bool = False) -> st
         page.fill(selector, text, timeout=10000)
         if press_enter:
             page.press(selector, "Enter")
+            # WAIT for results to load
+            try:
+                page.wait_for_load_state("domcontentloaded", timeout=5000)
+                time.sleep(2.0) # Grace period for JS rendering
+            except:
+                time.sleep(3.0) # Fallback
         return json.dumps({"status": "success"})
     except Exception as e:
         return json.dumps({"status": "error", "error": str(e)})

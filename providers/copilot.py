@@ -14,7 +14,7 @@ from langchain_core.outputs import ChatGeneration, ChatResult
 from langchain_core.language_models import BaseChatModel
 
 class CopilotLLM(BaseChatModel):
-    model_name: str = "gpt-4o"
+    model_name: str = "gpt-4.1"
     vision_model_name: str = "gpt-4.1"
     api_key: Optional[str] = None
     _tools: Optional[List[Any]] = None
@@ -27,7 +27,7 @@ class CopilotLLM(BaseChatModel):
         **kwargs: Any,
     ) -> None:
         super().__init__(**kwargs)
-        self.model_name = model_name or os.getenv("COPILOT_MODEL", "gpt-4o")
+        self.model_name = model_name or os.getenv("COPILOT_MODEL", "gpt-4.1")
         vm = vision_model_name or os.getenv("COPILOT_VISION_MODEL", "gpt-4.1")
         if vm == "gpt-4o":
             vm = "gpt-4.1"
@@ -338,7 +338,7 @@ class CopilotLLM(BaseChatModel):
                     headers.pop("Copilot-Vision-Request", None)
                     # Also fallback to standard model if current is vision specific
                     if "vision" in payload.get("model", ""):
-                         payload["model"] = "gpt-4o"
+                         payload["model"] = "gpt-4.1"
                          
                     response = requests.post(
                         f"{api_endpoint}/chat/completions",

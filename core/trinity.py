@@ -743,6 +743,12 @@ class TrinityRuntime:
                     # Previously this was "forcing step completion", which caused false positives.
                     if self.verbose: print(f"🧠 [Meta-Planner] Uncertainty limit reached ({current_step_fail_count}). Marking step as FAILED.")
                     last_step_status = "failed"
+                    # Capture failed action for forbidden list (Manual Retry)
+                    hist = state.get("history_plan_execution") or []
+                    if hist:
+                         forbidden = state.get("forbidden_actions") or []
+                         forbidden.append(f"FAILED ACTION: {hist[-1]}")
+                         state["forbidden_actions"] = forbidden
                     # Do NOT pop the plan. Let the decision logic below handle 'failed' -> 'replan'.
 
         # 3. Decision Logic with Doctor Vibe integration
@@ -762,6 +768,12 @@ class TrinityRuntime:
         elif last_step_status == "failed":
             if current_step_fail_count >= 3:
                  action = "replan"
+                 # Capture failed action for forbidden list
+                 hist = state.get("history_plan_execution") or []
+                 if hist:
+                     forbidden = state.get("forbidden_actions") or []
+                     forbidden.append(f"FAILED ACTION: {hist[-1]}")
+                     state["forbidden_actions"] = forbidden
             else:
                  recovery_mode = meta_config.get("recovery_mode", "local_fix")
                  action = "replan" if recovery_mode == "full_replan" else "repair"
@@ -873,15 +885,24 @@ class TrinityRuntime:
             f"Global Goal: {state.get('original_task')}\nCurrent Request: {last_msg}",
             tools_desc=self.registry.list_tools(),
             context=final_context,
-            preferred_language=self.preferred_language
+            preferred_language=self.preferred_language,
+            forbidden_actions="\n".join(state.get("forbidden_actions") or [])
         )
+        
+        # Inject ANTI-LOOP reinforcement if replanning after failure
+        if state.get("last_step_status") == "failed":
+            prompt.messages.append(HumanMessage(content=f"PREVIOUS STEP FAILED/UNCERTAIN. AVOID REPEATING IT. TRY DIFFERENT APPROACH."))
         
         try:
             def on_delta(chunk):
                 if self.on_stream:
                     self.on_stream("atlas", chunk)
 
-            plan_resp = self.llm.invoke_with_stream(prompt.format_messages(), on_delta=on_delta)
+            # Use Atlas-specific LLM
+            atlas_model = os.getenv("ATLAS_MODEL") or os.getenv("COPILOT_MODEL") or "gpt-4.1"
+            atlas_llm = CopilotLLM(model_name=atlas_model)
+
+            plan_resp = atlas_llm.invoke_with_stream(prompt.format_messages(), on_delta=on_delta)
             data = self._extract_json_object(plan_resp.content)
             
             raw_plan = []
@@ -897,8 +918,12 @@ class TrinityRuntime:
 
             if not raw_plan: raise ValueError("No steps generated")
 
-            # Optimize with Grisha (Verifier)
-            optimized_plan = self.verifier.optimize_plan(raw_plan, meta_config=meta_config)
+            # Optimize with Grisha (Verifier) using GRISHA settings
+            grisha_model = os.getenv("GRISHA_MODEL") or os.getenv("COPILOT_MODEL") or "gpt-4.1"
+            grisha_llm = CopilotLLM(model_name=grisha_model)
+            local_verifier = AdaptiveVerifier(grisha_llm)
+            
+            optimized_plan = local_verifier.optimize_plan(raw_plan, meta_config=meta_config)
             
             return self._atlas_dispatch(state, optimized_plan, replan_count=replan_count)
 
@@ -1024,7 +1049,11 @@ class TrinityRuntime:
         # Bind tools to LLM for structured tool_calls output.
         tool_defs = self.registry.get_all_tool_definitions()
         
-        bound_llm = self.llm.bind_tools(tool_defs)
+        # Use Tetyana-specific LLM
+        tetyana_model = os.getenv("TETYANA_MODEL") or os.getenv("COPILOT_MODEL") or "gpt-4o"
+        tetyana_llm = CopilotLLM(model_name=tetyana_model)
+        
+        bound_llm = tetyana_llm.bind_tools(tool_defs)
         
         pause_info = None
         content = ""  # Initialize content variable
@@ -1035,7 +1064,8 @@ class TrinityRuntime:
                 if self.on_stream:
                     self.on_stream("tetyana", chunk)
             
-            response = self.llm.invoke_with_stream(prompt.format_messages(), on_delta=on_delta)
+            # Use Tetyana's local bound LLM
+            response = tetyana_llm.invoke_with_stream(prompt.format_messages(), on_delta=on_delta)
             content = response.content
             tool_calls = response.tool_calls if hasattr(response, 'tool_calls') else []
             
@@ -1414,11 +1444,23 @@ class TrinityRuntime:
                 print(f"👁️ [Grisha] Test execution error: {e}")
         
         # Inject available tools (Vision priority)
-        tools_list = self.registry.list_tools()
+        # RESTRICTED: Grisha only gets read-only tools
+        all_tools = self.registry.list_tools()
+        allowed_prefixes = ["capture_", "analyze_", "browser_screenshot", "browser_get_", "chrome_active_tab", "read_", "list_", "run_shell"]
+        # Explicit allow-list for safety
+        allowed_tools_list = []
+        # We need a way to parse the tools_list string or object. 
+        # Assuming list_tools returns a string description, we might need to filter at execution time mostly.
+        # But `tools_list` variable is passed to prompt. Ideally we filter it.
+        # Check if list_tools returns a raw list or string. 
+        # Based on typical usage, it returns a string description. 
+        # For prompt safety, we will append a STRICT WARNING instead of parsing the string complexly.
+        
+        tools_desc = self.registry.list_tools() # We pass full list but instruct strictly.
         
         original_task = state.get("original_task") or ""
         verify_context = f"Global Goal: {original_task}\nVerify result of: {last_msg}"
-        prompt = get_grisha_prompt(verify_context, tools_desc=tools_list, preferred_language=self.preferred_language)
+        prompt = get_grisha_prompt(verify_context, tools_desc=tools_desc, preferred_language=self.preferred_language)
         
         content = ""  # Initialize content variable
         executed_tools_results = [] # Keep track of results for verdict phase
@@ -1430,7 +1472,11 @@ class TrinityRuntime:
                 if self.on_stream:
                     self.on_stream("grisha", chunk)
             
-            response = self.llm.invoke_with_stream(prompt.format_messages(), on_delta=on_delta)
+            # Use Grisha-specific LLM
+            grisha_model = os.getenv("GRISHA_MODEL") or os.getenv("COPILOT_MODEL") or "gpt-4.1"
+            grisha_llm = CopilotLLM(model_name=grisha_model)
+            
+            response = grisha_llm.invoke_with_stream(prompt.format_messages(), on_delta=on_delta)
             content = response.content
             tool_calls = response.tool_calls if hasattr(response, 'tool_calls') else []
             
@@ -1448,6 +1494,16 @@ class TrinityRuntime:
                      name = tool.get("name")
                      args = tool.get("args") or {}
                      
+                     # ⛔️ RUNTIME BLOCK FOR GRISHA ⛔️
+                     # She is NOT allowed to navigate or click.
+                     forbidden_prefixes = ["browser_open", "browser_click", "browser_type", "write_", "create_", "delete_", "move_"]
+                     if any(name.startswith(p) for p in forbidden_prefixes):
+                         res_str = f"Result for {name}: [BLOCKED] Grisha is a read-only agent. Navigation/Modification blocked."
+                         if self.verbose:
+                             print(f"🛑 [Grisha] Blocked forbidden tool: {name}")
+                         executed_tools_results.append(res_str)
+                         continue
+
                      # Provide helpful default for capture_screen if args empty
                      if name == "capture_screen" and not args:
                          args = {"app_name": None}

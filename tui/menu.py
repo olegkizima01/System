@@ -14,7 +14,9 @@ def build_menu(
     get_custom_tasks_menu_items: Callable[[], List[Tuple[str, Any]]],
     get_monitoring_menu_items: Callable[[], List[Tuple[str, Any]]],
     get_settings_menu_items: Callable[[], List[Tuple[str, Any]]],
+
     get_llm_menu_items: Callable[[], List[Tuple[str, Any]]],
+    get_llm_sub_menu_items: Callable[[Any], List[Tuple[str, Any]]],
     get_agent_menu_items: Callable[[], List[Tuple[str, Any]]],
     get_automation_permissions_menu_items: Callable[[], List[Tuple[str, Any]]],
     get_editors_list: Callable[[], List[Tuple[str, str]]],
@@ -171,6 +173,20 @@ def build_menu(
                 style_cls = "class:menu.selected" if i == state.menu_index else "class:menu.item"
                 handler = make_click(i)
                 result.append((style_cls, f"{prefix}{label}\n", handler))
+            return result
+
+        if state.menu_level in {MenuLevel.LLM_ATLAS, MenuLevel.LLM_TETYANA, MenuLevel.LLM_GRISHA, MenuLevel.LLM_VISION}:
+            add_back_btn(result)
+            section = state.menu_level.value.replace("llm_", "").upper()
+            result.append(("class:menu.title", f" {tr('menu.llm.title', state.ui_lang)}: {section}\n\n"))
+            items = get_llm_sub_menu_items(state.menu_level)
+            state.menu_index = max(0, min(state.menu_index, len(items) - 1))
+            for i, (label, val) in enumerate(items):
+                prefix = " > " if i == state.menu_index else "   "
+                style_cls = "class:menu.selected" if i == state.menu_index else "class:menu.item"
+                handler = make_click(i)
+                result.append((style_cls, f"{prefix}{label}\n", handler))
+            result.append(("class:menu.item", "\n Enter: Edit | Space: Cycle provider\n"))
             return result
 
         if state.menu_level == MenuLevel.AGENT_SETTINGS:

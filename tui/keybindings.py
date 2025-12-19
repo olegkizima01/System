@@ -26,6 +26,7 @@ def build_keybindings(
     get_monitoring_menu_items: Callable[[], List[Tuple[str, Any]]],
     get_settings_menu_items: Callable[[], List[Tuple[str, Any]]],
     get_llm_menu_items: Callable[[], List[Tuple[str, Any]]],
+    get_llm_sub_menu_items: Callable[[Any], List[Tuple[str, Any]]],
     get_agent_menu_items: Callable[[], List[Tuple[str, Any]]],
     get_automation_permissions_menu_items: Callable[[], List[Tuple[str, Any]]],
     get_editors_list: Callable[[], List[Tuple[str, str]]],
@@ -401,6 +402,36 @@ def build_keybindings(
                 state.monitor_targets.add(it.key)
                 log(f"Monitor: ON {it.label}", "action")
 
+        elif state.menu_level in {MenuLevel.LLM_ATLAS, MenuLevel.LLM_TETYANA, MenuLevel.LLM_GRISHA, MenuLevel.LLM_VISION, MenuLevel.LLM_DEFAULTS}:
+            items = get_llm_sub_menu_items(state.menu_level)
+            if not items: return
+            state.menu_index = max(0, min(state.menu_index, len(items) - 1))
+            _, key = items[state.menu_index]
+            
+            if key == "provider":
+                # Cycle providers
+                # Get current section
+                section = ""
+                if state.menu_level == MenuLevel.LLM_ATLAS: section = "atlas"
+                elif state.menu_level == MenuLevel.LLM_TETYANA: section = "tetyana"
+                elif state.menu_level == MenuLevel.LLM_GRISHA: section = "grisha"
+                elif state.menu_level == MenuLevel.LLM_VISION: section = "vision"
+                
+                # Determine next provider
+                from tui.tools import tool_llm_set, tool_llm_status
+                start_status = tool_llm_status({"section": section})
+                cur_prov = start_status.get("provider", "copilot")
+                
+                # Prov list
+                provs = ["copilot", "openai", "anthropic", "gemini"]
+                if cur_prov in provs:
+                    next_prov = provs[(provs.index(cur_prov) + 1) % len(provs)]
+                else:
+                    next_prov = "copilot"
+                    
+                tool_llm_set({"section": section, "provider": next_prov})
+                log(f"Provider set to: {next_prov}", "action")
+
     @kb.add("s", filter=show_menu)
     def _(event):
         if state.menu_level != MenuLevel.MONITOR_CONTROL:
@@ -472,6 +503,20 @@ def build_keybindings(
             state.menu_level = lvl
             state.menu_index = 0
             return
+
+        if state.menu_level == MenuLevel.LLM_SETTINGS:
+            items = get_llm_menu_items()
+            if not items:
+                return
+            state.menu_index = max(0, min(state.menu_index, len(items) - 1))
+            _, lvl = items[state.menu_index][0], items[state.menu_index][1]
+            state.menu_level = lvl
+            state.menu_index = 0
+            return
+            
+        if state.menu_level in {MenuLevel.LLM_ATLAS, MenuLevel.LLM_TETYANA, MenuLevel.LLM_GRISHA, MenuLevel.LLM_VISION, MenuLevel.LLM_DEFAULTS}:
+             log("To edit model, use CLI: /llm set section=<name> model=<model>", "info")
+             return
 
         if state.menu_level == MenuLevel.UNSAFE_MODE:
             state.ui_unsafe_mode = not bool(getattr(state, "ui_unsafe_mode", False))
