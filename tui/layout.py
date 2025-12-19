@@ -167,17 +167,38 @@ def build_app(
     def make_scroll_handler(name: str):
         def _handler(mouse_event: Any):
             from prompt_toolkit.mouse_events import MouseEventType
-            # Scroll faster and more reliably
-            scroll_delta = 5 # Lines per scroll
+            from system_cli.state import state
+            
+            # Scroll speed
+            scroll_delta = 10 
             
             if mouse_event.event_type == MouseEventType.SCROLL_UP:
+                # Disable follow when manually scrolling up
+                if name == "log":
+                    state.ui_log_follow = False
+                    state.ui_log_cursor_y = max(0, int(getattr(state, "ui_log_cursor_y", 0)) - scroll_delta)
+                elif name == "agents":
+                    state.ui_agents_follow = False
+                    state.ui_agents_cursor_y = max(0, int(getattr(state, "ui_agents_cursor_y", 0)) - scroll_delta)
+                
                 from prompt_toolkit.application.current import get_app
                 app = get_app()
                 for w in app.layout.find_all_windows():
                     if getattr(w, "name", None) == name:
                         w.vertical_scroll = max(0, w.vertical_scroll - scroll_delta)
-                return None # Handled
+                force_ui_update()
+                return None
+                
             elif mouse_event.event_type == MouseEventType.SCROLL_DOWN:
+                if name == "log":
+                    state.ui_log_cursor_y = int(getattr(state, "ui_log_cursor_y", 0)) + scroll_delta
+                    if state.ui_log_cursor_y >= max(0, int(getattr(state, "ui_log_line_count", 1)) - 1):
+                        state.ui_log_follow = True
+                elif name == "agents":
+                    state.ui_agents_cursor_y = int(getattr(state, "ui_agents_cursor_y", 0)) + scroll_delta
+                    if state.ui_agents_cursor_y >= max(0, int(getattr(state, "ui_agents_line_count", 1)) - 1):
+                        state.ui_agents_follow = True
+                
                 from prompt_toolkit.application.current import get_app
                 app = get_app()
                 for w in app.layout.find_all_windows():
@@ -188,7 +209,8 @@ def build_app(
                             w.vertical_scroll = min(max_scroll, w.vertical_scroll + scroll_delta)
                         else:
                             w.vertical_scroll += scroll_delta
-                return None # Handled
+                force_ui_update()
+                return None
             return NotImplemented
         return _handler
 
