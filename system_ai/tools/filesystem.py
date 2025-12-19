@@ -91,6 +91,7 @@ def read_file(path: str) -> Dict[str, Any]:
     """Reads the content of a file."""
     try:
         path = _normalize_special_paths(path)
+        path = os.path.expanduser(path)
         if not os.path.isabs(path):
             path = os.path.abspath(path)
         
@@ -113,6 +114,7 @@ def write_file(path: str, content: str, mode: str = "w") -> Dict[str, Any]:
     """Writes content to a file. Mode can be 'w' (overwrite) or 'a' (append)."""
     try:
         path = _normalize_special_paths(path)
+        path = os.path.expanduser(path)
         if not os.path.isabs(path):
             path = os.path.abspath(path)
             
@@ -137,6 +139,7 @@ def list_files(path: str) -> Dict[str, Any]:
     """Lists files in a directory."""
     try:
         path = _normalize_special_paths(path)
+        path = os.path.expanduser(path)
         if not os.path.isabs(path):
             path = os.path.abspath(path)
             
