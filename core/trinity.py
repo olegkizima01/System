@@ -1117,18 +1117,40 @@ class TrinityRuntime:
         else:
             current_streak = 0  # Reset on definite decision (success)
         
-        # If 3+ consecutive uncertain decisions, force to success with warning
-        # CRITICAL: Do NOT force success if CAPTCHA is active!
+        # If 3+ consecutive uncertain decisions, consider forcing completion
+        # CRITICAL: Do NOT force success if CAPTCHA is active or if vision shows failure!
+        # Check if vision analysis indicates objective failure (no video playing, etc.)
+        vision_shows_failure = any(kw in lower_content for kw in [
+            "no video playing", "no video in fullscreen", "не відтворюється", "відео не грає",
+            "page is empty", "сторінка порожня", "about:blank", "not found", "404",
+            "error loading", "помилка завантаження", "the task was not completed",
+            "завдання не виконано", "goal not achieved"
+        ])
+        
         if step_status == "uncertain" and current_streak >= 3 and "[captcha]" not in lower_content:
-            if self.verbose:
-                print(f"⚠️ [Grisha] Uncertainty streak ({current_streak}) reached limit → forcing SUCCESS")
-            try:
-                trace(self.logger, "grisha_uncertainty_limit", {"streak": current_streak, "forced": "success"})
-            except Exception:
-                pass
-            step_status = "success"
-            updated_messages.append(AIMessage(content="[VOICE] Після кількох спроб перевірки, вважаю завдання виконаним. [VERIFIED]"))
-            current_streak = 0
+            if vision_shows_failure:
+                # Don't force success - trigger replan instead
+                if self.verbose:
+                    print(f"⚠️ [Grisha] Uncertainty streak ({current_streak}) but vision shows failure → triggering REPLAN")
+                try:
+                    trace(self.logger, "grisha_uncertainty_limit_replan", {"streak": current_streak, "forced": "replan", "vision_failure": True})
+                except Exception:
+                    pass
+                step_status = "failed"
+                updated_messages.append(AIMessage(content="[VOICE] Після кількох спроб перевірки, бачу що завдання не виконано. Потрібне перепланування."))
+                current_streak = 0
+            else:
+                # Only force success if vision doesn't show clear failure (truly ambiguous)
+                if self.verbose:
+                    print(f"⚠️ [Grisha] Uncertainty streak ({current_streak}) reached limit → forcing SUCCESS (no clear failure)")
+                try:
+                    trace(self.logger, "grisha_uncertainty_limit", {"streak": current_streak, "forced": "success", "vision_failure": False})
+                except Exception:
+                    pass
+                step_status = "success"
+                updated_messages.append(AIMessage(content="[VOICE] Після кількох спроб перевірки, вважаю завдання виконаним. [VERIFIED]"))
+                current_streak = 0
+
 
         try:
             trace(self.logger, "grisha_decision", {"next_agent": next_agent, "last_step_status": step_status, "uncertain_streak": current_streak})
