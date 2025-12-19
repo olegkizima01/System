@@ -1,34 +1,3 @@
 ## My Last Response
 
-Update docs and workflows with capabilities info
-
----
-
-[Atlas] Final report
-
-Task: Найди через гугл фільм сучасний якийсь про штучний інтелект для перегляду його онлайн. Після того включи його на весь екран для перегляду, пересвідчись що він запущений і на весь екран.
-Outcome: completed
-Replans: 10
-Last agent: meta_planner
-
-Last message:
-[VOICE] Ліміт перепланувань вичерпано (10).
-
-Changed files:
-- core/mcp.py
-- core/trinity.py
-- system_ai/tools/browser.py
-- debug_tools.py
-- verify_fix.py
-
-Diff stat:
-core/mcp.py                | 27 +++++++++++++++++++++++++++
- core/trinity.py            |  7 ++-----
- system_ai/tools/browser.py |  4 +++-
- 3 files changed, 32 insertions(+), 6 deletions(-)
-
-Verification:
-- status: unknown (no explicit signal)
-
-Tests:
-- not executed by Trinity (no deterministic test runner in pipeline)
+Docs: Add Continue CLI to supported integrations

@@ -4,18 +4,15 @@
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 127
-- **Files Skipped**: 16219
+- **Files Skipped**: 16225
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-19 07:47:01
+- **Generated**: 2025-12-19 07:56:18
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-2025-12-19 07:33:17 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
-2025-12-19 07:33:17 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "tetyana", "current_agent": "grisha", "last_step_status": "success", "step_count": null, "replan_count": 7}
-2025-12-19 07:33:17 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 13, "replan_count": 7, "plan_len": 4, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "native", "last_msg_preview": "\n\nTool Results:\nResult for capture_screen: {\n  \"tool\": \"take_screenshot\",\n  \"status\": \"success\",\n  \"path\": \"/Users/dev/.antigravity/vision_cache/snap_1766122383.jpg\",\n  \"mode\": \"update\",\n  \"focus\": \"F"}
 2025-12-19 07:33:18 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": true, "changed_files": ["core/mcp.py", "core/trinity.py", "system_ai/tools/browser.py", "debug_tools.py", "verify_fix.py"], "skip": true}
 2025-12-19 07:33:18 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 12940}
 2025-12-19 07:33:20 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "[VOICE] The analysis of the terminal screen reveals critical errors and warnings. The most pressing issue is the inability to connect to the PostgreSQL database, as indicated by the repeated \"Connecti"}
@@ -113,6 +110,9 @@
 2025-12-19 07:42:34 | INFO     | MainThread | system_cli.cli | cli_main:2623 | Sending message to agent
 2025-12-19 07:42:35 | INFO     | MainThread | system_cli.cli | cli_main:2626 | Agent response sent, status: True
 2025-12-19 07:46:49 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
+2025-12-19 07:55:57 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
+2025-12-19 07:55:57 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
+2025-12-19 07:55:57 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
 ```
 
 ---
@@ -121,38 +121,7 @@
 
 ## My Last Response
 
-Update docs and workflows with capabilities info
-
----
-
-[Atlas] Final report
-
-Task: Найди через гугл фільм сучасний якийсь про штучний інтелект для перегляду його онлайн. Після того включи його на весь екран для перегляду, пересвідчись що він запущений і на весь екран.
-Outcome: completed
-Replans: 10
-Last agent: meta_planner
-
-Last message:
-[VOICE] Ліміт перепланувань вичерпано (10).
-
-Changed files:
-- core/mcp.py
-- core/trinity.py
-- system_ai/tools/browser.py
-- debug_tools.py
-- verify_fix.py
-
-Diff stat:
-core/mcp.py                | 27 +++++++++++++++++++++++++++
- core/trinity.py            |  7 ++-----
- system_ai/tools/browser.py |  4 +++-
- 3 files changed, 32 insertions(+), 6 deletions(-)
-
-Verification:
-- status: unknown (no explicit signal)
-
-Tests:
-- not executed by Trinity (no deterministic test runner in pipeline)
+Docs: Add Continue CLI to supported integrations
 
 
 ---
@@ -160,26 +129,26 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- .agent/workflows/atlas.md   |    19 +
+ .agent/workflows/atlas.md   |    21 +-
  README.md                   |    10 +
  cleanup_modules.json        |    17 +
  cli.py                      |    14 +
- docs/atlas.md               |    26 +
- project_structure_final.txt | 39617 +-----------------------------------------
+ docs/atlas.md               |    28 +-
+ project_structure_final.txt | 39648 +-----------------------------------------
  providers/copilot.py        |    32 +-
  tui/cleanup.py              |     2 +
  tui/tools.py                |    13 +
- 9 files changed, 231 insertions(+), 39519 deletions(-)
+ 9 files changed, 136 insertions(+), 39649 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-3e26b31 Update: Add latest response
+f7d53a0 Update: Add latest response
+6cbcd4c Update: Add latest response
 d3a3eed Trinity task completed: Найди через гугл фільм сучасний якийсь про штучний інтелект для перегля…
 5daa143 Update: Add latest response
 2747d12 Fix KeyError in Verifier radiation and register missing analyze_screen tool alias
-3f65976 Trinity task completed: Найди через гугл фільм сучасний якийсь про штучний інтелект для перегля…
 ```
 
 ---
@@ -441,7 +410,7 @@ graph TD
 ## 5. Додаткові можливості та Інтеграції (Extensions)
 
 ### 5.1 AI-IDE Integrations
--   **Windsurf**, **Antigravity**, **Cursor**: Спеціальні профілі для розробки.
+-   **Windsurf**, **Antigravity**, **Cursor**, **Continue CLI**: Спеціальні профілі для розробки.
 
 ### 5.2 Cleanup & Privacy System
 -   Очищення `IndexedDB`, `keychain`, локальних сховищ ШІ.
@@ -599,43 +568,12 @@ Windsurf*.app/
 kinotavr.md
 ```
 
-### `.last_response.txt` (1.0 KB)
+### `.last_response.txt` (0.1 KB)
 
 ```text
 ## My Last Response
 
-Update docs and workflows with capabilities info
-
----
-
-[Atlas] Final report
-
-Task: Найди через гугл фільм сучасний якийсь про штучний інтелект для перегляду його онлайн. Після того включи його на весь екран для перегляду, пересвідчись що він запущений і на весь екран.
-Outcome: completed
-Replans: 10
-Last agent: meta_planner
-
-Last message:
-[VOICE] Ліміт перепланувань вичерпано (10).
-
-Changed files:
-- core/mcp.py
-- core/trinity.py
-- system_ai/tools/browser.py
-- debug_tools.py
-- verify_fix.py
-
-Diff stat:
-core/mcp.py                | 27 +++++++++++++++++++++++++++
- core/trinity.py            |  7 ++-----
- system_ai/tools/browser.py |  4 +++-
- 3 files changed, 32 insertions(+), 6 deletions(-)
-
-Verification:
-- status: unknown (no explicit signal)
-
-Tests:
-- not executed by Trinity (no deterministic test runner in pipeline)
+Docs: Add Continue CLI to supported integrations
 ```
 
 ### `.windsurf/rules/logs.md` (1.3 KB)
@@ -12243,7 +12181,7 @@ graph TD
 ## 5. Додаткові можливості та Інтеграції (Extensions)
 
 ### 5.1 AI-IDE Integrations
--   **Windsurf**, **Antigravity**, **Cursor**: Спеціальні профілі для розробки.
+-   **Windsurf**, **Antigravity**, **Cursor**, **Continue CLI**: Спеціальні профілі для розробки.
 
 ### 5.2 Cleanup & Privacy System
 -   Очищення `IndexedDB`, `keychain`, локальних сховищ ШІ.
@@ -12686,7 +12624,7 @@ cli.py: error: unrecognized arguments: Найди через гугл фільм
 test content
 ```
 
-### `project_structure_final.txt` (577.8 KB)
+### `project_structure_final.txt` (575.2 KB)
 
 ```text
 # System — Project Structure
@@ -12695,18 +12633,15 @@ test content
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 127
-- **Files Skipped**: 16219
+- **Files Skipped**: 16225
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-19 07:47:01
+- **Generated**: 2025-12-19 07:56:18
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-2025-12-19 07:33:17 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
-2025-12-19 07:33:17 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "tetyana", "current_agent": "grisha", "last_step_status": "success", "step_count": null, "replan_count": 7}
-2025-12-19 07:33:17 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 13, "replan_count": 7, "plan_len": 4, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "native", "last_msg_preview": "\n\nTool Results:\nResult for capture_screen: {\n  \"tool\": \"take_screenshot\",\n  \"status\": \"success\",\n  \"path\": \"/Users/dev/.antigravity/vision_cache/snap_1766122383.jpg\",\n  \"mode\": \"update\",\n  \"focus\": \"F"}
 2025-12-19 07:33:18 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": true, "changed_files": ["core/mcp.py", "core/trinity.py", "system_ai/tools/browser.py", "debug_tools.py", "verify_fix.py"], "skip": true}
 2025-12-19 07:33:18 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 12940}
 2025-12-19 07:33:20 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "[VOICE] The analysis of the terminal screen reveals critical errors and warnings. The most pressing issue is the inability to connect to the PostgreSQL database, as indicated by the repeated \"Connecti"}
@@ -12804,6 +12739,9 @@ test content
 2025-12-19 07:42:34 | INFO     | MainThread | system_cli.cli | cli_main:2623 | Sending message to agent
 2025-12-19 07:42:35 | INFO     | MainThread | system_cli.cli | cli_main:2626 | Agent response sent, status: True
 2025-12-19 07:46:49 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
+2025-12-19 07:55:57 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
+2025-12-19 07:55:57 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
+2025-12-19 07:55:57 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
 ```
 
 ---
@@ -12812,38 +12750,7 @@ test content
 
 ## My Last Response
 
-Update docs and workflows with capabilities info
-
----
-
-[Atlas] Final report
-
-Task: Найди через гугл фільм сучасний якийсь про штучний інтелект для перегляду його онлайн. Після того включи його на весь екран для перегляду, пересвідчись що він запущений і на весь екран.
-Outcome: completed
-Replans: 10
-Last agent: meta_planner
-
-Last message:
-[VOICE] Ліміт перепланувань вичерпано (10).
-
-Changed files:
-- core/mcp.py
-- core/trinity.py
-- system_ai/tools/browser.py
-- debug_tools.py
-- verify_fix.py
-
-Diff stat:
-core/mcp.py                | 27 +++++++++++++++++++++++++++
- core/trinity.py            |  7 ++-----
- system_ai/tools/browser.py |  4 +++-
- 3 files changed, 32 insertions(+), 6 deletions(-)
-
-Verification:
-- status: unknown (no explicit signal)
-
-Tests:
-- not executed by Trinity (no deterministic test runner in pipeline)
+Docs: Add Continue CLI to supported integrations
 
 
 ---
@@ -12851,26 +12758,26 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- .agent/workflows/atlas.md   |    19 +
+ .agent/workflows/atlas.md   |    21 +-
  README.md                   |    10 +
  cleanup_modules.json        |    17 +
  cli.py                      |    14 +
- docs/atlas.md               |    26 +
- project_structure_final.txt | 39617 +-----------------------------------------
+ docs/atlas.md               |    28 +-
+ project_structure_final.txt | 39648 +-----------------------------------------
  providers/copilot.py        |    32 +-
  tui/cleanup.py              |     2 +
  tui/tools.py                |    13 +
- 9 files changed, 231 insertions(+), 39519 deletions(-)
+ 9 files changed, 136 insertions(+), 39649 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-3e26b31 Update: Add latest response
+f7d53a0 Update: Add latest response
+6cbcd4c Update: Add latest response
 d3a3eed Trinity task completed: Найди через гугл фільм сучасний якийсь про штучний інтелект для перегля…
 5daa143 Update: Add latest response
 2747d12 Fix KeyError in Verifier radiation and register missing analyze_screen tool alias
-3f65976 Trinity task completed: Найди через гугл фільм сучасний якийсь про штучний інтелект для перегля…
 ```
 
 ---
@@ -13132,7 +13039,7 @@ graph TD
 ## 5. Додаткові можливості та Інтеграції (Extensions)
 
 ### 5.1 AI-IDE Integrations
--   **Windsurf**, **Antigravity**, **Cursor**: Спеціальні профілі для розробки.
+-   **Windsurf**, **Antigravity**, **Cursor**, **Continue CLI**: Спеціальні профілі для розробки.
 
 ### 5.2 Cleanup & Privacy System
 -   Очищення `IndexedDB`, `keychain`, локальних сховищ ШІ.
@@ -13290,43 +13197,12 @@ Windsurf*.app/
 kinotavr.md
 ```
 
-### `.last_response.txt` (1.0 KB)
+### `.last_response.txt` (0.1 KB)
 
 ```text
 ## My Last Response
 
-Update docs and workflows with capabilities info
-
----
-
-[Atlas] Final report
-
-Task: Найди через гугл фільм сучасний якийсь про штучний інтелект для перегляду його онлайн. Після того включи його на весь екран для перегляду, пересвідчись що він запущений і на весь екран.
-Outcome: completed
-Replans: 10
-Last agent: meta_planner
-
-Last message:
-[VOICE] Ліміт перепланувань вичерпано (10).
-
-Changed files:
-- core/mcp.py
-- core/trinity.py
-- system_ai/tools/browser.py
-- debug_tools.py
-- verify_fix.py
-
-Diff stat:
-core/mcp.py                | 27 +++++++++++++++++++++++++++
- core/trinity.py            |  7 ++-----
- system_ai/tools/browser.py |  4 +++-
- 3 files changed, 32 insertions(+), 6 deletions(-)
-
-Verification:
-- status: unknown (no explicit signal)
-
-Tests:
-- not executed by Trinity (no deterministic test runner in pipeline)
+Docs: Add Continue CLI to supported integrations
 ```
 
 ### `.windsurf/rules/logs.md` (1.3 KB)
@@ -24934,7 +24810,7 @@ graph TD
 ## 5. Додаткові можливості та Інтеграції (Extensions)
 
 ### 5.1 AI-IDE Integrations
--   **Windsurf**, **Antigravity**, **Cursor**: Спеціальні профілі для розробки.
+-   **Windsurf**, **Antigravity**, **Cursor**, **Continue CLI**: Спеціальні профілі для розробки.
 
 ### 5.2 Cleanup & Privacy System
 -   Очищення `IndexedDB`, `keychain`, локальних сховищ ШІ.
@@ -39750,4 +39626,4 @@ if __name__ == "__main__":
 ## Summary
 
 - **Total Files**: 127
-- **Skipped**: 16219
+- **Skipped**: 16225
