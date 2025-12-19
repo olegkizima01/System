@@ -1638,7 +1638,9 @@ def _get_settings_menu_items() -> List[Tuple[str, Any, Optional[str]]]:
         ("menu.settings.llm", MenuLevel.LLM_SETTINGS, None),
         ("menu.settings.agent", MenuLevel.AGENT_SETTINGS, None),
         ("menu.settings.section.automation", None, "section"),
+        ("menu.settings.automation_permissions", MenuLevel.AUTOMATION_PERMISSIONS, None),
         ("menu.settings.section.dev", None, "section"),
+        ("menu.settings.dev", MenuLevel.DEV_SETTINGS, None),
         ("menu.settings.section.experimental", None, "section"),
         ("menu.settings.unsafe_mode", MenuLevel.UNSAFE_MODE, None),
     ]
@@ -1681,6 +1683,15 @@ def _get_llm_sub_menu_items(level: Any) -> List[Tuple[str, Any]]:
 
     prov = status.get("provider", "copilot")
     mod = status.get("model", "")
+
+    if section == "defaults":
+        main_mod = status.get("main_model", "")
+        vis_mod = status.get("vision_model", "")
+        return [
+            (f"Provider: {prov}", "provider", None),
+            (f"Main Model: {main_mod}", "main_model", None),
+            (f"Vision Model: {vis_mod}", "vision_model", None),
+        ]
 
     return [
         (f"Provider: {prov}", "provider", None),

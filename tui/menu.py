@@ -191,7 +191,7 @@ def build_menu(
                 style_cls = "class:menu.selected" if i == state.menu_index else "class:menu.item"
                 handler = make_click(i)
                 result.append((style_cls, f"{prefix}{label}\n", handler))
-            result.append(("class:menu.item", "\n Enter: Edit | Space: Cycle provider\n"))
+            result.append(("class:menu.item", "\n Enter: Edit | Space: Cycle value\n"))
             return result
 
         if state.menu_level == MenuLevel.AGENT_SETTINGS:
