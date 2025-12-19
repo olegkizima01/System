@@ -134,21 +134,38 @@ class TrinityRuntime:
         except Exception:
             pass
 
-        # Best-effort extraction of the first JSON-like block.
-        # This matches from the first { or [ to the last } or ] (greedy)
-        match = re.search(r"(\{.*\}|\[.*\])", s_clean, re.DOTALL)
-        if match:
-            candidate = match.group(0)
+        # Search for first JSON object {} or list []
+        # We search for the first occurrence of { or [
+        start_brace = s.find('{')
+        start_bracket = s.find('[')
+        
+        if start_brace == -1 and start_bracket == -1:
+            return None
+            
+        start_idx = -1
+        if start_brace != -1 and (start_bracket == -1 or start_brace < start_bracket):
+            start_idx = start_brace
+        else:
+            start_idx = start_bracket
+            
+        # Try to parse from start_idx to the end, effectively ignoring trailing text
+        # If that fails, we can try to find the balancing brace/bracket (complex without a parser)
+        # But json.loads supports parsing if we slice correctly. 
+        # Actually, standard json.loads doesn't ignore trailing chars. 
+        # So we try to find the last valid brace/bracket.
+        
+        candidate = s[start_idx:]
+        # Try iterative trimming from the end
+        for i in range(len(candidate), 0, -1):
             try:
-                return json.loads(candidate)
+                # Potential optimization: only try if candidate[i-1] is } or ]
+                char = candidate[i-1]
+                if char not in ['}', ']']:
+                    continue
+                return json.loads(candidate[:i])
             except Exception:
-                # If greedy fails (e.g. multiple objects), try non-greedy for the first block
-                match = re.search(r"(\{.*?\}|\[.*?\])", s_clean, re.DOTALL)
-                if match:
-                    try:
-                        return json.loads(match.group(0))
-                    except Exception:
-                        pass
+                pass
+                
         return None
 
     def _classify_task_llm(self, task: str) -> Optional[Dict[str, Any]]:
@@ -531,10 +548,16 @@ class TrinityRuntime:
         except Exception:
             routing_hint = ""
 
+        # Inject retry context if applicable
+        current_step_fail_count = int(state.get("current_step_fail_count") or 0)
+        retry_context = ""
+        if current_step_fail_count > 0:
+            retry_context = f"\n\n[SYSTEM NOTICE] This is retry #{current_step_fail_count} for this step. Previous attempts were uncertain or failed. Please adjust your approach (e.g., waiting longer, checking errors)."
+
         # Inject available tools into Tetyana's prompt.
         # If we are in GUI mode, we still list all tools, but the prompt instructs to prefer GUI primitives.
         tools_list = self.registry.list_tools()
-        prompt = get_tetyana_prompt(str(last_msg or "") + routing_hint, tools_desc=tools_list)
+        prompt = get_tetyana_prompt(str(last_msg or "") + routing_hint + retry_context, tools_desc=tools_list)
         
         # Bind tools to LLM for structured tool_calls output.
         tool_defs = self.registry.get_all_tool_definitions()
@@ -1141,15 +1164,16 @@ class TrinityRuntime:
                 updated_messages.append(AIMessage(content="[VOICE] Після кількох спроб перевірки, бачу що завдання не виконано. Потрібне перепланування."))
                 current_streak = 0
             else:
-                # Only force success if vision doesn't show clear failure (truly ambiguous)
+                # If still uncertain after limit, force FAILURE to trigger replan/repair.
+                # Forcing success is dangerous as we might skip actual work.
                 if self.verbose:
-                    print(f"⚠️ [Grisha] Uncertainty streak ({current_streak}) reached limit → forcing SUCCESS (no clear failure)")
+                    print(f"⚠️ [Grisha] Uncertainty streak ({current_streak}) reached limit → forcing FAILED (verification inconclusive)")
                 try:
-                    trace(self.logger, "grisha_uncertainty_limit", {"streak": current_streak, "forced": "success", "vision_failure": False})
+                    trace(self.logger, "grisha_uncertainty_limit", {"streak": current_streak, "forced": "failed"})
                 except Exception:
                     pass
-                step_status = "success"
-                updated_messages.append(AIMessage(content="[VOICE] Після кількох спроб перевірки, вважаю завдання виконаним. [VERIFIED]"))
+                step_status = "failed"
+                updated_messages.append(AIMessage(content="[VOICE] Перевірка не дала чіткого результату після кількох спроб. Вважаю крок невиконаним. [FAILED]"))
                 current_streak = 0
 
 
@@ -1166,41 +1190,6 @@ class TrinityRuntime:
             "plan": state.get("plan"),  # Always preserve plan in state
         }
         
-        # Determine if we need to increase replan_count
-        if next_agent == "atlas" and step_status in {"failed", "uncertain"}:
-            current_replan = int(state.get("replan_count") or 0)
-            
-            # Replan if:
-            # - Failed twice in a row (current_streak >= 2)
-            # - Still uncertain after 2 attempts (will force success on 3rd)
-            should_replan = (
-                (step_status == "failed" and current_streak >= 2) or
-                (step_status == "uncertain" and current_streak >= 2)
-            )
-            
-            if should_replan:
-                new_replan_count = current_replan + 1
-                if new_replan_count > 10:
-                    try:
-                        trace(self.logger, "replan_limit_reached", {"count": new_replan_count})
-                    except Exception:
-                        pass
-                    out["current_agent"] = "end"
-                    out["messages"] = updated_messages + [AIMessage(content="[VOICE] Досягнуто ліміту перепланувань (10). Зупинка для безпеки.")]
-                    return out
-                
-                out["replan_count"] = new_replan_count
-                out["plan"] = None  # Clear plan to trigger regeneration
-                try:
-                    trace(self.logger, "replan_triggered", {"replan_count": out["replan_count"], "status": step_status, "streak": current_streak})
-                except Exception:
-                    pass
-            else:
-                # Keep plan, Atlas will retry the current step
-                try:
-                    trace(self.logger, "retry_without_replan", {"status": step_status, "streak": current_streak})
-                except Exception:
-                    pass
         return out
 
     def _router(self, state: TrinityState):
