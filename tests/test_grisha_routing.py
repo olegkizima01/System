@@ -47,7 +47,8 @@ def test_grisha_question_like_message_does_not_end(monkeypatch: pytest.MonkeyPat
     state = {"messages": [AIMessage(content="previous")], "gui_mode": "off", "execution_mode": "native"}
     out = rt._grisha_node(state)
 
-    assert out["current_agent"] == "atlas"
+    # Grisha routes to meta_planner (controller brain), not directly to atlas
+    assert out["current_agent"] == "meta_planner"
 
 
 @pytest.mark.parametrize(
@@ -68,7 +69,8 @@ def test_grisha_explicit_verified_marker_ends(monkeypatch: pytest.MonkeyPatch, g
     state = {"messages": [AIMessage(content="previous")], "gui_mode": "off", "execution_mode": "native"}
     out = rt._grisha_node(state)
 
-    assert out["current_agent"] == "atlas"
+    # Grisha routes to meta_planner for decision making
+    assert out["current_agent"] == "meta_planner"
     assert out["last_step_status"] == "success"
 
 
@@ -85,5 +87,7 @@ def test_grisha_tool_calls_branch_does_not_crash(monkeypatch: pytest.MonkeyPatch
     state = {"messages": [AIMessage(content="previous")], "gui_mode": "off", "execution_mode": "native"}
     out = rt._grisha_node(state)
 
-    assert out["current_agent"] == "atlas"
+    # Grisha routes to meta_planner for decision making
+    assert out["current_agent"] == "meta_planner"
     assert out["last_step_status"] in {"uncertain", "failed", "success"}
+

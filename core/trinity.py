@@ -306,9 +306,18 @@ class TrinityRuntime:
             elif last_step_status == "failed":
                 current_step_fail_count += 1
                 if self.verbose: print(f"🧠 [Meta-Planner] Step failed ({current_step_fail_count}/3).")
-            else:
-                # Uncertain - usually keep the step and let Atlas/Meta decide
-                pass
+            elif last_step_status == "uncertain":
+                # Treat uncertain as soft failure - increment count but don't replan immediately
+                current_step_fail_count += 1
+                if self.verbose: print(f"🧠 [Meta-Planner] Step uncertain ({current_step_fail_count}/3).")
+                # After 3 uncertain attempts, assume step completed and move on
+                if current_step_fail_count >= 3:
+                    plan.pop(0)
+                    current_step_fail_count = 0
+                    if self.verbose: print(f"🧠 [Meta-Planner] Forcing step completion after uncertainty limit. Remaining: {len(plan)}")
+                    if not plan:
+                        msg = "All plan steps completed (uncertainty limit reached)." if self.preferred_language != "uk" else "Усі кроки плану завершено (ліміт невизначеності досягнуто)."
+                        return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] {msg}")]}
 
         # 3. Decision Logic
         action = "proceed" # Default: continue to tetyana with current plan
@@ -323,9 +332,7 @@ class TrinityRuntime:
             else:
                  recovery_mode = meta_config.get("recovery_mode", "local_fix")
                  action = "replan" if recovery_mode == "full_replan" else "repair"
-        elif last_step_status == "uncertain":
-            # If we are stuck/uncertain (e.g. CAPTCHA), force a replan to find a new path
-            action = "replan"
+        # NOTE: Removed the old "uncertain -> replan" logic. Uncertain is now handled above as a soft failure.
         
         # 4. Meta-Reasoning (LLM)
         if action in ["initialize", "replan", "repair"]:

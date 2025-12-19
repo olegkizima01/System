@@ -1,4 +1,0 @@
-usage: cli.py [-h]
-              {tui,list-editors,list-modules,run,enable,disable,install,smart-plan,ask,agent-chat,agent-reset,agent-on,agent-off}
-              ...
-cli.py: error: unrecognized arguments: Найди через гугл фільм сучасний якийсь про штучний інтелект для перегляду його онлайн. Після того включи його на весь екран для перегляду, пересвідчись що він запущений і на весь екран.
