@@ -281,6 +281,7 @@ class MCPToolRegistry:
         self.register_tool("take_burst_screenshot", take_burst_screenshot, "Take multiple screenshots in a burst. Args: app_name (optional), count (int), interval (float)")
         self.register_tool("capture_screen_region", capture_screen_region, "Capture screenshot of screen region. Args: x,y,width,height")
         self.register_tool("vision_analyze", analyze_with_copilot, "Analyze screen with AI to get coordinates and text. Args: image_path (optional), prompt (str)")
+        self.register_tool("analyze_screen", analyze_with_copilot, "Analyze screen with AI to verify state, find elements, or solve tasks. Args: image_path (optional), prompt (str)")
         self.register_tool("ocr_region", ocr_region, "OCR a screen region using vision. Args: x,y,width,height")
         self.register_tool("find_image_on_screen", find_image_on_screen, "Find an image template on screen (may be unimplemented). Args: template_path (str), tolerance (float)")
         self.register_tool("compare_images", compare_images, "Compare two images (before/after) using vision. Args: path1 (str), path2 (str), prompt (str optional)")

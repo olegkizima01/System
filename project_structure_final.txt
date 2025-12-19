@@ -4,115 +4,115 @@
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 125
-- **Files Skipped**: 16172
+- **Files Skipped**: 16194
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-19 06:41:03
+- **Generated**: 2025-12-19 07:08:10
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 275, in build_app
-    input_area = VSplit(
-                 ^^^^^^^
-TypeError: VSplit.__init__() got an unexpected keyword argument 'dont_extend_height'
-2025-12-19 04:52:38 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
-2025-12-19 04:52:38 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
-2025-12-19 04:52:38 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
-2025-12-19 04:52:38 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in TUI mode
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2475, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1706, in run_tui
-    app = build_app(
-          ^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 275, in build_app
-    input_area = VSplit(
-                 ^^^^^^^
-TypeError: VSplit.__init__() got an unexpected keyword argument 'dont_extend_height'
-2025-12-19 04:52:38 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in main()
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2637, in main
-    cli_main(sys.argv[1:])
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2475, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1706, in run_tui
-    app = build_app(
-          ^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 275, in build_app
-    input_area = VSplit(
-                 ^^^^^^^
-TypeError: VSplit.__init__() got an unexpected keyword argument 'dont_extend_height'
-2025-12-19 04:52:45 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
-2025-12-19 04:52:45 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
-2025-12-19 04:52:45 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
-2025-12-19 04:52:45 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in TUI mode
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2475, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1706, in run_tui
-    app = build_app(
-          ^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 275, in build_app
-    input_area = VSplit(
-                 ^^^^^^^
-TypeError: VSplit.__init__() got an unexpected keyword argument 'dont_extend_height'
-2025-12-19 04:52:45 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in main()
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2637, in main
-    cli_main(sys.argv[1:])
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2475, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1706, in run_tui
-    app = build_app(
-          ^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 275, in build_app
-    input_area = VSplit(
-                 ^^^^^^^
-TypeError: VSplit.__init__() got an unexpected keyword argument 'dont_extend_height'
-2025-12-19 04:54:33 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
-2025-12-19 04:54:33 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
-2025-12-19 04:54:33 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
-2025-12-19 04:58:55 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
-2025-12-19 04:58:57 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
-2025-12-19 04:58:57 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
-2025-12-19 04:58:57 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
-2025-12-19 05:05:02 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
-2025-12-19 05:05:04 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
-2025-12-19 05:05:04 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
-2025-12-19 05:05:04 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
-2025-12-19 05:12:44 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
-2025-12-19 05:12:46 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
-2025-12-19 05:12:46 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
-2025-12-19 05:12:46 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
-2025-12-19 05:43:18 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
-2025-12-19 05:43:22 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
-2025-12-19 05:43:22 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
-2025-12-19 05:43:22 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
-2025-12-19 05:44:03 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
-2025-12-19 06:33:56 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
-2025-12-19 06:33:56 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
-2025-12-19 06:33:56 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
-2025-12-19 06:34:41 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_start", "task_type": "GENERAL", "requires_windsurf": false, "gui_mode": "auto", "execution_mode": "native", "recursion_limit": 500, "input_preview": "Найди через гугл фільм сучасний якийсь про штучний інтелект для перегляду його онлайн. Після того включи його на весь екран для перегляду, пересвідчись що він запущений і на весь екран."}
-2025-12-19 06:34:44 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
-2025-12-19 06:34:44 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "meta_planner", "current_agent": "atlas", "last_step_status": null, "step_count": null, "replan_count": 0}
-2025-12-19 06:34:51 | WARNING  | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:83 | [Verifier] LLM JSON parsing/optimization error: '"type"'
-2025-12-19 06:34:51 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:84 | [Verifier] Raw response: ...
-2025-12-19 06:34:51 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:87 | [Verifier] Plan fallback: 8 → 8 steps (added 0 verify steps)
-2025-12-19 06:34:51 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "tetyana", "next": "tetyana"}
-2025-12-19 06:34:51 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "tetyana", "last_step_status": null, "step_count": 1, "replan_count": 1}
-2025-12-19 06:34:51 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "GENERAL", "requires_windsurf": false, "dev_edit_mode": "cli", "execution_mode": "native", "gui_mode": "auto", "gui_fallback_attempted": false, "plan_len": 8, "last_msg_preview": "[VOICE] Tetyana, [VOICE] Відкрити браузер і перейти на Google..\n\n[Atlas Debug] Step: [VOICE] Відкрити браузер і перейти на Google.. Next: tetyana"}
-2025-12-19 06:34:53 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 1, "content_preview": ""}
-2025-12-19 06:34:56 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli"}
-2025-12-19 06:34:56 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
-2025-12-19 06:34:56 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "tetyana", "current_agent": "grisha", "last_step_status": "success", "step_count": null, "replan_count": 1}
-2025-12-19 06:34:56 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 1, "replan_count": 1, "plan_len": 8, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "native", "last_msg_preview": "\n\nTool Results:\nResult for browser_open_url: \"{\\\"status\\\": \\\"success\\\", \\\"url\\\": \\\"https://www.google.com/\\\", \\\"title\\\": \\\"Google\\\", \\\"has_captcha\\\": true}\"\n\n[STEP_COMPLETED] Всі інструменти виконано "}
-2025-12-19 06:34:56 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": false, "changed_files": [".agent/workflows/atlas.md"], "skip": true}
-2025-12-19 06:34:56 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 9831}
-2025-12-19 06:34:58 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "[VOICE] The browser successfully opened the URL \"https://www.google.com/\" with the title \"Google\". However, the page contains a CAPTCHA.\n\n[VERIFIED]"}
-2025-12-19 06:34:58 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "atlas", "last_step_status": "success", "uncertain_streak": 0}
-2025-12-19 06:34:58 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
+2025-12-19 06:48:03 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "tetyana", "next": "tetyana"}
+2025-12-19 06:48:03 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "meta_planner", "current_agent": "tetyana", "last_step_status": null, "step_count": 6, "replan_count": 2}
+2025-12-19 06:48:03 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "GENERAL", "requires_windsurf": false, "dev_edit_mode": "cli", "execution_mode": "gui", "gui_mode": "auto", "gui_fallback_attempted": true, "plan_len": 3, "last_msg_preview": "[VOICE] Tetyana, Запустити фільм на сторінці..\n\n[Atlas Debug] Step: Запустити фільм на сторінці.. Next: tetyana"}
+2025-12-19 06:48:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 1, "content_preview": ""}
+2025-12-19 06:48:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "gui", "gui_mode": "auto", "dev_edit_mode": "cli"}
+2025-12-19 06:48:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
+2025-12-19 06:48:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "tetyana", "current_agent": "grisha", "last_step_status": "success", "step_count": null, "replan_count": 2}
+2025-12-19 06:48:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 6, "replan_count": 2, "plan_len": 3, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "gui", "last_msg_preview": "\n\nTool Results:\nResult for pyautogui.click_mouse: {\n  \"tool\": \"click_mouse\",\n  \"status\": \"success\",\n  \"output\": \"{\\\"status\\\":\\\"success\\\",\\\"message\\\":\\\"Mouse clicked at current position\\\"}\",\n  \"raw\": \""}
+2025-12-19 06:48:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": true, "changed_files": ["core/mcp.py", "core/trinity.py", "core/verification.py"], "skip": true}
+2025-12-19 06:48:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 10247}
+2025-12-19 06:48:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "[VOICE] The tool executed successfully, and the mouse was clicked at its current position.\n\n[VERIFIED]"}
+2025-12-19 06:48:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "meta_planner", "last_step_status": "success", "uncertain_streak": 0}
+2025-12-19 06:48:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "meta_planner", "next": "meta_planner"}
+2025-12-19 06:48:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "meta_planner", "last_step_status": "success", "step_count": null, "replan_count": 2}
+2025-12-19 06:48:09 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "tetyana", "next": "tetyana"}
+2025-12-19 06:48:09 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "meta_planner", "current_agent": "tetyana", "last_step_status": null, "step_count": 7, "replan_count": 2}
+2025-12-19 06:48:09 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "GENERAL", "requires_windsurf": false, "dev_edit_mode": "cli", "execution_mode": "gui", "gui_mode": "auto", "gui_fallback_attempted": true, "plan_len": 2, "last_msg_preview": "[VOICE] Tetyana, Переключити відео у повноекранний режим..\n\n[Atlas Debug] Step: Переключити відео у повноекранний режим.. Next: tetyana"}
+2025-12-19 06:48:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 1, "content_preview": ""}
+2025-12-19 06:48:11 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "gui", "gui_mode": "auto", "dev_edit_mode": "cli"}
+2025-12-19 06:48:11 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
+2025-12-19 06:48:11 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "tetyana", "current_agent": "grisha", "last_step_status": "success", "step_count": null, "replan_count": 2}
+2025-12-19 06:48:11 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 7, "replan_count": 2, "plan_len": 2, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "gui", "last_msg_preview": "\n\nTool Results:\nResult for pyautogui.hotkey: {\n  \"tool\": \"hotkey\",\n  \"status\": \"success\",\n  \"output\": \"{\\\"status\\\":\\\"success\\\",\\\"message\\\":\\\"Pressed hotkey combination: f\\\"}\",\n  \"raw\": \"meta=None cont"}
+2025-12-19 06:48:11 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": true, "changed_files": ["core/mcp.py", "core/trinity.py", "core/verification.py"], "skip": true}
+2025-12-19 06:48:11 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 10225}
+2025-12-19 06:48:13 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "[VOICE] The hotkey combination \"f\" was successfully pressed.\n\n[VERIFIED]"}
+2025-12-19 06:48:13 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "meta_planner", "last_step_status": "success", "uncertain_streak": 0}
+2025-12-19 06:48:13 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "meta_planner", "next": "meta_planner"}
+2025-12-19 06:48:13 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "meta_planner", "last_step_status": "success", "step_count": null, "replan_count": 2}
+2025-12-19 06:48:13 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "tetyana", "next": "tetyana"}
+2025-12-19 06:48:13 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "meta_planner", "current_agent": "tetyana", "last_step_status": null, "step_count": 8, "replan_count": 2}
+2025-12-19 06:48:13 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "GENERAL", "requires_windsurf": false, "dev_edit_mode": "cli", "execution_mode": "gui", "gui_mode": "auto", "gui_fallback_attempted": true, "plan_len": 1, "last_msg_preview": "[VOICE] Tetyana, Перевірити, що фільм запущений і відображається на весь екран..\n\n[Atlas Debug] Step: Перевірити, що фільм запущений і відображається на весь екран.. Next: tetyana"}
+2025-12-19 06:48:15 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
+2025-12-19 06:48:15 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 2, "content_preview": ""}
+2025-12-19 06:54:53 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: ['--help']
+2025-12-19 07:00:35 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
+2025-12-19 07:00:35 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
+2025-12-19 07:00:35 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
+2025-12-19 07:00:50 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_start", "task_type": "GENERAL", "requires_windsurf": false, "gui_mode": "auto", "execution_mode": "native", "recursion_limit": 500, "input_preview": "Найди через гугл фільм сучасний якийсь про штучний інтелект для перегляду його онлайн. Після того включи його на весь екран для перегляду, пересвідчись що він запущений і на весь екран."}
+2025-12-19 07:00:53 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
+2025-12-19 07:00:53 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "meta_planner", "current_agent": "atlas", "last_step_status": null, "step_count": null, "replan_count": 0}
+2025-12-19 07:00:59 | WARNING  | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:119 | [Verifier] LLM JSON parsing/optimization error: '"type"'
+2025-12-19 07:00:59 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:120 | [Verifier] Raw response snippet: ...
+2025-12-19 07:00:59 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:123 | [Verifier] Plan fallback: 5 → 5 steps (added 0 verify steps)
+2025-12-19 07:00:59 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "tetyana", "next": "tetyana"}
+2025-12-19 07:00:59 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "tetyana", "last_step_status": null, "step_count": 1, "replan_count": 1}
+2025-12-19 07:00:59 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "GENERAL", "requires_windsurf": false, "dev_edit_mode": "cli", "execution_mode": "native", "gui_mode": "auto", "gui_fallback_attempted": false, "plan_len": 5, "last_msg_preview": "[VOICE] Tetyana, [VOICE] Відкрити Google і ввести запит 'сучасний фільм про штучний інтелект онлайн'..\n\n[Atlas Debug] Step: [VOICE] Відкрити Google і ввести запит 'сучасний фільм про штучний інтелект "}
+2025-12-19 07:01:01 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 1, "content_preview": ""}
+2025-12-19 07:01:03 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli"}
+2025-12-19 07:01:03 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
+2025-12-19 07:01:03 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "tetyana", "current_agent": "grisha", "last_step_status": "success", "step_count": null, "replan_count": 1}
+2025-12-19 07:01:03 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 1, "replan_count": 1, "plan_len": 5, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "native", "last_msg_preview": "\n\nTool Results:\nResult for browser_open_url: \"{\\\"status\\\": \\\"success\\\", \\\"url\\\": \\\"https://www.google.com/\\\", \\\"title\\\": \\\"Google\\\", \\\"has_captcha\\\": false}\"\n\n[STEP_COMPLETED] Всі інструменти виконано"}
+2025-12-19 07:01:03 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": true, "changed_files": ["core/context7.py", "core/mcp.py", "core/trinity.py", "core/verification.py"], "skip": true}
+2025-12-19 07:01:03 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 9924}
+2025-12-19 07:01:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "[VOICE] The browser successfully opened the URL \"https://www.google.com/\" with the title \"Google\". There is no CAPTCHA present.\n\n[VERIFIED]"}
+2025-12-19 07:01:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "meta_planner", "last_step_status": "uncertain", "uncertain_streak": 1}
+2025-12-19 07:01:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "meta_planner", "next": "meta_planner"}
+2025-12-19 07:01:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "meta_planner", "last_step_status": "uncertain", "step_count": null, "replan_count": 1}
+2025-12-19 07:01:09 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
+2025-12-19 07:01:09 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "meta_planner", "current_agent": "atlas", "last_step_status": null, "step_count": null, "replan_count": 1}
+2025-12-19 07:01:12 | WARNING  | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:119 | [Verifier] LLM JSON parsing/optimization error: '"type"'
+2025-12-19 07:01:12 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:120 | [Verifier] Raw response snippet: ...
+2025-12-19 07:01:12 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:123 | [Verifier] Plan fallback: 2 → 2 steps (added 0 verify steps)
+2025-12-19 07:01:12 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "tetyana", "next": "tetyana"}
+2025-12-19 07:01:12 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "tetyana", "last_step_status": null, "step_count": 2, "replan_count": 2}
+2025-12-19 07:01:12 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "GENERAL", "requires_windsurf": false, "dev_edit_mode": "cli", "execution_mode": "native", "gui_mode": "auto", "gui_fallback_attempted": false, "plan_len": 2, "last_msg_preview": "[VOICE] Tetyana, Ввести запит 'сучасний фільм про штучний інтелект онлайн' у пошуковий рядок Google..\n\n[Atlas Debug] Step: Ввести запит 'сучасний фільм про штучний інтелект онлайн' у пошуковий рядок G"}
+2025-12-19 07:01:14 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 1, "content_preview": ""}
+2025-12-19 07:01:14 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_gui_fallback", "from": "native", "to": "gui"}
+2025-12-19 07:01:14 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "tetyana", "next": "tetyana"}
+2025-12-19 07:01:14 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "tetyana", "current_agent": "tetyana", "last_step_status": "failed", "step_count": null, "replan_count": 2}
+2025-12-19 07:01:14 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "GENERAL", "requires_windsurf": false, "dev_edit_mode": "cli", "execution_mode": "gui", "gui_mode": "auto", "gui_fallback_attempted": true, "plan_len": 2, "last_msg_preview": "[VOICE] Native не спрацював. Перемикаюся на GUI режим."}
+2025-12-19 07:01:17 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 1, "content_preview": ""}
+2025-12-19 07:01:17 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "gui", "gui_mode": "auto", "dev_edit_mode": "cli"}
+2025-12-19 07:01:17 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
+2025-12-19 07:01:17 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "tetyana", "current_agent": "grisha", "last_step_status": "success", "step_count": null, "replan_count": 2}
+2025-12-19 07:01:17 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 2, "replan_count": 2, "plan_len": 2, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "gui", "last_msg_preview": "\n\nTool Results:\nResult for pyautogui.get_screen_size: {\n  \"tool\": \"get_screen_size\",\n  \"status\": \"success\",\n  \"output\": \"{\\\"status\\\":\\\"success\\\",\\\"message\\\":\\\"Screen size: Size(width=1920, height=1080"}
+2025-12-19 07:01:17 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": true, "changed_files": ["core/context7.py", "core/mcp.py", "core/trinity.py", "core/verification.py"], "skip": true}
+2025-12-19 07:01:17 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 10282}
+2025-12-19 07:01:19 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "[VOICE] The screen size has been successfully retrieved, showing dimensions of 1920x1080 pixels.\n\n[VERIFIED]"}
+2025-12-19 07:01:19 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "meta_planner", "last_step_status": "success", "uncertain_streak": 0}
+2025-12-19 07:01:19 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "meta_planner", "next": "meta_planner"}
+2025-12-19 07:01:19 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "meta_planner", "last_step_status": "success", "step_count": null, "replan_count": 2}
+2025-12-19 07:01:19 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "tetyana", "next": "tetyana"}
+2025-12-19 07:01:19 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "meta_planner", "current_agent": "tetyana", "last_step_status": null, "step_count": 3, "replan_count": 2}
+2025-12-19 07:01:19 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "GENERAL", "requires_windsurf": false, "dev_edit_mode": "cli", "execution_mode": "gui", "gui_mode": "auto", "gui_fallback_attempted": true, "plan_len": 1, "last_msg_preview": "[VOICE] Tetyana, Перевірити, чи запит успішно введено в пошуковий рядок..\n\n[Atlas Debug] Step: Перевірити, чи запит успішно введено в пошуковий рядок.. Next: tetyana"}
+2025-12-19 07:01:21 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 1, "content_preview": "Перевірте, чи текст у буфері обміну відповідає введеному запиту."}
+2025-12-19 07:01:21 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "gui", "gui_mode": "auto", "dev_edit_mode": "cli"}
+2025-12-19 07:01:21 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
+2025-12-19 07:01:21 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "tetyana", "current_agent": "grisha", "last_step_status": "success", "step_count": null, "replan_count": 2}
+2025-12-19 07:01:21 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 3, "replan_count": 2, "plan_len": 1, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "gui", "last_msg_preview": "Перевірте, чи текст у буфері обміну відповідає введеному запиту.\n\nTool Results:\nResult for get_clipboard: {\n  \"tool\": \"get_clipboard\",\n  \"status\": \"success\",\n  \"content\": \"Найди через гугл фільм сучас"}
+2025-12-19 07:01:21 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": true, "changed_files": ["core/context7.py", "core/mcp.py", "core/trinity.py", "core/verification.py"], "skip": true}
+2025-12-19 07:01:21 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 10118}
+2025-12-19 07:01:23 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "[VOICE] Текст у буфері обміну: \"Найди через гугл фільм сучасний якийсь про штучний інтелект для перегляду його онлайн. Після того включи його на весь екран для перегляду, пересвідчись що він запущений"}
+2025-12-19 07:01:24 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "meta_planner", "last_step_status": "success", "uncertain_streak": 0}
+2025-12-19 07:01:24 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "meta_planner", "next": "meta_planner"}
+2025-12-19 07:01:24 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "meta_planner", "last_step_status": "success", "step_count": null, "replan_count": 2}
+2025-12-19 07:01:25 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "meta_planner", "current_agent": "end", "last_step_status": null, "step_count": null, "replan_count": 2}
+2025-12-19 07:01:25 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "knowledge_stored", "status": "success", "confidence": 0.8}
+2025-12-19 07:01:25 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "end", "next": "end"}
+2025-12-19 07:01:25 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "knowledge", "current_agent": "end", "last_step_status": null, "step_count": null, "replan_count": 2}
+2025-12-19 07:01:26 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_end", "outcome": "completed", "last_agent": "knowledge", "replan_count": 2}
 ```
 
 ---
@@ -123,21 +123,27 @@ TypeError: VSplit.__init__() got an unexpected keyword argument 'dont_extend_hei
 
 Task: Найди через гугл фільм сучасний якийсь про штучний інтелект для перегляду його онлайн. Після того включи його на весь екран для перегляду, пересвідчись що він запущений і на весь екран.
 Outcome: completed
-Replans: 1
-Last agent: atlas
+Replans: 2
+Last agent: knowledge
 
 Last message:
-[VOICE] Не вдалося створити план.
+[VOICE] Досвід збережено. Завдання завершено.
 
 Changed files:
-- tui/themes.py
+- core/context7.py
+- core/mcp.py
+- core/trinity.py
+- core/verification.py
 
 Diff stat:
-tui/themes.py | 24 ++++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
+core/context7.py     |  50 +++++++--------
+ core/mcp.py          |   1 +
+ core/trinity.py      | 172 +++++++++++++++++++++++++++++++--------------------
+ core/verification.py |  68 +++++++++++++++-----
+ 4 files changed, 181 insertions(+), 110 deletions(-)
 
 Verification:
-- status: failed (heuristic)
+- status: unknown (no explicit signal)
 
 Tests:
 - not executed by Trinity (no deterministic test runner in pipeline)
@@ -148,20 +154,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- core/trinity.py             |    34 +-
- core/verification.py        |     7 +-
- project_structure_final.txt | 39039 +-----------------------------------------
- 3 files changed, 26 insertions(+), 39054 deletions(-)
+ project_structure_final.txt | 39277 +-----------------------------------------
+ 1 file changed, 102 insertions(+), 39175 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-4b4c970 fix(browser): Refine CAPTCHA detection to avoid false positives on Google search results
+9b8d9bb Fix KeyError in Verifier radiation and register missing analyze_screen tool alias
+3f65976 Trinity task completed: Найди через гугл фільм сучасний якийсь про штучний інтелект для перегля…
+abed17a fix(browser): Refine CAPTCHA detection to avoid false positives on Google search results
 026cf98 docs: update Atlas workflow documentation
 e9ec6d9 docs: Restore Context7 as Explicit Context Manager in architecture
-172cc81 docs: Hide Context7 implementation details from architecture overview
-3d9d437 docs: Update README.md to reflect Cognitive 2.0 architecture and Context7
 ```
 
 ---
@@ -560,28 +564,34 @@ Windsurf*.app/
 kinotavr.md
 ```
 
-### `.last_response.txt` (0.7 KB)
+### `.last_response.txt` (1.0 KB)
 
 ```text
 [Atlas] Final report
 
 Task: Найди через гугл фільм сучасний якийсь про штучний інтелект для перегляду його онлайн. Після того включи його на весь екран для перегляду, пересвідчись що він запущений і на весь екран.
 Outcome: completed
-Replans: 1
-Last agent: atlas
+Replans: 2
+Last agent: knowledge
 
 Last message:
-[VOICE] Не вдалося створити план.
+[VOICE] Досвід збережено. Завдання завершено.
 
 Changed files:
-- tui/themes.py
+- core/context7.py
+- core/mcp.py
+- core/trinity.py
+- core/verification.py
 
 Diff stat:
-tui/themes.py | 24 ++++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
+core/context7.py     |  50 +++++++--------
+ core/mcp.py          |   1 +
+ core/trinity.py      | 172 +++++++++++++++++++++++++++++++--------------------
+ core/verification.py |  68 +++++++++++++++-----
+ 4 files changed, 181 insertions(+), 110 deletions(-)
 
 Verification:
-- status: failed (heuristic)
+- status: unknown (no explicit signal)
 
 Tests:
 - not executed by Trinity (no deterministic test runner in pipeline)
@@ -7908,7 +7918,7 @@ def run_tetyana(llm, state):
     pass
 ```
 
-### `core/context7.py` (3.6 KB)
+### `core/context7.py` (3.7 KB)
 
 ```python
 """Context7 Layer
@@ -7937,48 +7947,46 @@ class Context7:
                 last_msg: str = "") -> str:
         """
         Prepares the final context string for the Atlas planner.
-        
-        Args:
-            rag_context: Raw context retrieved from RAG/Memory.
-            project_structure: Current file structure representation.
-            meta_config: Meta-Planner configuration (strategy, limits, etc).
-            last_msg: The specific user task or trigger message.
-            
-        Returns:
-            Formatted, budgeted, and policy-injected context string.
+        Priority: Policy > last_msg > Structure > RAG
         """
         
         # 1. Apply Policy (High Priority)
         policy_block = self._format_policy(meta_config)
         
-        # 2. Budget Tokens
-        # Priority: Policy > Structure > RAG
-        # We assume Policy is small (~500 chars)
-        # Structure can be large (~5k-10k chars)
-        # RAG acts as the filler up to limit
+        # 2. Budget Characters
+        # Conservative token count: 16k tokens -> ~48k chars (using 3 chars/token for safety)
+        TOTAL_BUDGET = 16000 * 3 
         
-        available_chars = self.MAX_CONTEXT_TOKENS * self.CHARS_PER_TOKEN
+        policy_len = len(policy_block)
+        msg_len = len(last_msg)
         
-        used_chars = len(policy_block) + len(project_structure) + len(last_msg)
-        remaining_chars = available_chars - used_chars
+        # Remaining budget for Structure and RAG
+        remaining = TOTAL_BUDGET - (policy_len + msg_len + 500) # 500 for headers/overhead
         
-        final_rag = rag_context
-        if remaining_chars < len(rag_context):
+        # Budget for structure (max 50% of remaining or 20k chars)
+        structure_budget = min(int(remaining * 0.5), 20000)
+        final_structure = project_structure
+        if len(project_structure) > structure_budget:
             if self.verbose:
-                print(f"[Context7] Budgeting RAG context: {len(rag_context)} -> {remaining_chars} chars")
-            final_rag = rag_context[:max(0, remaining_chars)] + "\n...[Context Truncated by Context7]..."
+                 print(f"[Context7] Truncating structure: {len(project_structure)} -> {structure_budget}")
+            final_structure = project_structure[:structure_budget] + "\n...[Structure Truncated]..."
+            
+        remaining -= len(final_structure)
+        
+        # Final budget for RAG
+        final_rag = rag_context
+        if len(rag_context) > remaining:
+            if self.verbose:
+                print(f"[Context7] Budgeting RAG context: {len(rag_context)} -> {max(0, remaining)} chars")
+            final_rag = rag_context[:max(0, remaining)] + "\n...[Context Truncated by Context7]..."
             
         # 3. Assemble
         sections = []
-        
-        # Section: Policy / Strategy
         sections.append(f"## 🧠 STRATEGIC POLICY (Meta-Planner)\n{policy_block}")
         
-        # Section: Structural Context
-        if project_structure:
-            sections.append(f"## 📂 PROJECT STRUCTURE\n{project_structure}")
+        if final_structure:
+            sections.append(f"## 📂 PROJECT STRUCTURE\n{final_structure}")
             
-        # Section: Retrieved Memory / RAG
         if final_rag:
             sections.append(f"## 📚 RETRIEVED KNOWLEDGE (RAG)\n{final_rag}")
             
@@ -8009,7 +8017,7 @@ class Context7:
         return {"policy": "local_heuristic"}
 ```
 
-### `core/mcp.py` (25.3 KB)
+### `core/mcp.py` (25.6 KB)
 
 ```python
 import json
@@ -8291,9 +8299,11 @@ class MCPToolRegistry:
         
         # Vision/Input
         self.register_tool("take_screenshot", take_screenshot, "Take screenshot of app or screen. Args: app_name (optional)")
+        self.register_tool("capture_screen", take_screenshot, "Capture current screen state for verification. Args: app_name (optional)")
         self.register_tool("take_burst_screenshot", take_burst_screenshot, "Take multiple screenshots in a burst. Args: app_name (optional), count (int), interval (float)")
         self.register_tool("capture_screen_region", capture_screen_region, "Capture screenshot of screen region. Args: x,y,width,height")
         self.register_tool("vision_analyze", analyze_with_copilot, "Analyze screen with AI to get coordinates and text. Args: image_path (optional), prompt (str)")
+        self.register_tool("analyze_screen", analyze_with_copilot, "Analyze screen with AI to verify state, find elements, or solve tasks. Args: image_path (optional), prompt (str)")
         self.register_tool("ocr_region", ocr_region, "OCR a screen region using vision. Args: x,y,width,height")
         self.register_tool("find_image_on_screen", find_image_on_screen, "Find an image template on screen (may be unimplemented). Args: template_path (str), tolerance (float)")
         self.register_tool("compare_images", compare_images, "Compare two images (before/after) using vision. Args: path1 (str), path2 (str), prompt (str optional)")
@@ -8658,7 +8668,7 @@ def query_memory_tool(category: str, query: str) -> Dict[str, Any]:
     return {"status": "success", "results": results}
 ```
 
-### `core/trinity.py` (85.2 KB)
+### `core/trinity.py` (87.2 KB)
 
 ```python
 from typing import Annotated, TypedDict, Literal, List, Dict, Any, Optional, Callable
@@ -8666,6 +8676,7 @@ import json
 import os
 import subprocess
 import re
+import time
 from langgraph.graph import StateGraph, END
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage
 
@@ -8776,23 +8787,42 @@ class TrinityRuntime:
         self.on_stream = on_stream
         self.workflow = self._build_graph()
 
-    def _extract_json_object(self, text: str) -> Optional[Dict[str, Any]]:
-        try:
-            s = str(text or "").strip()
-            if not s:
-                return None
-            # Try direct JSON first.
-            if s.startswith("{") and s.endswith("}"):
-                obj = json.loads(s)
-                return obj if isinstance(obj, dict) else None
-            # Best-effort extraction of the first JSON object.
-            match = re.search(r"\{.*\}", s, re.DOTALL)
-            if not match:
-                return None
-            obj = json.loads(match.group(0))
-            return obj if isinstance(obj, dict) else None
-        except Exception:
+    def _extract_json_object(self, text: str) -> Any:
+        """Helper to extract any JSON object or list from a string."""
+        if not text:
             return None
+        s = str(text).strip()
+        
+        # Try direct JSON first.
+        try:
+            return json.loads(s)
+        except Exception:
+            pass
+
+        # Try cleaning markdown code blocks
+        s_clean = re.sub(r"^```json\s*", "", s, flags=re.IGNORECASE | re.MULTILINE)
+        s_clean = re.sub(r"\s*```$", "", s_clean, flags=re.IGNORECASE | re.MULTILINE)
+        try:
+            return json.loads(s_clean.strip())
+        except Exception:
+            pass
+
+        # Best-effort extraction of the first JSON-like block.
+        # This matches from the first { or [ to the last } or ] (greedy)
+        match = re.search(r"(\{.*\}|\[.*\])", s_clean, re.DOTALL)
+        if match:
+            candidate = match.group(0)
+            try:
+                return json.loads(candidate)
+            except Exception:
+                # If greedy fails (e.g. multiple objects), try non-greedy for the first block
+                match = re.search(r"(\{.*?\}|\[.*?\])", s_clean, re.DOTALL)
+                if match:
+                    try:
+                        return json.loads(match.group(0))
+                    except Exception:
+                        pass
+        return None
 
     def _classify_task_llm(self, task: str) -> Optional[Dict[str, Any]]:
         try:
@@ -8882,12 +8912,12 @@ class TrinityRuntime:
         builder.add_conditional_edges(
             "atlas", 
             self._router, 
-            {"tetyana": "tetyana", "grisha": "grisha", "meta_planner": "meta_planner", "atlas": "atlas", "end": END}
+            {"tetyana": "tetyana", "grisha": "grisha", "meta_planner": "meta_planner", "atlas": "atlas", "knowledge": "knowledge", "end": END}
         )
         builder.add_conditional_edges(
             "tetyana", 
             self._router, 
-            {"grisha": "grisha", "meta_planner": "meta_planner", "tetyana": "tetyana", "atlas": "atlas", "end": END}
+            {"grisha": "grisha", "meta_planner": "meta_planner", "tetyana": "tetyana", "atlas": "atlas", "knowledge": "knowledge", "end": END}
         )
         builder.add_conditional_edges(
             "grisha", 
@@ -9813,29 +9843,27 @@ class TrinityRuntime:
             # Check for completion to trigger learning
             # If current is 'end', we check if we should go to 'knowledge' first
             if current == "end":
+                # ANTI-LOOP: If we were already in knowledge, just end
+                # We can check the messages or a specific state flag if we added one.
+                # But simpler: if the last message was from Grisha/Meta and contains success, go to knowledge.
+                # If the last message was from Knowledge, then it's really the end.
+                
+                # Check the message history to see who sent the last message
                 messages = state.get("messages", [])
-                if messages:
-                    last_text = messages[-1].content.lower()
-                    # If it sounds like success, go to learning
-                    if any(x in last_text for x in ["завершена", "готово", "виконано", "completed", "success"]):
-                        return "knowledge"
+                if messages and isinstance(messages[-1], AIMessage):
+                    content = messages[-1].content.lower()
+                    # If it sounds like success AND it's not a message from the knowledge node itself
+                    if any(x in content for x in ["завершена", "готово", "виконано", "completed", "success"]):
+                        # Simple heuristic: if the message doesn't mention "experience stored" (which knowledge node does)
+                        if "experience stored" not in content and "досвід збережено" not in content:
+                            return "knowledge"
 
             trace(self.logger, "router_decision", {"current": current, "next": current})
         except Exception:
             pass
         return current
 
-    def _extract_json_object(self, text: str) -> Any:
-        """Helper to extract the first JSON object or list from a string."""
-        import re
-        import json
-        try:
-            match = re.search(r"(\{.*\}|\[.*\])", text, re.DOTALL)
-            if match:
-                return json.loads(match.group(1))
-        except (json.JSONDecodeError, ValueError, Exception):
-            pass
-        return None
+    # _extract_json_object was moved to the top of the class to avoid duplication.
 
     def _knowledge_node(self, state: TrinityState):
         """Final node to extract and store knowledge (success or failure) from completion."""
@@ -9880,7 +9908,9 @@ class TrinityRuntime:
                 }
             )
             
-            if self.verbose: print(f"🧠 [Learning] {actual_status.upper()} experience stored (conf: {confidence})")
+            if self.verbose: 
+                stored_msg = f"🧠 [Learning] {actual_status.upper()} experience stored (conf: {confidence})"
+                print(stored_msg)
             
             try:
                 trace(self.logger, "knowledge_stored", {"status": actual_status, "confidence": confidence})
@@ -9890,7 +9920,11 @@ class TrinityRuntime:
         except Exception as e:
             if self.verbose: print(f"⚠️ [Learning] Error: {e}")
             
-        return {"current_agent": "end"}
+        final_msg = "[VOICE] Досвід збережено. Завдання завершено." if self.preferred_language == "uk" else "[VOICE] Experience stored. Task completed."
+        return {
+            "current_agent": "end",
+            "messages": context + [AIMessage(content=final_msg)]
+        }
 
     def _get_git_root(self) -> Optional[str]:
         try:
@@ -9917,39 +9951,47 @@ class TrinityRuntime:
             if not os.path.exists(structure_file):
                 return ""
             
+            # Read only first part of file to avoid memory issues with huge files
+            # then process carefully
             with open(structure_file, 'r', encoding='utf-8') as f:
-                content = f.read()
+                # Read up to 100kb of the file
+                content = f.read(100000)
             
-            # Extract key sections for context (Last Response, Git Log, Recent Changes)
+            # Extract key sections for context (Metadata, Program Execution Logs, Project Structure)
             lines = content.split('\n')
             context_lines = []
             current_section = None
             section_count = 0
             
             for line in lines:
-                # Extract Last Response section
-                if '## Last Response' in line:
-                    current_section = 'last_response'
-                    section_count = 0
-                    continue
-                elif '## Git Diff' in line:
-                    current_section = 'git_diff'
-                    section_count = 0
-                    continue
-                elif '## Git Log' in line:
-                    current_section = 'git_log'
-                    section_count = 0
-                    continue
-                elif line.startswith('## ') and current_section:
-                    current_section = None
+                # Each line limited to 500 chars to avoid prompt blowup
+                line = line[:500]
                 
-                # Collect lines from key sections (limit to 50 lines per section)
-                if current_section and section_count < 50:
-                    if line.strip() and not line.startswith('```'):
-                        context_lines.append(line)
-                        section_count += 1
+                # Identify sections
+                lstrip = line.strip()
+                if lstrip.startswith('## Metadata'):
+                    current_section = 'metadata'
+                    section_count = 0
+                elif '## Program Execution Logs' in lstrip:
+                    current_section = 'logs'
+                    section_count = 0
+                elif '## Project Structure' in lstrip:
+                    current_section = 'structure'
+                    section_count = 0
+                elif lstrip.startswith('## ') and current_section:
+                    # If it's a new section we don't care about, stop capturing
+                    if not any(x in lstrip for x in ['Metadata', 'Logs', 'Structure']):
+                        current_section = None
+                
+                # Collect lines (limit per section to avoid bias)
+                if current_section:
+                    if section_count < 30: # Max 30 lines per section
+                         if lstrip and not lstrip.startswith('```'):
+                            context_lines.append(line)
+                            section_count += 1
             
-            return '\n'.join(context_lines[:100])  # Limit to 100 lines total
+            # Final safety cut
+            return '\n'.join(context_lines[:150]) 
             
         except Exception as e:
             if self.verbose:
@@ -10551,7 +10593,7 @@ class TrinityRuntime:
         yield {"atlas": {"messages": final_messages, "current_agent": "end", "task_status": outcome}}
 ```
 
-### `core/verification.py` (8.4 KB)
+### `core/verification.py` (10.0 KB)
 
 ```python
 from typing import List, Dict, Any, Optional
@@ -10579,7 +10621,7 @@ class AdaptiveVerifier:
 
         rigor = (meta_config or {}).get("verification_rigor", "medium")
         
-        VERIFIER_PROMPT = f"""Ти — Grisha, агент безпеки та верифікації.
+        VERIFIER_PROMPT = """Ти — Grisha, агент безпеки та верифікації.
 Твоє завдання: Проаналізувати план дій та вставити кроки перевірки (VERIFY).
 
 ПОЛІТИКА ВЕРИФІКАЦІЇ (Rigor: {rigor}):
@@ -10591,7 +10633,7 @@ class AdaptiveVerifier:
 {{"type": "verify", "description": "Перевірити, що [результат дії]"}}
 
 Вхідний план:
-{{plan_json}}
+{plan_json}
 
 Поверни повний оновлений JSON список кроків (оригінальні кроки + вставлені VERIFY кроки).
 """
@@ -10600,39 +10642,73 @@ class AdaptiveVerifier:
         
         try:
             plan_json = json.dumps(raw_plan, ensure_ascii=False)
+            full_prompt_content = VERIFIER_PROMPT.format(rigor=rigor, plan_json=plan_json)
             prompt = ChatPromptTemplate.from_messages([
-                SystemMessage(content=VERIFIER_PROMPT.format(plan_json=plan_json)),
+                SystemMessage(content=full_prompt_content),
                 HumanMessage(content=f"Оптимізуй план згідно з політикою Rigor: {rigor}")
             ])
             
             response = self.llm.invoke(prompt.format_messages())
             content = response.content
             
-            # Simple JSON cleanup
-            content = content.replace("```json", "").replace("```", "").strip()
+            # Use improved extraction logic
+            def extract_json(text):
+                if not text: return None
+                s = text.strip()
+                try: return json.loads(s)
+                except: pass
+                
+                # Match balanced or largest block
+                # First try the whole thing without markdown
+                s_clean = s.replace("```json", "").replace("```", "").strip()
+                try: return json.loads(s_clean)
+                except: pass
+                
+                # Regex fallback
+                match = re.search(r"(\{.*\}|\[.*\])", s_clean, re.DOTALL)
+                if match:
+                    try: return json.loads(match.group(0))
+                    except: pass
+                    
+                match = re.search(r"(\{.*?\}|\[.*?\])", s_clean, re.DOTALL)
+                if match:
+                    try: return json.loads(match.group(0))
+                    except: pass
+                return None
+
+            optimized_raw = extract_json(content)
             
-            # Extract JSON list [ ... ]
-            import re
-            match = re.search(r"(\[.*\])", content, re.DOTALL)
-            if match:
-                content = match.group(1)
+            if optimized_raw is None:
+                self.logger.warning(f"[Verifier] No valid JSON found in response.")
+                raise ValueError("No JSON found")
+                
+            # Handle if LLM returned an object instead of a list
+            optimized = []
+            if isinstance(optimized_raw, list):
+                optimized = optimized_raw
+            elif isinstance(optimized_raw, dict):
+                optimized = optimized_raw.get("steps") or optimized_raw.get("plan") or []
             else:
-                self.logger.warning(f"[Verifier] No JSON array found in response: {content[:100]}")
-                raise ValueError("No JSON array found")
-                
-            optimized = json.loads(content)
-            
-            # Safety checks
-            if not isinstance(optimized, list):
-                raise ValueError("Optimized plan is not a list")
-                
+                raise ValueError(f"Unexpected optimized plan type: {type(optimized_raw)}")
+
+            # Safety check: ensure it's a list of dicts
+            clean_optimized = []
+            for item in optimized:
+                if isinstance(item, dict):
+                    clean_optimized.append(item)
+                elif isinstance(item, str):
+                    # Convert string step to dict step
+                    clean_optimized.append({"type": "execute", "description": item})
+                else:
+                    self.logger.warning(f"[Verifier] Skipping invalid item in optimized plan: {item}")
+
             # If the optimizer removed steps or returned empty (and raw wasn't), treat as failure
-            if len(optimized) < len(raw_plan):
-                 self.logger.warning(f"[Verifier] Optimization reduced step count ({len(raw_plan)} -> {len(optimized)}). Use raw plan fallback.")
+            if len(clean_optimized) < len(raw_plan) and len(raw_plan) > 0:
+                 self.logger.warning(f"[Verifier] Optimization reduced step count ({len(raw_plan)} -> {len(clean_optimized)}). Use raw plan fallback.")
                  raise ValueError("Optimized plan unexpectedly shorter than raw plan")
 
             # Fallback: if LLM didn't add verify steps, add them manually
-            enhanced = self._ensure_verify_steps(optimized, rigor=rigor)
+            enhanced = self._ensure_verify_steps(clean_optimized, rigor=rigor)
             self.logger.debug(
                 f"[Verifier] Plan optimized (Rigor: {rigor}): {len(raw_plan)} → {len(enhanced)} steps"
             )
@@ -10640,7 +10716,7 @@ class AdaptiveVerifier:
                 
         except Exception as e:
             self.logger.warning(f"[Verifier] LLM JSON parsing/optimization error: {e}")
-            self.logger.debug(f"[Verifier] Raw response: {content[:200]}...")
+            self.logger.debug(f"[Verifier] Raw response snippet: {str(content)[:200]}...")
             # Fallback: ensure verify steps manually
             enhanced = self._ensure_verify_steps(raw_plan, rigor=rigor)
             self.logger.debug(
@@ -12444,7 +12520,7 @@ cli.py: error: unrecognized arguments: Найди через гугл фільм
 test content
 ```
 
-### `project_structure_final.txt` (554.0 KB)
+### `project_structure_final.txt` (572.6 KB)
 
 ```text
 # System — Project Structure
@@ -12453,115 +12529,115 @@ test content
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 125
-- **Files Skipped**: 16172
+- **Files Skipped**: 16194
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-19 06:41:03
+- **Generated**: 2025-12-19 07:08:10
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 275, in build_app
-    input_area = VSplit(
-                 ^^^^^^^
-TypeError: VSplit.__init__() got an unexpected keyword argument 'dont_extend_height'
-2025-12-19 04:52:38 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
-2025-12-19 04:52:38 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
-2025-12-19 04:52:38 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
-2025-12-19 04:52:38 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in TUI mode
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2475, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1706, in run_tui
-    app = build_app(
-          ^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 275, in build_app
-    input_area = VSplit(
-                 ^^^^^^^
-TypeError: VSplit.__init__() got an unexpected keyword argument 'dont_extend_height'
-2025-12-19 04:52:38 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in main()
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2637, in main
-    cli_main(sys.argv[1:])
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2475, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1706, in run_tui
-    app = build_app(
-          ^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 275, in build_app
-    input_area = VSplit(
-                 ^^^^^^^
-TypeError: VSplit.__init__() got an unexpected keyword argument 'dont_extend_height'
-2025-12-19 04:52:45 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
-2025-12-19 04:52:45 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
-2025-12-19 04:52:45 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
-2025-12-19 04:52:45 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in TUI mode
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2475, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1706, in run_tui
-    app = build_app(
-          ^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 275, in build_app
-    input_area = VSplit(
-                 ^^^^^^^
-TypeError: VSplit.__init__() got an unexpected keyword argument 'dont_extend_height'
-2025-12-19 04:52:45 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in main()
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2637, in main
-    cli_main(sys.argv[1:])
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2475, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1706, in run_tui
-    app = build_app(
-          ^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 275, in build_app
-    input_area = VSplit(
-                 ^^^^^^^
-TypeError: VSplit.__init__() got an unexpected keyword argument 'dont_extend_height'
-2025-12-19 04:54:33 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
-2025-12-19 04:54:33 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
-2025-12-19 04:54:33 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
-2025-12-19 04:58:55 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
-2025-12-19 04:58:57 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
-2025-12-19 04:58:57 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
-2025-12-19 04:58:57 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
-2025-12-19 05:05:02 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
-2025-12-19 05:05:04 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
-2025-12-19 05:05:04 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
-2025-12-19 05:05:04 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
-2025-12-19 05:12:44 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
-2025-12-19 05:12:46 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
-2025-12-19 05:12:46 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
-2025-12-19 05:12:46 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
-2025-12-19 05:43:18 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
-2025-12-19 05:43:22 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
-2025-12-19 05:43:22 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
-2025-12-19 05:43:22 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
-2025-12-19 05:44:03 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
-2025-12-19 06:33:56 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
-2025-12-19 06:33:56 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
-2025-12-19 06:33:56 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
-2025-12-19 06:34:41 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_start", "task_type": "GENERAL", "requires_windsurf": false, "gui_mode": "auto", "execution_mode": "native", "recursion_limit": 500, "input_preview": "Найди через гугл фільм сучасний якийсь про штучний інтелект для перегляду його онлайн. Після того включи його на весь екран для перегляду, пересвідчись що він запущений і на весь екран."}
-2025-12-19 06:34:44 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
-2025-12-19 06:34:44 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "meta_planner", "current_agent": "atlas", "last_step_status": null, "step_count": null, "replan_count": 0}
-2025-12-19 06:34:51 | WARNING  | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:83 | [Verifier] LLM JSON parsing/optimization error: '"type"'
-2025-12-19 06:34:51 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:84 | [Verifier] Raw response: ...
-2025-12-19 06:34:51 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:87 | [Verifier] Plan fallback: 8 → 8 steps (added 0 verify steps)
-2025-12-19 06:34:51 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "tetyana", "next": "tetyana"}
-2025-12-19 06:34:51 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "tetyana", "last_step_status": null, "step_count": 1, "replan_count": 1}
-2025-12-19 06:34:51 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "GENERAL", "requires_windsurf": false, "dev_edit_mode": "cli", "execution_mode": "native", "gui_mode": "auto", "gui_fallback_attempted": false, "plan_len": 8, "last_msg_preview": "[VOICE] Tetyana, [VOICE] Відкрити браузер і перейти на Google..\n\n[Atlas Debug] Step: [VOICE] Відкрити браузер і перейти на Google.. Next: tetyana"}
-2025-12-19 06:34:53 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 1, "content_preview": ""}
-2025-12-19 06:34:56 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli"}
-2025-12-19 06:34:56 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
-2025-12-19 06:34:56 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "tetyana", "current_agent": "grisha", "last_step_status": "success", "step_count": null, "replan_count": 1}
-2025-12-19 06:34:56 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 1, "replan_count": 1, "plan_len": 8, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "native", "last_msg_preview": "\n\nTool Results:\nResult for browser_open_url: \"{\\\"status\\\": \\\"success\\\", \\\"url\\\": \\\"https://www.google.com/\\\", \\\"title\\\": \\\"Google\\\", \\\"has_captcha\\\": true}\"\n\n[STEP_COMPLETED] Всі інструменти виконано "}
-2025-12-19 06:34:56 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": false, "changed_files": [".agent/workflows/atlas.md"], "skip": true}
-2025-12-19 06:34:56 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 9831}
-2025-12-19 06:34:58 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "[VOICE] The browser successfully opened the URL \"https://www.google.com/\" with the title \"Google\". However, the page contains a CAPTCHA.\n\n[VERIFIED]"}
-2025-12-19 06:34:58 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "atlas", "last_step_status": "success", "uncertain_streak": 0}
-2025-12-19 06:34:58 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
+2025-12-19 06:48:03 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "tetyana", "next": "tetyana"}
+2025-12-19 06:48:03 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "meta_planner", "current_agent": "tetyana", "last_step_status": null, "step_count": 6, "replan_count": 2}
+2025-12-19 06:48:03 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "GENERAL", "requires_windsurf": false, "dev_edit_mode": "cli", "execution_mode": "gui", "gui_mode": "auto", "gui_fallback_attempted": true, "plan_len": 3, "last_msg_preview": "[VOICE] Tetyana, Запустити фільм на сторінці..\n\n[Atlas Debug] Step: Запустити фільм на сторінці.. Next: tetyana"}
+2025-12-19 06:48:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 1, "content_preview": ""}
+2025-12-19 06:48:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "gui", "gui_mode": "auto", "dev_edit_mode": "cli"}
+2025-12-19 06:48:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
+2025-12-19 06:48:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "tetyana", "current_agent": "grisha", "last_step_status": "success", "step_count": null, "replan_count": 2}
+2025-12-19 06:48:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 6, "replan_count": 2, "plan_len": 3, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "gui", "last_msg_preview": "\n\nTool Results:\nResult for pyautogui.click_mouse: {\n  \"tool\": \"click_mouse\",\n  \"status\": \"success\",\n  \"output\": \"{\\\"status\\\":\\\"success\\\",\\\"message\\\":\\\"Mouse clicked at current position\\\"}\",\n  \"raw\": \""}
+2025-12-19 06:48:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": true, "changed_files": ["core/mcp.py", "core/trinity.py", "core/verification.py"], "skip": true}
+2025-12-19 06:48:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 10247}
+2025-12-19 06:48:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "[VOICE] The tool executed successfully, and the mouse was clicked at its current position.\n\n[VERIFIED]"}
+2025-12-19 06:48:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "meta_planner", "last_step_status": "success", "uncertain_streak": 0}
+2025-12-19 06:48:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "meta_planner", "next": "meta_planner"}
+2025-12-19 06:48:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "meta_planner", "last_step_status": "success", "step_count": null, "replan_count": 2}
+2025-12-19 06:48:09 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "tetyana", "next": "tetyana"}
+2025-12-19 06:48:09 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "meta_planner", "current_agent": "tetyana", "last_step_status": null, "step_count": 7, "replan_count": 2}
+2025-12-19 06:48:09 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "GENERAL", "requires_windsurf": false, "dev_edit_mode": "cli", "execution_mode": "gui", "gui_mode": "auto", "gui_fallback_attempted": true, "plan_len": 2, "last_msg_preview": "[VOICE] Tetyana, Переключити відео у повноекранний режим..\n\n[Atlas Debug] Step: Переключити відео у повноекранний режим.. Next: tetyana"}
+2025-12-19 06:48:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 1, "content_preview": ""}
+2025-12-19 06:48:11 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "gui", "gui_mode": "auto", "dev_edit_mode": "cli"}
+2025-12-19 06:48:11 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
+2025-12-19 06:48:11 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "tetyana", "current_agent": "grisha", "last_step_status": "success", "step_count": null, "replan_count": 2}
+2025-12-19 06:48:11 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 7, "replan_count": 2, "plan_len": 2, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "gui", "last_msg_preview": "\n\nTool Results:\nResult for pyautogui.hotkey: {\n  \"tool\": \"hotkey\",\n  \"status\": \"success\",\n  \"output\": \"{\\\"status\\\":\\\"success\\\",\\\"message\\\":\\\"Pressed hotkey combination: f\\\"}\",\n  \"raw\": \"meta=None cont"}
+2025-12-19 06:48:11 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": true, "changed_files": ["core/mcp.py", "core/trinity.py", "core/verification.py"], "skip": true}
+2025-12-19 06:48:11 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 10225}
+2025-12-19 06:48:13 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "[VOICE] The hotkey combination \"f\" was successfully pressed.\n\n[VERIFIED]"}
+2025-12-19 06:48:13 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "meta_planner", "last_step_status": "success", "uncertain_streak": 0}
+2025-12-19 06:48:13 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "meta_planner", "next": "meta_planner"}
+2025-12-19 06:48:13 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "meta_planner", "last_step_status": "success", "step_count": null, "replan_count": 2}
+2025-12-19 06:48:13 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "tetyana", "next": "tetyana"}
+2025-12-19 06:48:13 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "meta_planner", "current_agent": "tetyana", "last_step_status": null, "step_count": 8, "replan_count": 2}
+2025-12-19 06:48:13 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "GENERAL", "requires_windsurf": false, "dev_edit_mode": "cli", "execution_mode": "gui", "gui_mode": "auto", "gui_fallback_attempted": true, "plan_len": 1, "last_msg_preview": "[VOICE] Tetyana, Перевірити, що фільм запущений і відображається на весь екран..\n\n[Atlas Debug] Step: Перевірити, що фільм запущений і відображається на весь екран.. Next: tetyana"}
+2025-12-19 06:48:15 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
+2025-12-19 06:48:15 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 2, "content_preview": ""}
+2025-12-19 06:54:53 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: ['--help']
+2025-12-19 07:00:35 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
+2025-12-19 07:00:35 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
+2025-12-19 07:00:35 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
+2025-12-19 07:00:50 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_start", "task_type": "GENERAL", "requires_windsurf": false, "gui_mode": "auto", "execution_mode": "native", "recursion_limit": 500, "input_preview": "Найди через гугл фільм сучасний якийсь про штучний інтелект для перегляду його онлайн. Після того включи його на весь екран для перегляду, пересвідчись що він запущений і на весь екран."}
+2025-12-19 07:00:53 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
+2025-12-19 07:00:53 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "meta_planner", "current_agent": "atlas", "last_step_status": null, "step_count": null, "replan_count": 0}
+2025-12-19 07:00:59 | WARNING  | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:119 | [Verifier] LLM JSON parsing/optimization error: '"type"'
+2025-12-19 07:00:59 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:120 | [Verifier] Raw response snippet: ...
+2025-12-19 07:00:59 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:123 | [Verifier] Plan fallback: 5 → 5 steps (added 0 verify steps)
+2025-12-19 07:00:59 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "tetyana", "next": "tetyana"}
+2025-12-19 07:00:59 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "tetyana", "last_step_status": null, "step_count": 1, "replan_count": 1}
+2025-12-19 07:00:59 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "GENERAL", "requires_windsurf": false, "dev_edit_mode": "cli", "execution_mode": "native", "gui_mode": "auto", "gui_fallback_attempted": false, "plan_len": 5, "last_msg_preview": "[VOICE] Tetyana, [VOICE] Відкрити Google і ввести запит 'сучасний фільм про штучний інтелект онлайн'..\n\n[Atlas Debug] Step: [VOICE] Відкрити Google і ввести запит 'сучасний фільм про штучний інтелект "}
+2025-12-19 07:01:01 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 1, "content_preview": ""}
+2025-12-19 07:01:03 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli"}
+2025-12-19 07:01:03 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
+2025-12-19 07:01:03 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "tetyana", "current_agent": "grisha", "last_step_status": "success", "step_count": null, "replan_count": 1}
+2025-12-19 07:01:03 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 1, "replan_count": 1, "plan_len": 5, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "native", "last_msg_preview": "\n\nTool Results:\nResult for browser_open_url: \"{\\\"status\\\": \\\"success\\\", \\\"url\\\": \\\"https://www.google.com/\\\", \\\"title\\\": \\\"Google\\\", \\\"has_captcha\\\": false}\"\n\n[STEP_COMPLETED] Всі інструменти виконано"}
+2025-12-19 07:01:03 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": true, "changed_files": ["core/context7.py", "core/mcp.py", "core/trinity.py", "core/verification.py"], "skip": true}
+2025-12-19 07:01:03 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 9924}
+2025-12-19 07:01:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "[VOICE] The browser successfully opened the URL \"https://www.google.com/\" with the title \"Google\". There is no CAPTCHA present.\n\n[VERIFIED]"}
+2025-12-19 07:01:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "meta_planner", "last_step_status": "uncertain", "uncertain_streak": 1}
+2025-12-19 07:01:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "meta_planner", "next": "meta_planner"}
+2025-12-19 07:01:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "meta_planner", "last_step_status": "uncertain", "step_count": null, "replan_count": 1}
+2025-12-19 07:01:09 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
+2025-12-19 07:01:09 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "meta_planner", "current_agent": "atlas", "last_step_status": null, "step_count": null, "replan_count": 1}
+2025-12-19 07:01:12 | WARNING  | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:119 | [Verifier] LLM JSON parsing/optimization error: '"type"'
+2025-12-19 07:01:12 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:120 | [Verifier] Raw response snippet: ...
+2025-12-19 07:01:12 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:123 | [Verifier] Plan fallback: 2 → 2 steps (added 0 verify steps)
+2025-12-19 07:01:12 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "tetyana", "next": "tetyana"}
+2025-12-19 07:01:12 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "tetyana", "last_step_status": null, "step_count": 2, "replan_count": 2}
+2025-12-19 07:01:12 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "GENERAL", "requires_windsurf": false, "dev_edit_mode": "cli", "execution_mode": "native", "gui_mode": "auto", "gui_fallback_attempted": false, "plan_len": 2, "last_msg_preview": "[VOICE] Tetyana, Ввести запит 'сучасний фільм про штучний інтелект онлайн' у пошуковий рядок Google..\n\n[Atlas Debug] Step: Ввести запит 'сучасний фільм про штучний інтелект онлайн' у пошуковий рядок G"}
+2025-12-19 07:01:14 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 1, "content_preview": ""}
+2025-12-19 07:01:14 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_gui_fallback", "from": "native", "to": "gui"}
+2025-12-19 07:01:14 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "tetyana", "next": "tetyana"}
+2025-12-19 07:01:14 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "tetyana", "current_agent": "tetyana", "last_step_status": "failed", "step_count": null, "replan_count": 2}
+2025-12-19 07:01:14 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "GENERAL", "requires_windsurf": false, "dev_edit_mode": "cli", "execution_mode": "gui", "gui_mode": "auto", "gui_fallback_attempted": true, "plan_len": 2, "last_msg_preview": "[VOICE] Native не спрацював. Перемикаюся на GUI режим."}
+2025-12-19 07:01:17 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 1, "content_preview": ""}
+2025-12-19 07:01:17 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "gui", "gui_mode": "auto", "dev_edit_mode": "cli"}
+2025-12-19 07:01:17 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
+2025-12-19 07:01:17 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "tetyana", "current_agent": "grisha", "last_step_status": "success", "step_count": null, "replan_count": 2}
+2025-12-19 07:01:17 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 2, "replan_count": 2, "plan_len": 2, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "gui", "last_msg_preview": "\n\nTool Results:\nResult for pyautogui.get_screen_size: {\n  \"tool\": \"get_screen_size\",\n  \"status\": \"success\",\n  \"output\": \"{\\\"status\\\":\\\"success\\\",\\\"message\\\":\\\"Screen size: Size(width=1920, height=1080"}
+2025-12-19 07:01:17 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": true, "changed_files": ["core/context7.py", "core/mcp.py", "core/trinity.py", "core/verification.py"], "skip": true}
+2025-12-19 07:01:17 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 10282}
+2025-12-19 07:01:19 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "[VOICE] The screen size has been successfully retrieved, showing dimensions of 1920x1080 pixels.\n\n[VERIFIED]"}
+2025-12-19 07:01:19 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "meta_planner", "last_step_status": "success", "uncertain_streak": 0}
+2025-12-19 07:01:19 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "meta_planner", "next": "meta_planner"}
+2025-12-19 07:01:19 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "meta_planner", "last_step_status": "success", "step_count": null, "replan_count": 2}
+2025-12-19 07:01:19 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "tetyana", "next": "tetyana"}
+2025-12-19 07:01:19 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "meta_planner", "current_agent": "tetyana", "last_step_status": null, "step_count": 3, "replan_count": 2}
+2025-12-19 07:01:19 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "GENERAL", "requires_windsurf": false, "dev_edit_mode": "cli", "execution_mode": "gui", "gui_mode": "auto", "gui_fallback_attempted": true, "plan_len": 1, "last_msg_preview": "[VOICE] Tetyana, Перевірити, чи запит успішно введено в пошуковий рядок..\n\n[Atlas Debug] Step: Перевірити, чи запит успішно введено в пошуковий рядок.. Next: tetyana"}
+2025-12-19 07:01:21 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 1, "content_preview": "Перевірте, чи текст у буфері обміну відповідає введеному запиту."}
+2025-12-19 07:01:21 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "gui", "gui_mode": "auto", "dev_edit_mode": "cli"}
+2025-12-19 07:01:21 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
+2025-12-19 07:01:21 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "tetyana", "current_agent": "grisha", "last_step_status": "success", "step_count": null, "replan_count": 2}
+2025-12-19 07:01:21 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 3, "replan_count": 2, "plan_len": 1, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "gui", "last_msg_preview": "Перевірте, чи текст у буфері обміну відповідає введеному запиту.\n\nTool Results:\nResult for get_clipboard: {\n  \"tool\": \"get_clipboard\",\n  \"status\": \"success\",\n  \"content\": \"Найди через гугл фільм сучас"}
+2025-12-19 07:01:21 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": true, "changed_files": ["core/context7.py", "core/mcp.py", "core/trinity.py", "core/verification.py"], "skip": true}
+2025-12-19 07:01:21 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 10118}
+2025-12-19 07:01:23 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "[VOICE] Текст у буфері обміну: \"Найди через гугл фільм сучасний якийсь про штучний інтелект для перегляду його онлайн. Після того включи його на весь екран для перегляду, пересвідчись що він запущений"}
+2025-12-19 07:01:24 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "meta_planner", "last_step_status": "success", "uncertain_streak": 0}
+2025-12-19 07:01:24 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "meta_planner", "next": "meta_planner"}
+2025-12-19 07:01:24 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "meta_planner", "last_step_status": "success", "step_count": null, "replan_count": 2}
+2025-12-19 07:01:25 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "meta_planner", "current_agent": "end", "last_step_status": null, "step_count": null, "replan_count": 2}
+2025-12-19 07:01:25 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "knowledge_stored", "status": "success", "confidence": 0.8}
+2025-12-19 07:01:25 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "end", "next": "end"}
+2025-12-19 07:01:25 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "knowledge", "current_agent": "end", "last_step_status": null, "step_count": null, "replan_count": 2}
+2025-12-19 07:01:26 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_end", "outcome": "completed", "last_agent": "knowledge", "replan_count": 2}
 ```
 
 ---
@@ -12572,21 +12648,27 @@ TypeError: VSplit.__init__() got an unexpected keyword argument 'dont_extend_hei
 
 Task: Найди через гугл фільм сучасний якийсь про штучний інтелект для перегляду його онлайн. Після того включи його на весь екран для перегляду, пересвідчись що він запущений і на весь екран.
 Outcome: completed
-Replans: 1
-Last agent: atlas
+Replans: 2
+Last agent: knowledge
 
 Last message:
-[VOICE] Не вдалося створити план.
+[VOICE] Досвід збережено. Завдання завершено.
 
 Changed files:
-- tui/themes.py
+- core/context7.py
+- core/mcp.py
+- core/trinity.py
+- core/verification.py
 
 Diff stat:
-tui/themes.py | 24 ++++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
+core/context7.py     |  50 +++++++--------
+ core/mcp.py          |   1 +
+ core/trinity.py      | 172 +++++++++++++++++++++++++++++++--------------------
+ core/verification.py |  68 +++++++++++++++-----
+ 4 files changed, 181 insertions(+), 110 deletions(-)
 
 Verification:
-- status: failed (heuristic)
+- status: unknown (no explicit signal)
 
 Tests:
 - not executed by Trinity (no deterministic test runner in pipeline)
@@ -12597,20 +12679,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- core/trinity.py             |    34 +-
- core/verification.py        |     7 +-
- project_structure_final.txt | 39039 +-----------------------------------------
- 3 files changed, 26 insertions(+), 39054 deletions(-)
+ project_structure_final.txt | 39277 +-----------------------------------------
+ 1 file changed, 102 insertions(+), 39175 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-4b4c970 fix(browser): Refine CAPTCHA detection to avoid false positives on Google search results
+9b8d9bb Fix KeyError in Verifier radiation and register missing analyze_screen tool alias
+3f65976 Trinity task completed: Найди через гугл фільм сучасний якийсь про штучний інтелект для перегля…
+abed17a fix(browser): Refine CAPTCHA detection to avoid false positives on Google search results
 026cf98 docs: update Atlas workflow documentation
 e9ec6d9 docs: Restore Context7 as Explicit Context Manager in architecture
-172cc81 docs: Hide Context7 implementation details from architecture overview
-3d9d437 docs: Update README.md to reflect Cognitive 2.0 architecture and Context7
 ```
 
 ---
@@ -13009,28 +13089,34 @@ Windsurf*.app/
 kinotavr.md
 ```
 
-### `.last_response.txt` (0.7 KB)
+### `.last_response.txt` (1.0 KB)
 
 ```text
 [Atlas] Final report
 
 Task: Найди через гугл фільм сучасний якийсь про штучний інтелект для перегляду його онлайн. Після того включи його на весь екран для перегляду, пересвідчись що він запущений і на весь екран.
 Outcome: completed
-Replans: 1
-Last agent: atlas
+Replans: 2
+Last agent: knowledge
 
 Last message:
-[VOICE] Не вдалося створити план.
+[VOICE] Досвід збережено. Завдання завершено.
 
 Changed files:
-- tui/themes.py
+- core/context7.py
+- core/mcp.py
+- core/trinity.py
+- core/verification.py
 
 Diff stat:
-tui/themes.py | 24 ++++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
+core/context7.py     |  50 +++++++--------
+ core/mcp.py          |   1 +
+ core/trinity.py      | 172 +++++++++++++++++++++++++++++++--------------------
+ core/verification.py |  68 +++++++++++++++-----
+ 4 files changed, 181 insertions(+), 110 deletions(-)
 
 Verification:
-- status: failed (heuristic)
+- status: unknown (no explicit signal)
 
 Tests:
 - not executed by Trinity (no deterministic test runner in pipeline)
@@ -20357,7 +20443,7 @@ def run_tetyana(llm, state):
     pass
 ```
 
-### `core/context7.py` (3.6 KB)
+### `core/context7.py` (3.7 KB)
 
 ```python
 """Context7 Layer
@@ -20386,48 +20472,46 @@ class Context7:
                 last_msg: str = "") -> str:
         """
         Prepares the final context string for the Atlas planner.
-        
-        Args:
-            rag_context: Raw context retrieved from RAG/Memory.
-            project_structure: Current file structure representation.
-            meta_config: Meta-Planner configuration (strategy, limits, etc).
-            last_msg: The specific user task or trigger message.
-            
-        Returns:
-            Formatted, budgeted, and policy-injected context string.
+        Priority: Policy > last_msg > Structure > RAG
         """
         
         # 1. Apply Policy (High Priority)
         policy_block = self._format_policy(meta_config)
         
-        # 2. Budget Tokens
-        # Priority: Policy > Structure > RAG
-        # We assume Policy is small (~500 chars)
-        # Structure can be large (~5k-10k chars)
-        # RAG acts as the filler up to limit
+        # 2. Budget Characters
+        # Conservative token count: 16k tokens -> ~48k chars (using 3 chars/token for safety)
+        TOTAL_BUDGET = 16000 * 3 
         
-        available_chars = self.MAX_CONTEXT_TOKENS * self.CHARS_PER_TOKEN
+        policy_len = len(policy_block)
+        msg_len = len(last_msg)
         
-        used_chars = len(policy_block) + len(project_structure) + len(last_msg)
-        remaining_chars = available_chars - used_chars
+        # Remaining budget for Structure and RAG
+        remaining = TOTAL_BUDGET - (policy_len + msg_len + 500) # 500 for headers/overhead
         
-        final_rag = rag_context
-        if remaining_chars < len(rag_context):
+        # Budget for structure (max 50% of remaining or 20k chars)
+        structure_budget = min(int(remaining * 0.5), 20000)
+        final_structure = project_structure
+        if len(project_structure) > structure_budget:
             if self.verbose:
-                print(f"[Context7] Budgeting RAG context: {len(rag_context)} -> {remaining_chars} chars")
-            final_rag = rag_context[:max(0, remaining_chars)] + "\n...[Context Truncated by Context7]..."
+                 print(f"[Context7] Truncating structure: {len(project_structure)} -> {structure_budget}")
+            final_structure = project_structure[:structure_budget] + "\n...[Structure Truncated]..."
+            
+        remaining -= len(final_structure)
+        
+        # Final budget for RAG
+        final_rag = rag_context
+        if len(rag_context) > remaining:
+            if self.verbose:
+                print(f"[Context7] Budgeting RAG context: {len(rag_context)} -> {max(0, remaining)} chars")
+            final_rag = rag_context[:max(0, remaining)] + "\n...[Context Truncated by Context7]..."
             
         # 3. Assemble
         sections = []
-        
-        # Section: Policy / Strategy
         sections.append(f"## 🧠 STRATEGIC POLICY (Meta-Planner)\n{policy_block}")
         
-        # Section: Structural Context
-        if project_structure:
-            sections.append(f"## 📂 PROJECT STRUCTURE\n{project_structure}")
+        if final_structure:
+            sections.append(f"## 📂 PROJECT STRUCTURE\n{final_structure}")
             
-        # Section: Retrieved Memory / RAG
         if final_rag:
             sections.append(f"## 📚 RETRIEVED KNOWLEDGE (RAG)\n{final_rag}")
             
@@ -20458,7 +20542,7 @@ class Context7:
         return {"policy": "local_heuristic"}
 ```
 
-### `core/mcp.py` (25.3 KB)
+### `core/mcp.py` (25.6 KB)
 
 ```python
 import json
@@ -20740,9 +20824,11 @@ class MCPToolRegistry:
         
         # Vision/Input
         self.register_tool("take_screenshot", take_screenshot, "Take screenshot of app or screen. Args: app_name (optional)")
+        self.register_tool("capture_screen", take_screenshot, "Capture current screen state for verification. Args: app_name (optional)")
         self.register_tool("take_burst_screenshot", take_burst_screenshot, "Take multiple screenshots in a burst. Args: app_name (optional), count (int), interval (float)")
         self.register_tool("capture_screen_region", capture_screen_region, "Capture screenshot of screen region. Args: x,y,width,height")
         self.register_tool("vision_analyze", analyze_with_copilot, "Analyze screen with AI to get coordinates and text. Args: image_path (optional), prompt (str)")
+        self.register_tool("analyze_screen", analyze_with_copilot, "Analyze screen with AI to verify state, find elements, or solve tasks. Args: image_path (optional), prompt (str)")
         self.register_tool("ocr_region", ocr_region, "OCR a screen region using vision. Args: x,y,width,height")
         self.register_tool("find_image_on_screen", find_image_on_screen, "Find an image template on screen (may be unimplemented). Args: template_path (str), tolerance (float)")
         self.register_tool("compare_images", compare_images, "Compare two images (before/after) using vision. Args: path1 (str), path2 (str), prompt (str optional)")
@@ -21107,7 +21193,7 @@ def query_memory_tool(category: str, query: str) -> Dict[str, Any]:
     return {"status": "success", "results": results}
 ```
 
-### `core/trinity.py` (85.2 KB)
+### `core/trinity.py` (87.2 KB)
 
 ```python
 from typing import Annotated, TypedDict, Literal, List, Dict, Any, Optional, Callable
@@ -21115,6 +21201,7 @@ import json
 import os
 import subprocess
 import re
+import time
 from langgraph.graph import StateGraph, END
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage
 
@@ -21225,23 +21312,42 @@ class TrinityRuntime:
         self.on_stream = on_stream
         self.workflow = self._build_graph()
 
-    def _extract_json_object(self, text: str) -> Optional[Dict[str, Any]]:
-        try:
-            s = str(text or "").strip()
-            if not s:
-                return None
-            # Try direct JSON first.
-            if s.startswith("{") and s.endswith("}"):
-                obj = json.loads(s)
-                return obj if isinstance(obj, dict) else None
-            # Best-effort extraction of the first JSON object.
-            match = re.search(r"\{.*\}", s, re.DOTALL)
-            if not match:
-                return None
-            obj = json.loads(match.group(0))
-            return obj if isinstance(obj, dict) else None
-        except Exception:
+    def _extract_json_object(self, text: str) -> Any:
+        """Helper to extract any JSON object or list from a string."""
+        if not text:
             return None
+        s = str(text).strip()
+        
+        # Try direct JSON first.
+        try:
+            return json.loads(s)
+        except Exception:
+            pass
+
+        # Try cleaning markdown code blocks
+        s_clean = re.sub(r"^```json\s*", "", s, flags=re.IGNORECASE | re.MULTILINE)
+        s_clean = re.sub(r"\s*```$", "", s_clean, flags=re.IGNORECASE | re.MULTILINE)
+        try:
+            return json.loads(s_clean.strip())
+        except Exception:
+            pass
+
+        # Best-effort extraction of the first JSON-like block.
+        # This matches from the first { or [ to the last } or ] (greedy)
+        match = re.search(r"(\{.*\}|\[.*\])", s_clean, re.DOTALL)
+        if match:
+            candidate = match.group(0)
+            try:
+                return json.loads(candidate)
+            except Exception:
+                # If greedy fails (e.g. multiple objects), try non-greedy for the first block
+                match = re.search(r"(\{.*?\}|\[.*?\])", s_clean, re.DOTALL)
+                if match:
+                    try:
+                        return json.loads(match.group(0))
+                    except Exception:
+                        pass
+        return None
 
     def _classify_task_llm(self, task: str) -> Optional[Dict[str, Any]]:
         try:
@@ -21331,12 +21437,12 @@ class TrinityRuntime:
         builder.add_conditional_edges(
             "atlas", 
             self._router, 
-            {"tetyana": "tetyana", "grisha": "grisha", "meta_planner": "meta_planner", "atlas": "atlas", "end": END}
+            {"tetyana": "tetyana", "grisha": "grisha", "meta_planner": "meta_planner", "atlas": "atlas", "knowledge": "knowledge", "end": END}
         )
         builder.add_conditional_edges(
             "tetyana", 
             self._router, 
-            {"grisha": "grisha", "meta_planner": "meta_planner", "tetyana": "tetyana", "atlas": "atlas", "end": END}
+            {"grisha": "grisha", "meta_planner": "meta_planner", "tetyana": "tetyana", "atlas": "atlas", "knowledge": "knowledge", "end": END}
         )
         builder.add_conditional_edges(
             "grisha", 
@@ -22262,29 +22368,27 @@ class TrinityRuntime:
             # Check for completion to trigger learning
             # If current is 'end', we check if we should go to 'knowledge' first
             if current == "end":
+                # ANTI-LOOP: If we were already in knowledge, just end
+                # We can check the messages or a specific state flag if we added one.
+                # But simpler: if the last message was from Grisha/Meta and contains success, go to knowledge.
+                # If the last message was from Knowledge, then it's really the end.
+                
+                # Check the message history to see who sent the last message
                 messages = state.get("messages", [])
-                if messages:
-                    last_text = messages[-1].content.lower()
-                    # If it sounds like success, go to learning
-                    if any(x in last_text for x in ["завершена", "готово", "виконано", "completed", "success"]):
-                        return "knowledge"
+                if messages and isinstance(messages[-1], AIMessage):
+                    content = messages[-1].content.lower()
+                    # If it sounds like success AND it's not a message from the knowledge node itself
+                    if any(x in content for x in ["завершена", "готово", "виконано", "completed", "success"]):
+                        # Simple heuristic: if the message doesn't mention "experience stored" (which knowledge node does)
+                        if "experience stored" not in content and "досвід збережено" not in content:
+                            return "knowledge"
 
             trace(self.logger, "router_decision", {"current": current, "next": current})
         except Exception:
             pass
         return current
 
-    def _extract_json_object(self, text: str) -> Any:
-        """Helper to extract the first JSON object or list from a string."""
-        import re
-        import json
-        try:
-            match = re.search(r"(\{.*\}|\[.*\])", text, re.DOTALL)
-            if match:
-                return json.loads(match.group(1))
-        except (json.JSONDecodeError, ValueError, Exception):
-            pass
-        return None
+    # _extract_json_object was moved to the top of the class to avoid duplication.
 
     def _knowledge_node(self, state: TrinityState):
         """Final node to extract and store knowledge (success or failure) from completion."""
@@ -22329,7 +22433,9 @@ class TrinityRuntime:
                 }
             )
             
-            if self.verbose: print(f"🧠 [Learning] {actual_status.upper()} experience stored (conf: {confidence})")
+            if self.verbose: 
+                stored_msg = f"🧠 [Learning] {actual_status.upper()} experience stored (conf: {confidence})"
+                print(stored_msg)
             
             try:
                 trace(self.logger, "knowledge_stored", {"status": actual_status, "confidence": confidence})
@@ -22339,7 +22445,11 @@ class TrinityRuntime:
         except Exception as e:
             if self.verbose: print(f"⚠️ [Learning] Error: {e}")
             
-        return {"current_agent": "end"}
+        final_msg = "[VOICE] Досвід збережено. Завдання завершено." if self.preferred_language == "uk" else "[VOICE] Experience stored. Task completed."
+        return {
+            "current_agent": "end",
+            "messages": context + [AIMessage(content=final_msg)]
+        }
 
     def _get_git_root(self) -> Optional[str]:
         try:
@@ -22366,39 +22476,47 @@ class TrinityRuntime:
             if not os.path.exists(structure_file):
                 return ""
             
+            # Read only first part of file to avoid memory issues with huge files
+            # then process carefully
             with open(structure_file, 'r', encoding='utf-8') as f:
-                content = f.read()
+                # Read up to 100kb of the file
+                content = f.read(100000)
             
-            # Extract key sections for context (Last Response, Git Log, Recent Changes)
+            # Extract key sections for context (Metadata, Program Execution Logs, Project Structure)
             lines = content.split('\n')
             context_lines = []
             current_section = None
             section_count = 0
             
             for line in lines:
-                # Extract Last Response section
-                if '## Last Response' in line:
-                    current_section = 'last_response'
-                    section_count = 0
-                    continue
-                elif '## Git Diff' in line:
-                    current_section = 'git_diff'
-                    section_count = 0
-                    continue
-                elif '## Git Log' in line:
-                    current_section = 'git_log'
-                    section_count = 0
-                    continue
-                elif line.startswith('## ') and current_section:
-                    current_section = None
+                # Each line limited to 500 chars to avoid prompt blowup
+                line = line[:500]
                 
-                # Collect lines from key sections (limit to 50 lines per section)
-                if current_section and section_count < 50:
-                    if line.strip() and not line.startswith('```'):
-                        context_lines.append(line)
-                        section_count += 1
+                # Identify sections
+                lstrip = line.strip()
+                if lstrip.startswith('## Metadata'):
+                    current_section = 'metadata'
+                    section_count = 0
+                elif '## Program Execution Logs' in lstrip:
+                    current_section = 'logs'
+                    section_count = 0
+                elif '## Project Structure' in lstrip:
+                    current_section = 'structure'
+                    section_count = 0
+                elif lstrip.startswith('## ') and current_section:
+                    # If it's a new section we don't care about, stop capturing
+                    if not any(x in lstrip for x in ['Metadata', 'Logs', 'Structure']):
+                        current_section = None
+                
+                # Collect lines (limit per section to avoid bias)
+                if current_section:
+                    if section_count < 30: # Max 30 lines per section
+                         if lstrip and not lstrip.startswith('```'):
+                            context_lines.append(line)
+                            section_count += 1
             
-            return '\n'.join(context_lines[:100])  # Limit to 100 lines total
+            # Final safety cut
+            return '\n'.join(context_lines[:150]) 
             
         except Exception as e:
             if self.verbose:
@@ -23000,7 +23118,7 @@ class TrinityRuntime:
         yield {"atlas": {"messages": final_messages, "current_agent": "end", "task_status": outcome}}
 ```
 
-### `core/verification.py` (8.4 KB)
+### `core/verification.py` (10.0 KB)
 
 ```python
 from typing import List, Dict, Any, Optional
@@ -23028,7 +23146,7 @@ class AdaptiveVerifier:
 
         rigor = (meta_config or {}).get("verification_rigor", "medium")
         
-        VERIFIER_PROMPT = f"""Ти — Grisha, агент безпеки та верифікації.
+        VERIFIER_PROMPT = """Ти — Grisha, агент безпеки та верифікації.
 Твоє завдання: Проаналізувати план дій та вставити кроки перевірки (VERIFY).
 
 ПОЛІТИКА ВЕРИФІКАЦІЇ (Rigor: {rigor}):
@@ -23040,7 +23158,7 @@ class AdaptiveVerifier:
 {{"type": "verify", "description": "Перевірити, що [результат дії]"}}
 
 Вхідний план:
-{{plan_json}}
+{plan_json}
 
 Поверни повний оновлений JSON список кроків (оригінальні кроки + вставлені VERIFY кроки).
 """
@@ -23049,39 +23167,73 @@ class AdaptiveVerifier:
         
         try:
             plan_json = json.dumps(raw_plan, ensure_ascii=False)
+            full_prompt_content = VERIFIER_PROMPT.format(rigor=rigor, plan_json=plan_json)
             prompt = ChatPromptTemplate.from_messages([
-                SystemMessage(content=VERIFIER_PROMPT.format(plan_json=plan_json)),
+                SystemMessage(content=full_prompt_content),
                 HumanMessage(content=f"Оптимізуй план згідно з політикою Rigor: {rigor}")
             ])
             
             response = self.llm.invoke(prompt.format_messages())
             content = response.content
             
-            # Simple JSON cleanup
-            content = content.replace("```json", "").replace("```", "").strip()
+            # Use improved extraction logic
+            def extract_json(text):
+                if not text: return None
+                s = text.strip()
+                try: return json.loads(s)
+                except: pass
+                
+                # Match balanced or largest block
+                # First try the whole thing without markdown
+                s_clean = s.replace("```json", "").replace("```", "").strip()
+                try: return json.loads(s_clean)
+                except: pass
+                
+                # Regex fallback
+                match = re.search(r"(\{.*\}|\[.*\])", s_clean, re.DOTALL)
+                if match:
+                    try: return json.loads(match.group(0))
+                    except: pass
+                    
+                match = re.search(r"(\{.*?\}|\[.*?\])", s_clean, re.DOTALL)
+                if match:
+                    try: return json.loads(match.group(0))
+                    except: pass
+                return None
+
+            optimized_raw = extract_json(content)
             
-            # Extract JSON list [ ... ]
-            import re
-            match = re.search(r"(\[.*\])", content, re.DOTALL)
-            if match:
-                content = match.group(1)
+            if optimized_raw is None:
+                self.logger.warning(f"[Verifier] No valid JSON found in response.")
+                raise ValueError("No JSON found")
+                
+            # Handle if LLM returned an object instead of a list
+            optimized = []
+            if isinstance(optimized_raw, list):
+                optimized = optimized_raw
+            elif isinstance(optimized_raw, dict):
+                optimized = optimized_raw.get("steps") or optimized_raw.get("plan") or []
             else:
-                self.logger.warning(f"[Verifier] No JSON array found in response: {content[:100]}")
-                raise ValueError("No JSON array found")
-                
-            optimized = json.loads(content)
-            
-            # Safety checks
-            if not isinstance(optimized, list):
-                raise ValueError("Optimized plan is not a list")
-                
+                raise ValueError(f"Unexpected optimized plan type: {type(optimized_raw)}")
+
+            # Safety check: ensure it's a list of dicts
+            clean_optimized = []
+            for item in optimized:
+                if isinstance(item, dict):
+                    clean_optimized.append(item)
+                elif isinstance(item, str):
+                    # Convert string step to dict step
+                    clean_optimized.append({"type": "execute", "description": item})
+                else:
+                    self.logger.warning(f"[Verifier] Skipping invalid item in optimized plan: {item}")
+
             # If the optimizer removed steps or returned empty (and raw wasn't), treat as failure
-            if len(optimized) < len(raw_plan):
-                 self.logger.warning(f"[Verifier] Optimization reduced step count ({len(raw_plan)} -> {len(optimized)}). Use raw plan fallback.")
+            if len(clean_optimized) < len(raw_plan) and len(raw_plan) > 0:
+                 self.logger.warning(f"[Verifier] Optimization reduced step count ({len(raw_plan)} -> {len(clean_optimized)}). Use raw plan fallback.")
                  raise ValueError("Optimized plan unexpectedly shorter than raw plan")
 
             # Fallback: if LLM didn't add verify steps, add them manually
-            enhanced = self._ensure_verify_steps(optimized, rigor=rigor)
+            enhanced = self._ensure_verify_steps(clean_optimized, rigor=rigor)
             self.logger.debug(
                 f"[Verifier] Plan optimized (Rigor: {rigor}): {len(raw_plan)} → {len(enhanced)} steps"
             )
@@ -23089,7 +23241,7 @@ class AdaptiveVerifier:
                 
         except Exception as e:
             self.logger.warning(f"[Verifier] LLM JSON parsing/optimization error: {e}")
-            self.logger.debug(f"[Verifier] Raw response: {content[:200]}...")
+            self.logger.debug(f"[Verifier] Raw response snippet: {str(content)[:200]}...")
             # Fallback: ensure verify steps manually
             enhanced = self._ensure_verify_steps(raw_plan, rigor=rigor)
             self.logger.debug(
@@ -39185,4 +39337,4 @@ _tool_ui_theme_set = tool_ui_theme_set
 ## Summary
 
 - **Total Files**: 125
-- **Skipped**: 16172
+- **Skipped**: 16194

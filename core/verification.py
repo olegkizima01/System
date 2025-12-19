@@ -23,7 +23,7 @@ class AdaptiveVerifier:
 
         rigor = (meta_config or {}).get("verification_rigor", "medium")
         
-        VERIFIER_PROMPT = f"""Ти — Grisha, агент безпеки та верифікації.
+        VERIFIER_PROMPT = """Ти — Grisha, агент безпеки та верифікації.
 Твоє завдання: Проаналізувати план дій та вставити кроки перевірки (VERIFY).
 
 ПОЛІТИКА ВЕРИФІКАЦІЇ (Rigor: {rigor}):
@@ -35,7 +35,7 @@ class AdaptiveVerifier:
 {{"type": "verify", "description": "Перевірити, що [результат дії]"}}
 
 Вхідний план:
-{{plan_json}}
+{plan_json}
 
 Поверни повний оновлений JSON список кроків (оригінальні кроки + вставлені VERIFY кроки).
 """
@@ -44,8 +44,9 @@ class AdaptiveVerifier:
         
         try:
             plan_json = json.dumps(raw_plan, ensure_ascii=False)
+            full_prompt_content = VERIFIER_PROMPT.format(rigor=rigor, plan_json=plan_json)
             prompt = ChatPromptTemplate.from_messages([
-                SystemMessage(content=VERIFIER_PROMPT.format(plan_json=plan_json)),
+                SystemMessage(content=full_prompt_content),
                 HumanMessage(content=f"Оптимізуй план згідно з політикою Rigor: {rigor}")
             ])
             
