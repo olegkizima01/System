@@ -762,7 +762,8 @@ class TrinityRuntime:
         
         # Doctor Vibe integration: Check if we're in background error correction mode
         vibe_assistant_context = state.get("vibe_assistant_context", "")
-        if "background_mode" in vibe_assistant_context or (self.self_healing_enabled and self.self_healer):
+        if "background_mode" in vibe_assistant_context:
+
             # If Doctor Vibe is working in background, let him continue
             if self.verbose:
                 self.logger.info("🧠 [Meta-Planner] Doctor Vibe working in background mode - continuing execution")
