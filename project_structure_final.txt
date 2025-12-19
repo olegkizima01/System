@@ -4,37 +4,15 @@
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 125
-- **Files Skipped**: 16158
+- **Files Skipped**: 16164
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-19 06:33:12
+- **Generated**: 2025-12-19 06:37:10
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-2025-12-19 04:52:17 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
-2025-12-19 04:52:17 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
-2025-12-19 04:52:17 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in TUI mode
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2475, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1706, in run_tui
-    app = build_app(
-          ^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 275, in build_app
-    input_area = VSplit(
-                 ^^^^^^^
-TypeError: VSplit.__init__() got an unexpected keyword argument 'dont_extend_height'
-2025-12-19 04:52:17 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in main()
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2637, in main
-    cli_main(sys.argv[1:])
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2475, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1706, in run_tui
-    app = build_app(
-          ^^^^^^^^^^
   File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 275, in build_app
     input_area = VSplit(
                  ^^^^^^^
@@ -113,6 +91,28 @@ TypeError: VSplit.__init__() got an unexpected keyword argument 'dont_extend_hei
 2025-12-19 05:43:22 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
 2025-12-19 05:43:22 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
 2025-12-19 05:44:03 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
+2025-12-19 06:33:56 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
+2025-12-19 06:33:56 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
+2025-12-19 06:33:56 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
+2025-12-19 06:34:41 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_start", "task_type": "GENERAL", "requires_windsurf": false, "gui_mode": "auto", "execution_mode": "native", "recursion_limit": 500, "input_preview": "Найди через гугл фільм сучасний якийсь про штучний інтелект для перегляду його онлайн. Після того включи його на весь екран для перегляду, пересвідчись що він запущений і на весь екран."}
+2025-12-19 06:34:44 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
+2025-12-19 06:34:44 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "meta_planner", "current_agent": "atlas", "last_step_status": null, "step_count": null, "replan_count": 0}
+2025-12-19 06:34:51 | WARNING  | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:83 | [Verifier] LLM JSON parsing/optimization error: '"type"'
+2025-12-19 06:34:51 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:84 | [Verifier] Raw response: ...
+2025-12-19 06:34:51 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:87 | [Verifier] Plan fallback: 8 → 8 steps (added 0 verify steps)
+2025-12-19 06:34:51 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "tetyana", "next": "tetyana"}
+2025-12-19 06:34:51 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "tetyana", "last_step_status": null, "step_count": 1, "replan_count": 1}
+2025-12-19 06:34:51 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "GENERAL", "requires_windsurf": false, "dev_edit_mode": "cli", "execution_mode": "native", "gui_mode": "auto", "gui_fallback_attempted": false, "plan_len": 8, "last_msg_preview": "[VOICE] Tetyana, [VOICE] Відкрити браузер і перейти на Google..\n\n[Atlas Debug] Step: [VOICE] Відкрити браузер і перейти на Google.. Next: tetyana"}
+2025-12-19 06:34:53 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 1, "content_preview": ""}
+2025-12-19 06:34:56 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli"}
+2025-12-19 06:34:56 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
+2025-12-19 06:34:56 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "tetyana", "current_agent": "grisha", "last_step_status": "success", "step_count": null, "replan_count": 1}
+2025-12-19 06:34:56 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 1, "replan_count": 1, "plan_len": 8, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "native", "last_msg_preview": "\n\nTool Results:\nResult for browser_open_url: \"{\\\"status\\\": \\\"success\\\", \\\"url\\\": \\\"https://www.google.com/\\\", \\\"title\\\": \\\"Google\\\", \\\"has_captcha\\\": true}\"\n\n[STEP_COMPLETED] Всі інструменти виконано "}
+2025-12-19 06:34:56 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": false, "changed_files": [".agent/workflows/atlas.md"], "skip": true}
+2025-12-19 06:34:56 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 9831}
+2025-12-19 06:34:58 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "[VOICE] The browser successfully opened the URL \"https://www.google.com/\" with the title \"Google\". However, the page contains a CAPTCHA.\n\n[VERIFIED]"}
+2025-12-19 06:34:58 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "atlas", "last_step_status": "success", "uncertain_streak": 0}
+2025-12-19 06:34:58 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
 ```
 
 ---
@@ -148,19 +148,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- .agent/workflows/atlas.md   |    12 +-
- project_structure_final.txt | 39146 ------------------------------------------
- 2 files changed, 7 insertions(+), 39151 deletions(-)
+ project_structure_final.txt | 39085 +-----------------------------------------
+ 1 file changed, 24 insertions(+), 39061 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-abaa4e9 docs: Restore Context7 as Explicit Context Manager in architecture
+002f27d docs: update Atlas workflow documentation
+e9ec6d9 docs: Restore Context7 as Explicit Context Manager in architecture
 172cc81 docs: Hide Context7 implementation details from architecture overview
 3d9d437 docs: Update README.md to reflect Cognitive 2.0 architecture and Context7
 ef6f4d4 chore(setup): Auto-fix permissions for cleanup_scripts in setup.sh
-5a23b0e docs(atlas): Document Context7 integration as Explicit Context Manager
 ```
 
 ---
@@ -12436,7 +12435,7 @@ cli.py: error: unrecognized arguments: Найди через гугл фільм
 test content
 ```
 
-### `project_structure_final.txt` (549.6 KB)
+### `project_structure_final.txt` (553.4 KB)
 
 ```text
 # System — Project Structure
@@ -12445,37 +12444,15 @@ test content
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 125
-- **Files Skipped**: 16158
+- **Files Skipped**: 16164
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-19 06:33:12
+- **Generated**: 2025-12-19 06:37:10
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-2025-12-19 04:52:17 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
-2025-12-19 04:52:17 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
-2025-12-19 04:52:17 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in TUI mode
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2475, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1706, in run_tui
-    app = build_app(
-          ^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 275, in build_app
-    input_area = VSplit(
-                 ^^^^^^^
-TypeError: VSplit.__init__() got an unexpected keyword argument 'dont_extend_height'
-2025-12-19 04:52:17 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in main()
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2637, in main
-    cli_main(sys.argv[1:])
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2475, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1706, in run_tui
-    app = build_app(
-          ^^^^^^^^^^
   File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 275, in build_app
     input_area = VSplit(
                  ^^^^^^^
@@ -12554,6 +12531,28 @@ TypeError: VSplit.__init__() got an unexpected keyword argument 'dont_extend_hei
 2025-12-19 05:43:22 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
 2025-12-19 05:43:22 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
 2025-12-19 05:44:03 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
+2025-12-19 06:33:56 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
+2025-12-19 06:33:56 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
+2025-12-19 06:33:56 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
+2025-12-19 06:34:41 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_start", "task_type": "GENERAL", "requires_windsurf": false, "gui_mode": "auto", "execution_mode": "native", "recursion_limit": 500, "input_preview": "Найди через гугл фільм сучасний якийсь про штучний інтелект для перегляду його онлайн. Після того включи його на весь екран для перегляду, пересвідчись що він запущений і на весь екран."}
+2025-12-19 06:34:44 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
+2025-12-19 06:34:44 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "meta_planner", "current_agent": "atlas", "last_step_status": null, "step_count": null, "replan_count": 0}
+2025-12-19 06:34:51 | WARNING  | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:83 | [Verifier] LLM JSON parsing/optimization error: '"type"'
+2025-12-19 06:34:51 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:84 | [Verifier] Raw response: ...
+2025-12-19 06:34:51 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:87 | [Verifier] Plan fallback: 8 → 8 steps (added 0 verify steps)
+2025-12-19 06:34:51 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "tetyana", "next": "tetyana"}
+2025-12-19 06:34:51 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "tetyana", "last_step_status": null, "step_count": 1, "replan_count": 1}
+2025-12-19 06:34:51 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "GENERAL", "requires_windsurf": false, "dev_edit_mode": "cli", "execution_mode": "native", "gui_mode": "auto", "gui_fallback_attempted": false, "plan_len": 8, "last_msg_preview": "[VOICE] Tetyana, [VOICE] Відкрити браузер і перейти на Google..\n\n[Atlas Debug] Step: [VOICE] Відкрити браузер і перейти на Google.. Next: tetyana"}
+2025-12-19 06:34:53 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 1, "content_preview": ""}
+2025-12-19 06:34:56 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli"}
+2025-12-19 06:34:56 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
+2025-12-19 06:34:56 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "tetyana", "current_agent": "grisha", "last_step_status": "success", "step_count": null, "replan_count": 1}
+2025-12-19 06:34:56 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 1, "replan_count": 1, "plan_len": 8, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "native", "last_msg_preview": "\n\nTool Results:\nResult for browser_open_url: \"{\\\"status\\\": \\\"success\\\", \\\"url\\\": \\\"https://www.google.com/\\\", \\\"title\\\": \\\"Google\\\", \\\"has_captcha\\\": true}\"\n\n[STEP_COMPLETED] Всі інструменти виконано "}
+2025-12-19 06:34:56 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": false, "changed_files": [".agent/workflows/atlas.md"], "skip": true}
+2025-12-19 06:34:56 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 9831}
+2025-12-19 06:34:58 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "[VOICE] The browser successfully opened the URL \"https://www.google.com/\" with the title \"Google\". However, the page contains a CAPTCHA.\n\n[VERIFIED]"}
+2025-12-19 06:34:58 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "atlas", "last_step_status": "success", "uncertain_streak": 0}
+2025-12-19 06:34:58 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
 ```
 
 ---
@@ -12589,19 +12588,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- .agent/workflows/atlas.md   |    12 +-
- project_structure_final.txt | 39146 ------------------------------------------
- 2 files changed, 7 insertions(+), 39151 deletions(-)
+ project_structure_final.txt | 39085 +-----------------------------------------
+ 1 file changed, 24 insertions(+), 39061 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-abaa4e9 docs: Restore Context7 as Explicit Context Manager in architecture
+002f27d docs: update Atlas workflow documentation
+e9ec6d9 docs: Restore Context7 as Explicit Context Manager in architecture
 172cc81 docs: Hide Context7 implementation details from architecture overview
 3d9d437 docs: Update README.md to reflect Cognitive 2.0 architecture and Context7
 ef6f4d4 chore(setup): Auto-fix permissions for cleanup_scripts in setup.sh
-5a23b0e docs(atlas): Document Context7 integration as Explicit Context Manager
 ```
 
 ---
@@ -39149,4 +39147,4 @@ _tool_ui_theme_set = tool_ui_theme_set
 ## Summary
 
 - **Total Files**: 125
-- **Skipped**: 16158
+- **Skipped**: 16164
