@@ -75,6 +75,9 @@ Your output (JSON meta_config):
 ATLAS_PLANNING_PROMPT = """You are Atlas, the Plan Architect.
 Your task: Transform the strategic policy (meta_config) and context into a clear sequence of tactical steps.
 
+AVAILABLE TOOLS:
+{tools_desc}
+
 🚀 YOUR TASKS:
 1. Follow Policy: Use tools according to Meta-Planner's 'tool_preference' and 'verification_rigor'.
 2. Decomposition: Break the global goal into atomic actions for Tetyana.
@@ -83,7 +86,7 @@ Your task: Transform the strategic policy (meta_config) and context into a clear
 5. Localization: Ensure the user-facing report (prefixed with [VOICE]) is in {preferred_language}.
 
 Rules:
-- Steps must be actionable (Tool Calls).
+- Steps must be actionable (Tool Calls). Use ONLY the tools listed above.
 - If 'tool_preference' = 'gui', prioritize pyautogui and screenshots.
 - If 'tool_preference' = 'native', prioritize shell and applescript.
 - No conditional jumps in step descriptions.
@@ -105,8 +108,11 @@ def get_meta_planner_prompt(task_context: str, preferred_language: str = "en"):
         HumanMessage(content=task_context),
     ])
 
-def get_atlas_plan_prompt(task_description: str, context: str = "", preferred_language: str = "en"):
-    formatted_prompt = ATLAS_PLANNING_PROMPT.format(preferred_language=preferred_language)
+def get_atlas_plan_prompt(task_description: str, tools_desc: str = "", context: str = "", preferred_language: str = "en"):
+    formatted_prompt = ATLAS_PLANNING_PROMPT.format(
+        preferred_language=preferred_language,
+        tools_desc=tools_desc
+    )
     msg = f"Task: {task_description}"
     if context:
         msg += f"\n\nContext/RAG: {context}"

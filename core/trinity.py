@@ -384,7 +384,12 @@ class TrinityRuntime:
         structure_context = self._get_project_structure_context()
         routing_hint = f"\nSTRATEGY: {meta_config.get('strategy', 'linear')}\nRIGOR: {meta_config.get('verification_rigor', 'medium')}"
         
-        prompt = get_atlas_plan_prompt(last_msg, context=rag_context + "\n\n" + structure_context + routing_hint, preferred_language=self.preferred_language)
+        prompt = get_atlas_plan_prompt(
+            last_msg,
+            tools_desc=self.registry.list_tools(),
+            context=rag_context + "\n\n" + structure_context + routing_hint,
+            preferred_language=self.preferred_language
+        )
         
         try:
             def on_delta(chunk):

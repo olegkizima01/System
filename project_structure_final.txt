@@ -4,16 +4,15 @@
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 127
-- **Files Skipped**: 16065
+- **Files Skipped**: 16074
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-19 05:43:33
+- **Generated**: 2025-12-19 05:47:20
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-2025-12-19 04:52:17 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
 2025-12-19 04:52:17 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
 2025-12-19 04:52:17 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
 2025-12-19 04:52:17 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in TUI mode
@@ -113,6 +112,7 @@ TypeError: VSplit.__init__() got an unexpected keyword argument 'dont_extend_hei
 2025-12-19 05:43:22 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
 2025-12-19 05:43:22 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
 2025-12-19 05:43:22 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
+2025-12-19 05:44:03 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
 ```
 
 ---
@@ -148,18 +148,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 39450 ------------------------------------------
- 1 file changed, 39450 deletions(-)
+ project_structure_final.txt | 39455 ------------------------------------------
+ 1 file changed, 39455 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-e2e609e Fix TUI input frame height to tightly wrap content
+4c01cb3 feat(core): Expose complete MCP tool registry to Atlas planner for better tactical planning
+1521780 Fix TUI input frame height to tightly wrap content
 553493a docs: update Atlas workflow definition
 26f7db3 fix(tui): remove invalid dont_extend_height from containers to fix crash
 de965b6 fix(tui): wrap input frame in non-extending HSplit to prevent vertical stretching
-c0a8dbd fix(tui): strictly force single-line height for input area when empty
 ```
 
 ---
@@ -7671,7 +7671,7 @@ c0c61642-aff6-41cf-b182-10e49179bdf9
 {"name":"original","created":"2025-12-15 09:51:37","hostname":"Mini-Adam"}
 ```
 
-### `core/agents/atlas.py` (5.4 KB)
+### `core/agents/atlas.py` (5.5 KB)
 
 ```python
 from langchain_core.prompts import ChatPromptTemplate
@@ -7751,6 +7751,9 @@ Your output (JSON meta_config):
 ATLAS_PLANNING_PROMPT = """You are Atlas, the Plan Architect.
 Your task: Transform the strategic policy (meta_config) and context into a clear sequence of tactical steps.
 
+AVAILABLE TOOLS:
+{tools_desc}
+
 🚀 YOUR TASKS:
 1. Follow Policy: Use tools according to Meta-Planner's 'tool_preference' and 'verification_rigor'.
 2. Decomposition: Break the global goal into atomic actions for Tetyana.
@@ -7759,7 +7762,7 @@ Your task: Transform the strategic policy (meta_config) and context into a clear
 5. Localization: Ensure the user-facing report (prefixed with [VOICE]) is in {preferred_language}.
 
 Rules:
-- Steps must be actionable (Tool Calls).
+- Steps must be actionable (Tool Calls). Use ONLY the tools listed above.
 - If 'tool_preference' = 'gui', prioritize pyautogui and screenshots.
 - If 'tool_preference' = 'native', prioritize shell and applescript.
 - No conditional jumps in step descriptions.
@@ -7781,8 +7784,11 @@ def get_meta_planner_prompt(task_context: str, preferred_language: str = "en"):
         HumanMessage(content=task_context),
     ])
 
-def get_atlas_plan_prompt(task_description: str, context: str = "", preferred_language: str = "en"):
-    formatted_prompt = ATLAS_PLANNING_PROMPT.format(preferred_language=preferred_language)
+def get_atlas_plan_prompt(task_description: str, tools_desc: str = "", context: str = "", preferred_language: str = "en"):
+    formatted_prompt = ATLAS_PLANNING_PROMPT.format(
+        preferred_language=preferred_language,
+        tools_desc=tools_desc
+    )
     msg = f"Task: {task_description}"
     if context:
         msg += f"\n\nContext/RAG: {context}"
@@ -8481,7 +8487,7 @@ def query_memory_tool(category: str, query: str) -> Dict[str, Any]:
     return {"status": "success", "results": results}
 ```
 
-### `core/trinity.py` (84.4 KB)
+### `core/trinity.py` (84.5 KB)
 
 ```python
 from typing import Annotated, TypedDict, Literal, List, Dict, Any, Optional, Callable
@@ -8870,7 +8876,12 @@ class TrinityRuntime:
         structure_context = self._get_project_structure_context()
         routing_hint = f"\nSTRATEGY: {meta_config.get('strategy', 'linear')}\nRIGOR: {meta_config.get('verification_rigor', 'medium')}"
         
-        prompt = get_atlas_plan_prompt(last_msg, context=rag_context + "\n\n" + structure_context + routing_hint, preferred_language=self.preferred_language)
+        prompt = get_atlas_plan_prompt(
+            last_msg,
+            tools_desc=self.registry.list_tools(),
+            context=rag_context + "\n\n" + structure_context + routing_hint,
+            preferred_language=self.preferred_language
+        )
         
         try:
             def on_delta(chunk):
@@ -12232,7 +12243,7 @@ cli.py: error: unrecognized arguments: Найди через гугл фільм
 test content
 ```
 
-### `project_structure_final.txt` (540.4 KB)
+### `project_structure_final.txt` (540.7 KB)
 
 ```text
 # System — Project Structure
@@ -12241,16 +12252,15 @@ test content
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 127
-- **Files Skipped**: 16065
+- **Files Skipped**: 16074
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-19 05:43:33
+- **Generated**: 2025-12-19 05:47:20
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-2025-12-19 04:52:17 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
 2025-12-19 04:52:17 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
 2025-12-19 04:52:17 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
 2025-12-19 04:52:17 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in TUI mode
@@ -12350,6 +12360,7 @@ TypeError: VSplit.__init__() got an unexpected keyword argument 'dont_extend_hei
 2025-12-19 05:43:22 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
 2025-12-19 05:43:22 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
 2025-12-19 05:43:22 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
+2025-12-19 05:44:03 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
 ```
 
 ---
@@ -12385,18 +12396,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 39450 ------------------------------------------
- 1 file changed, 39450 deletions(-)
+ project_structure_final.txt | 39455 ------------------------------------------
+ 1 file changed, 39455 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-e2e609e Fix TUI input frame height to tightly wrap content
+4c01cb3 feat(core): Expose complete MCP tool registry to Atlas planner for better tactical planning
+1521780 Fix TUI input frame height to tightly wrap content
 553493a docs: update Atlas workflow definition
 26f7db3 fix(tui): remove invalid dont_extend_height from containers to fix crash
 de965b6 fix(tui): wrap input frame in non-extending HSplit to prevent vertical stretching
-c0a8dbd fix(tui): strictly force single-line height for input area when empty
 ```
 
 ---
@@ -19908,7 +19919,7 @@ c0c61642-aff6-41cf-b182-10e49179bdf9
 {"name":"original","created":"2025-12-15 09:51:37","hostname":"Mini-Adam"}
 ```
 
-### `core/agents/atlas.py` (5.4 KB)
+### `core/agents/atlas.py` (5.5 KB)
 
 ```python
 from langchain_core.prompts import ChatPromptTemplate
@@ -19988,6 +19999,9 @@ Your output (JSON meta_config):
 ATLAS_PLANNING_PROMPT = """You are Atlas, the Plan Architect.
 Your task: Transform the strategic policy (meta_config) and context into a clear sequence of tactical steps.
 
+AVAILABLE TOOLS:
+{tools_desc}
+
 🚀 YOUR TASKS:
 1. Follow Policy: Use tools according to Meta-Planner's 'tool_preference' and 'verification_rigor'.
 2. Decomposition: Break the global goal into atomic actions for Tetyana.
@@ -19996,7 +20010,7 @@ Your task: Transform the strategic policy (meta_config) and context into a clear
 5. Localization: Ensure the user-facing report (prefixed with [VOICE]) is in {preferred_language}.
 
 Rules:
-- Steps must be actionable (Tool Calls).
+- Steps must be actionable (Tool Calls). Use ONLY the tools listed above.
 - If 'tool_preference' = 'gui', prioritize pyautogui and screenshots.
 - If 'tool_preference' = 'native', prioritize shell and applescript.
 - No conditional jumps in step descriptions.
@@ -20018,8 +20032,11 @@ def get_meta_planner_prompt(task_context: str, preferred_language: str = "en"):
         HumanMessage(content=task_context),
     ])
 
-def get_atlas_plan_prompt(task_description: str, context: str = "", preferred_language: str = "en"):
-    formatted_prompt = ATLAS_PLANNING_PROMPT.format(preferred_language=preferred_language)
+def get_atlas_plan_prompt(task_description: str, tools_desc: str = "", context: str = "", preferred_language: str = "en"):
+    formatted_prompt = ATLAS_PLANNING_PROMPT.format(
+        preferred_language=preferred_language,
+        tools_desc=tools_desc
+    )
     msg = f"Task: {task_description}"
     if context:
         msg += f"\n\nContext/RAG: {context}"
@@ -20718,7 +20735,7 @@ def query_memory_tool(category: str, query: str) -> Dict[str, Any]:
     return {"status": "success", "results": results}
 ```
 
-### `core/trinity.py` (84.4 KB)
+### `core/trinity.py` (84.5 KB)
 
 ```python
 from typing import Annotated, TypedDict, Literal, List, Dict, Any, Optional, Callable
@@ -21107,7 +21124,12 @@ class TrinityRuntime:
         structure_context = self._get_project_structure_context()
         routing_hint = f"\nSTRATEGY: {meta_config.get('strategy', 'linear')}\nRIGOR: {meta_config.get('verification_rigor', 'medium')}"
         
-        prompt = get_atlas_plan_prompt(last_msg, context=rag_context + "\n\n" + structure_context + routing_hint, preferred_language=self.preferred_language)
+        prompt = get_atlas_plan_prompt(
+            last_msg,
+            tools_desc=self.registry.list_tools(),
+            context=rag_context + "\n\n" + structure_context + routing_hint,
+            preferred_language=self.preferred_language
+        )
         
         try:
             def on_delta(chunk):
@@ -39452,4 +39474,4 @@ graph TD
 ## Summary
 
 - **Total Files**: 127
-- **Skipped**: 16065
+- **Skipped**: 16074
