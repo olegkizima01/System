@@ -332,10 +332,34 @@ class CopilotLLM(BaseChatModel):
         except requests.exceptions.HTTPError as e:
             # Check for Vision error (400) and try fallback
             if e.response.status_code == 400:
-                print(f"[COPILOT] 400 Error intercepted. Checking for fallback...", flush=True)
-                # ... (existing fallback logic would go here if we were keeping it in _generate, 
-                # but simplistic return for now to match structure)
-                return ChatResult(generations=[ChatGeneration(message=AIMessage(content=f"[COPILOT ERROR] HTTP 400 (Vision rejected): {e.response.text}"))])
+                print(f"[COPILOT] 400 Error intercepted. Retrying without Vision header...", flush=True)
+                # Retry without vision header
+                try:
+                    headers.pop("Copilot-Vision-Request", None)
+                    # Also fallback to standard model if current is vision specific
+                    if "vision" in payload.get("model", ""):
+                         payload["model"] = "gpt-4o"
+                         
+                    response = requests.post(
+                        f"{api_endpoint}/chat/completions",
+                        headers=headers,
+                        data=json.dumps(payload),
+                        stream=stream_mode,
+                        timeout=90
+                    )
+                    if stream_mode:
+                        return self._stream_response(response, messages, on_delta=on_delta)
+                    else:
+                        response.raise_for_status()
+                        data = response.json()
+                        # ... (success path duplication or recursive call would be cleaner, but inline for now)
+                        if not data.get("choices"):
+                             return ChatResult(generations=[ChatGeneration(message=AIMessage(content="[COPILOT] No response from model (retry)."))])
+                        content = data["choices"][0]["message"]["content"]
+                        return ChatResult(generations=[ChatGeneration(message=AIMessage(content=content))])
+                        
+                except Exception as retry_err:
+                     return ChatResult(generations=[ChatGeneration(message=AIMessage(content=f"[COPILOT ERROR] Retry failed: {retry_err}"))])
 
             error_msg = f"[COPILOT ERROR] HTTP {e.response.status_code}: {e.response.text}"
             return ChatResult(generations=[ChatGeneration(message=AIMessage(content=error_msg))])

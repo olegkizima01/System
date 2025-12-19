@@ -71,6 +71,20 @@ if [ -d "cleanup_scripts" ]; then
     echo "✅ Cleanup scripts are now executable."
 fi
 
+# 4. Git Hook Installation
+echo "🪝 Installing git hooks..."
+REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+HOOK_SRC="$REPO_ROOT/templates/bootstrap/post-commit"
+HOOK_DST="$REPO_ROOT/.git/hooks/post-commit"
+
+if [ -f "$HOOK_SRC" ]; then
+    cp "$HOOK_SRC" "$HOOK_DST"
+    chmod +x "$HOOK_DST"
+    echo "✅ Installed post-commit hook."
+else
+    echo "⚠️  Post-commit template not found at $HOOK_SRC"
+fi
+
 # 3. Patching mcp-pyautogui-server if needed
 # (This is a workaround for the broken site-package version)
 # We can add a more permanent patch logic here if desired.

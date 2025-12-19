@@ -41,6 +41,8 @@ Atlas accesses the world through the **Model Context Protocol (MCP)** registry:
 -   **External MCPs**:
     -   **Playwright**: Full browser automation.
     -   **PyAutoGUI**: Fallback input emulation.
+-   **Integrations**:
+    -   **AI-IDE Support**: Windsurf, Antigravity, Cursor, Continue CLI.
 
 ---
 
@@ -79,6 +81,16 @@ Run the TUI (Text User Interface):
 -   `/trinity <task>`: Start a standard agent assignment.
 -   `/autopilot <task>`: Run in fully autonomous mode.
 -   `/help`: Show all commands.
+
+---
+
+---
+
+## ⚡️ Advanced Capabilities
+
+-   **Self-Healing**: Atlas automaticaly detects failures (via `Grisha`) and triggers replanning to fix errors without user intervention.
+-   **Dev Mode**: Capable of editing its own source code, running shell commands, and managing git integration.
+-   **Interactive TUI**: Real-time communication via `[VOICE]` messages; users can intervene or guide the agent via the CLI chat.
 
 ---
 

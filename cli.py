@@ -25,6 +25,20 @@ except Exception:
 
 def main() -> None:
     try:
+        # Auto-detect 'run' command for natural language
+        if len(sys.argv) > 1:
+            first_arg = sys.argv[1]
+            known_commands = {
+                "tui", "list-editors", "list-modules", "run", "enable", "disable", 
+                "install", "smart-plan", "ask", "agent-chat", "agent-reset", 
+                "agent-on", "agent-off", "-h", "--help"
+            }
+            if first_arg not in known_commands and not first_arg.startswith("-"):
+                # Treat as agent-chat message
+                # Reconstruct argv to: cli.py agent-chat --message "all args joined"
+                message = " ".join(sys.argv[1:])
+                sys.argv = [sys.argv[0], "agent-chat", "--message", message]
+
         from tui.cli import main as tui_main
         tui_main()
     except KeyboardInterrupt:

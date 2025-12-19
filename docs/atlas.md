@@ -87,7 +87,7 @@ graph TD
 ## 5. Додаткові можливості та Інтеграції (Extensions)
 
 ### 5.1 AI-IDE Integrations
--   **Windsurf**, **Antigravity**, **Cursor**: Спеціальні профілі для розробки.
+-   **Windsurf**, **Antigravity**, **Cursor**, **Continue CLI**: Спеціальні профілі для розробки.
 
 ### 5.2 Cleanup & Privacy System
 -   Очищення `IndexedDB`, `keychain`, локальних сховищ ШІ.
@@ -113,6 +113,32 @@ graph TD
 /trinity <завдання>         # Запуск Trinity
 /autopilot <завдання>       # Режим повної автономії
 ```
+
+---
+
+
+---
+
+## 8. FAQ & Advanced Capabilities
+
+### 8.1 Режим Розробника (Dev Mode)
+Atlas може працювати в розширеному режимі (Dev Mode), що дозволяє:
+-   **Direct Code Editing**: Агент може читати та змінювати код власної системи (через `multi_replace_file_content`).
+-   **Shell Execution**: Виконання термінальних команд (включаючи `git`, `npm`, `python`).
+-   **Unsafe Tools**: Доступ до потенційно небезпечних інструментів (AppleScript, Mouse Control) за умови підтвердження користувачем (`confirm users`) або в режимі `--unsafe`.
+
+### 8.2 Чи може Atlas "лікувати" себе? (Self-Healing)
+**Так.** Це закладено в архітектуру Trinity Runtime:
+1.  **Detection**: Агент-верифікатор (`Grisha`) аналізує результат виконання кожного кроку.
+2.  **Correction**: Якщо виявлено помилку (наприклад, `JSON parsing error` або `Element not found`), система ініціює `Replanning Loop`.
+3.  **Strategy Shift**: Meta-Planner може змінити стратегію (наприклад, перейти з Native Mode на GUI Mode), якщо попередній підхід не спрацював.
+4.  **Limits**: Система має ліміт на кількість спроб (`MAX_REPLANS`), щоб уникнути нескінченних циклів.
+
+### 8.3 Інтерактивність (Chat & Response)
+Atlas працює в напівавтономному режимі через TUI (`cli.py`):
+-   **User -> Agent**: Ви можете писати команди або уточнення прямо в чат TUI.
+-   **Agent -> User**: Агенти використовують тег `[VOICE]` для відправки повідомлень користувачу, які відображаються в інтерфейсі.
+-   **Feedback Loop**: Хоча агент фокусується на завданні, він може "чути" нові вхідні дані від користувача під час пауз між кроками, якщо це реалізовано через режим `interactive`.
 
 ---
 

@@ -263,6 +263,7 @@ def scan_traces(editor: str) -> Dict[str, Any]:
         "vscode": ["*Code*", "*VSCodium*", "*vscode*", "*VSCode*"],
         "antigravity": ["*Antigravity*", "*antigravity*", "*Google/Antigravity*"],
         "cursor": ["*Cursor*", "*cursor*"],
+        "continue": ["*Continue*", "*continue*"],
     }
 
     base_dirs = [
@@ -301,6 +302,7 @@ def scan_traces(editor: str) -> Dict[str, Any]:
         os.path.expanduser("~/.vscode-oss"),
         os.path.expanduser("~/.cursor"),
         os.path.expanduser("~/.windsurf"),
+        os.path.expanduser("~/.continue"),
     ]
     for p in dot_candidates:
         if os.path.exists(p) and editor_key in os.path.basename(p).lower():

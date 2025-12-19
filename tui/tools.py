@@ -190,10 +190,15 @@ def tool_chrome_open_url(args: Dict[str, Any]) -> Dict[str, Any]:
     if not allow_applescript:
         return {"ok": False, "error": "AppleScript requires unsafe mode or CONFIRM_APPLESCRIPT"}
     try:
+        from tui.cli import log
+        log(f"[BROWSER] Opening Chrome URL: {url}", "info")
         script = f'tell application "Google Chrome" to open location "{url}"'
         subprocess.run(["osascript", "-e", script], check=True, capture_output=True, timeout=10)
+        log(f"[BROWSER] Chrome URL opened: {url}", "success")
         return {"ok": True, "url": url}
     except Exception as e:
+        from tui.cli import log
+        log(f"[BROWSER] Failed to open Chrome URL: {e}", "error")
         return {"ok": False, "error": str(e)}
 
 
@@ -230,9 +235,13 @@ def tool_open_url(args: Dict[str, Any]) -> Dict[str, Any]:
     if not url:
         return {"ok": False, "error": "Missing url"}
     try:
+        from tui.cli import log
+        log(f"[App] Opening URL: {url}", "info")
         subprocess.run(["open", url], check=True, capture_output=True, timeout=10)
         return {"ok": True, "url": url}
     except Exception as e:
+        from tui.cli import log
+        log(f"[App] Failed to open URL: {e}", "error")
         return {"ok": False, "error": str(e)}
 
 
@@ -242,9 +251,13 @@ def tool_open_app(args: Dict[str, Any]) -> Dict[str, Any]:
     if not name:
         return {"ok": False, "error": "Missing name"}
     try:
+        from tui.cli import log
+        log(f"[App] Opening app: {name}", "info")
         subprocess.run(["open", "-a", name], check=True, capture_output=True, timeout=10)
         return {"ok": True, "app": name}
     except Exception as e:
+        from tui.cli import log
+        log(f"[App] Failed to open app {name}: {e}", "error")
         return {"ok": False, "error": str(e)}
 
 

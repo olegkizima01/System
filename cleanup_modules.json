@@ -150,6 +150,23 @@
         "hint": "Відкриється офіційна сторінка завантаження Cursor"
       },
       "modules": []
+    },
+    "continue": {
+      "label": "Continue CLI",
+      "install": {
+        "type": "url",
+        "url": "https://www.continue.dev/docs/quickstart",
+        "hint": "Refer to official docs/extension install."
+      },
+      "modules": [
+        {
+          "id": "continue_cleanup",
+          "name": "Continue Config Cleanup",
+          "script": "echo 'Not implemented'",
+          "enabled": false,
+          "description": "Cleanup ~/.continue folder"
+        }
+      ]
     }
   }
 }
