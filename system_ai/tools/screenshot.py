@@ -19,7 +19,13 @@ class VisionDiffManager:
         return cls._instance
 
     def process_screenshot(self, current_img: Image.Image, focus_id: str) -> Dict[str, Any]:
-        output_dir = os.path.expanduser("~/.antigravity/vision_cache")
+        # Prioritize project data folder if it exists
+        project_dir = os.path.abspath(".agent/workflows/data/screenshots")
+        if os.path.isdir(project_dir):
+            output_dir = project_dir
+        else:
+            output_dir = os.path.expanduser("~/.antigravity/vision_cache")
+        
         os.makedirs(output_dir, exist_ok=True)
         timestamp = int(time.time())
         path = os.path.join(output_dir, f"snap_{timestamp}.jpg")
