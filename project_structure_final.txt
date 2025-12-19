@@ -4,9 +4,9 @@
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 125
-- **Files Skipped**: 16144
+- **Files Skipped**: 16152
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-19 06:29:55
+- **Generated**: 2025-12-19 06:32:26
 
 ---
 
@@ -149,18 +149,18 @@ Tests:
 
 ```
  .agent/workflows/atlas.md   |    12 +-
- project_structure_final.txt | 39106 ------------------------------------------
- 2 files changed, 7 insertions(+), 39111 deletions(-)
+ project_structure_final.txt | 39152 ------------------------------------------
+ 2 files changed, 7 insertions(+), 39157 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-2e02d90 docs: Update README.md to reflect Cognitive 2.0 architecture and Context7
+9812c63 docs: Hide Context7 implementation details from architecture overview
+3d9d437 docs: Update README.md to reflect Cognitive 2.0 architecture and Context7
 ef6f4d4 chore(setup): Auto-fix permissions for cleanup_scripts in setup.sh
 5a23b0e docs(atlas): Document Context7 integration as Explicit Context Manager
 b0a73bc chore: remove unused files and update agent workflow configuration.
-2465645 feat(core): Integrate Context7 Layer for explicit context management
 ```
 
 ---
@@ -640,7 +640,7 @@ cat ~/.system_cli/logs/debug.log
 - When you want to save progress with logs
 ```
 
-### `README.md` (3.1 KB)
+### `README.md` (3.0 KB)
 
 ```markdown
 # Project Atlas: Cognitive 2.0 Identity
@@ -668,7 +668,6 @@ The system runs on **Trinity Runtime**, a cyclic graph (LangGraph) of specialize
 | Agent / Layer | Role | Description |
 | :--- | :--- | :--- |
 | **Meta-Planner** | *Orchestrator* | The "Head". Performs Active Retrieval and filters memories. |
-| **Context7** | *Context Manager* | **Implicit Layer**. Budgets tokens, injects policy, and normalizes context. |
 | **Atlas** | *Architect* | Generates tactical plans based on normalized context. |
 | **Tetyana** | *Executor* | Universal operator. Executes tools (Shell, AppleScript, Browser). |
 | **Grisha** | *Verifier* | QA. Verifies actions via visual feedback and logic. |
@@ -11927,7 +11926,7 @@ if __name__ == "__main__":
     main()
 ```
 
-### `docs/atlas.md` (6.8 KB)
+### `docs/atlas.md` (6.4 KB)
 
 ```markdown
 ---
@@ -11965,8 +11964,7 @@ Atlas — це не просто автоматизатор, а **автоном
 ```mermaid
 graph TD
     START((START)) --> MP[meta_planner<br/>Голова/Стратег/Контролер]
-    MP -->|Policy & Strategy| C7[context7<br/>Контекст-Менеджер]
-    C7 -->|Normalized Context| A[atlas<br/>Архітектор Плану]
+    MP -->|Active Retrieval| A[atlas<br/>Архітектор Плану]
     MP -->|план готовий| T[tetyana<br/>Виконавець]
     MP -->|план готовий| G[grisha<br/>Верифікатор]
     A --> MP
@@ -11979,8 +11977,7 @@ graph TD
 ### 2.1 Trinity Agents & Layers
 
 -   **Meta-Planner** (`_meta_planner_node`): Головний оркестратор. Виконує **Active Retrieval** та фільтрує спогади.
--   **Context7** (`context7`): **Explicit Context Manager**. Готує контекст, керує бюджетом токенів та ін'єктує стратегічні політики перед плануванням.
--   **Atlas** (`_atlas_node`): Архітектор тактичного плану. Отримує *нормалізований* контекст від Context7 для розробки кроків.
+-   **Atlas** (`_atlas_node`): Архітектор тактичного плану. Отримує *нормалізований* контекст для розробки кроків.
 -   **Tetyana** (`_tetyana_node`): Виконавець (Native/GUI/Playwright).
 -   **Grisha** (`_grisha_node`): Верифікатор. У разі успіху або критичного провалу ініціює перехід до навчання.
 -   **Knowledge** (`_knowledge_node`): **Етап рефлексії**. Зберігає досвід (`success`/`failed`).
@@ -12436,7 +12433,7 @@ cli.py: error: unrecognized arguments: Найди через гугл фільм
 test content
 ```
 
-### `project_structure_final.txt` (549.6 KB)
+### `project_structure_final.txt` (549.2 KB)
 
 ```text
 # System — Project Structure
@@ -12445,9 +12442,9 @@ test content
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 125
-- **Files Skipped**: 16144
+- **Files Skipped**: 16152
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-19 06:29:55
+- **Generated**: 2025-12-19 06:32:26
 
 ---
 
@@ -12590,18 +12587,18 @@ Tests:
 
 ```
  .agent/workflows/atlas.md   |    12 +-
- project_structure_final.txt | 39106 ------------------------------------------
- 2 files changed, 7 insertions(+), 39111 deletions(-)
+ project_structure_final.txt | 39152 ------------------------------------------
+ 2 files changed, 7 insertions(+), 39157 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-2e02d90 docs: Update README.md to reflect Cognitive 2.0 architecture and Context7
+9812c63 docs: Hide Context7 implementation details from architecture overview
+3d9d437 docs: Update README.md to reflect Cognitive 2.0 architecture and Context7
 ef6f4d4 chore(setup): Auto-fix permissions for cleanup_scripts in setup.sh
 5a23b0e docs(atlas): Document Context7 integration as Explicit Context Manager
 b0a73bc chore: remove unused files and update agent workflow configuration.
-2465645 feat(core): Integrate Context7 Layer for explicit context management
 ```
 
 ---
@@ -13081,7 +13078,7 @@ cat ~/.system_cli/logs/debug.log
 - When you want to save progress with logs
 ```
 
-### `README.md` (3.1 KB)
+### `README.md` (3.0 KB)
 
 ```markdown
 # Project Atlas: Cognitive 2.0 Identity
@@ -13109,7 +13106,6 @@ The system runs on **Trinity Runtime**, a cyclic graph (LangGraph) of specialize
 | Agent / Layer | Role | Description |
 | :--- | :--- | :--- |
 | **Meta-Planner** | *Orchestrator* | The "Head". Performs Active Retrieval and filters memories. |
-| **Context7** | *Context Manager* | **Implicit Layer**. Budgets tokens, injects policy, and normalizes context. |
 | **Atlas** | *Architect* | Generates tactical plans based on normalized context. |
 | **Tetyana** | *Executor* | Universal operator. Executes tools (Shell, AppleScript, Browser). |
 | **Grisha** | *Verifier* | QA. Verifies actions via visual feedback and logic. |
@@ -24368,7 +24364,7 @@ if __name__ == "__main__":
     main()
 ```
 
-### `docs/atlas.md` (6.8 KB)
+### `docs/atlas.md` (6.4 KB)
 
 ```markdown
 ---
@@ -24406,8 +24402,7 @@ Atlas — це не просто автоматизатор, а **автоном
 ```mermaid
 graph TD
     START((START)) --> MP[meta_planner<br/>Голова/Стратег/Контролер]
-    MP -->|Policy & Strategy| C7[context7<br/>Контекст-Менеджер]
-    C7 -->|Normalized Context| A[atlas<br/>Архітектор Плану]
+    MP -->|Active Retrieval| A[atlas<br/>Архітектор Плану]
     MP -->|план готовий| T[tetyana<br/>Виконавець]
     MP -->|план готовий| G[grisha<br/>Верифікатор]
     A --> MP
@@ -24420,8 +24415,7 @@ graph TD
 ### 2.1 Trinity Agents & Layers
 
 -   **Meta-Planner** (`_meta_planner_node`): Головний оркестратор. Виконує **Active Retrieval** та фільтрує спогади.
--   **Context7** (`context7`): **Explicit Context Manager**. Готує контекст, керує бюджетом токенів та ін'єктує стратегічні політики перед плануванням.
--   **Atlas** (`_atlas_node`): Архітектор тактичного плану. Отримує *нормалізований* контекст від Context7 для розробки кроків.
+-   **Atlas** (`_atlas_node`): Архітектор тактичного плану. Отримує *нормалізований* контекст для розробки кроків.
 -   **Tetyana** (`_tetyana_node`): Виконавець (Native/GUI/Playwright).
 -   **Grisha** (`_grisha_node`): Верифікатор. У разі успіху або критичного провалу ініціює перехід до навчання.
 -   **Knowledge** (`_knowledge_node`): **Етап рефлексії**. Зберігає досвід (`success`/`failed`).
@@ -39149,4 +39143,4 @@ _tool_ui_theme_set = tool_ui_theme_set
 ## Summary
 
 - **Total Files**: 125
-- **Skipped**: 16144
+- **Skipped**: 16152
