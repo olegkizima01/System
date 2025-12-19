@@ -2,11 +2,11 @@
 
 Task: Find a modern AI movie online using the browser.
 Outcome: completed
-Replans: 10
-Last agent: meta_planner
+Replans: 7
+Last agent: knowledge
 
 Last message:
-[VOICE] Ліміт перепланувань вичерпано (10).
+[VOICE] Досвід збережено. Завдання завершено.
 
 Changed files:
 - (no uncommitted changes detected)
