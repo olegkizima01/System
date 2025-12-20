@@ -288,6 +288,31 @@ def build_keybindings(
         if w:
             event.app.layout.focus(w)
 
+    @kb.add("c-s-k")
+    def _(event):
+        """Toggle auto-copy on text selection (Ctrl+Shift+K).
+        
+        When enabled, selecting text with the mouse will automatically
+        copy the selected text to the clipboard.
+        """
+        try:
+            from tui.selection_tracker import (
+                set_auto_copy_enabled, 
+                SELECTION_AUTO_COPY_ENABLED,
+                get_selection_stats
+            )
+            
+            # Toggle
+            stats = get_selection_stats()
+            new_state = not stats.get("auto_copy_enabled", True)
+            set_auto_copy_enabled(new_state)
+            
+            status = "Увімкнено" if new_state else "Вимкнено"
+            log(f"Автокопіювання при виділенні: {status}", "action")
+            
+        except Exception as e:
+            log(f"Помилка перемикання автокопіювання: {str(e)}", "error")
+
     @kb.add("up", filter=show_menu)
     def _(event):
         state.menu_index = max(0, state.menu_index - 1)
