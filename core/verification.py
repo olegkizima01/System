@@ -51,7 +51,7 @@ class AdaptiveVerifier:
             ])
             
             response = self.llm.invoke(prompt.format_messages())
-            content = response.content
+            content = getattr(response, "content", "") if response is not None else ""
             
             # Use improved extraction logic
             def extract_json(text):

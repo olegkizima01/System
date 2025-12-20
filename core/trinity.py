@@ -316,7 +316,8 @@ class TrinityRuntime:
                 HumanMessage(content=str(task or "")),
             ]
             resp = self.llm.invoke(msgs)
-            data = self._extract_json_object(getattr(resp, "content", ""))
+            resp_content = getattr(resp, "content", "") if resp is not None else ""
+            data = self._extract_json_object(resp_content)
             if not data:
                 return None
             task_type = str(data.get("task_type") or "").strip().upper()
@@ -471,7 +472,7 @@ class TrinityRuntime:
         
         # Detect stall conditions
         messages = state.get("messages", [])
-        last_message = messages[-1].content if messages and len(messages) > 0 else ""
+        last_message = getattr(messages[-1], "content", "") if messages and len(messages) > 0 and messages[-1] is not None else ""
         last_message_lower = last_message.lower()
         
         stall_conditions = [
@@ -733,7 +734,7 @@ class TrinityRuntime:
         if self.verbose: print("🧠 [Meta-Planner] Analyzing strategy...")
         context = state.get("messages", [])
         # Safe access to last message - check if context is not empty first
-        last_msg = context[-1].content if context and len(context) > 0 else "Start"
+        last_msg = getattr(context[-1], "content", "Start") if context and len(context) > 0 and context[-1] is not None else "Start"
         original_task = state.get("original_task") or "Unknown"
         step_count = state.get("step_count", 0)
         replan_count = state.get("replan_count", 0)
@@ -746,13 +747,20 @@ class TrinityRuntime:
         summary = state.get("summary", "")
         if len(context) > 6 and step_count % 3 == 0:
              try:
+                # Safe content extraction - handle objects without .content attribute
+                recent_contents = []
+                for m in (context[-4:] if len(context) >= 4 else context):
+                    msg_content = getattr(m, "content", "") if m is not None else ""
+                    if msg_content:
+                        recent_contents.append(str(msg_content)[:500])
+                
                 summary_prompt = [
                     SystemMessage(content=f"You are the Trinity archivist. Create a concise summary (2-3 sentences) of the current task state in {self.preferred_language}. What has been done? What remains?"),
-                    HumanMessage(content=f"Current summary: {summary}\n\nRecent events:\n" + "\n".join([m.content[:500] for m in (context[-4:] if len(context) >= 4 else context)]))
+                    HumanMessage(content=f"Current summary: {summary}\n\nRecent events:\n" + "\n".join(recent_contents))
                 ]
                 sum_resp = self.llm.invoke(summary_prompt)
-                summary = sum_resp.content
-                if self.verbose: print(f"🧠 [Meta-Planner] Summary update: {summary[:50]}...")
+                summary = getattr(sum_resp, "content", "")
+                if self.verbose: print(f"🧠 [Meta-Planner] Summary update: {summary[:50] if summary else '(empty)'}...")
              except Exception:
                 pass
 
@@ -855,7 +863,8 @@ class TrinityRuntime:
             
             try:
                 resp = self.llm.invoke(prompt.format_messages())
-                data = self._extract_json_object(resp.content)
+                resp_content = getattr(resp, "content", "") if resp is not None else ""
+                data = self._extract_json_object(resp_content)
                 if data and "meta_config" in data:
                     meta_config.update(data["meta_config"])
                     # Selective RAG: If Meta-Planner decides context is needed
@@ -909,7 +918,7 @@ class TrinityRuntime:
         """Generates the plan based on Meta-Planner policy."""
         if self.verbose: print("🌐 [Atlas] Generating steps...")
         context = state.get("messages", [])
-        last_msg = context[-1].content if context and len(context) > 0 else "Start"
+        last_msg = getattr(context[-1], "content", "Start") if context and len(context) > 0 and context[-1] is not None else "Start"
         step_count = state.get("step_count", 0) + 1
         replan_count = state.get("replan_count", 0)
         plan = state.get("plan")
@@ -973,7 +982,8 @@ class TrinityRuntime:
                 atlas_llm = CopilotLLM(model_name=atlas_model)
 
                 plan_resp = atlas_llm.invoke_with_stream(prompt.format_messages(), on_delta=on_delta)
-                data = self._extract_json_object(plan_resp.content)
+                plan_resp_content = getattr(plan_resp, "content", "") if plan_resp is not None else ""
+                data = self._extract_json_object(plan_resp_content)
                 
                 raw_plan = []
                 if isinstance(data, list): raw_plan = data
@@ -1071,7 +1081,8 @@ class TrinityRuntime:
         context = state.get("messages", [])
         if not context:
             return {"current_agent": "end", "messages": [AIMessage(content="[VOICE] Немає контексту для виконання.")]}
-        last_msg = context[-1].content  # Safe because we checked 'if not context' above
+        # Safe content extraction - check for None and missing attribute
+        last_msg = getattr(context[-1], "content", "") if context and context[-1] is not None else ""
         original_task = state.get("original_task") or ""
 
         gui_mode = str(state.get("gui_mode") or "auto").strip().lower()
@@ -1142,8 +1153,8 @@ class TrinityRuntime:
             
             # Use Tetyana's local bound LLM
             response = tetyana_llm.invoke_with_stream(prompt.format_messages(), on_delta=on_delta)
-            content = response.content
-            tool_calls = response.tool_calls if hasattr(response, 'tool_calls') else []
+            content = getattr(response, "content", "") if response is not None else ""
+            tool_calls = getattr(response, "tool_calls", []) if response is not None and hasattr(response, 'tool_calls') else []
             
             # Anti-acknowledgment check: if no tools and content looks like "I understand/will do"
             if not tool_calls and content:
@@ -1450,7 +1461,7 @@ class TrinityRuntime:
         context = state.get("messages", [])
         if not context:
             return {"current_agent": "end", "messages": [AIMessage(content="[VOICE] Немає контексту для перевірки.")]}
-        last_msg = context[-1].content if context and len(context) > 0 else ""
+        last_msg = getattr(context[-1], "content", "") if context and len(context) > 0 and context[-1] is not None else ""
         if isinstance(last_msg, str) and len(last_msg) > 50000:
             last_msg = last_msg[:45000] + "\n\n[... TRUNCATED DUE TO SIZE ...]\n\n" + last_msg[-5000:]
         tool_calls = [] # Initialize for scope safety
@@ -1565,8 +1576,8 @@ class TrinityRuntime:
             grisha_llm = CopilotLLM(model_name=grisha_model)
             
             response = grisha_llm.invoke_with_stream(prompt.format_messages(), on_delta=on_delta)
-            content = response.content
-            tool_calls = response.tool_calls if hasattr(response, 'tool_calls') else []
+            content = getattr(response, "content", "") if response is not None else ""
+            tool_calls = getattr(response, "tool_calls", []) if response is not None and hasattr(response, 'tool_calls') else []
             
             try:
                 trace(self.logger, "grisha_llm", {
@@ -1675,7 +1686,8 @@ class TrinityRuntime:
             # We don't stream the verdict, just get it
             try:
                 verdict_resp = self.llm.invoke(verdict_msgs)
-                verdict_content += "\n\n[VERDICT ANALYSIS]\n" + verdict_resp.content
+                verdict_content_to_add = getattr(verdict_resp, "content", "") if verdict_resp is not None else ""
+                verdict_content += "\n\n[VERDICT ANALYSIS]\n" + verdict_content_to_add
             except Exception as e:
                 verdict_content += f"\n\n[VERDICT ERROR] Could not get verdict: {e}"
 
@@ -1854,7 +1866,7 @@ class TrinityRuntime:
                 # Check the message history to see who sent the last message
                 messages = state.get("messages", [])
                 if messages and isinstance(messages[-1], AIMessage):
-                    content = messages[-1].content.lower()
+                    content = getattr(messages[-1], "content", "").lower() if messages[-1] is not None else ""
                     # If it sounds like success AND it's not a message from the knowledge node itself
                     if any(x in content for x in ["завершена", "готово", "виконано", "completed", "success"]):
                         # Simple heuristic: if the message doesn't mention "experience stored" (which knowledge node does)
@@ -1880,8 +1892,12 @@ class TrinityRuntime:
         # Determine status: if we are here via 'success' tags, it's a win.
         # But we should also be able to learn from failures.
         actual_status = "success"
-        if last_status == "failed" or (context and "failed" in context[-1].content.lower()):
+        if last_status == "failed":
             actual_status = "failed"
+        elif context and len(context) > 0 and context[-1] is not None:
+            last_content = getattr(context[-1], "content", "").lower()
+            if "failed" in last_content:
+                actual_status = "failed"
             
         # Self-evaluation of confidence
         if actual_status == "success":

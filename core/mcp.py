@@ -89,10 +89,11 @@ class ExternalMCPProvider:
             result = await self._session.call_tool(tool_name, args)
             # Standardize output for Trinity (JSON string or dict)
             content = []
-            for item in result.content:
-                if hasattr(item, "text"):
+            result_content = getattr(result, "content", []) if result is not None else []
+            for item in result_content if result_content else []:
+                if item is not None and hasattr(item, "text"):
                     content.append(item.text)
-                elif hasattr(item, "data"):
+                elif item is not None and hasattr(item, "data"):
                     # Handle image/binary data if needed
                     content.append(f"[Binary Data: {len(item.data)} bytes]")
             
