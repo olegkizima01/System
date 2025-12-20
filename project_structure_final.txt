@@ -1,5 +1,5 @@
 ## Metadata
-Generated: Sat Dec 20 07:27:46 EET 2025
+Generated: Sat Dec 20 07:28:28 EET 2025
 
 ## Program Execution Logs
 (See logs/cli.log for details)
@@ -28,6 +28,11 @@ Generated: Sat Dec 20 07:27:46 EET 2025
 ├── cli.sh
 ├── configs
 │   ├── Anna-Station
+│   │   ├── hostname.txt
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
+│   ├── Ariana-Server-01
 │   │   ├── hostname.txt
 │   │   ├── metadata.json
 │   │   └── User
@@ -246,6 +251,7 @@ Generated: Sat Dec 20 07:27:46 EET 2025
 ├── script.js
 ├── setup.sh
 ├── style.css
+├── SUPER_RAG_DEPENDENCY_ISSUE.md
 ├── system_ai
 │   ├── __init__.py
 │   ├── graph
@@ -322,4 +328,4 @@ Generated: Sat Dec 20 07:27:46 EET 2025
     ├── themes.py
     └── tools.py
 
-123 directories, 193 files
+126 directories, 196 files
