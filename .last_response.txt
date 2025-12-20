@@ -2,17 +2,17 @@
 
 Task: Найди через гугл фільм сучасний якийсь про штучний інтелект для перегляду його онлайн. Після того включи його на весь екран для перегляду, пересвідчись що він запущений і на весь екран.
 Outcome: completed
-Replans: 10
+Replans: 2
 Last agent: meta_planner
 
 Last message:
-[VOICE] Ліміт перепланувань вичерпано (10).
+[VOICE] Усі кроки плану успішно виконано.
 
 Changed files:
 - (no uncommitted changes detected)
 
 Verification:
-- status: unknown (no explicit signal)
+- status: passed (heuristic)
 
 Tests:
 - not executed by Trinity (no deterministic test runner in pipeline)
