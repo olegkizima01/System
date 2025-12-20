@@ -1,5 +1,5 @@
 ## Metadata
-Generated: Sat Dec 20 22:32:50  2025
+Generated: Sat Dec 20 22:35:57  2025
 
 ## Program Execution Logs
 (See logs/cli.log for details)
@@ -61,7 +61,8 @@ Tests:
 
 ## Git History (Last 10 Commits)
 ```
-  cf879cf9 docs: update atlas and README documentation
+  b972eb2a docs: Update Atlas documentation and agent workflow definition.
+  e89c0534 docs: update atlas and README documentation
   b4284d68 feat(tui): add Ctrl+Shift+K toggle for auto-copy on selection
   d511c53a feat: Implement TUI selection and clipboard features, and remove temporary screenshot artifacts.
   9efb14d6 fix: Update project_structure_final.txt generation + atlas.md verification section
@@ -70,7 +71,6 @@ Tests:
   fad1b84d docs: Update README and setup script with detailed MCP server setup instructions
   cb4e405c fix: Safely access response content in MCP and Trinity classes to prevent attribute errors
   e0415410 Add initial project structure and configuration files for development
-  51828e17 refactor: Correct indentation of Atlas planning and error handling logic.
 ```
 
 ## Project Structure
