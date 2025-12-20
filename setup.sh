@@ -133,8 +133,10 @@ echo "--- Vision Dependencies ---"
 # Check PaddleOCR
 if python -c "import paddleocr; print('✅ PaddleOCR version:', paddleocr.__version__)" 2>/dev/null; then
     echo "✅ PaddleOCR installed"
+    PADDLEOCR_INSTALLED=true
 else
     echo "⚠️  PaddleOCR not installed (fallback to Copilot OCR)"
+    PADDLEOCR_INSTALLED=false
 fi
 
 # Check super-rag
