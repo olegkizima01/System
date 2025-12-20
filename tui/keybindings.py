@@ -288,9 +288,9 @@ def build_keybindings(
         if w:
             event.app.layout.focus(w)
 
-    @kb.add("c-s-k")
+    @kb.add("c-o")
     def _(event):
-        """Toggle auto-copy on text selection (Ctrl+Shift+K).
+        """Toggle auto-copy on text selection (Ctrl+O).
         
         When enabled, selecting text with the mouse will automatically
         copy the selected text to the clipboard.
