@@ -349,7 +349,13 @@ class CodeSelfHealer:
                 # Check for file/line in stack trace
                 file_match = re.search(r'File "([^"]+)", line (\d+)', line)
                 if file_match:
-                    current_file = file_match.group(1)
+                    path_str = file_match.group(1)
+                    # Ensure we only track files within the project
+                    if os.path.isabs(path_str) and not path_str.startswith(self.project_root):
+                        current_file = None 
+                    else:
+                        current_file = path_str
+                    
                     current_line = int(file_match.group(2))
                     current_stack.append(line)
                     continue

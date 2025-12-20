@@ -1,5 +1,5 @@
 ## Metadata
-Generated: Sat Dec 20 09:35:58 EET 2025
+Generated: Сб 20 груд. 2025 18:29:41 EET
 
 ## Program Execution Logs
 (See logs/cli.log for details)
@@ -7,6 +7,7 @@ Generated: Sat Dec 20 09:35:58 EET 2025
 ## Project Structure
 .
 ├── auto_commit.sh
+├── check_fastmcp.py
 ├── cleanup_modules.json
 ├── cleanup_scripts
 │   ├── advanced_antigraviti_cleanup.sh
@@ -254,6 +255,8 @@ Generated: Sat Dec 20 09:35:58 EET 2025
 ├── run_trinity_task.py
 ├── save_response.sh
 ├── script.js
+├── scripts
+│   └── fix_mcp_server.py
 ├── setup.sh
 ├── style.css
 ├── SUPER_RAG_DEPENDENCY_ISSUE.md
@@ -337,4 +340,4 @@ Generated: Sat Dec 20 09:35:58 EET 2025
     ├── themes.py
     └── tools.py
 
-126 directories, 205 files
+127 directories, 207 files

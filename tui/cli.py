@@ -1645,19 +1645,6 @@ def _custom_task_recording_analyze_last() -> Tuple[bool, str]:
     if state.ui_lang == 'uk':
         # Add logic for 'uk' if necessary
         pass
-        ("menu.settings.section.appearance", None, "section"),
-        ("menu.settings.appearance", MenuLevel.APPEARANCE, None),
-        ("menu.settings.layout", MenuLevel.LAYOUT, None),
-        ("menu.settings.language", MenuLevel.LANGUAGE, None),
-        ("menu.settings.language", MenuLevel.LANGUAGE, None),
-        ("menu.settings.locales", MenuLevel.LOCALES, None),
-        ("menu.settings.section.agent", None, "section"),
-        ("menu.settings.llm", MenuLevel.LLM_SETTINGS, None),
-        ("menu.settings.agent", MenuLevel.AGENT_SETTINGS, None),
-        ("menu.settings.unsafe_mode", MenuLevel.UNSAFE_MODE, None),
-        ("menu.settings.section.dev", None, "section"),
-        ("menu.settings.dev_code_provider", MenuLevel.DEV_SETTINGS, None),
-    ]
 
 def _get_llm_menu_items() -> List[Tuple[str, Any, Optional[str]]]:
     return [
@@ -1676,8 +1663,6 @@ def _get_llm_sub_menu_items(level: Any) -> List[Tuple[str, Any]]:
     
     # Determine section from level
     section = ""
-    if not isinstance(level, MenuLevel):
-    """Get LLM settings sub-menu items for a specific agent/section."""
     if not isinstance(level, MenuLevel):
         raise TypeError(f"Expected level to be of type MenuLevel, got {type(level).__name__}")
 
@@ -1739,6 +1724,20 @@ def _get_dev_settings_menu_items() -> List[Tuple[str, Any, Optional[str]]]:
     provider_label = "VIBE-CLI" if provider == "vibe-cli" else "CONTINUE"
     return [
         (f"Code Provider: {provider_label}", "ui_dev_code_provider", None),
+    ]
+
+
+def _get_settings_menu_items() -> List[Tuple[str, Any, Optional[str]]]:
+    """Return settings menu items."""
+    return [
+        ("menu.settings.section.appearance", None, "section"),
+        ("menu.settings.appearance", MenuLevel.APPEARANCE, None),
+        ("menu.settings.language", MenuLevel.LANGUAGE, None),
+        ("menu.settings.locales", MenuLevel.LOCALES, None),
+        ("menu.settings.section.agent", None, "section"),
+        ("menu.settings.llm", MenuLevel.LLM_SETTINGS, None),
+        ("menu.settings.agent", MenuLevel.AGENT_SETTINGS, None),
+        ("menu.settings.unsafe_mode", MenuLevel.UNSAFE_MODE, None),
     ]
 
 

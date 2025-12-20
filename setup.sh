@@ -73,23 +73,28 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-# Install PaddleOCR for OCR functionality
-echo "📦 Installing PaddleOCR for OCR..."
-pip install paddleocr paddlepaddle
+# Note: PaddleOCR is included in requirements.txt, but we ensure it here if something failed differently, or just trust requirements.txt.
+# Relying on requirements.txt for paddleocr.
 
-if [ $? -ne 0 ]; then
-    echo "⚠️  PaddleOCR installation failed. OCR will use fallback methods."
-else
-    echo "✅ PaddleOCR installed successfully"
-fi
 
 # Note: super-rag is deprecated (abandoned project with broken dependencies)
 # System uses DifferentialVisionAnalyzer (OpenCV + PaddleOCR) instead
 echo "📝 Using DifferentialVisionAnalyzer for vision analysis (OpenCV + PaddleOCR)"
 
-# Install additional useful packages
-echo "📦 Installing additional useful packages..."
-pip install python-dotenv rich typer
+# Apply patches to MCP servers
+echo "🔧 Applying patches to MCP servers..."
+if [ -f "scripts/fix_mcp_server.py" ]; then
+    $PYTHON_CMD scripts/fix_mcp_server.py
+    if [ $? -ne 0 ]; then
+        echo "⚠️  Failed to patch MCP server. Use with caution."
+    fi
+else
+    echo "⚠️  Patch script scripts/fix_mcp_server.py not found."
+fi
+
+
+# Additional packages are now in requirements.txt
+
 
 # Verify all installations
 echo "🔍 Verifying all installations..."

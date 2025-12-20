@@ -80,7 +80,7 @@ class BrowserManager:
         self.browser = None
         self.page = None
 
-def browser_open_url(url: str, headless: bool = True) -> str:
+def browser_open_url(url: str, headless: bool = False) -> str:
     try:
         manager = BrowserManager.get_instance()
         page = manager.get_page(headless=headless)
@@ -242,7 +242,7 @@ def browser_snapshot() -> str:
     except Exception as e:
         return json.dumps({"status": "error", "error": str(e)})
 
-def browser_navigate(url: str, headless: bool = True) -> str:
+def browser_navigate(url: str, headless: bool = False) -> str:
     """Alias for browser_open_url."""
     return browser_open_url(url, headless=headless)
 
