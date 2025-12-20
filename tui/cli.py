@@ -1670,14 +1670,17 @@ def _get_llm_menu_items() -> List[Tuple[str, Any, Optional[str]]]:
 
 
 def _get_llm_sub_menu_items(level: Any) -> List[Tuple[str, Any]]:
+    """Get LLM settings sub-menu items for a specific agent/section."""
+    if not isinstance(level, MenuLevel):
+        raise TypeError(f"Expected level to be of type MenuLevel, got {type(level).__name__}")
+    
     # Determine section from level
     section = ""
     if level == MenuLevel.LLM_DEFAULTS:
         section = "defaults"
     elif level == MenuLevel.LLM_ATLAS:
         section = "atlas"
-    if not isinstance(level, MenuLevel):
-        raise TypeError(f"Expected level to be of type MenuLevel, got {type(level).__name__}")
+    elif level == MenuLevel.LLM_TETYANA:
         section = "tetyana"
     elif level == MenuLevel.LLM_GRISHA:
         section = "grisha"
@@ -1711,6 +1714,7 @@ def _get_llm_sub_menu_items(level: Any) -> List[Tuple[str, Any]]:
         (f"Provider: {prov}", "provider", None),
         (f"Model: {mod}", "model", None),
     ]
+
 
 def _get_agent_menu_items() -> List[Tuple[str, Any, Optional[str]]]:
     mode = "ON" if agent_chat_mode and agent_session.enabled else "OFF"
