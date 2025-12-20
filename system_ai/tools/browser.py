@@ -22,15 +22,24 @@ class BrowserManager:
         return cls._instance
 
     def get_page(self, headless: Optional[bool] = None) -> Page:
+        log_file = os.path.expanduser("~/.system_cli/logs/browser_debug.log")
+        os.makedirs(os.path.dirname(log_file), exist_ok=True)
+        with open(log_file, "a") as f:
+            f.write(f"{time.ctime()}: get_page called with headless={headless} (last={self._last_headless})\n")
+
         # If headless mode is not specified, use the last one or default to True
         if headless is None:
             headless = self._last_headless if self._last_headless is not None else True
 
         # If already running but in different headless mode, restart
         if self.pw and self.browser and self._last_headless is not None and self._last_headless != headless:
+            with open(log_file, "a") as f:
+                f.write(f"{time.ctime()}: Re-starting browser due to headless change\n")
             self.close()
 
         if not self.browser:
+            with open(log_file, "a") as f:
+                f.write(f"{time.ctime()}: Launching new browser instance\n")
             try:
                 if not self.pw:
                     self.pw = sync_playwright().start()
@@ -76,10 +85,20 @@ class BrowserManager:
 
 
     def close(self):
+        log_file = os.path.expanduser("~/.system_cli/logs/browser_debug.log")
+        os.makedirs(os.path.dirname(log_file), exist_ok=True)
+        with open(log_file, "a") as f:
+            f.write(f"{time.ctime()}: close() called\n")
         if self.browser:
-            self.browser.close()
+            try:
+                self.browser.close()
+            except:
+                pass
         if self.pw:
-            self.pw.stop()
+            try:
+                self.pw.stop()
+            except:
+                pass
         self.pw = None
         self.browser = None
         self.page = None
@@ -92,7 +111,6 @@ def browser_open_url(url: str, headless: bool = False) -> str:
         time.sleep(2) # Give page some time to settle
         
         content = page.content().lower()
-        # Refined detection: avoid false positives on 'robot' or 'sorry' in footer/about pages
         captcha_markers = [
             "g-recaptcha", "hcaptcha", "cloudflare-turnstile",
             "verify you are human", "solving this captcha",
@@ -100,8 +118,6 @@ def browser_open_url(url: str, headless: bool = False) -> str:
             "check if you are a robot"
         ]
         has_captcha = any(marker in content for marker in captcha_markers)
-        
-        # If very suspicious but not explicitly matched, log it but don't force 'uncertain' automatically
         if not has_captcha and ("sorry" in content and "unusual traffic" in content):
             has_captcha = True
         
@@ -119,7 +135,6 @@ def browser_click_element(selector: str) -> str:
         manager = BrowserManager.get_instance()
         page = manager.get_page()
         page.click(selector, timeout=5000)
-        # Add basic wait for navigation/action
         try:
              page.wait_for_load_state("domcontentloaded", timeout=5000)
              time.sleep(1.0)
@@ -131,7 +146,6 @@ def browser_click_element(selector: str) -> str:
 
 def browser_type_text(selector: str, text: str, press_enter: bool = False) -> str:
     try:
-        # Smart Selector Mapping: Google changed input[name="q"] to textarea[name="q"]
         if selector == "input[name='q']" or selector == 'input[name="q"]':
             selector = 'textarea[name="q"]'
             
@@ -140,12 +154,11 @@ def browser_type_text(selector: str, text: str, press_enter: bool = False) -> st
         page.fill(selector, text, timeout=10000)
         if press_enter:
             page.press(selector, "Enter")
-            # WAIT for results to load
             try:
                 page.wait_for_load_state("domcontentloaded", timeout=5000)
-                time.sleep(2.0) # Grace period for JS rendering
+                time.sleep(2.0)
             except:
-                time.sleep(3.0) # Fallback
+                time.sleep(3.0)
         return json.dumps({"status": "success"})
     except Exception as e:
         return json.dumps({"status": "error", "error": str(e)})
@@ -181,7 +194,6 @@ def browser_screenshot(path: Optional[str] = None) -> str:
         manager = BrowserManager.get_instance()
         page = manager.get_page()
         if not path:
-            # Prioritize project data folder if it exists
             project_dir = os.path.abspath(".agent/workflows/data/screenshots")
             if os.path.isdir(project_dir):
                 output_dir = project_dir
@@ -198,16 +210,11 @@ def browser_screenshot(path: Optional[str] = None) -> str:
 def browser_get_content() -> str:
     try:
         manager = BrowserManager.get_instance()
-        # Use existing session's headless mode if available
-        headless_mode = manager._last_headless if manager._last_headless is not None else True
-        page = manager.get_page(headless=headless_mode)
-        
-        # Extract visible text instead of raw HTML to reduce noise and fit more useful info
+        page = manager.get_page()
         text_content = page.inner_text("body")
-        
         return json.dumps({
             "status": "success",
-            "content": text_content[:15000],  # Increased limit and switched to text
+            "content": text_content[:15000],
             "url": page.url,
             "title": page.title()
         }, ensure_ascii=False)
@@ -215,17 +222,11 @@ def browser_get_content() -> str:
         return json.dumps({"status": "error", "error": str(e)})
 
 def browser_snapshot() -> str:
-    """Capture accessibility snapshot of the current page.
-    Note: Full A11y tree snapshot was removed in v1.50+. 
-    This tool now returns a simplified view with content, url, and title.
-    """
     try:
         manager = BrowserManager.get_instance()
         page = manager.get_page()
         content = page.content()
-        
         content_lower = content.lower()
-        # Basic CAPTCHA check
         captcha_markers = [
             "g-recaptcha", "hcaptcha", "cloudflare-turnstile",
             "verify you are human", "solving this captcha",
@@ -241,21 +242,18 @@ def browser_snapshot() -> str:
             "url": page.url,
             "title": page.title(),
             "has_captcha": has_captcha,
-            "content_preview": content[:30000] # Return much more content for verification
+            "content_preview": content[:30000]
         }, ensure_ascii=False)
     except Exception as e:
         return json.dumps({"status": "error", "error": str(e)})
 
 def browser_navigate(url: str, headless: bool = False) -> str:
-    """Alias for browser_open_url."""
     return browser_open_url(url, headless=headless)
 
 def browser_get_links() -> str:
-    """Extract all clickable links from the current page."""
     try:
         manager = BrowserManager.get_instance()
         page = manager.get_page()
-        
         links = page.evaluate("""
             () => {
                 const results = [];
@@ -270,11 +268,7 @@ def browser_get_links() -> str:
                 return results;
             }
         """)
-        
-        return json.dumps({
-            "status": "success",
-            "links": links[:50] # Top 50 links
-        }, ensure_ascii=False)
+        return json.dumps({"status": "success", "links": links[:50]}, ensure_ascii=False)
     except Exception as e:
         return json.dumps({"status": "error", "error": str(e)})
 

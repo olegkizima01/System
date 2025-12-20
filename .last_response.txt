@@ -9,14 +9,17 @@ Last message:
 [VOICE] Ліміт перепланувань вичерпано (10).
 
 Changed files:
-- scripts/fix_mcp_server.py
+- core/mcp.py
 - system_ai/tools/browser.py
-- check_ssl.py
+- test_mss.py
+- test_playwright_alt.py
+- test_playwright_local.py
+- test_pyautogui_direct.py
 
 Diff stat:
-scripts/fix_mcp_server.py  | 2 +-
- system_ai/tools/browser.py | 8 ++++++--
- 2 files changed, 7 insertions(+), 3 deletions(-)
+core/mcp.py                |  2 +-
+ system_ai/tools/browser.py | 60 +++++++++++++++++++++-------------------------
+ 2 files changed, 28 insertions(+), 34 deletions(-)
 
 Verification:
 - status: unknown (no explicit signal)

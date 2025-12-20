@@ -1,5 +1,5 @@
 ## Metadata
-Generated: Сб 20 груд. 2025 18:52:25 EET
+Generated: Сб 20 груд. 2025 19:03:07 EET
 
 ## Program Execution Logs
 (See logs/cli.log for details)
@@ -300,6 +300,10 @@ Generated: Сб 20 груд. 2025 18:52:25 EET
 │   └── bootstrap_new_project.sh
 ├── test_integration.txt
 ├── test_loop_fix.py
+├── test_mss.py
+├── test_playwright_alt.py
+├── test_playwright_local.py
+├── test_pyautogui_direct.py
 ├── tests
 │   ├── conftest.py
 │   ├── test_agent_protocol.py
@@ -341,4 +345,4 @@ Generated: Сб 20 груд. 2025 18:52:25 EET
     ├── themes.py
     └── tools.py
 
-127 directories, 208 files
+127 directories, 212 files
