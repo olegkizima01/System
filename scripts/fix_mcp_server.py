@@ -74,7 +74,7 @@ from typing import List, Dict, Union, Optional
 from pydantic import Field
 
 
-mcp = FastMCP("MCP Pyautogui Server", dependencies=["pyautogui", "Pillow"])
+mcp = FastMCP("MCP Pyautogui Server")
 
 
 @mcp.tool()

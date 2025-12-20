@@ -9,21 +9,14 @@ Last message:
 [VOICE] Ліміт перепланувань вичерпано (10).
 
 Changed files:
-- core/self_healing.py
-- requirements.txt
-- setup.sh
+- scripts/fix_mcp_server.py
 - system_ai/tools/browser.py
-- tui/cli.py
-- check_fastmcp.py
-- scripts/
+- check_ssl.py
 
 Diff stat:
-core/self_healing.py       |  8 +++++++-
- requirements.txt           |  4 ++++
- setup.sh                   | 27 ++++++++++++++++-----------
- system_ai/tools/browser.py |  4 ++--
- tui/cli.py                 | 29 ++++++++++++++---------------
- 5 files changed, 43 insertions(+), 29 deletions(-)
+scripts/fix_mcp_server.py  | 2 +-
+ system_ai/tools/browser.py | 8 ++++++--
+ 2 files changed, 7 insertions(+), 3 deletions(-)
 
 Verification:
 - status: unknown (no explicit signal)

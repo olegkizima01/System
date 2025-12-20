@@ -21,9 +21,13 @@ class BrowserManager:
             cls._instance = cls()
         return cls._instance
 
-    def get_page(self, headless: bool = True) -> Page:
+    def get_page(self, headless: Optional[bool] = None) -> Page:
+        # If headless mode is not specified, use the last one or default to True
+        if headless is None:
+            headless = self._last_headless if self._last_headless is not None else True
+
         # If already running but in different headless mode, restart
-        if self.pw and self.browser and self._last_headless != headless:
+        if self.pw and self.browser and self._last_headless is not None and self._last_headless != headless:
             self.close()
 
         if not self.browser:
