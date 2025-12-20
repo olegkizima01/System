@@ -84,15 +84,23 @@ else
 fi
 
 # Install super-rag for advanced vision features
-echo "📦 Attempting to install super-rag for advanced vision features..."
-pip install git+https://github.com/superagent-ai/super-rag.git
-
-if [ $? -ne 0 ]; then
-    echo "⚠️  super-rag repository not found or unavailable."
+# Note: super-rag requires Python <3.12, so skip for Python 3.12+
+PYTHON_MAJOR_MINOR=$(echo $PYTHON_VERSION | cut -d. -f1,2)
+if [ "$PYTHON_MAJOR_MINOR" = "3.12" ]; then
+    echo "⚠️  super-rag requires Python <3.12, but Python $PYTHON_VERSION is installed."
     echo "   The system will use OpenCV-based vision analysis."
     echo "   Advanced features will be unavailable, but core functionality works."
 else
-    echo "✅ super-rag installed successfully"
+    echo "📦 Attempting to install super-rag for advanced vision features..."
+    pip install git+https://github.com/superagent-ai/super-rag.git
+
+    if [ $? -ne 0 ]; then
+        echo "⚠️  super-rag repository not found or unavailable."
+        echo "   The system will use OpenCV-based vision analysis."
+        echo "   Advanced features will be unavailable, but core functionality works."
+    else
+        echo "✅ super-rag installed successfully"
+    fi
 fi
 
 # Install additional useful packages
@@ -105,7 +113,7 @@ echo "🔍 Verifying all installations..."
 echo "--- Core Dependencies ---"
 
 # Check OpenCV
-if python -c "import cv2; print('✅ OpenCV version:', cv2.__version__)" 2>/dev/null; then
+if $PYTHON_CMD -c "import cv2; print('✅ OpenCV version:', cv2.__version__)" 2>/dev/null; then
     echo "✅ OpenCV installed"
 else
     echo "❌ OpenCV not installed"
@@ -113,7 +121,7 @@ else
 fi
 
 # Check PIL/Pillow
-if python -c "from PIL import Image; print('✅ PIL/Pillow installed')" 2>/dev/null; then
+if $PYTHON_CMD -c "from PIL import Image; print('✅ PIL/Pillow installed')" 2>/dev/null; then
     echo "✅ PIL/Pillow installed"
 else
     echo "❌ PIL/Pillow not installed"
@@ -121,7 +129,7 @@ else
 fi
 
 # Check numpy
-if python -c "import numpy as np; print('✅ NumPy version:', np.__version__)" 2>/dev/null; then
+if $PYTHON_CMD -c "import numpy as np; print('✅ NumPy version:', np.__version__)" 2>/dev/null; then
     echo "✅ NumPy installed"
 else
     echo "❌ NumPy not installed"
@@ -131,7 +139,7 @@ fi
 echo "--- Vision Dependencies ---"
 
 # Check PaddleOCR
-if python -c "import paddleocr; print('✅ PaddleOCR version:', paddleocr.__version__)" 2>/dev/null; then
+if $PYTHON_CMD -c "import paddleocr; print('✅ PaddleOCR version:', paddleocr.__version__)" 2>/dev/null; then
     echo "✅ PaddleOCR installed"
     PADDLEOCR_INSTALLED=true
 else
@@ -140,7 +148,7 @@ else
 fi
 
 # Check super-rag
-if python -c "import super_rag; print('✅ super-rag installed')" 2>/dev/null; then
+if $PYTHON_CMD -c "import super_rag; print('✅ super-rag installed')" 2>/dev/null; then
     echo "✅ super-rag installed"
 else
     echo "⚠️  super-rag not installed (using OpenCV fallback)"
@@ -149,7 +157,7 @@ fi
 echo "--- LLM Dependencies ---"
 
 # Check langchain
-if python -c "import langchain; print('✅ LangChain version:', langchain.__version__)" 2>/dev/null; then
+if $PYTHON_CMD -c "import langchain; print('✅ LangChain version:', langchain.__version__)" 2>/dev/null; then
     echo "✅ LangChain installed"
 else
     echo "❌ LangChain not installed"
@@ -157,7 +165,7 @@ else
 fi
 
 # Check langchain-core
-if python -c "import langchain_core; print('✅ LangChain Core installed')" 2>/dev/null; then
+if $PYTHON_CMD -c "import langchain_core; print('✅ LangChain Core installed')" 2>/dev/null; then
     echo "✅ LangChain Core installed"
 else
     echo "❌ LangChain Core not installed"
@@ -167,7 +175,7 @@ fi
 echo "--- System Dependencies ---"
 
 # Check python-dotenv
-if python -c "import dotenv; print('✅ python-dotenv installed')" 2>/dev/null; then
+if $PYTHON_CMD -c "import dotenv; print('✅ python-dotenv installed')" 2>/dev/null; then
     echo "✅ python-dotenv installed"
 else
     echo "❌ python-dotenv not installed"
@@ -175,14 +183,14 @@ else
 fi
 
 # Check rich
-if python -c "import rich; print('✅ Rich installed')" 2>/dev/null; then
+if $PYTHON_CMD -c "import rich; print('✅ Rich installed')" 2>/dev/null; then
     echo "✅ Rich installed"
 else
     echo "⚠️  Rich not installed (optional for better UI)"
 fi
 
 # Check typer
-if python -c "import typer; print('✅ Typer installed')" 2>/dev/null; then
+if $PYTHON_CMD -c "import typer; print('✅ Typer installed')" 2>/dev/null; then
     echo "✅ Typer installed"
 else
     echo "⚠️  Typer not installed (optional for CLI)"

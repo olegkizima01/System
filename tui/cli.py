@@ -1643,7 +1643,6 @@ def _custom_task_recording_analyze_last() -> Tuple[bool, str]:
     if str(state.ui_lang or '').strip().lower() == 'uk':
         return True, "Введи додатковий контекст для аналізу (опціонально) і натисни Enter. Можна просто Enter щоб пропустити."
     return True, "Type optional extra context for analysis and press Enter (or press Enter to skip)."
-    ]
 
 
 def _get_settings_menu_items() -> List[Tuple[str, Any, Optional[str]]]:
