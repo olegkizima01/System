@@ -1,3 +1,9 @@
+## My Last Response
+
+Adjusted setup.sh to prefer Python 3.11; reviewed requirements.txt; explained venv removal and system Python 3.11 setup steps
+
+---
+
 [Atlas] Final report
 
 Task: Найди через гугл фільм сучасний якийсь про штучний інтелект для перегляду його онлайн. Після того включи його на весь екран для перегляду, пересвідчись що він запущений і на весь екран.
