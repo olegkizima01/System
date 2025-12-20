@@ -66,9 +66,18 @@ class VibeCLIAssistant:
         if pause_context.get('issues'):
             print("\n🔍 Виявлені критичні помилки:")
             for i, issue in enumerate(pause_context['issues'], 1):
-                print(f"  {i}. {issue['type']} в {issue['file']}:{issue.get('line', '?')}")
-                print(f"     Серйозність: {issue['severity']}")
-                print(f"     Повідомлення: {issue['message'][:80]}...")
+                if not isinstance(issue, dict):
+                    print(f"  {i}. [Невідома помилка - некоректний формат]")
+                    continue
+                issue_type = issue.get('type', 'unknown')
+                issue_file = issue.get('file', 'unknown')
+                issue_line = issue.get('line', '?')
+                issue_severity = issue.get('severity', 'unknown')
+                issue_message = issue.get('message', 'no message')[:80]
+                
+                print(f"  {i}. {issue_type} в {issue_file}:{issue_line}")
+                print(f"     Серйозність: {issue_severity}")
+                print(f"     Повідомлення: {issue_message}...")
         
         print("\n💡 Doctor Vibe рекомендує:")
         print("   - Перевірте виявлені помилки")

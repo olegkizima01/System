@@ -1791,11 +1791,15 @@ class TrinityRuntime:
         return out
 
     def _router(self, state: TrinityState):
-        current = state["current_agent"]
+        current = state.get("current_agent", "meta_planner")  # Safe default to meta_planner
         
         # Check for Vibe CLI Assistant pause state
         if state.get("vibe_assistant_pause"):
-            pause_info = state["vibe_assistant_pause"]
+            pause_info = state.get("vibe_assistant_pause")
+            if pause_info is None:
+                # Corrupted pause state, reset
+                state["vibe_assistant_pause"] = None
+                return current
             
             # Try auto-repair if enabled
             if self.vibe_assistant.should_attempt_auto_repair(pause_info):
@@ -1804,7 +1808,7 @@ class TrinityRuntime:
                 
                 repair_result = self.vibe_assistant.attempt_auto_repair(pause_info)
                 
-                if repair_result.get("success"):
+                if repair_result and repair_result.get("success"):
                     # Auto-repair succeeded - clear pause and continue
                     if self.verbose:
                         self.logger.info(f"✅ Doctor Vibe: Auto-repair successful! Resuming execution.")
@@ -1812,7 +1816,7 @@ class TrinityRuntime:
                     # Clear pause state in vibe_assistant (already done by attempt_auto_repair)
                     # Update state to remove pause
                     state["vibe_assistant_pause"] = None
-                    state["vibe_assistant_context"] = f"AUTO-REPAIRED: {repair_result.get('message', 'Fixed')}"
+                    state["vibe_assistant_context"] = f"AUTO-REPAIRED: {repair_result.get('message', 'Fixed') if repair_result else 'Fixed'}"
                     
                     # Reset failure counters to give system fresh start
                     state["current_step_fail_count"] = 0
@@ -1838,7 +1842,7 @@ class TrinityRuntime:
             if pause_context.get("auto_resume_available", False) or pause_context.get("background_mode", False):
                 if self.vibe_assistant.should_attempt_auto_repair(pause_context):
                     repair_result = self.vibe_assistant.attempt_auto_repair(pause_context)
-                    if repair_result.get("success"):
+                    if repair_result and repair_result.get("success"):
                         # Fixed before even creating pause - continue normally
                         if self.verbose:
                             self.logger.info("🔧 Doctor Vibe: Pre-emptive repair successful!")
@@ -1846,12 +1850,12 @@ class TrinityRuntime:
             
             # Create pause state and return to current agent
             new_state = self._create_vibe_assistant_pause_state(state, 
-                                                               pause_context["reason"], 
-                                                               pause_context["message"])
+                                                               pause_context.get("reason", "unknown"), 
+                                                               pause_context.get("message", "Unknown pause reason"))
             # Update the state in the workflow
             # We'll handle this in the node functions
             if self.verbose:
-                self.logger.info(f"Vibe CLI Assistant INTERVENTION: {pause_context['message']}")
+                self.logger.info(f"Vibe CLI Assistant INTERVENTION: {pause_context.get('message', 'Unknown reason')}")
             return current
         
         try:
