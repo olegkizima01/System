@@ -31,6 +31,7 @@ class MenuLevel(Enum):
     AUTOMATION_PERMISSIONS = "automation_permissions"
     LAYOUT = "layout"
     DEV_SETTINGS = "dev_settings"
+    SELF_HEALING = "self_healing"
 
 
 @dataclass
@@ -71,6 +72,7 @@ class AppState:
     ui_panel_max_width: int = 120
     ui_left_panel_ratio: float = 0.6
     ui_dev_code_provider: str = "vibe-cli"  # vibe-cli | continue
+    ui_self_healing: bool = False
 
 
 state = AppState()

@@ -576,6 +576,7 @@ def _load_ui_settings() -> None:
         state.ui_log_follow = bool(data.get("log_follow", True))
         state.ui_agents_follow = bool(data.get("agents_follow", True))
         state.ui_dev_code_provider = str(data.get("dev_code_provider", "vibe-cli")).strip().lower()
+        state.ui_self_healing = bool(data.get("self_healing", False))
     except Exception:
         pass
 
@@ -597,6 +598,7 @@ def _save_ui_settings() -> bool:
             "log_follow": bool(getattr(state, "ui_log_follow", True)),
             "agents_follow": bool(getattr(state, "ui_agents_follow", True)),
             "dev_code_provider": str(getattr(state, "ui_dev_code_provider", "vibe-cli") or "vibe-cli").strip().lower() or "vibe-cli",
+            "self_healing": bool(getattr(state, "ui_self_healing", False)),
         }
         with open(UI_SETTINGS_PATH, "w", encoding="utf-8") as f:
             json.dump(payload, f, ensure_ascii=False, indent=2)
@@ -1625,6 +1627,7 @@ def _get_settings_menu_items() -> List[Tuple[str, Any, Optional[str]]]:
         ("menu.settings.llm", MenuLevel.LLM_SETTINGS, None),
         ("menu.settings.agent", MenuLevel.AGENT_SETTINGS, None),
         ("menu.settings.unsafe_mode", MenuLevel.UNSAFE_MODE, None),
+        ("menu.settings.self_healing", MenuLevel.SELF_HEALING, None),
     ]
 
 

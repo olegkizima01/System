@@ -214,7 +214,7 @@ def build_keybindings(
             state.menu_index = 0
         elif state.menu_level in {
             MenuLevel.LLM_SETTINGS, MenuLevel.AGENT_SETTINGS, MenuLevel.APPEARANCE, MenuLevel.LANGUAGE, MenuLevel.LAYOUT, MenuLevel.UNSAFE_MODE,
-            MenuLevel.AUTOMATION_PERMISSIONS, MenuLevel.DEV_SETTINGS, MenuLevel.LOCALES
+            MenuLevel.AUTOMATION_PERMISSIONS, MenuLevel.DEV_SETTINGS, MenuLevel.LOCALES, MenuLevel.SELF_HEALING
         }:
             state.menu_level = MenuLevel.SETTINGS
             state.menu_index = 0
@@ -283,6 +283,7 @@ def build_keybindings(
 
     @kb.add("c-o")
     def _(event):
+
         """Toggle auto-copy on text selection (Ctrl+O).
         
         When enabled, selecting text with the mouse will automatically
@@ -357,6 +358,8 @@ def build_keybindings(
         elif state.menu_level == MenuLevel.LAYOUT:
             max_idx = 0
         elif state.menu_level == MenuLevel.DEV_SETTINGS:
+            max_idx = 0
+        elif state.menu_level == MenuLevel.SELF_HEALING:
             max_idx = 0
 
         state.menu_index = min(max_idx, state.menu_index + 1)
@@ -592,6 +595,12 @@ def build_keybindings(
             state.ui_unsafe_mode = not bool(getattr(state, "ui_unsafe_mode", False))
             save_ui_settings()
             log(f"Unsafe mode: {'ON' if state.ui_unsafe_mode else 'OFF'}", "action")
+            return
+
+        if state.menu_level == MenuLevel.SELF_HEALING:
+            state.ui_self_healing = not bool(getattr(state, "ui_self_healing", False))
+            save_ui_settings()
+            log(f"Self-healing: {'ON' if state.ui_self_healing else 'OFF'}", "action")
             return
 
         if state.menu_level == MenuLevel.AUTOMATION_PERMISSIONS:

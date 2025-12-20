@@ -674,8 +674,8 @@ def run_graph_agent_task(
         tail_thread.start()
 
         chat_lang = getattr(state, "chat_lang", "en")
-        # Enable self-healing by default
-        enable_self_healing = not getattr(state, "disable_self_healing", False)
+        # Use state setting for self-healing
+        enable_self_healing = bool(getattr(state, "ui_self_healing", False))
         runtime = TrinityRuntime(
             verbose=False, 
             permissions=permissions, 

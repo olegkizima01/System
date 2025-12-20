@@ -259,6 +259,17 @@ def build_menu(
             result.append(("", "\n"))
             return result
 
+        if state.menu_level == MenuLevel.SELF_HEALING:
+            add_back_btn(result)
+            result.append(("class:menu.title", f" {tr('menu.self_healing.title', state.ui_lang)}\n\n"))
+            on = bool(getattr(state, "ui_self_healing", False))
+            prefix = " > "
+            handler = make_click(0)
+            result.append(("class:menu.selected", f"{prefix}{tr('menu.self_healing.label', state.ui_lang)} ", handler))
+            result.extend(get_toggle_text(on))
+            result.append(("", "\n"))
+            return result
+
         if state.menu_level == MenuLevel.AUTOMATION_PERMISSIONS:
             add_back_btn(result)
             result.append(("class:menu.title", f" {tr('menu.automation_permissions.title', state.ui_lang)}\n\n"))
