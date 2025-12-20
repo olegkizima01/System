@@ -1,5 +1,5 @@
 ## Metadata
-Generated: Sat Dec 20 09:00:36 EET 2025
+Generated: Sat Dec 20 09:03:37 EET 2025
 
 ## Program Execution Logs
 (See logs/cli.log for details)
@@ -234,6 +234,7 @@ Generated: Sat Dec 20 09:00:36 EET 2025
 │   ├── atlas.md
 │   ├── sonar.md
 │   └── vision.md
+├── ERROR_ANALYSIS_REPORT.md
 ├── FINAL_MIGRATION_SUMMARY.md
 ├── generate_structure.py
 ├── i18n.py
@@ -335,4 +336,4 @@ Generated: Sat Dec 20 09:00:36 EET 2025
     ├── themes.py
     └── tools.py
 
-126 directories, 203 files
+126 directories, 204 files
