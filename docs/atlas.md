@@ -1,11 +1,13 @@
 ---
-description: Authoritative guide for Project Atlas architecture, Cognitive 2.0 meta-planning logic, Active Retrieval, and the continuous learning principles of the Trinity Graph runtime.
+description: Authoritative guide for Project Atlas architecture, Cognitive 2.0 meta-planning logic, Active Retrieval, and the continuous learning principles of the Trinity Graph runtime. Updated December 2025.
 ---
 
 # Project Atlas: Архітектура, Workflow та Основні Принципи  
-**Актуальний стан на грудень 2025 року (Cognitive 2.1)**
+**Актуальний стан: Грудень 2025 (Cognitive 2.1 + Trinity Improvements v1.0)**
 
 Цей документ є **єдиним джерелом правди** про фундаментальні принципи роботи системи Atlas (Trinity Runtime).
+
+⚠️ **Останнє оновлення:** 20 грудня 2025 - Додано Pydantic валідацію, State Logging, MyPy типізація
 
 ---
 
@@ -15,14 +17,21 @@ Atlas — це не просто автоматизатор, а **автоном
 
 1.  **Автономна Навігація (Autonomous Navigation)**  
     Здатність самостійно приймати рішення в умовах невизначеності, використовуючи цикл "Сприйняття → Планування → Дія → Верифікація".
-2.  **Управління Мисленням (Meta-Planning)**  
-    Агент керує власною стратегією: обирає рівень верифікації, режим відновлення та тип плану.
+    
+2.  **Управління Мисленням (Meta-Planning 2.0)**  
+    Агент керує власною стратегією: обирає рівень верифікації, режим відновлення та тип плану. **Новинка**: Pydantic валідація конфігурації.
+    
 3.  **Візуальне Сприйняття (Vision-First)**  
     Використання скріншотів та Computer Vision як Ground Truth. Підтримка multi-monitor та диференційного аналізу.
+    
 4.  **Конфіденційність та Стелс-режим (Privacy & Stealth)**  
     Система очищення слідів та підміна ідентифікаторів (`spoofing`).
+    
 5.  **Постійне Навчання (Continuous Learning 2.0)**  
     Система витягує досвід (як успішний, так і негативний) та зберігає його у **Knowledge Base** з оцінкою впевненості та статусом.
+    
+6.  **Деталізоване Логування (State Logging)**  
+    Система логує весь процес ініціалізації та переходи для простої діагностики. Логи: `logs/trinity_state_*.log`
 
 ---
 
@@ -187,7 +196,42 @@ context_manager.update_context(result)
 
 ---
 
-## 8. Швидкий старт
+## 8. Trinity Improvements v1.0 (Грудень 2025)
+
+**Нові можливості для якості та надійності:**
+
+### 8.1 Pydantic State Validation
+```python
+from core.trinity_models import TrinityStateModel, MetaConfig
+
+# Автоматична валідація всіх полів
+state = TrinityStateModel(
+    current_agent="meta_planner",
+    task_type="DEV",
+    meta_config=MetaConfig(strategy="linear")
+)
+state.validate_state()  # ✅ Все перевірено
+```
+
+### 8.2 MyPy Type Checking
+```bash
+# Перевірка типів на рівні Python 3.11+
+mypy core/trinity.py --config-file=setup.cfg
+```
+
+### 8.3 State Initialization Logging
+- Деталізовані логи всіх переходів агентів
+- Тра́сування конфігурацій та помилок
+- Місце: `logs/trinity_state_*.log`
+
+### 8.4 Unit Testing
+- 16 комплексних тестів для Pydantic моделей
+- 100% coverage критичних функцій
+- Запуск: `pytest tests/test_trinity_models.py -v`
+
+---
+
+## 9. Швидкий старт
 
 ```bash
 # Вимоги: Python 3.11 (рекомендовано) або 3.12
@@ -195,11 +239,15 @@ context_manager.update_context(result)
 ./cli.sh                    # Запуск TUI
 /trinity <завдання>         # Запуск Trinity
 /autopilot <завдання>       # Режим повної автономії
+
+# Перевірка якості коду
+pytest tests/test_trinity_models.py -v
+mypy core/ --config-file=setup.cfg
 ```
 
 ---
 
-## 9. FAQ & Advanced Capabilities
+## 10. FAQ & Advanced Capabilities
 
 ### 9.1 Режим Розробника (Dev Mode)
 Atlas може працювати в розширеному режимі:
@@ -220,29 +268,144 @@ Atlas може працювати в розширеному режимі:
 
 ---
 
-## 10. Файлова структура ключових компонентів
+## 9. Файлова структура ключових компонентів
 
 ```
-core/
-├── trinity.py          # Trinity Runtime (LangGraph)
-├── context7.py         # Context Manager + Sliding Window
-├── memory.py           # Hierarchical Memory (Working/Episodic/Semantic)
-├── agent_protocol.py   # Agent Message Protocol
-├── parallel_executor.py # Parallel Tool Execution
-├── vision_context.py   # Vision Context Manager
-└── mcp.py             # MCP Tool Registry
+System/ (корінь проекту)
+├── README.md                          # Основна документація
+├── requirements.txt                   # Залежності проекту
+├── setup.sh                          # Встановлення
+├── setup.cfg                         # MyPy конфігурація (НОВИНКА)
+├── pytest.ini                        # Pytest конфігурація
+│
+├── cli.sh                            # Entry point
+├── cli.py                            # CLI обгортка
+├── main.py                           # Основна програма
+│
+├── logs/                             # 📝 Логи (НОВИНКА - централізовано)
+│   └── trinity_state_*.log          # State initialization логи
+│   └── cli.log                       # CLI логи
+│
+├── docs/                             # Документація
+│   ├── atlas.md                      # ТА цей файл (Project Atlas)
+│   ├── analize.md                    # Аналіз системи
+│   ├── sonar.md                      # SonarQube документація
+│   └── vision.md                     # Vision система
+│
+├── core/                             # 🧠 Основне ядро
+│   ├── trinity.py                    # Trinity Runtime (LangGraph) - 2671 рядків
+│   ├── trinity_models.py             # Pydantic моделі валідації (НОВИНКА)
+│   ├── state_logger.py               # State логування система (НОВИНКА)
+│   ├── context7.py                   # Context Manager + Sliding Window
+│   ├── memory.py                     # Hierarchical Memory
+│   ├── agent_protocol.py             # Agent Message Protocol
+│   ├── parallel_executor.py          # Parallel Tool Execution
+│   ├── vision_context.py             # Vision Context Manager
+│   ├── mcp.py                        # MCP Tool Registry
+│   ├── self_healing.py               # Self-healing система
+│   ├── verification.py               # Adaptive Verifier
+│   ├── vibe_assistant.py             # Doctor Vibe (Intervention Assistant)
+│   └── agents/                       # Агенти
+│       ├── atlas.py                  # Atlas агент (плануванн)
+│       ├── tetyana.py                # Tetyana агент (виконання)
+│       └── grisha.py                 # Grisha агент (верифікація)
+│
+├── system_ai/                        # 🤖 AI та інструменти
+│   ├── tools/
+│   │   ├── vision.py                 # Enhanced Vision Analysis + OCR
+│   │   ├── screenshot.py             # Multi-monitor screenshots
+│   │   ├── automation.py             # Shell/AppleScript/Shortcuts
+│   │   ├── browser.py                # Playwright інтеграція
+│   │   ├── filesystem.py             # FS операції
+│   │   ├── system.py                 # System операції
+│   │   └── mcp_integration.py        # MCP інтеграція
+│   ├── memory/
+│   │   ├── chroma_store.py           # ChromaDB вектор-сховище
+│   │   └── summary_memory.py         # Резюме та консолідація
+│   └── recorder.py                   # Session Recording
+│
+├── tui/                              # 🖥️ Terminal UI
+│   ├── cli.py                        # Основна TUI програма
+│   ├── app.py                        # TUI Runtime
+│   ├── menu.py                       # Меню система
+│   ├── themes.py                     # 14 color schemes
+│   ├── layout.py                     # Layout конструктор
+│   ├── keybindings.py                # Keyboard shortcuts
+│   ├── permissions.py                # Permission wizard
+│   ├── commands.py                   # Команди TUI
+│   ├── logger.py                     # TUI логування
+│   └── cli_localization.py           # i18n підтримка
+│
+├── tests/                            # 🧪 Тести
+│   ├── test_trinity_models.py        # Unit тести Pydantic моделей (НОВИНКА - 16/16 PASSED)
+│   ├── test_vision_system.py         # Vision tests
+│   ├── test_agent_protocol.py        # Agent communication tests
+│   ├── test_parallel_executor.py     # Executor tests
+│   ├── test_trinity_autocommit.py    # Autocommit tests
+│   ├── test_context7_sliding_window.py # Context7 tests
+│   ├── conftest.py                   # Pytest конфігурація
+│   └── ... (інші тести)
+│
+├── providers/                        # 🔌 LLM Providers
+│   └── copilot.py                    # GitHub Copilot інтеграція
+│
+├── mcp_integration/                  # 🔗 MCP Сервери
+│   ├── core/
+│   │   └── mcp_manager.py            # MCP Менеджер
+│   ├── modes/
+│   │   ├── dev_project_mode.py       # Dev режим
+│   │   └── atlas_healing_mode.py     # Self-healing режим
+│   └── config/
+│       └── mcp_config.json           # MCP конфігурація
+│
+├── configs/                          # 🗂️ Конфігурації IDE
+│   ├── original/                     # Оригінальні конфіги
+│   └── [30+ машин]/                  # Конфіги для різних систем
+│
+├── projects/                         # 📦 Генеровані проекти
+│   └── dev_*/                        # Dev проекти (автоґенерація)
+│
+└── cleanup_scripts/                  # 🧹 Утиліти очистки
+    └── ... (різні cleanup скрипти)
+```
 
-system_ai/tools/
-├── vision.py          # DifferentialVisionAnalyzer, EnhancedVisionTools
-└── screenshot.py      # Screenshot utilities
+### Логи та Діагностика
 
-tui/
-├── cli.py            # Main TUI application
-├── themes.py         # 14 color themes
-├── menu.py           # Menu system
-└── keybindings.py    # Keyboard shortcuts
+**Централізована папка логів (НОВИНКА):**
+```
+logs/
+├── trinity_state_20251220.log        # State initialization логи
+├── cli.log                           # CLI операції
+└── ...
+```
+
+**Як переглянути логи:**
+```bash
+# Реальний час
+tail -f logs/trinity_state_*.log
+
+# Останні 50 рядків
+tail -50 logs/trinity_state_*.log
+
+# Пошук по помилкам
+grep ERROR logs/trinity_state_*.log
+```
+
+**State Logger інформація:**
+- 📍 Логує ініціалізацію стану з таймстампом
+- 🔄 Логує переходи між агентами
+- 🔧 Логує зміни конфігурації
+- ❌ Логує помилки зі снімком стану
+- 📈 Логує метрики перформансу
+
+Використання:
+```python
+from core.state_logger import log_initial_state, log_state_transition
+
+log_initial_state(input_text, initial_state)
+log_state_transition("atlas", "tetyana", 5, "success")
 ```
 
 ---
 
-*Останнє оновлення: 20 грудня 2025*
+*Останнє оновлення: 20 грудня 2025 р. - Trinity Improvements v1.0 інтегровано*

@@ -1,0 +1,15 @@
+{
+  "terminal.integrated.shellIntegration.enabled": true,
+  "terminal.integrated.shellIntegration.decorationsEnabled": true,
+  "terminal.integrated.shellIntegration.showCommandGuide": true,
+  "terminal.integrated.shellIntegration.history": 1000,
+  "terminal.integrated.stickyScroll.enabled": true,
+  "terminal.integrated.suggest.enabled": true,
+  "terminal.integrated.suggest.runOnEnter": true,
+  "terminal.integrated.suggest.quickSuggestions": true,
+  "terminal.integrated.suggest.suggestOnTriggerCharacters": true,
+  "terminal.integrated.suggest.showStatusBar": true,
+  "terminal.integrated.suggest.upArrowNavigatesHistory": true,
+  "terminal.integrated.suggest.inlineSuggestion": "auto",
+  "terminal.integrated.suggest.cdPath": true
+}

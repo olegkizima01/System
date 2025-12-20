@@ -741,6 +741,28 @@ class TrinityRuntime:
         last_step_status = state.get("last_step_status", "success")
         plan = state.get("plan") or []
         meta_config = state.get("meta_config") or {}
+        
+        # Ensure meta_config has all required keys with safe defaults
+        if isinstance(meta_config, dict):
+            meta_config.setdefault("strategy", "hybrid")
+            meta_config.setdefault("verification_rigor", "standard")
+            meta_config.setdefault("recovery_mode", "local_fix")
+            meta_config.setdefault("tool_preference", "hybrid")
+            meta_config.setdefault("reasoning", "")
+            meta_config.setdefault("retrieval_query", last_msg)
+            meta_config.setdefault("n_results", 3)
+        else:
+            # If meta_config is not a dict for some reason, reset it
+            meta_config = {
+                "strategy": "hybrid",
+                "verification_rigor": "standard",
+                "recovery_mode": "local_fix",
+                "tool_preference": "hybrid",
+                "reasoning": "",
+                "retrieval_query": last_msg,
+                "n_results": 3
+            }
+        
         current_step_fail_count = int(state.get("current_step_fail_count") or 0)
 
         # 1. Update Summary Memory periodically
@@ -792,7 +814,7 @@ class TrinityRuntime:
                 
                 # Record failure
                 hist = state.get("history_plan_execution") or []
-                desc = plan[0].get('description', 'Unknown step')
+                desc = plan[0].get('description', 'Unknown step') if plan else 'Unknown step'
                 hist.append(f"FAILED: {desc} (Try #{current_step_fail_count})")
                 state["history_plan_execution"] = hist
                 
@@ -803,7 +825,7 @@ class TrinityRuntime:
                 
                 # Record uncertainty
                 hist = state.get("history_plan_execution") or []
-                desc = plan[0].get('description', 'Unknown step')
+                desc = plan[0].get('description', 'Unknown step') if plan else 'Unknown step'
                 hist.append(f"UNCERTAIN: {desc} (Check #{current_step_fail_count})")
                 state["history_plan_execution"] = hist
 
@@ -906,7 +928,7 @@ class TrinityRuntime:
                 "plan": None if action == "replan" else plan,
                 "current_step_fail_count": current_step_fail_count,
                 "summary": summary,
-                "retrieved_context": state.get("retrieved_context")
+                "retrieved_context": state.get("retrieved_context", "")
             }
 
         # 5. Default flow
@@ -2398,7 +2420,7 @@ class TrinityRuntime:
 
         initial_state = {
             "messages": [HumanMessage(content=input_text)],
-            "current_agent": "atlas",
+            "current_agent": "meta_planner",  # Align with graph entry point
             "task_status": "started",
             "final_response": None,
             "plan": [],
@@ -2423,13 +2445,17 @@ class TrinityRuntime:
                 "strategy": "hybrid",
                 "verification_rigor": "standard",
                 "recovery_mode": "local_fix",
-                "tool_preference": "hybrid"
+                "tool_preference": "hybrid",
+                "reasoning": "",
+                "retrieval_query": input_text[:100],
+                "n_results": 3
             },
             "retrieved_context": "",
             "original_task": input_text,
             "is_media": ("фільм" in input_text.lower() or "movie" in input_text.lower() or "video" in input_text.lower() or "youtube" in input_text.lower() or "музика" in input_text.lower() or "music" in input_text.lower()),
             "vibe_assistant_pause": None,
-            "vibe_assistant_context": ""
+            "vibe_assistant_context": "",
+            "vision_context": None
         }
 
         # Initialize snapshot session
