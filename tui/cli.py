@@ -1,5 +1,6 @@
-from some_module import MenuLevel
-
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
 Єдиний і основний інтерфейс керування системою.
 
 Можливості:
@@ -15,7 +16,6 @@ from some_module import MenuLevel
 
 Примітка: скрипт навмисно не прив'язується до версій редакторів.
 """
-
 
 import argparse
 import atexit
