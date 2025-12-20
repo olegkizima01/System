@@ -1637,8 +1637,6 @@ def _custom_task_recording_analyze_last() -> Tuple[bool, str]:
 
     if not isinstance(state.ui_lang, str):
         state.ui_lang = ''
-
-    state.ui_lang = str(state.ui_lang or '').strip().lower()
     if not hasattr(state, 'ui_lang') or not isinstance(state.ui_lang, str):
         state.ui_lang = ''
     else:
@@ -1647,10 +1645,10 @@ def _custom_task_recording_analyze_last() -> Tuple[bool, str]:
     if state.ui_lang == 'uk':
         # Add logic for 'uk' if necessary
         pass
-    return [
         ("menu.settings.section.appearance", None, "section"),
         ("menu.settings.appearance", MenuLevel.APPEARANCE, None),
         ("menu.settings.layout", MenuLevel.LAYOUT, None),
+        ("menu.settings.language", MenuLevel.LANGUAGE, None),
         ("menu.settings.language", MenuLevel.LANGUAGE, None),
         ("menu.settings.locales", MenuLevel.LOCALES, None),
         ("menu.settings.section.agent", None, "section"),
@@ -1679,8 +1677,13 @@ def _get_llm_sub_menu_items(level: Any) -> List[Tuple[str, Any]]:
     # Determine section from level
     section = ""
     if not isinstance(level, MenuLevel):
-        raise TypeError(f"Invalid type for level: expected MenuLevel, got {type(level).__name__}")
-    elif level == MenuLevel.LLM_ATLAS:
+    """Get LLM settings sub-menu items for a specific agent/section."""
+    if not isinstance(level, MenuLevel):
+        raise TypeError(f"Expected level to be of type MenuLevel, got {type(level).__name__}")
+
+    # Determine section from level
+    section = ""
+    if level == MenuLevel.LLM_ATLAS:
         section = "atlas"
     elif level == MenuLevel.LLM_TETYANA:
         section = "tetyana"
@@ -1690,11 +1693,6 @@ def _get_llm_sub_menu_items(level: Any) -> List[Tuple[str, Any]]:
         section = "vision"
     else:
         return []
-
-
-    # Fetch status
-    from tui.tools import tool_llm_status
-    status = {}
     try:
         status_res = tool_llm_status({"section": section})
         if isinstance(status_res, dict):
