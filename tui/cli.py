@@ -546,6 +546,7 @@ def _monitor_resolve_watch_items(targets: Set[str]) -> List[Tuple[str, str]]:
 
 
 def _load_ui_settings() -> None:
+    """Load UI settings from file."""
     try:
         _load_env()
         if not os.path.exists(UI_SETTINGS_PATH):
@@ -555,61 +556,28 @@ def _load_ui_settings() -> None:
             if env_unsafe is not None:
                 state.ui_unsafe_mode = bool(env_unsafe)
             return
+        
         with open(UI_SETTINGS_PATH, "r", encoding="utf-8") as f:
             data = json.load(f)
-        theme = str(data.get("theme") or "").strip().lower()
-        if theme:
-            state.ui_theme = theme
-        ui_lang = str(data.get("ui_lang") or "").strip().lower()
-        if ui_lang:
-            state.ui_lang = normalize_lang(ui_lang)
-        chat_lang = str(data.get("chat_lang") or "").strip().lower()
-        if chat_lang:
-            state.chat_lang = normalize_lang(chat_lang)
-        streaming = data.get("streaming")
-        if isinstance(streaming, bool):
-            state.ui_streaming = streaming
-        gui_mode = str(data.get("gui_mode") or "").strip().lower()
-        if gui_mode in {"off", "on", "auto"}:
-            state.ui_gui_mode = gui_mode
-        exec_mode = str(data.get("execution_mode") or "").strip().lower()
-        if exec_mode in {"native", "gui"}:
-            state.ui_execution_mode = exec_mode
-        unsafe_mode = data.get("unsafe_mode")
-        if isinstance(unsafe_mode, bool):
-            state.ui_unsafe_mode = unsafe_mode
-
-        automation_allow_shortcuts = data.get("automation_allow_shortcuts")
-        if isinstance(automation_allow_shortcuts, bool):
-            state.automation_allow_shortcuts = automation_allow_shortcuts
-
-        left_ratio = data.get("left_panel_ratio")
-        if isinstance(left_ratio, (int, float)):
-            state.ui_left_panel_ratio = max(0.2, min(0.8, float(left_ratio)))
         
-        scroll_target = data.get("scroll_target")
-        if scroll_target in {"log", "agents"}:
-            state.ui_scroll_target = scroll_target
+        state.ui_theme = str(data.get("theme") or "monaco").strip().lower()
+        state.ui_lang = normalize_lang(data.get("ui_lang"))
+        state.chat_lang = normalize_lang(data.get("chat_lang"))
+        state.ui_streaming = bool(data.get("streaming", True))
+        state.ui_gui_mode = str(data.get("gui_mode") or "auto").strip().lower()
+        state.ui_execution_mode = str(data.get("execution_mode") or "native").strip().lower()
         
-        log_follow = data.get("log_follow")
-        if isinstance(log_follow, bool):
-            state.ui_log_follow = log_follow
-            
-        agents_follow = data.get("agents_follow")
-        if isinstance(agents_follow, bool):
-            state.ui_agents_follow = agents_follow
-
-        dev_code_provider = str(data.get("dev_code_provider") or "").strip().lower()
-        if dev_code_provider in {"vibe-cli", "continue"}:
-            state.ui_dev_code_provider = dev_code_provider
-
-        env_unsafe = _env_bool(os.getenv("SYSTEM_CLI_UNSAFE_MODE"))
-        if env_unsafe is None:
-            env_unsafe = _env_bool(os.getenv("SYSTEM_CLI_AUTO_CONFIRM"))
-        if env_unsafe is not None:
-            state.ui_unsafe_mode = bool(env_unsafe)
+        if "unsafe_mode" in data:
+            state.ui_unsafe_mode = bool(data.get("unsafe_mode"))
+        
+        state.automation_allow_shortcuts = bool(data.get("automation_allow_shortcuts", False))
+        state.ui_left_panel_ratio = float(data.get("left_panel_ratio", 0.6))
+        state.ui_scroll_target = str(data.get("scroll_target", "log"))
+        state.ui_log_follow = bool(data.get("log_follow", True))
+        state.ui_agents_follow = bool(data.get("agents_follow", True))
+        state.ui_dev_code_provider = str(data.get("dev_code_provider", "vibe-cli")).strip().lower()
     except Exception:
-        return
+        pass
 
 
 def _save_ui_settings() -> bool:
@@ -666,36 +634,6 @@ def _load_env() -> None:
 
 def _reset_agent_llm() -> None:
     return _reset_agent_llm_new()
-
-
-def _load_ui_settings() -> None:
-    # Logic to load UI settings from file if needed
-    pass
-
-
-def _save_ui_settings() -> bool:
-    try:
-        os.makedirs(SYSTEM_CLI_DIR, exist_ok=True)
-        payload = {
-            "theme": str(state.ui_theme or "monaco").strip().lower() or "monaco",
-            "ui_lang": normalize_lang(state.ui_lang),
-            "chat_lang": normalize_lang(state.chat_lang),
-            "streaming": bool(getattr(state, "ui_streaming", True)),
-            "gui_mode": str(getattr(state, "ui_gui_mode", "auto") or "auto").strip().lower() or "auto",
-            "execution_mode": str(getattr(state, "ui_execution_mode", "native") or "native").strip().lower() or "native",
-            "unsafe_mode": bool(state.ui_unsafe_mode),
-            "automation_allow_shortcuts": bool(getattr(state, "automation_allow_shortcuts", False)),
-            "left_panel_ratio": float(getattr(state, "ui_left_panel_ratio", 0.6)),
-            "scroll_target": str(getattr(state, "ui_scroll_target", "log")),
-            "log_follow": bool(getattr(state, "ui_log_follow", True)),
-            "agents_follow": bool(getattr(state, "ui_agents_follow", True)),
-            "dev_code_provider": str(getattr(state, "ui_dev_code_provider", "vibe-cli") or "vibe-cli").strip().lower() or "vibe-cli",
-        }
-        with open(UI_SETTINGS_PATH, "w", encoding="utf-8") as f:
-            json.dump(payload, f, ensure_ascii=False, indent=2)
-        return True
-    except Exception:
-        return False
 
 
 def _load_monitor_targets() -> None:
@@ -1351,80 +1289,26 @@ def _set_cleanup_cfg(cfg: Any) -> None:
     global cleanup_cfg
     cleanup_cfg = cfg
 
+def _get_custom_tasks_menu_items() -> List[Tuple[str, Any, Optional[str]]]:
+    """Return custom tasks menu items."""
+    return [
+        ("menu.custom.section.recorder", None, "section"),
+        ("menu.custom.recorder_start", "recorder_start", None),
+        ("menu.custom.recorder_stop", "recorder_stop", None),
+        ("menu.custom.section.recordings", None, "section"),
+        ("menu.custom.recorder_open_last", "recorder_open_last", None),
+        ("menu.custom.recording_analyze_last", "recording_analyze_last", None),
+        ("menu.custom.section.automations", None, "section"),
+        ("menu.custom.automation_run_last", "automation_run_last", None),
+    ]
 
-def _get_custom_tasks_menu_items() -> List[Tuple[str, Any]]:
-    items: List[Tuple[str, Any]] = []
-    items.append(("menu.custom.section.recorder", None))
-    items.append(("menu.custom.recorder_start", _custom_task_recorder_start))
-    items.append(("menu.custom.recorder_stop", _custom_task_recorder_stop))
 
-    items.append(("menu.custom.section.recordings", None))
-
-    last_dir = _recordings_resolve_last_dir()
-    if last_dir:
-        meta = _recordings_read_meta(last_dir)
-        name = str(meta.get("name") or "").strip() or _recordings_ensure_meta_name(last_dir)
-        auto_title = str(meta.get("automation_title") or "").strip()
-        display = auto_title or name
-        sid = str(meta.get("session_id") or os.path.basename(last_dir) or "").strip()
-        if str(state.ui_lang or "").strip().lower() == "uk":
-            items.append((f"Останній запис: {display} ({sid})", _custom_task_recorder_open_last))
-            items.append((f"Аналізувати: {display} ({sid})", _custom_task_recording_analyze_last))
-        else:
-            items.append((f"Last recording: {display} ({sid})", _custom_task_recorder_open_last))
-            items.append((f"Analyze: {display} ({sid})", _custom_task_recording_analyze_last))
-    else:
-        items.append(("menu.custom.recorder_open_last", _custom_task_recorder_open_last))
-        items.append(("menu.custom.recording_analyze_last", _custom_task_recording_analyze_last))
-
-    for d in _recordings_list_session_dirs(limit=6):
-        if last_dir and os.path.abspath(d) == os.path.abspath(last_dir):
-            continue
-        meta = _recordings_read_meta(d)
-        name = str(meta.get("name") or "").strip() or _recordings_ensure_meta_name(d)
-        auto_title = str(meta.get("automation_title") or "").strip()
-        sid = str(meta.get("session_id") or os.path.basename(d) or "").strip()
-        if auto_title and name and auto_title.strip() != name.strip() and name.strip() not in auto_title.strip():
-            label = f"  {auto_title} — {name} ({sid})"
-        else:
-            label = f"  {(auto_title or name)} ({sid})"
-
-        def _make_open(dd: str) -> Any:
-            def _act() -> Tuple[bool, str]:
-                return _open_in_finder(dd)
-
-            return _act
-
-        items.append((label, _make_open(d)))
-
-    items.append(("menu.custom.windsurf_register", _custom_task_windsurf_register))
-
-    items.append(("menu.custom.section.automations", None))
-    items.append(("menu.custom.automation_run_last", _custom_task_automation_run_last))
-    items.append(("menu.custom.automation_permissions", _custom_task_automation_permissions_help))
-
-    # show a few recent automations (if present)
-    for d in _recordings_list_session_dirs(limit=6):
-        meta = _recordings_read_meta(d)
-        prompt = str(meta.get("automation_prompt") or "").strip()
-        if not prompt:
-            continue
-        name = str(meta.get("name") or "").strip() or _recordings_ensure_meta_name(d)
-        auto_title = str(meta.get("automation_title") or "").strip() or "(automation)"
-        sid = str(meta.get("session_id") or os.path.basename(d) or "").strip()
-
-        def _make_run(dd: str) -> Any:
-            def _act() -> Tuple[bool, str]:
-                return _custom_task_automation_run_dir(dd)
-
-            return _act
-
-        if str(state.ui_lang or "").strip().lower() == "uk":
-            items.append((f"▶ {auto_title} ({sid})", _make_run(d)))
-        else:
-            items.append((f"▶ {auto_title} ({sid})", _make_run(d)))
-
-    return items
+def _get_monitoring_menu_items() -> List[Tuple[str, Any, Optional[str]]]:
+    """Return monitoring menu items."""
+    return [
+        ("menu.monitoring.start_stop", MenuLevel.MONITOR_CONTROL, None),
+        ("menu.monitoring.targets", MenuLevel.MONITOR_TARGETS, None),
+    ]
 
 
 def _custom_task_automation_run_dir(rec_dir: str) -> Tuple[bool, str]:
@@ -1676,10 +1560,13 @@ def _get_llm_sub_menu_items(level: Any) -> List[Tuple[str, Any]]:
         section = "grisha"
     elif level == MenuLevel.LLM_VISION:
         section = "vision"
+    elif level == MenuLevel.LLM_DEFAULTS:
+        section = "defaults"
     else:
         return []
+    status = {}
     try:
-        status_res = tool_llm_status({"section": section})
+        status_res = _tool_llm_status_new({"section": section})
         if isinstance(status_res, dict):
             status = status_res
     except Exception:
@@ -1877,6 +1764,7 @@ def run_tui() -> None:
         load_env=_load_env,
         load_llm_settings=_load_llm_settings,
         apply_default_monitor_targets=_apply_default_monitor_targets,
+        save_ui_settings=_save_ui_settings,
     )
     tui_run_tui(runtime)
 

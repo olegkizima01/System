@@ -14,8 +14,8 @@ from langchain_core.outputs import ChatGeneration, ChatResult
 from langchain_core.language_models import BaseChatModel
 
 class CopilotLLM(BaseChatModel):
-    model_name: str = "gpt-4.1"
-    vision_model_name: str = "gpt-4.1"
+    model_name: str = "gpt-4o"
+    vision_model_name: str = "gpt-4o"
     api_key: Optional[str] = None
     _tools: Optional[List[Any]] = None
 
@@ -27,10 +27,8 @@ class CopilotLLM(BaseChatModel):
         **kwargs: Any,
     ) -> None:
         super().__init__(**kwargs)
-        self.model_name = model_name or os.getenv("COPILOT_MODEL", "gpt-4.1")
-        vm = vision_model_name or os.getenv("COPILOT_VISION_MODEL", "gpt-4.1")
-        if vm == "gpt-4o":
-            vm = "gpt-4.1"
+        self.model_name = model_name or os.getenv("COPILOT_MODEL", "gpt-4o")
+        vm = vision_model_name or os.getenv("COPILOT_VISION_MODEL", "gpt-4o")
         self.vision_model_name = vm
         self.api_key = api_key or os.getenv("COPILOT_API_KEY") or os.getenv("GITHUB_TOKEN")
         if not self.api_key:
@@ -231,6 +229,8 @@ class CopilotLLM(BaseChatModel):
         final_messages = [{"role": "system", "content": system_content}] + formatted_messages
 
         chosen_model = self.vision_model_name if self._has_image(messages) else self.model_name
+        if chosen_model == "gpt-4o":
+            chosen_model = "gpt-4.1"
 
         return {
             "model": chosen_model,

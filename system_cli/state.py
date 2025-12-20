@@ -47,7 +47,7 @@ class AppState:
     ui_theme: str = "monaco"
     ui_lang: str = "uk"
     chat_lang: str = "uk"
-    ui_unsafe_mode: bool = False
+    ui_unsafe_mode: bool = True
     ui_streaming: bool = True
     ui_gui_mode: str = "auto"
     ui_execution_mode: str = "native"

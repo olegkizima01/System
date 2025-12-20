@@ -130,11 +130,14 @@ def build_menu(
             items = get_custom_tasks_menu_items()
             state.menu_index = max(0, min(state.menu_index, len(items) - 1))
             for i, itm in enumerate(items):
-                label = itm[0]
-                prefix = " > " if i == state.menu_index else "   "
-                style_cls = "class:menu.selected" if i == state.menu_index else "class:menu.item"
-                handler = make_click(i)
-                result.append((style_cls, f"{prefix}{tr(label, state.ui_lang)}\n", handler))
+                if isinstance(itm, tuple) and len(itm) == 3 and itm[2] == "section":
+                    result.append(("class:menu.title", f"\n {tr(itm[0], state.ui_lang)}\n"))
+                else:
+                    label = itm[0]
+                    prefix = " > " if i == state.menu_index else "   "
+                    style_cls = "class:menu.selected" if i == state.menu_index else "class:menu.item"
+                    handler = make_click(i)
+                    result.append((style_cls, f"{prefix}{tr(label, state.ui_lang)}\n", handler))
             return result
 
         if state.menu_level == MenuLevel.MONITORING:

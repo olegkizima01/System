@@ -1,5 +1,5 @@
 ## Metadata
-Generated: Сб 20 груд. 2025 19:03:07 EET
+Generated: Sat Dec 20 19:16:30 EET 2025
 
 ## Program Execution Logs
 (See logs/cli.log for details)
@@ -321,28 +321,29 @@ Generated: Сб 20 груд. 2025 19:03:07 EET
 │   ├── test_vision_find_image.py
 │   ├── test_vision_system.py
 │   └── verify_vision_fix.py
-└── tui
-    ├── __init__.py
-    ├── agents.py
-    ├── app.py
-    ├── cleanup.py
-    ├── cli_defaults.py
-    ├── cli_localization.py
-    ├── cli_paths.py
-    ├── cli.py
-    ├── commands.py
-    ├── constants.py
-    ├── i18n.py
-    ├── keybindings.py
-    ├── layout.py
-    ├── logger.py
-    ├── menu.py
-    ├── messages.py
-    ├── monitoring.py
-    ├── permissions.py
-    ├── recordings.py
-    ├── render.py
-    ├── themes.py
-    └── tools.py
+├── tui
+│   ├── __init__.py
+│   ├── agents.py
+│   ├── app.py
+│   ├── cleanup.py
+│   ├── cli_defaults.py
+│   ├── cli_localization.py
+│   ├── cli_paths.py
+│   ├── cli.py
+│   ├── commands.py
+│   ├── constants.py
+│   ├── i18n.py
+│   ├── keybindings.py
+│   ├── layout.py
+│   ├── logger.py
+│   ├── menu.py
+│   ├── messages.py
+│   ├── monitoring.py
+│   ├── permissions.py
+│   ├── recordings.py
+│   ├── render.py
+│   ├── themes.py
+│   └── tools.py
+└── verify_mcp_patch.py
 
-127 directories, 212 files
+127 directories, 213 files

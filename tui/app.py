@@ -14,6 +14,7 @@ class TuiRuntime:
     load_env: Callable[[], None]
     load_llm_settings: Callable[[], None]
     apply_default_monitor_targets: Callable[[], None]
+    save_ui_settings: Optional[Callable[[], bool]] = None
 
 
 def run_tui(runtime: TuiRuntime) -> None:
@@ -24,4 +25,8 @@ def run_tui(runtime: TuiRuntime) -> None:
     runtime.load_env()
     runtime.load_llm_settings()
     runtime.apply_default_monitor_targets()
-    runtime.app.run()
+    try:
+        runtime.app.run()
+    finally:
+        if runtime.save_ui_settings:
+            runtime.save_ui_settings()
