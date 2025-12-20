@@ -1,5 +1,5 @@
 ## Metadata
-Generated: Sat Dec 20 08:00:28 EET 2025
+Generated: Sat Dec 20 08:19:40 EET 2025
 
 ## Program Execution Logs
 (See logs/cli.log for details)
@@ -217,6 +217,7 @@ Generated: Sat Dec 20 08:00:28 EET 2025
 │       ├── machineid
 │       └── metadata.json
 ├── core
+│   ├── agent_protocol.py
 │   ├── agents
 │   │   ├── atlas.py
 │   │   ├── grisha.py
@@ -224,6 +225,7 @@ Generated: Sat Dec 20 08:00:28 EET 2025
 │   ├── context7.py
 │   ├── mcp.py
 │   ├── memory.py
+│   ├── parallel_executor.py
 │   ├── self_healing.py
 │   ├── trinity.py
 │   ├── verification.py
@@ -294,12 +296,16 @@ Generated: Sat Dec 20 08:00:28 EET 2025
 ├── test_loop_fix.py
 ├── tests
 │   ├── conftest.py
+│   ├── test_agent_protocol.py
 │   ├── test_bootstrap_e2e.py
 │   ├── test_cli_parsing.py
+│   ├── test_context7_sliding_window.py
 │   ├── test_doctor_vibe_auto_repair.py
 │   ├── test_grisha_routing.py
+│   ├── test_hierarchical_memory.py
 │   ├── test_intent_routing.py
 │   ├── test_mcp_registry.py
+│   ├── test_parallel_executor.py
 │   ├── test_trinity_autocommit.py
 │   ├── test_tui_menu_struct.py
 │   ├── test_vision_find_image.py
@@ -329,4 +335,4 @@ Generated: Sat Dec 20 08:00:28 EET 2025
     ├── themes.py
     └── tools.py
 
-126 directories, 197 files
+126 directories, 203 files
