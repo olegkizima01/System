@@ -28,8 +28,12 @@ Available tools:
 {tools_desc}
 """
 
-def get_tetyana_prompt(task_context: str, tools_desc: str = "", preferred_language: str = "en"):
-    formatted_prompt = TETYANA_SYSTEM_PROMPT.format(tools_desc=tools_desc, preferred_language=preferred_language)
+def get_tetyana_prompt(task_context: str, tools_desc: str = "", preferred_language: str = "en", vision_context: str = ""):
+    formatted_prompt = TETYANA_SYSTEM_PROMPT.format(
+        tools_desc=tools_desc, 
+        preferred_language=preferred_language,
+        vision_context=vision_context
+    )
     return ChatPromptTemplate.from_messages([
         SystemMessage(content=formatted_prompt),
         HumanMessage(content=task_context),

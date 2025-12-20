@@ -1,136 +1,214 @@
 #!/bin/bash
-# Trinity System Setup Script
 
-echo "🚀 Starting Trinity System Setup..."
+# System Vision Full Setup Script
+# This script sets up Python 3.12 environment and installs all required dependencies
 
-# 1. Python 3.12 Environment
-echo "🐍 Checking Python 3.12 environment..."
+echo "🚀 Starting System Vision Full Setup..."
 
-# Check if python3.12 is installed
-if ! command -v python3.12 >/dev/null 2>&1; then
-    echo "❌ Python 3.12 is not installed. Please install it: brew install python@3.12"
+# Check if running in the correct directory
+if [ ! -f "requirements.txt" ]; then
+    echo "❌ Error: This script must be run from the project root directory"
     exit 1
 fi
 
-# Create or verify .venv
-if [ ! -d ".venv" ]; then
-    echo "� Creating virtual environment with Python 3.12..."
-    python3.12 -m venv .venv
-else
-    # Check if existing .venv is 3.12
-    VENV_VERSION=$(.venv/bin/python --version 2>&1 | cut -d' ' -f2 | cut -d'.' -f1,2)
-    if [ "$VENV_VERSION" != "3.12" ]; then
-        echo "⚠️  Existing .venv is version $VENV_VERSION. Recreating with 3.12..."
-        rm -rf .venv
-        python3.12 -m venv .venv
+# Function to check Python version
+check_python_version() {
+    local required_version="3.12"
+    local python_cmd="python3.12"
+    
+    # Try to find Python 3.12
+    if command -v python3.12 &> /dev/null; then
+        PYTHON_CMD="python3.12"
+        PYTHON_VERSION=$(python3.12 --version 2>&1 | awk '{print $2}')
+        echo "✅ Found Python 3.12: $PYTHON_VERSION"
+        return 0
+    elif command -v python3 &> /dev/null; then
+        PYTHON_CMD="python3"
+        PYTHON_VERSION=$(python3 --version 2>&1 | awk '{print $2}')
+        echo "⚠️  Using Python $PYTHON_VERSION (Python 3.12 recommended)"
+        return 0
     else
-        echo "✅ Existing .venv is Python 3.12."
+        echo "❌ Python 3 not found. Please install Python 3.12 or later."
+        return 1
+    fi
+}
+
+# Check Python version
+if ! check_python_version; then
+    exit 1
+fi
+
+# Remove existing virtual environment if it exists
+if [ -d ".venv" ]; then
+    echo "🔧 Removing existing virtual environment..."
+    rm -rf .venv
+    if [ $? -ne 0 ]; then
+        echo "❌ Failed to remove existing virtual environment"
+        exit 1
     fi
 fi
 
+# Create new virtual environment
+echo "🔧 Creating new virtual environment with Python $PYTHON_VERSION..."
+$PYTHON_CMD -m venv .venv
+if [ $? -ne 0 ]; then
+    echo "❌ Failed to create virtual environment"
+    exit 1
+fi
+
+# Activate virtual environment
+echo "🔧 Activating virtual environment..."
 source .venv/bin/activate
-echo "📦 Installing Python dependencies into .venv..."
-pip install --upgrade pip
+
+# Upgrade pip and setuptools
+echo "🔧 Upgrading pip and setuptools..."
+pip install --upgrade pip setuptools wheel
+
+# Install main requirements
+echo "📦 Installing main requirements..."
 pip install -r requirements.txt
 
-# 2. Patching mcp-pyautogui-server
-echo "🛠️ Patching mcp-pyautogui-server..."
-SERVER_FILE=".venv/lib/python3.12/site-packages/mcp_pyautogui_server/server.py"
+if [ $? -ne 0 ]; then
+    echo "❌ Failed to install main requirements"
+    exit 1
+fi
 
-if [ -f "$SERVER_FILE" ]; then
-    # Fix Image import
-    sed -i '' 's/from fastmcp import FastMCP, Image/from fastmcp import FastMCP/g' "$SERVER_FILE"
-    
-    # Fix FastMCP init
-    sed -i '' 's/mcp = FastMCP("MCP Pyautogui Server", dependencies=\["pyautogui", "Pillow"\])/mcp = FastMCP("MCP Pyautogui Server")/g' "$SERVER_FILE"
-    
-    # Fix screenshot tool types and base64 return
-    # This is more complex for sed, but we can do a simple replacement for the common signature and return
-    sed -i '' 's/def screenshot() -> Image | Dict\[str, str\]:/def screenshot() -> Dict[str, str]:/g' "$SERVER_FILE"
-    # Note: The full base64 return logic is already manually patched, 
-    # but this ensures basic functionality if reinstalled.
-    echo "✅ Patched $SERVER_FILE"
+# Install PaddleOCR for OCR functionality
+echo "📦 Installing PaddleOCR for OCR..."
+pip install paddleocr paddlepaddle
+
+if [ $? -ne 0 ]; then
+    echo "⚠️  PaddleOCR installation failed. OCR will use fallback methods."
 else
-    echo "⚠️  $SERVER_FILE not found, skipping patch."
+    echo "✅ PaddleOCR installed successfully"
 fi
 
-# 2. Node.js & Playwright setup (for external MCP)
-echo "🌐 Checking Node.js for Playwright MCP..."
-if ! command -v node >/dev/null 2>&1; then
-    echo "❌ Node.js is not installed. Please install it: brew install node"
+# Install super-rag for advanced vision features
+echo "📦 Attempting to install super-rag for advanced vision features..."
+pip install git+https://github.com/superagent-ai/super-rag.git
+
+if [ $? -ne 0 ]; then
+    echo "⚠️  super-rag repository not found or unavailable."
+    echo "   The system will use OpenCV-based vision analysis."
+    echo "   Advanced features will be unavailable, but core functionality works."
 else
-    echo "✅ Node.js found: $(node -v)"
-    echo "🎭 Installing Playwright browsers..."
-    npx playwright install chromium
+    echo "✅ super-rag installed successfully"
 fi
 
-# 3. Cleanup Scripts Permissions
-if [ -d "cleanup_scripts" ]; then
-    echo "🛡️  Setting permissions for cleanup scripts..."
-    chmod +x cleanup_scripts/*.sh
-    echo "✅ Cleanup scripts are now executable."
-fi
+# Install additional useful packages
+echo "📦 Installing additional useful packages..."
+pip install python-dotenv rich typer
 
-# 4. Git Hook Installation
-echo "🪝 Installing git hooks..."
-REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
-HOOK_SRC="$REPO_ROOT/templates/bootstrap/post-commit"
-HOOK_DST="$REPO_ROOT/.git/hooks/post-commit"
+# Verify all installations
+echo "🔍 Verifying all installations..."
 
-if [ -f "$HOOK_SRC" ]; then
-    cp "$HOOK_SRC" "$HOOK_DST"
-    chmod +x "$HOOK_DST"
-    echo "✅ Installed post-commit hook."
+echo "--- Core Dependencies ---"
+
+# Check OpenCV
+if python -c "import cv2; print('✅ OpenCV version:', cv2.__version__)" 2>/dev/null; then
+    echo "✅ OpenCV installed"
 else
-    echo "⚠️  Post-commit template not found at $HOOK_SRC"
+    echo "❌ OpenCV not installed"
+    exit 1
 fi
 
-# 3. Patching mcp-pyautogui-server if needed
-# (This is a workaround for the broken site-package version)
-# We can add a more permanent patch logic here if desired.
-
-# 5. Continue CLI Installation (npm)
-echo "📦 Installing Continue CLI..."
-if command -v npm >/dev/null 2>&1; then
-    npm i -g @continuedev/cli cn 2>/dev/null && echo "✅ Continue CLI installed" || echo "⚠️ Continue CLI installation failed (non-critical)"
+# Check PIL/Pillow
+if python -c "from PIL import Image; print('✅ PIL/Pillow installed')" 2>/dev/null; then
+    echo "✅ PIL/Pillow installed"
 else
-    echo "⚠️ npm not found, skipping Continue CLI"
+    echo "❌ PIL/Pillow not installed"
+    exit 1
 fi
 
-# 6. Mistral Vibe CLI Installation (pip)
-echo "🎵 Installing Mistral Vibe CLI..."
-# Install in the activated venv
-pip install mistral-vibe 2>/dev/null && echo "✅ Vibe CLI installed" || echo "⚠️ Vibe CLI installation failed (non-critical)"
-
-# 7. Vibe CLI Configuration
-VIBE_HOME="${HOME}/.vibe"
-if [ ! -d "$VIBE_HOME" ]; then
-    mkdir -p "$VIBE_HOME"
-    echo "✅ Created Vibe config directory: $VIBE_HOME"
-fi
-
-# 8. API Key Validation
-echo "🔑 Checking API keys..."
-if [ -f ".env" ]; then
-    if grep -q "^MISTRAL_API_KEY=" .env; then
-        # Check if key is not empty
-        MISTRAL_KEY=$(grep "^MISTRAL_API_KEY=" .env | cut -d'=' -f2)
-        if [ -n "$MISTRAL_KEY" ] && [ "$MISTRAL_KEY" != "your_key_here" ]; then
-            echo "✅ MISTRAL_API_KEY found in .env"
-            # Copy to Vibe config if not exists
-            if [ ! -f "$VIBE_HOME/.env" ]; then
-                echo "MISTRAL_API_KEY=$MISTRAL_KEY" > "$VIBE_HOME/.env"
-                echo "✅ Copied MISTRAL_API_KEY to $VIBE_HOME/.env"
-            fi
-        else
-            echo "⚠️ MISTRAL_API_KEY is empty or placeholder in .env - Vibe CLI requires this"
-        fi
-    else
-        echo "⚠️ MISTRAL_API_KEY not found in .env - Vibe CLI requires this"
-    fi
+# Check numpy
+if python -c "import numpy as np; print('✅ NumPy version:', np.__version__)" 2>/dev/null; then
+    echo "✅ NumPy installed"
 else
-    echo "⚠️ .env file not found - Create it and add MISTRAL_API_KEY for Vibe CLI"
+    echo "❌ NumPy not installed"
+    exit 1
 fi
 
-echo "✅ Setup complete! You can now run the system using ./cli.sh"
+echo "--- Vision Dependencies ---"
 
+# Check PaddleOCR
+if python -c "import paddleocr; print('✅ PaddleOCR version:', paddleocr.__version__)" 2>/dev/null; then
+    echo "✅ PaddleOCR installed"
+else
+    echo "⚠️  PaddleOCR not installed (fallback to Copilot OCR)"
+fi
+
+# Check super-rag
+if python -c "import super_rag; print('✅ super-rag installed')" 2>/dev/null; then
+    echo "✅ super-rag installed"
+else
+    echo "⚠️  super-rag not installed (using OpenCV fallback)"
+fi
+
+echo "--- LLM Dependencies ---"
+
+# Check langchain
+if python -c "import langchain; print('✅ LangChain version:', langchain.__version__)" 2>/dev/null; then
+    echo "✅ LangChain installed"
+else
+    echo "❌ LangChain not installed"
+    exit 1
+fi
+
+# Check langchain-core
+if python -c "import langchain_core; print('✅ LangChain Core installed')" 2>/dev/null; then
+    echo "✅ LangChain Core installed"
+else
+    echo "❌ LangChain Core not installed"
+    exit 1
+fi
+
+echo "--- System Dependencies ---"
+
+# Check python-dotenv
+if python -c "import dotenv; print('✅ python-dotenv installed')" 2>/dev/null; then
+    echo "✅ python-dotenv installed"
+else
+    echo "❌ python-dotenv not installed"
+    exit 1
+fi
+
+# Check rich
+if python -c "import rich; print('✅ Rich installed')" 2>/dev/null; then
+    echo "✅ Rich installed"
+else
+    echo "⚠️  Rich not installed (optional for better UI)"
+fi
+
+# Check typer
+if python -c "import typer; print('✅ Typer installed')" 2>/dev/null; then
+    echo "✅ Typer installed"
+else
+    echo "⚠️  Typer not installed (optional for CLI)"
+fi
+
+echo ""
+echo "🎉 System Vision Full Setup completed successfully!"
+echo ""
+echo "📋 Installation Summary:"
+echo "  • Python version: $PYTHON_VERSION"
+echo "  • Virtual environment: .venv (created)"
+echo "  • Core dependencies: ✅ Installed"
+echo "  • Vision dependencies: ✅ Installed (with fallbacks)"
+echo "  • LLM dependencies: ✅ Installed"
+echo "  • System dependencies: ✅ Installed"
+echo ""
+echo "💡 To activate the virtual environment later, run:"
+echo "   source .venv/bin/activate"
+echo ""
+echo "🚀 To start the system, run:"
+echo "   python cli.py"
+echo ""
+echo "🔧 To update the system later, run:"
+echo "   source .venv/bin/activate && pip install -r requirements.txt --upgrade"
+echo ""
+echo "📝 System is ready for:"
+echo "  • Vision analysis with OpenCV"
+echo "  • OCR with PaddleOCR (or Copilot fallback)"
+echo "  • Advanced vision with super-rag (if installed)"
+echo "  • Full LLM integration"
+echo "  • All agent operations (Atlas, Tetyana, Grisha)"

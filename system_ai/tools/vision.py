@@ -9,9 +9,9 @@ import numpy as np
 
 
 def analyze_image_local(image_path: str, *, mode: str = "auto") -> Dict[str, Any]:
-    """Best-effort local analysis. Uses dop_materials vision module if present; otherwise returns minimal info."""
+    """Best-effort local analysis. Uses super-rag vision module if present; otherwise returns minimal info."""
     try:
-        from dop_materials.super_rag_agent.vision_module import get_vision_module  # type: ignore
+        from super_rag.vision_module import get_vision_module  # type: ignore
 
         vm = get_vision_module()
         return vm.analyze_screenshot(image_path, mode=mode)
