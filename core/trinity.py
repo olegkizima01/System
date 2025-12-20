@@ -758,29 +758,46 @@ class TrinityRuntime:
         # 2. Plan Maintenance (Consumption)
         if plan:
             if last_step_status == "success":
-                plan.pop(0)
+                # Success - record it in history and consume
+                completed_step = plan.pop(0)
+                hist = state.get("history_plan_execution") or []
+                desc = completed_step.get('description', 'Unknown step')
+                hist.append(f"SUCCESS: {desc}")
+                state["history_plan_execution"] = hist
                 current_step_fail_count = 0
-                if self.verbose: print(f"🧠 [Meta-Planner] Step succeeded. Remaining: {len(plan)}")
+                if self.verbose: print(f"🧠 [Meta-Planner] Step succeeded: {desc}. Remaining: {len(plan)}")
                 if not plan:
                      msg = "All plan steps completed successfully." if self.preferred_language != "uk" else "Усі кроки плану успішно виконано."
                      return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] {msg}")]}
             elif last_step_status == "failed":
                 current_step_fail_count += 1
                 if self.verbose: print(f"🧠 [Meta-Planner] Step failed ({current_step_fail_count}/3).")
+                
+                # Record failure
+                hist = state.get("history_plan_execution") or []
+                desc = plan[0].get('description', 'Unknown step')
+                hist.append(f"FAILED: {desc} (Try #{current_step_fail_count})")
+                state["history_plan_execution"] = hist
+                
             elif last_step_status == "uncertain":
                 # Treat uncertain as soft failure - increment count but don't replan immediately
                 current_step_fail_count += 1
                 if self.verbose: print(f"🧠 [Meta-Planner] Step uncertain ({current_step_fail_count}/4).")
+                
+                # Record uncertainty
+                hist = state.get("history_plan_execution") or []
+                desc = plan[0].get('description', 'Unknown step')
+                hist.append(f"UNCERTAIN: {desc} (Check #{current_step_fail_count})")
+                state["history_plan_execution"] = hist
+
                 # Increase allowance for uncertainty to avoid premature failure
                 if current_step_fail_count >= 4:
                     if self.verbose: print(f"🧠 [Meta-Planner] Uncertainty limit reached ({current_step_fail_count}). Marking step as FAILED to trigger recovery.")
                     last_step_status = "failed"
                     # Capture failed action for forbidden list (Manual Retry)
-                    hist = state.get("history_plan_execution") or []
-                    if hist:
-                         forbidden = state.get("forbidden_actions") or []
-                         forbidden.append(f"FAILED ACTION: {hist[-1]}")
-                         state["forbidden_actions"] = forbidden
+                    forbidden = state.get("forbidden_actions") or []
+                    forbidden.append(f"FAILED ACTION: {desc}")
+                    state["forbidden_actions"] = forbidden
                     # Do NOT pop the plan. Let the decision logic below handle 'failed' -> 'replan'.
 
         # 3. Decision Logic with Doctor Vibe integration
@@ -913,84 +930,95 @@ class TrinityRuntime:
             last_msg=last_user_msg
         )
         
-        prompt = get_atlas_plan_prompt(
-            f"Global Goal: {state.get('original_task')}\nCurrent Request: {last_msg}",
-            tools_desc=self.registry.list_tools(),
-            context=final_context + ("\n\n[MEDIA_MODE] This is a media-related task. Use the Two-Phase Media Strategy." if state.get("is_media") else ""),
-            preferred_language=self.preferred_language,
-            forbidden_actions="\n".join(state.get("forbidden_actions") or []),
-            vision_context=self.vision_context_manager.current_context
-        )
-        
-        # Inject ANTI-LOOP reinforcement if replanning after failure
-        if state.get("last_step_status") == "failed":
-            prompt.messages.append(HumanMessage(content=f"PREVIOUS STEP FAILED/UNCERTAIN. AVOID REPEATING IT. TRY DIFFERENT APPROACH."))
-        
-        try:
-            def on_delta(chunk):
-                if self.on_stream:
-                    self.on_stream("atlas", chunk)
-
-            # Use Atlas-specific LLM
-            atlas_model = os.getenv("ATLAS_MODEL") or os.getenv("COPILOT_MODEL") or "gpt-4.1"
-            atlas_llm = CopilotLLM(model_name=atlas_model)
-
-            plan_resp = atlas_llm.invoke_with_stream(prompt.format_messages(), on_delta=on_delta)
-            data = self._extract_json_object(plan_resp.content)
+            # Prepare history of execution for context
+            execution_history = []
+            hist = state.get("history_plan_execution") or []
+            if hist:
+                for h in hist:
+                    execution_history.append(f"- {h}")
             
-            raw_plan = []
-            if isinstance(data, list): raw_plan = data
-            elif isinstance(data, dict):
-                if data.get("status") == "completed":
-                    return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] {data.get('message', 'Done.')}")]}
-                raw_plan = data.get("steps") or data.get("plan") or []
-                if data.get("meta_config"):
-                    meta_config.update(data["meta_config"])
-                    if self.verbose: print(f"🌐 [Atlas] Strategy Justification: {meta_config.get('reasoning')}")
-                    if self.verbose: print(f"🌐 [Atlas] Preferences: tool_pref={meta_config.get('tool_preference', 'hybrid')}")
-
-            if not raw_plan: raise ValueError("No steps generated")
-
-            # Optimize with Grisha (Verifier) using GRISHA settings
-            grisha_model = os.getenv("GRISHA_MODEL") or os.getenv("COPILOT_MODEL") or "gpt-4.1"
-            grisha_llm = CopilotLLM(model_name=grisha_model)
-            local_verifier = AdaptiveVerifier(grisha_llm)
+            history_str = "\n".join(execution_history) if execution_history else "No steps executed yet. Starting fresh."
             
-            optimized_plan = local_verifier.optimize_plan(raw_plan, meta_config=meta_config)
+            prompt = get_atlas_plan_prompt(
+                f"Global Goal: {state.get('original_task')}\nCurrent Request: {last_msg}\n\nEXECUTION HISTORY SO FAR (Status of steps):\n{history_str}",
+                tools_desc=self.registry.list_tools(),
+                context=final_context + ("\n\n[MEDIA_MODE] This is a media-related task. Use the Two-Phase Media Strategy." if state.get("is_media") else ""),
+                preferred_language=self.preferred_language,
+                forbidden_actions="\n".join(state.get("forbidden_actions") or []),
+                vision_context=self.vision_context_manager.current_context
+            )
             
-            return self._atlas_dispatch(state, optimized_plan, replan_count=replan_count)
+            # Inject ANTI-LOOP reinforcement if replanning after failure
+            if state.get("last_step_status") == "failed":
+                prompt.messages.append(HumanMessage(content=f"PREVIOUS ATTEMPT FAILED. Current history shows what didn't work. AVOID REPEATING FAILED ACTIONS. Respecify the plan starting from the current state to achieve the goal. RESUME, DO NOT RESTART."))
+            elif state.get("last_step_status") == "uncertain":
+                prompt.messages.append(HumanMessage(content=f"PREVIOUS STEP WAS UNCERTAIN. Review the last action's output and verify if you need to retry it differently or try an alternative approach to confirm success."))
 
-        except Exception as e:
-            if self.verbose: print(f"⚠️ [Atlas] Error: {e}")
-            
-            # Check if this is a planning failure that Doctor Vibe should handle
-            error_str = str(e).lower()
-            if "no steps generated" in error_str or "empty plan" in error_str or "cannot" in error_str:
-                if self.verbose:
-                    print(f"🚨 [Atlas] Planning failure detected. Activating Doctor Vibe intervention.")
+            try:
+                def on_delta(chunk):
+                    if self.on_stream:
+                        self.on_stream("atlas", chunk)
+
+                # Use Atlas-specific LLM
+                atlas_model = os.getenv("ATLAS_MODEL") or os.getenv("COPILOT_MODEL") or "gpt-4.1"
+                atlas_llm = CopilotLLM(model_name=atlas_model)
+
+                plan_resp = atlas_llm.invoke_with_stream(prompt.format_messages(), on_delta=on_delta)
+                data = self._extract_json_object(plan_resp.content)
                 
-                # Create pause context for Doctor Vibe
-                pause_context = {
-                    "reason": "planning_failure",
-                    "message": f"Doctor Vibe: Атлас не може створити план для завдання: {last_msg}",
-                    "timestamp": datetime.now().isoformat(),
-                    "suggested_action": "Будь ласка, уточніть завдання або розбийте його на простіші кроки",
-                    "atlas_status": "planning_failed",
-                    "auto_resume_available": False,
-                    "original_task": state.get("original_task"),
-                    "current_attempt": last_msg
-                }
+                raw_plan = []
+                if isinstance(data, list): raw_plan = data
+                elif isinstance(data, dict):
+                    if data.get("status") == "completed":
+                        return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] {data.get('message', 'Done.')}")]}
+                    raw_plan = data.get("steps") or data.get("plan") or []
+                    if data.get("meta_config"):
+                        meta_config.update(data["meta_config"])
+                        if self.verbose: print(f"🌐 [Atlas] Strategy Justification: {meta_config.get('reasoning')}")
+                        if self.verbose: print(f"🌐 [Atlas] Preferences: tool_pref={meta_config.get('tool_preference', 'hybrid')}")
+
+                if not raw_plan: raise ValueError("No steps generated")
+
+                # Optimize with Grisha (Verifier) using GRISHA settings
+                grisha_model = os.getenv("GRISHA_MODEL") or os.getenv("COPILOT_MODEL") or "gpt-4.1"
+                grisha_llm = CopilotLLM(model_name=grisha_model)
+                local_verifier = AdaptiveVerifier(grisha_llm)
                 
-                # Notify Doctor Vibe and create pause state
-                self.vibe_assistant.handle_pause_request(pause_context)
+                optimized_plan = local_verifier.optimize_plan(raw_plan, meta_config=meta_config)
                 
-                return {
-                    **state,
-                    "vibe_assistant_pause": pause_context,
-                    "vibe_assistant_context": f"PAUSED: Planning failure for task: {last_msg}",
-                    "current_agent": "meta_planner",  # Stay in meta_planner to handle pause
-                    "messages": list(context) + [AIMessage(content=f"[VOICE] Doctor Vibe: Виникла проблема з плануванням. Будь ласка, уточніть завдання.")]
-                }
+                return self._atlas_dispatch(state, optimized_plan, replan_count=replan_count)
+
+            except Exception as e:
+                if self.verbose: print(f"⚠️ [Atlas] Error: {e}")
+                
+                # Check if this is a planning failure that Doctor Vibe should handle
+                error_str = str(e).lower()
+                if "no steps generated" in error_str or "empty plan" in error_str or "cannot" in error_str:
+                    if self.verbose:
+                        print(f"🚨 [Atlas] Planning failure detected. Activating Doctor Vibe intervention.")
+                    
+                    # Create pause context for Doctor Vibe
+                    pause_context = {
+                        "reason": "planning_failure",
+                        "message": f"Doctor Vibe: Атлас не може створити план для завдання: {last_msg}",
+                        "timestamp": datetime.now().isoformat(),
+                        "suggested_action": "Будь ласка, уточніть завдання або розбийте його на простіші кроки",
+                        "atlas_status": "planning_failed",
+                        "auto_resume_available": False,
+                        "original_task": state.get("original_task"),
+                        "current_attempt": last_msg
+                    }
+                    
+                    # Notify Doctor Vibe and create pause state
+                    self.vibe_assistant.handle_pause_request(pause_context)
+                    
+                    return {
+                        **state,
+                        "vibe_assistant_pause": pause_context,
+                        "vibe_assistant_context": f"PAUSED: Planning failure for task: {last_msg}",
+                        "current_agent": "meta_planner",  # Stay in meta_planner to handle pause
+                        "messages": list(context) + [AIMessage(content=f"[VOICE] Doctor Vibe: Виникла проблема з плануванням. Будь ласка, уточніть завдання.")]
+                    }
             else:
                 # Regular fallback for other errors
                 if self.verbose:
@@ -1577,35 +1605,33 @@ class TrinityRuntime:
             forced_verification_run = False
             
             if (gui_mode in {"auto", "on"} and execution_mode == "gui") or is_browser_task:
-                # NEW: Prefer browser_screenshot if browser tools were used
-                snap = ""
-                if is_browser_task:
-                    snap = self.registry.execute("browser_screenshot", {})
-                    if '"status": "error"' in snap:
-                        # Fallback to global capture if browser screenshot fails or isn't a browser task
-                        snap = self.registry.execute("capture_screen", {"app_name": None})
-                else:
-                    snap = self.registry.execute("capture_screen", {"app_name": None})
-                
-                snap_res = f"\n[GUI_BROWSER_VERIFY] capture_screen:\n{snap}"
-                content += snap_res
-                executed_tools_results.append(snap_res)
+                # Use the new enhanced vision tool instead of basic capture
+                analysis = self.registry.execute("enhanced_vision_analysis", {"app_name": None})
+                analysis_res = f"\n[GUI_BROWSER_VERIFY] enhanced_vision_analysis:\n{analysis}"
+                content += analysis_res
+                executed_tools_results.append(analysis_res)
                 forced_verification_run = True
 
                 try:
-                    snap_dict = json.loads(snap)
-                    img_path = snap_dict.get("path") if isinstance(snap_dict, dict) else None
+                    # Attempt to extract image path from analysis result for further analyze_screen if needed
+                    # Note: enhanced_vision_analysis result structure is different
+                    if isinstance(analysis, dict):
+                        img_path = analysis.get("diff_image_path") or analysis.get("path")
+                    else:
+                        analysis_dict = json.loads(analysis)
+                        img_path = analysis_dict.get("diff_image_path") or analysis_dict.get("path")
                 except Exception:
                     img_path = None
                 
                 if img_path:
-                    analysis = self.registry.execute(
+                    # Optional: still use LLM analysis on the diff image for high-level understanding
+                    analysis_llm = self.registry.execute(
                         "analyze_screen",
-                        {"image_path": img_path, "prompt": "Verify the UI state. Describe what changed and whether the goal seems achieved. Check for errors or typos."},
+                        {"image_path": img_path, "prompt": "Based on this (potentially highlighted diff) image and the goal, provide a final confirmation of success or failure. Focus on specific UI changes."},
                     )
-                    analysis_res = f"\n[GUI_VERIFY] analyze_screen:\n{analysis}"
-                    content += analysis_res
-                    executed_tools_results.append(analysis_res)
+                    analysis_res_llm = f"\n[GUI_VERIFY_LLM] analyze_screen:\n{analysis_llm}"
+                    content += analysis_res_llm
+                    executed_tools_results.append(analysis_res_llm)
 
         except Exception as e:
             content = f"Error invoking Grisha: {e}"
@@ -2346,9 +2372,14 @@ class TrinityRuntime:
             "current_agent": "atlas",
             "task_status": "started",
             "final_response": None,
+            "plan": [],
+            "summary": "",
             "step_count": 0,
             "replan_count": 0,
-            "summary": None,
+            "uncertain_streak": 0,
+            "current_step_fail_count": 0,
+            "history_plan_execution": [],
+            "forbidden_actions": [],
             "pause_info": None,
             "gui_mode": gm,
             "execution_mode": em,
@@ -2356,10 +2387,32 @@ class TrinityRuntime:
             "task_type": task_type,
             "is_dev": bool(is_dev),
             "requires_windsurf": bool(requires_windsurf),
-            "dev_edit_mode": "cli", # User Preference: Continue CLI priority
+            "dev_edit_mode": "cli",
             "intent_reason": intent_reason,
+            "last_step_status": "success",
+            "meta_config": {
+                "strategy": "hybrid",
+                "verification_rigor": "standard",
+                "recovery_mode": "local_fix",
+                "tool_preference": "hybrid"
+            },
+            "retrieved_context": "",
             "original_task": input_text,
+            "is_media": ("фільм" in input_text.lower() or "movie" in input_text.lower() or "video" in input_text.lower() or "youtube" in input_text.lower() or "музика" in input_text.lower() or "music" in input_text.lower()),
+            "vibe_assistant_pause": None,
+            "vibe_assistant_context": ""
         }
+
+        # Initialize snapshot session
+        session_id = datetime.now().strftime("%Y%m%d_%H%M%S")
+        try:
+            from system_ai.tools.screenshot import VisionDiffManager
+            VisionDiffManager.get_instance().set_session_id(session_id)
+            if self.verbose: 
+                print(f"📸 [Trinity] Screenshot session initialized: {session_id}")
+        except Exception as e:
+            if self.verbose:
+                print(f"⚠️ [Trinity] Could not initialize screenshot session: {e}")
 
         last_node_name: str = ""
         last_state_update: Dict[str, Any] = {}
