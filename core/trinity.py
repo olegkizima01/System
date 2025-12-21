@@ -23,6 +23,11 @@ from core.vibe_assistant import VibeCLIAssistant
 from dataclasses import dataclass
 from tui.logger import get_logger, trace
 from core.utils import extract_json_object
+from core.constants import (
+    DEV_KEYWORDS, GENERAL_KEYWORDS, MEDIA_KEYWORDS, 
+    SUCCESS_MARKERS, FAILURE_MARKERS, UNCERTAIN_MARKERS,
+    NEGATION_PATTERNS, VISION_FAILURE_KEYWORDS, MESSAGES
+)
 
 @dataclass
 class TrinityPermissions:
@@ -70,40 +75,10 @@ class TrinityRuntime:
     MAX_STEPS = 50
     
     # Dev task keywords (allow execution)
-    DEV_KEYWORDS = {
-        "код", "code", "python", "javascript", "typescript", "script", "function",
-        "рефакторинг", "refactor", "тест", "test", "git", "commit", "branch",
-        "архітектура", "architecture", "api", "database", "db", "sql",
-        "windsurf", "editor", "ide", "файл", "file", "write", "create",
-        "bug", "fix", "error", "debug", "patch", "merge", "pull request",
-        "deploy", "build", "compile", "run", "execute", "shell", "command",
-        "npm", "pip", "package", "dependency", "import", "module", "library"
-    }
+    DEV_KEYWORDS = set(DEV_KEYWORDS)
     
     # Non-dev keywords (block execution)
-    NON_DEV_KEYWORDS = {
-        # Media & Entertainment
-        "фільм", "movie", "video", "youtube", "netflix", "браузер", "browser",
-        "музика", "music", "spotify", "apple music", "відкрий", "open",
-        "переглянь", "watch", "слухай", "listen", "грай", "play",
-        "скачай", "download", "завантаж", "upload", "фото", "photo",
-        "картинка", "image", "розташування", "location", "карта", "map",
-        "погода", "weather", "новини", "news", "соціальна мережа", "social",
-        "facebook", "instagram", "twitter", "whatsapp", "telegram",
-        "email", "mail", "повідомлення", "message", "чат", "chat",
-        
-        # Standard macOS folders (non-dev)
-        "documents", "документи", "desktop", "робочий стіл", "downloads", "завантаження",
-        "pictures", "фото", "movies", "фільми", "music", "музика",
-        "applications", "програми", "library", "бібліотека",
-        "~/", "$home", "~", "home", "users", "користувачі",
-        "finder", "фіндер", "trash", "кошик", "recycle bin",
-        
-        # System operations (non-dev)
-        "видалити", "delete", "видали", "remove", "очистити", "clean",
-        "перейменувати", "rename", "скопіювати", "copy", "перемістити", "move",
-        "архівувати", "archive", "zip", "unzip", "compress", "розпакувати"
-    }
+    NON_DEV_KEYWORDS = set(GENERAL_KEYWORDS)
     
     def __init__(
         self,
@@ -279,7 +254,8 @@ class TrinityRuntime:
         Returns: (task_type, is_dev, is_media)
         """
         task_lower = str(task or "").lower()
-        media_keywords = {"фільм", "movie", "video", "youtube", "netflix", "дивитись", "watch", "серіал", "serial", "film"}
+        # Media keywords for specific logic
+        media_keywords = set(MEDIA_KEYWORDS)
         is_media = any(k in task_lower for k in media_keywords)
         
         llm_res = self._classify_task_llm(task)
@@ -351,11 +327,12 @@ class TrinityRuntime:
         # Check for repeated failures that might need human intervention
         current_step_fail_count = state.get("current_step_fail_count", 0)
         if current_step_fail_count >= 3:
+            lang = self.preferred_language if self.preferred_language in MESSAGES else "en"
             pause_context = {
                 "reason": "repeated_failures",
-                "message": "Doctor Vibe: Атлас виявив повторювані помилки. Система призупинена для аналізу.",
+                "message": "Doctor Vibe: Atlas detected repeating errors. System paused." if lang != "uk" else "Doctor Vibe: Атлас виявив повторювані помилки. Система призупинена для аналізу.",
                 "timestamp": datetime.now().isoformat(),
-                "suggested_action": "Будь ласка, проаналізуйте проблему. Використовуйте /continue або /cancel",
+                "suggested_action": "Please analyze the issue. Use /continue or /cancel" if lang != "uk" else "Будь ласка, проаналізуйте проблему. Використовуйте /continue або /cancel",
                 "atlas_status": "paused_analyzing_failures",
                 "auto_resume_available": True
             }
@@ -374,12 +351,13 @@ class TrinityRuntime:
                 
                 if unresolved_issues and len(unresolved_issues) > 2:
                     # Doctor Vibe works in background mode for dev tasks
+                    lang = self.preferred_language if self.preferred_language in MESSAGES else "en"
                     pause_context = {
                         "reason": "background_error_correction_needed",
                         "issues": [issue.to_dict() for issue in unresolved_issues[:3]],
-                        "message": f"Doctor Vibe: Виявлено {len(unresolved_issues)} помилок в фоновому режимі. Атлас продовжує основне завдання.",
+                        "message": f"Doctor Vibe: Detected {len(unresolved_issues)} background errors. Atlas continues current task." if lang != "uk" else f"Doctor Vibe: Виявлено {len(unresolved_issues)} помилок в фоновому режимі. Атлас продовжує основне завдання.",
                         "timestamp": datetime.now().isoformat(),
-                        "suggested_action": "Помилки виправляються автоматично. Ви можете продовжувати роботу",
+                        "suggested_action": "Errors are being fixed automatically." if lang != "uk" else "Помилки виправляються автоматично. Ви можете продовжувати роботу",
                         "atlas_status": "running_with_background_fixes",
                         "auto_resume_available": False,  # No pause needed, just notification
                         "background_mode": True
@@ -409,12 +387,13 @@ class TrinityRuntime:
         ]
         
         if any(condition in last_message_lower for condition in stall_conditions):
+            lang = self.preferred_language if self.preferred_language in MESSAGES else "en"
             # System is stalled with unclear reason - Doctor Vibe should intervene
             pause_context = {
                 "reason": "unknown_stall_detected",
-                "message": f"Doctor Vibe: Виявлено невідому зупинку системи. Останнє повідомлення: {last_message[:100]}...",
+                "message": f"Doctor Vibe: Detected unknown stall. Last message: {last_message[:100]}..." if lang != "uk" else f"Doctor Vibe: Виявлено невідому зупинку системи. Останнє повідомлення: {last_message[:100]}...",
                 "timestamp": datetime.now().isoformat(),
-                "suggested_action": "Будь ласка, уточніть завдання або перезапустіть систему",
+                "suggested_action": "Please clarify the task or restart the system." if lang != "uk" else "Будь ласка, уточніть завдання або перезапустіть систему",
                 "atlas_status": "stalled_unknown_reason",
                 "auto_resume_available": False,
                 "last_message": last_message,
@@ -710,11 +689,12 @@ class TrinityRuntime:
                 pass
 
         # 1b. Check Master Limits
+        lang = self.preferred_language if self.preferred_language in MESSAGES else "en"
         if step_count >= self.MAX_STEPS:
-            msg = f"Step limit reached ({self.MAX_STEPS})." if self.preferred_language != "uk" else f"Ліміт кроків вичерпано ({self.MAX_STEPS})."
+            msg = MESSAGES[lang]["step_limit_reached"].format(limit=self.MAX_STEPS)
             return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] {msg}")]}
         if replan_count >= self.MAX_REPLANS:
-            msg = f"Replan limit reached ({self.MAX_REPLANS})." if self.preferred_language != "uk" else f"Ліміт перепланувань вичерпано ({self.MAX_REPLANS})."
+            msg = MESSAGES[lang]["replan_limit_reached"].format(limit=self.MAX_REPLANS)
             return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] {msg}")]}
 
         # 2. Plan Maintenance (Consumption)
@@ -727,11 +707,14 @@ class TrinityRuntime:
                 hist.append(f"SUCCESS: {desc}")
                 state["history_plan_execution"] = hist
                 current_step_fail_count = 0
+                state["gui_fallback_attempted"] = False # Reset for next step
                 if self.verbose: print(f"🧠 [Meta-Planner] Step succeeded: {desc}. Remaining: {len(plan)}")
                 if not plan:
                     # Robust termination: Only end if the Global Goal is explicitly verified
-                    if "[VERIFIED]" in last_msg.upper() or "[ACHIEVEMENT_CONFIRMED]" in last_msg.upper():
-                        msg = "All plan steps completed successfully. Task achieved." if self.preferred_language != "uk" else "Усі кроки плану успішно виконано. Ціль досягнута."
+                    has_verified = any(m.upper() in last_msg.upper() for m in SUCCESS_MARKERS) or "[ACHIEVEMENT_CONFIRMED]" in last_msg.upper()
+                    if has_verified:
+                        lang = self.preferred_language if self.preferred_language in MESSAGES else "en"
+                        msg = MESSAGES[lang]["task_achieved"]
                         return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] {msg}")]}
                     else:
                         if self.verbose: print("🧠 [Meta-Planner] Plan exhausted but Global Goal NOT verified. Triggering replan for next steps.")
@@ -856,6 +839,7 @@ class TrinityRuntime:
                 "meta_config": meta_config,
                 "plan": None if action == "replan" else plan,
                 "current_step_fail_count": current_step_fail_count,
+                "gui_fallback_attempted": False if action == "replan" else state.get("gui_fallback_attempted"),
                 "summary": summary,
                 "retrieved_context": state.get("retrieved_context", "")
             }
@@ -1336,7 +1320,11 @@ class TrinityRuntime:
                 content += "\n\nTool Results:\n" + "\n".join(results)
                 # Add explicit success marker if no errors occurred
                 if not had_failure and not pause_info:
-                    content += "\n\n[STEP_COMPLETED] Всі дії виконано, верифікацію можна починати."
+                    success_marker = "[STEP_COMPLETED]" if "[STEP_COMPLETED]" not in content else ""
+                    if success_marker:
+                        lang = self.preferred_language if self.preferred_language in MESSAGES else "en"
+                        desc = "All actions completed, verification can begin." if lang != "uk" else "Всі дії виконано, верифікацію можна починати."
+                        content += f"\n\n{success_marker} {desc}"
 
             # Save successful action to RAG memory (only if no pause and learning mode is ON)
             if not pause_info and state.get("learning_mode", True):
@@ -1355,7 +1343,9 @@ class TrinityRuntime:
                 and (not gui_fallback_attempted)
             ):
                 # Tell the graph to retry this step in GUI mode.
-                updated_messages = list(context) + [AIMessage(content=f"[VOICE] Native не спрацював. Перемикаюся на GUI режим.")]
+                lang = self.preferred_language if self.preferred_language in MESSAGES else "en"
+                msg = MESSAGES[lang]["native_failed_switching_gui"]
+                updated_messages = list(context) + [AIMessage(content=msg)]
                 
                 try:
                     trace(self.logger, "tetyana_gui_fallback", {"from": execution_mode, "to": "gui"})
@@ -1656,20 +1646,10 @@ class TrinityRuntime:
         next_agent = "meta_planner"
 
         # 1. Check for explicit FAILURE markers first (Priority)
-        explicit_failure_markers = [
-            "[failed]", "critical error", "fatal error", "verification failed", 
-            "unable to verify", "not achieved", "goal not met"
-        ]
-        has_explicit_fail = any(m in lower_content for m in explicit_failure_markers)
+        has_explicit_fail = any(f"[{m}]" in lower_content or m in lower_content for m in FAILURE_MARKERS)
         
         # 2. Check for explicit SUCCESS markers
-        explicit_complete_markers = [
-            "[verified]", "[confirmed]", "[step_completed]", "[completed]",
-            "verification passed", "qa passed", "verdict: pass", "перевірку пройдено", 
-            "підтверджую", "verified: true", "verified: yes"
-        ]
-        has_explicit_complete = any(m in lower_content for m in explicit_complete_markers)
-        
+        has_explicit_complete = any(f"[{m}]" in lower_content or m in lower_content for m in SUCCESS_MARKERS)
         # 3. Check for tool execution errors in context
         latest_tools_result = "\n".join(executed_tools_results).lower()
         has_tool_error_in_context = '"status": "error"' in latest_tools_result
@@ -1701,20 +1681,19 @@ class TrinityRuntime:
             step_status = "uncertain"
             next_agent = "meta_planner"
         elif has_explicit_complete:
-            step_status = "success"
-            next_agent = "meta_planner"
-        elif any(kw in lower_content for kw in ["успішно", "працює", "готово", "виконано", "completed", "done"]):
-            # Fallback soft success markers (weakest)
-            # CHECK FOR NEGATIONS: if 'не' or 'not' is near the marker, it's NOT a success
-            # Simple heuristic: if 'не' appears within 20 chars before the keyword
+            # CHECK FOR NEGATIONS: if 'not' or 'не' is near the marker
             is_negated = False
-            for kw in ["успішно", "готово", "виконано", "працює"]:
+            lang_negations = NEGATION_PATTERNS.get(self.preferred_language, NEGATION_PATTERNS["en"])
+            
+            for kw in SUCCESS_MARKERS:
                 if kw in lower_content:
-                    idx = lower_content.find(kw)
-                    pre_text = lower_content[max(0, idx-15):idx]
-                    if "не " in pre_text or "нема" in pre_text or "not " in pre_text:
-                        is_negated = True
-                        break
+                    for match in re.finditer(re.escape(kw), lower_content):
+                        idx = match.start()
+                        pre_text = lower_content[max(0, idx-25):idx]
+                        if re.search(lang_negations, pre_text):
+                            is_negated = True
+                            break
+                if is_negated: break
             
             if not is_negated:
                 step_status = "success"
@@ -1739,16 +1718,7 @@ class TrinityRuntime:
             current_streak = 0  # Reset on definite decision (success)
         
         # If 3+ consecutive uncertain decisions, consider forcing completion
-        vision_shows_failure = any(kw in lower_content for kw in [
-            "no video playing", "no video in fullscreen", "не відтворюється", "відео не грає",
-            "page is empty", "сторінка порожня", "about:blank", "not found", "404",
-            "error loading", "помилка завантаження", "the task was not completed",
-            "завдання не виконано", "goal not achieved",
-            "not playing", "nothing playing",
-            "not in fullscreen", "not in full-screen",
-            "no active video",
-            "no evidence of", "does not show",
-        ])
+        vision_shows_failure = any(kw in lower_content for kw in VISION_FAILURE_KEYWORDS)
         
         if step_status == "uncertain" and current_streak >= 3:
             if vision_shows_failure or "[failed]" in lower_content:
@@ -2421,7 +2391,7 @@ class TrinityRuntime:
             },
             "retrieved_context": "",
             "original_task": input_text,
-            "is_media": ("фільм" in input_text.lower() or "movie" in input_text.lower() or "video" in input_text.lower() or "youtube" in input_text.lower() or "музика" in input_text.lower() or "music" in input_text.lower()),
+            "is_media": any(kw in input_text.lower() for kw in MEDIA_KEYWORDS),
             "vibe_assistant_pause": None,
             "vibe_assistant_context": "",
             "vision_context": None,
