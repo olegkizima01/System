@@ -584,6 +584,7 @@ def _load_ui_settings() -> None:
         state.ui_agents_follow = bool(data.get("agents_follow", True))
         state.ui_dev_code_provider = str(data.get("dev_code_provider", "vibe-cli")).strip().lower()
         state.ui_self_healing = bool(data.get("self_healing", False))
+        state.learning_mode = bool(data.get("learning_mode", False))
     except Exception:
         pass
 
@@ -606,6 +607,7 @@ def _save_ui_settings() -> bool:
             "agents_follow": bool(getattr(state, "ui_agents_follow", True)),
             "dev_code_provider": str(getattr(state, "ui_dev_code_provider", "vibe-cli") or "vibe-cli").strip().lower() or "vibe-cli",
             "self_healing": bool(getattr(state, "ui_self_healing", False)),
+            "learning_mode": bool(getattr(state, "learning_mode", False)),
         }
         with open(UI_SETTINGS_PATH, "w", encoding="utf-8") as f:
             json.dump(payload, f, ensure_ascii=False, indent=2)
@@ -1601,7 +1603,12 @@ def _get_llm_sub_menu_items(level: Any) -> List[Tuple[str, Any]]:
 def _get_agent_menu_items() -> List[Tuple[str, Any, Optional[str]]]:
     mode = "ON" if agent_chat_mode and agent_session.enabled else "OFF"
     unsafe = "ON" if bool(getattr(state, "ui_unsafe_mode", False)) else "OFF"
-    return [(f"Agent: {mode}", None, None), (f"Unsafe mode: {unsafe}", None, None)]
+    learning = "ON" if bool(getattr(state, "learning_mode", False)) else "OFF"
+    return [
+        (f"Agent: {mode}", None, None),
+        (f"Unsafe mode: {unsafe}", None, None),
+        (f"Learning mode: {learning}", "learning_mode", None)
+    ]
 
 
 def _get_automation_permissions_menu_items() -> List[Tuple[str, Any, Optional[str]]]:
@@ -1635,6 +1642,7 @@ def _get_settings_menu_items() -> List[Tuple[str, Any, Optional[str]]]:
         ("menu.settings.agent", MenuLevel.AGENT_SETTINGS, None),
         ("menu.settings.unsafe_mode", MenuLevel.UNSAFE_MODE, None),
         ("menu.settings.self_healing", MenuLevel.SELF_HEALING, None),
+        ("menu.settings.learning_mode", MenuLevel.LEARNING_MODE, None),
     ]
 
 

@@ -63,6 +63,7 @@ class TrinityState(TypedDict):
     vibe_assistant_pause: Optional[Dict[str, Any]]  # Vibe CLI Assistant pause state
     vibe_assistant_context: Optional[str]  # Context for Vibe CLI Assistant
     vision_context: Optional[Dict[str, Any]] # Enhanced visual context
+    learning_mode: Optional[bool]
 
 class TrinityRuntime:
     MAX_REPLANS = 10
@@ -111,12 +112,14 @@ class TrinityRuntime:
         on_stream: Optional[Callable[[str, str], None]] = None,
         preferred_language: str = "en",
         enable_self_healing: bool = True,
-        hyper_mode: bool = False
+        hyper_mode: bool = False,
+        learning_mode: bool = False
     ):
         self.llm = CopilotLLM()
         self.verbose = verbose
         self.logger = get_logger("system_cli.trinity")
         self.registry = MCPToolRegistry()
+        self.learning_mode = learning_mode
         
         # Integrate MCP tools with Trinity's registry
         try:
@@ -572,7 +575,8 @@ class TrinityRuntime:
             "original_task": task,
             "vibe_assistant_pause": None,
             "is_media": is_media,
-            "vibe_assistant_context": "eternal_engine_mode: Doctor Vibe monitoring activated"
+            "vibe_assistant_context": "eternal_engine_mode: Doctor Vibe monitoring activated",
+            "learning_mode": self.learning_mode
         }
         
         if self.verbose:
@@ -1334,8 +1338,8 @@ class TrinityRuntime:
                 if not had_failure and not pause_info:
                     content += "\n\n[STEP_COMPLETED] Всі дії виконано, верифікацію можна починати."
 
-            # Save successful action to RAG memory (only if no pause)
-            if not pause_info:
+            # Save successful action to RAG memory (only if no pause and learning mode is ON)
+            if not pause_info and state.get("learning_mode", True):
                 try:
                     action_summary = f"Task: {last_msg[:100]}\nTools used: {[t.get('name') for t in tool_calls]}\nResult: Success"
                     self.memory.add_memory("strategies", action_summary, {"type": "tetyana_action"})
@@ -2420,7 +2424,8 @@ class TrinityRuntime:
             "is_media": ("фільм" in input_text.lower() or "movie" in input_text.lower() or "video" in input_text.lower() or "youtube" in input_text.lower() or "музика" in input_text.lower() or "music" in input_text.lower()),
             "vibe_assistant_pause": None,
             "vibe_assistant_context": "",
-            "vision_context": None
+            "vision_context": None,
+            "learning_mode": self.learning_mode
         }
 
         # Initialize snapshot session

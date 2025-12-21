@@ -270,6 +270,17 @@ def build_menu(
             result.append(("", "\n"))
             return result
 
+        if state.menu_level == MenuLevel.LEARNING_MODE:
+            add_back_btn(result)
+            result.append(("class:menu.title", f" {tr('menu.learning_mode.title', state.ui_lang)}\n\n"))
+            on = bool(getattr(state, "learning_mode", False))
+            prefix = " > "
+            handler = make_click(0)
+            result.append(("class:menu.selected", f"{prefix}{tr('menu.learning_mode.label', state.ui_lang)} ", handler))
+            result.extend(get_toggle_text(on))
+            result.append(("", "\n"))
+            return result
+
         if state.menu_level == MenuLevel.AUTOMATION_PERMISSIONS:
             add_back_btn(result)
             result.append(("class:menu.title", f" {tr('menu.automation_permissions.title', state.ui_lang)}\n\n"))

@@ -214,7 +214,7 @@ def build_keybindings(
             state.menu_index = 0
         elif state.menu_level in {
             MenuLevel.LLM_SETTINGS, MenuLevel.AGENT_SETTINGS, MenuLevel.APPEARANCE, MenuLevel.LANGUAGE, MenuLevel.LAYOUT, MenuLevel.UNSAFE_MODE,
-            MenuLevel.AUTOMATION_PERMISSIONS, MenuLevel.DEV_SETTINGS, MenuLevel.LOCALES, MenuLevel.SELF_HEALING
+            MenuLevel.AUTOMATION_PERMISSIONS, MenuLevel.DEV_SETTINGS, MenuLevel.LOCALES, MenuLevel.SELF_HEALING, MenuLevel.LEARNING_MODE
         }:
             state.menu_level = MenuLevel.SETTINGS
             state.menu_index = 0
@@ -360,6 +360,8 @@ def build_keybindings(
         elif state.menu_level == MenuLevel.DEV_SETTINGS:
             max_idx = 0
         elif state.menu_level == MenuLevel.SELF_HEALING:
+            max_idx = 0
+        elif state.menu_level == MenuLevel.LEARNING_MODE:
             max_idx = 0
 
         state.menu_index = min(max_idx, state.menu_index + 1)
@@ -601,6 +603,12 @@ def build_keybindings(
             state.ui_self_healing = not bool(getattr(state, "ui_self_healing", False))
             save_ui_settings()
             log(f"Self-healing: {'ON' if state.ui_self_healing else 'OFF'}", "action")
+            return
+
+        if state.menu_level == MenuLevel.LEARNING_MODE:
+            state.learning_mode = not bool(getattr(state, "learning_mode", False))
+            save_ui_settings()
+            log(f"Learning mode: {'ON' if state.learning_mode else 'OFF'}", "action")
             return
 
         if state.menu_level == MenuLevel.AUTOMATION_PERMISSIONS:

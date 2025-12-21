@@ -32,6 +32,7 @@ class MenuLevel(Enum):
     LAYOUT = "layout"
     DEV_SETTINGS = "dev_settings"
     SELF_HEALING = "self_healing"
+    LEARNING_MODE = "learning_mode"
 
 
 @dataclass
@@ -73,6 +74,7 @@ class AppState:
     ui_left_panel_ratio: float = 0.6
     ui_dev_code_provider: str = "vibe-cli"  # vibe-cli | continue
     ui_self_healing: bool = False
+    learning_mode: bool = False
 
 
 state = AppState()
