@@ -2,6 +2,10 @@
 
 setopt NULL_GLOB
 
+# Забезпечуємо базовий PATH для системних утиліт
+PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:${PATH:-}"
+export PATH
+
 # ═══════════════════════════════════════════════════════════════
 #  🔄 DEEP VSCODE CLEANUP - Глибоке видалення VS Code
 #  Для повної переінсталяції як новий клієнт

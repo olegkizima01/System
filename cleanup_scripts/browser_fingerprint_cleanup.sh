@@ -3,13 +3,43 @@
 # Видаляє або спуфує браузер fingerprint метри
 # Цільова база: WebGL, Canvas, Audio, IndexedDB, Service Workers, User-Agent
 
+# Забезпечуємо базовий PATH для системних утиліт (ПЕРЕД усім іншим)
+PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:${PATH:-}"
+export PATH
+
 set -a
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 source "$REPO_ROOT/.env" 2>/dev/null || true
 set +a
 
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+# Відновлюємо PATH після .env (може бути перезаписаний)
+PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:${PATH:-}"
+export PATH
+
+# Визначаємо функції-обгортки для системних утиліт
+basename() { /usr/bin/basename "$@"; }
+dirname() { /usr/bin/dirname "$@"; }
+
+SCRIPT_DIR="$(cd "$(/usr/bin/dirname "$0")" && pwd)"
 LOG_FILE="/tmp/browser_fingerprint_cleanup_$(date +%s).log"
+touch "$LOG_FILE" 2>/dev/null || true
+
+REQUIRED_CMDS=(rm find sed defaults security tee grep wc basename dirname)
+
+check_requirements() {
+    local missing=()
+    for cmd in "${REQUIRED_CMDS[@]}"; do
+        command -v "$cmd" >/dev/null 2>&1 || missing+=("$cmd")
+    done
+
+    if (( ${#missing[@]} )); then
+        local msg="Відсутні команди: ${missing[*]}"
+        echo "$msg" | /usr/bin/tee -a "$LOG_FILE" 2>/dev/null
+        return 127
+    fi
+
+    return 0
+}
 
 # Кольорове вивід
 RED='\033[0;31m'
@@ -25,15 +55,64 @@ print_header() {
 }
 
 print_info() {
-    echo -e "${BLUE}[ℹ]${NC} $1" | tee -a "$LOG_FILE"
+    echo -e "${BLUE}[ℹ]${NC} $1" | /usr/bin/tee -a "$LOG_FILE"
 }
 
 print_success() {
-    echo -e "${GREEN}[✓]${NC} $1" | tee -a "$LOG_FILE"
+    echo -e "${GREEN}[✓]${NC} $1" | /usr/bin/tee -a "$LOG_FILE"
 }
 
 print_error() {
-    echo -e "${RED}[✗]${NC} $1" | tee -a "$LOG_FILE"
+    echo -e "${RED}[✗]${NC} $1" | /usr/bin/tee -a "$LOG_FILE"
+}
+
+# 0. Закриття браузерів перед очищенням
+close_browsers() {
+    print_info "Закриття браузерів для очищення..."
+    
+    local browsers_closed=0
+    
+    # Chrome
+    if pgrep -q "Google Chrome" 2>/dev/null; then
+        osascript -e 'tell application "Google Chrome" to quit' 2>/dev/null
+        print_success "Google Chrome закрито"
+        browsers_closed=1
+    fi
+    
+    # Chromium
+    if pgrep -q "Chromium" 2>/dev/null; then
+        osascript -e 'tell application "Chromium" to quit' 2>/dev/null
+        print_success "Chromium закрито"
+        browsers_closed=1
+    fi
+    
+    # Safari
+    if pgrep -q "Safari" 2>/dev/null; then
+        osascript -e 'tell application "Safari" to quit' 2>/dev/null
+        print_success "Safari закрито"
+        browsers_closed=1
+    fi
+    
+    # Firefox
+    if pgrep -q "firefox" 2>/dev/null; then
+        osascript -e 'tell application "Firefox" to quit' 2>/dev/null
+        print_success "Firefox закрито"
+        browsers_closed=1
+    fi
+    
+    if [[ $browsers_closed -eq 1 ]]; then
+        print_info "Очікування завершення процесів (5 сек)..."
+        sleep 5
+        
+        # Примусове завершення якщо ще працюють
+        pkill -9 "Google Chrome" 2>/dev/null
+        pkill -9 "Chromium" 2>/dev/null
+        pkill -9 "Safari" 2>/dev/null
+        pkill -9 "firefox" 2>/dev/null
+        sleep 1
+    else
+        print_info "Браузери не запущені"
+    fi
 }
 
 # 1. Видалення IndexedDB записів (основна база браузерів)
@@ -52,8 +131,8 @@ clean_indexeddb() {
     for path in "${indexeddb_paths[@]}"; do
         if [[ -e "$path" ]]; then
             rm -rf "$path" 2>/dev/null && \
-                print_success "Видалено IndexedDB: $path" || \
-                print_error "Помилка видалення: $path"
+                print_success "Видалено IndexedDB: $(basename "$path")" || \
+                print_info "Пропущено (заблоковано): $(basename "$path")"
         fi
     done
 }
@@ -72,8 +151,8 @@ clean_service_workers() {
     for path in "${sw_paths[@]}"; do
         if [[ -e "$path" ]]; then
             rm -rf "$path" 2>/dev/null && \
-                print_success "Видалено Service Worker: $path" || \
-                print_error "Помилка: $path"
+                print_success "Видалено Service Worker: $(basename "$path")" || \
+                print_info "Пропущено (заблоковано): $(basename "$path")"
         fi
     done
 }
@@ -92,8 +171,8 @@ clean_cache_manifest() {
     for path in "${manifest_paths[@]}"; do
         if [[ -d "$path" ]]; then
             rm -rf "$path" 2>/dev/null && \
-                print_success "Видалено Cache: $(basename $path)" || \
-                print_error "Помилка видалення: $path"
+                print_success "Видалено Cache: $(basename "$path")" || \
+                print_info "Пропущено (заблоковано): $(basename "$path")"
         fi
     done
 }
@@ -126,8 +205,8 @@ clean_storage() {
     for path in "${storage_paths[@]}"; do
         if [[ -d "$path" ]]; then
             rm -rf "$path" 2>/dev/null && \
-                print_success "Видалено Storage: $(basename $path)" || \
-                print_error "Помилка: $path"
+                print_success "Видалено Storage: $(basename "$path")" || \
+                print_info "Пропущено (заблоковано): $(basename "$path")"
         fi
     done
 }
@@ -150,8 +229,8 @@ clean_browser_history() {
     for path in "${history_paths[@]}"; do
         if [[ -f "$path" ]]; then
             rm -f "$path" 2>/dev/null && \
-                print_success "Видалено: $(basename $path)" || \
-                print_error "Помилка: $path"
+                print_success "Видалено: $(basename "$path")" || \
+                print_info "Пропущено (заблоковано): $(basename "$path")"
         fi
     done
 }
@@ -224,13 +303,13 @@ randomize_browser_defaults() {
     print_info "Рандомізація браузерних Defaults..."
     
     # Chrome
-    if defaults read com.google.Chrome 2>/dev/null | grep -q "UserAgentOverride"; then
+    if defaults read com.google.Chrome 2>/dev/null | /usr/bin/grep -q "UserAgentOverride"; then
         defaults delete com.google.Chrome UserAgentOverride 2>/dev/null && \
             print_success "Очищено Chrome UserAgent" || true
     fi
     
     # Safari
-    if defaults read com.apple.Safari 2>/dev/null | grep -q "UserAgent"; then
+    if defaults read com.apple.Safari 2>/dev/null | /usr/bin/grep -q "UserAgent"; then
         defaults delete com.apple.Safari UserAgent 2>/dev/null && \
             print_success "Очищено Safari UserAgent" || true
     fi
@@ -240,6 +319,11 @@ randomize_browser_defaults() {
 clean_plugin_cache() {
     print_info "Очищення Plugin Cache..."
     
+    # Перевірка чи браузери запущені
+    if pgrep -q "Google Chrome" 2>/dev/null; then
+        print_info "Chrome запущено - деякі файли можуть бути заблоковані"
+    fi
+    
     local plugin_paths=(
         "$HOME/Library/Caches/Google/Chrome/Default/Code Cache"
         "$HOME/Library/Caches/Chromium/Default/Code Cache"
@@ -247,9 +331,10 @@ clean_plugin_cache() {
     
     for path in "${plugin_paths[@]}"; do
         if [[ -d "$path" ]]; then
-            rm -rf "$path" 2>/dev/null && \
-                print_success "Видалено Plugin Cache" || \
-                print_error "Помилка: $path"
+            # Видаляємо вміст директорії, а не саму директорію (браузер може її тримати)
+            rm -rf "$path"/* 2>/dev/null && \
+                print_success "Очищено Plugin Cache: $(basename "$(dirname "$path")")" || \
+                print_info "Пропущено (браузер активний): $(basename "$(dirname "$path")")"
         fi
     done
 }
@@ -300,6 +385,14 @@ main() {
     print_header
     print_info "Старт очищення браузерного fingerprint..."
     print_info "Лог: $LOG_FILE"
+    if ! check_requirements; then
+        print_error "Потрібні утиліти відсутні. Деталі у лог-файлі."
+        exit 127
+    fi
+    echo ""
+    
+    # Закрити браузери перед очищенням
+    close_browsers
     echo ""
     
     # Виконати всі функції очищення

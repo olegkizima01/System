@@ -2,6 +2,10 @@
 
 setopt NULL_GLOB
 
+# Забезпечуємо базовий PATH для системних утиліт
+PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:${PATH:-}"
+export PATH
+
 pkill -f antigravity 2>/dev/null
 pkill -f Antigravity 2>/dev/null
 sleep 2

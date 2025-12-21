@@ -3,10 +3,18 @@
 # Видаляє персистентні залишки які виживають після звичайного очищення
 # Цільова база: ETag, Cache-Control, хеші файлів, перехресні домени
 
+# Забезпечуємо базовий PATH для системних утиліт
+PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:${PATH:-}"
+export PATH
+
 set -a
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 source "$REPO_ROOT/.env" 2>/dev/null || true
 set +a
+
+# Відновлюємо PATH після .env
+PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:${PATH:-}"
+export PATH
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 LOG_FILE="/tmp/evercookie_killer_$(date +%s).log"
@@ -25,19 +33,19 @@ print_header() {
 }
 
 print_info() {
-    echo -e "${BLUE}[ℹ]${NC} $1" | tee -a "$LOG_FILE"
+    echo -e "${BLUE}[ℹ]${NC} $1" | /usr/bin/tee -a "$LOG_FILE"
 }
 
 print_success() {
-    echo -e "${GREEN}[✓]${NC} $1" | tee -a "$LOG_FILE"
+    echo -e "${GREEN}[✓]${NC} $1" | /usr/bin/tee -a "$LOG_FILE"
 }
 
 print_warning() {
-    echo -e "${YELLOW}[⚠]${NC} $1" | tee -a "$LOG_FILE"
+    echo -e "${YELLOW}[⚠]${NC} $1" | /usr/bin/tee -a "$LOG_FILE"
 }
 
 print_error() {
-    echo -e "${RED}[✗]${NC} $1" | tee -a "$LOG_FILE"
+    echo -e "${RED}[✗]${NC} $1" | /usr/bin/tee -a "$LOG_FILE"
 }
 
 # 1. Видалення кешованих відповідей (HTTP Cache)
@@ -244,7 +252,7 @@ clean_indexeddb_persisted() {
 clean_apple_privacy_prefs() {
     print_info "Очищення Apple Privacy Preferences..."
     
-    defaults read com.apple.Safari 2>/dev/null | grep -q "PrivacyPreferences" && {
+    defaults read com.apple.Safari 2>/dev/null | /usr/bin/grep -q "PrivacyPreferences" && {
         defaults delete com.apple.Safari PrivacyPreferences 2>/dev/null && \
             print_success "Видалено Safari Privacy Prefs" || true
     } || true
@@ -279,13 +287,13 @@ verify_removal() {
     local remaining=0
     
     # Перевірити IndexedDB
-    if find "$HOME/Library" -path "*IndexedDB*" -type f 2>/dev/null | grep -q .; then
+    if find "$HOME/Library" -path "*IndexedDB*" -type f 2>/dev/null | /usr/bin/grep -q .; then
         print_warning "Залишилися IndexedDB файли"
         remaining=$((remaining + 1))
     fi
     
     # Перевірити Service Workers
-    if find "$HOME/Library" -path "*Service Worker*" -type f 2>/dev/null | grep -q .; then
+    if find "$HOME/Library" -path "*Service Worker*" -type f 2>/dev/null | /usr/bin/grep -q .; then
         print_warning "Залишилися Service Worker файли"
         remaining=$((remaining + 1))
     fi

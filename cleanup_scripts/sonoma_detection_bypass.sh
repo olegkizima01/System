@@ -3,10 +3,18 @@
 # Блокує macOS 14 (Sonoma) специфічні детектори через Privacy Report, TPCD, API detection
 # Видаляє маркери що розкривають True Sonoma версію
 
+# Забезпечуємо базовий PATH
+PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:${PATH:-}"
+export PATH
+
 set -a
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 source "$REPO_ROOT/.env" 2>/dev/null || true
 set +a
+
+# Відновлюємо PATH після .env
+PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:${PATH:-}"
+export PATH
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 LOG_FILE="/tmp/sonoma_detection_bypass_$(date +%s).log"

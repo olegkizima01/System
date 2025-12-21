@@ -4,10 +4,18 @@
 # Криє Apple Silicon маркери, рандомізує GPU cores і RAM
 # Запускається ДО deep_hardware_spoof.sh для максимального ефекту
 
+# Забезпечуємо базовий PATH
+PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:${PATH:-}"
+export PATH
+
 set -a
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 source "$REPO_ROOT/.env" 2>/dev/null || true
 set +a
+
+# Відновлюємо PATH після .env
+PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:${PATH:-}"
+export PATH
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 LOG_FILE="/tmp/m1_max_spoof_$(date +%s).log"

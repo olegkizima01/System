@@ -2,6 +2,10 @@
 
 setopt NULL_GLOB
 
+# Забезпечуємо базовий PATH для системних утиліт
+PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:${PATH:-}"
+export PATH
+
 # ═══════════════════════════════════════════════════════════════
 #  🛰  ADVANCED ANTIGRAVITY CLEANUP - Розширене очищення
 #  Використовує спільні функції з common_functions.sh
@@ -140,7 +144,7 @@ print_success "Gatekeeper атрибути очищено"
 
 # 12. Фінальне очищення залишків
 print_step 12 $TOTAL_STEPS "Фінальне очищення залишків..."
-REMAINING_PATHS=$(find "$HOME/Library" -iname "*antigravity*" 2>/dev/null | head -n 100)
+REMAINING_PATHS=$(find "$HOME/Library" -iname "*antigravity*" 2>/dev/null | /usr/bin/head -n 100)
 if [ -n "$REMAINING_PATHS" ]; then
     echo "$REMAINING_PATHS" | while read -r path; do
         [ -n "$path" ] && safe_remove "$path"
@@ -162,9 +166,9 @@ if [ -n "$REMAINING_ANTIGRAVITY_PATHS" ]; then
     done
 fi
 
-REMAINING_ANTIGRAVITY=$(find ~/Library -name "*antigravity*" -o -name "*Antigravity*" 2>/dev/null | wc -l)
-REMAINING_GOOGLE=$(find ~/Library/Application\ Support -name "*Google*" 2>/dev/null | wc -l)
-REMAINING_CACHES=$(find ~/Library/Caches -name "*antigravity*" -o -name "*Antigravity*" 2>/dev/null | wc -l)
+REMAINING_ANTIGRAVITY=$(find ~/Library -name "*antigravity*" -o -name "*Antigravity*" 2>/dev/null | /usr/bin/wc -l)
+REMAINING_GOOGLE=$(find ~/Library/Application\ Support -name "*Google*" 2>/dev/null | /usr/bin/wc -l)
+REMAINING_CACHES=$(find ~/Library/Caches -name "*antigravity*" -o -name "*Antigravity*" 2>/dev/null | /usr/bin/wc -l)
 
 if [ "$REMAINING_ANTIGRAVITY" -eq 0 ]; then
     print_success "Antigravity ідентифікатори: ОЧИЩЕНО"
@@ -185,7 +189,7 @@ else
 fi
 
 # Перевірка Keychain
-KEYCHAIN_ANTIGRAVITY=$(security find-generic-password -s "Antigravity" 2>/dev/null | wc -l)
+KEYCHAIN_ANTIGRAVITY=$(security find-generic-password -s "Antigravity" 2>/dev/null | /usr/bin/wc -l)
 if [ "$KEYCHAIN_ANTIGRAVITY" -eq 0 ]; then
     print_success "Keychain: ОЧИЩЕНО"
 else

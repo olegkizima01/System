@@ -3,10 +3,18 @@
 # Змінює системну локаль, мову, timezone для маскування identity
 # Важливо: впливає на весь систему, потребує перезаваантажу
 
+# Забезпечуємо базовий PATH
+PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:${PATH:-}"
+export PATH
+
 set -a
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 source "$REPO_ROOT/.env" 2>/dev/null || true
 set +a
+
+# Відновлюємо PATH після .env
+PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:${PATH:-}"
+export PATH
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 LOG_FILE="/tmp/locale_spoof_$(date +%s).log"
@@ -164,39 +172,48 @@ backup_locale_settings() {
 
 # 🔧 НОВА ФУНКЦІЯ: Детекція VPN з ClearVPN
 detect_vpn_country() {
-    print_info "Виявлення поточного VPN..."
+    print_info "Виявлення поточного VPN..." >&2
     
     local vpn_country=""
     
-    # Спосіб 1: Прочитати з ClearVPN defaults
+    # Спосіб 1: 🌐 АВТОДЕТЕКЦІЯ через IP (ipinfo.io) - НАЙНАДІЙНІШИЙ
+    vpn_country=$(curl -s --connect-timeout 5 ipinfo.io/country 2>/dev/null | tr -d '\n\r ' || echo "")
+    
+    if [[ -n "$vpn_country" && ${#vpn_country} -eq 2 ]]; then
+        print_success "🌐 VPN виявлена через IP (ipinfo.io): $vpn_country" >&2
+        echo "$vpn_country"
+        return 0
+    fi
+    
+    # Спосіб 2: Прочитати з ClearVPN defaults
     vpn_country=$(defaults read com.clearvpn.mac Country 2>/dev/null || echo "")
     
     if [[ -n "$vpn_country" ]]; then
-        print_success "VPN виявлена з ClearVPN: $vpn_country"
+        print_success "VPN виявлена з ClearVPN: $vpn_country" >&2
         echo "$vpn_country"
         return 0
     fi
     
-    # Спосіб 2: Спробувати через launchctl/system preferences
+    # Спосіб 3: Спробувати через launchctl/system preferences
     vpn_country=$(defaults read NSGlobalDomain AppleLocale 2>/dev/null | grep -o "[A-Z][A-Z]" || echo "")
     
     if [[ -n "$vpn_country" ]]; then
-        print_success "VPN виявлена з системи: $vpn_country"
+        print_success "VPN виявлена з системи: $vpn_country" >&2
         echo "$vpn_country"
         return 0
     fi
     
-    # Спосіб 3: Користувацька переменна з .env
+    # Спосіб 4: Користувацька переменна з .env
     if [[ -n "$VPN_COUNTRY" ]]; then
-        print_info "Використання VPN_COUNTRY з .env: $VPN_COUNTRY"
+        print_info "Використання VPN_COUNTRY з .env: $VPN_COUNTRY" >&2
         echo "$VPN_COUNTRY"
         return 0
     fi
     
     # Fallback: запитати користувача
-    print_warning "Не вдалося автоматично виявити VPN"
-    print_info "Доступні опції: Ukraine, USA, Germany, France, UK, Japan"
-    echo "Ukraine"  # Default fallback
+    print_warning "Не вдалося автоматично виявити VPN" >&2
+    print_info "Доступні опції: Ukraine, USA, Germany, France, UK, Japan" >&2
+    echo "UA"  # Default fallback - Ukraine
 }
 
 # 🔧 НОВА ФУНКЦІЯ: Отримати locale по країні VPN
@@ -251,10 +268,12 @@ set_system_locale() {
     
     print_info "Встановлення локалі: $new_locale"
     
-    # macOS використовує defaults
-    defaults write NSGlobalDomain AppleLanguages -array "$new_locale" 2>/dev/null && \
-        print_success "Локаль: $new_locale" || \
-        print_warning "Помилка встановлення локалі"
+    # ⚠️ НЕ чіпаємо AppleLanguages - щоб не змінювати мову системи
+    # Тільки встановлюємо AppleLocale для регіональних форматів
+    local locale_code="${new_locale%%.*}"  # uk_UA.UTF-8 -> uk_UA
+    defaults write NSGlobalDomain AppleLocale -string "$locale_code" 2>/dev/null && \
+        print_success "Регіон (AppleLocale): $locale_code" || \
+        print_warning "Помилка встановлення регіону"
     
     # Встановити LANG для поточної сесії
     export LANG="$new_locale"

@@ -167,11 +167,24 @@ def script_env() -> Dict[str, str]:
     if "SUDO_PASSWORD" in os.environ:
         env["SUDO_PASSWORD"] = os.environ["SUDO_PASSWORD"]
     
+    # Set SUDO_ASKPASS for non-interactive sudo
+    sudo_helper = os.path.join(SCRIPT_DIR, "cleanup_scripts", "sudo_helper.sh")
+    if os.path.exists(sudo_helper):
+        env["SUDO_ASKPASS"] = sudo_helper
+    
     return env
 
 
-def run_script(script_path: str) -> int:
-    """Run a cleanup script and return exit code."""
+def run_script(script_path: str, timeout: int = 300) -> int:
+    """Run a cleanup script and return exit code.
+    
+    Args:
+        script_path: Path to the script (absolute or relative to SCRIPT_DIR)
+        timeout: Maximum execution time in seconds (default: 5 minutes)
+    
+    Returns:
+        Exit code (0 = success, non-zero = error)
+    """
     full = script_path
     if not os.path.isabs(full):
         full = os.path.join(SCRIPT_DIR, script_path)
@@ -181,8 +194,21 @@ def run_script(script_path: str) -> int:
 
     try:
         subprocess.run(["chmod", "+x", full], check=False)
-        proc = subprocess.run([full], cwd=SCRIPT_DIR, env=script_env())
+        # Use stdin=DEVNULL to prevent script from waiting for input
+        # Use timeout to prevent hanging indefinitely
+        proc = subprocess.run(
+            [full], 
+            cwd=SCRIPT_DIR, 
+            env=script_env(),
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            timeout=timeout
+        )
         return int(proc.returncode)
+    except subprocess.TimeoutExpired:
+        # Script timed out
+        return 124  # Standard timeout exit code
     except Exception:
         return 1
 

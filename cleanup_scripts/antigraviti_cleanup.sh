@@ -2,6 +2,10 @@
 
 setopt NULL_GLOB
 
+# Забезпечуємо базовий PATH для системних утиліт (включаючи homebrew для timeout)
+PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:${PATH:-}"
+export PATH
+
 # ═══════════════════════════════════════════════════════════════
 #  🛰  ANTIGRAVITY CLEANUP - Очищення ідентифікаторів Antigravity
 #  Використовує спільні функції з common_functions.sh
@@ -164,8 +168,9 @@ else
     print_warning "Знайдено $REMAINING залишкових файлів"
 fi
 
-KEYCHAIN_CHECK=$(security find-generic-password -s "Antigravity" 2>/dev/null | /usr/bin/wc -l)
-if [ "$KEYCHAIN_CHECK" -eq 0 ]; then
+# Use timeout to prevent keychain dialog from blocking
+KEYCHAIN_CHECK=$(timeout 5 security find-generic-password -s "Antigravity" 2>/dev/null | /usr/bin/wc -l || echo "0")
+if [ "$KEYCHAIN_CHECK" -eq 0 ] || [ -z "$KEYCHAIN_CHECK" ]; then
     print_success "Keychain: ОЧИЩЕНО"
 else
     print_warning "Keychain: Знайдено записи"

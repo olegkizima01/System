@@ -3,10 +3,18 @@
 # Додаткові вектори для hardware fingerprint: SMBIOS, XPC, UUID, HWID, System Information
 # Запускати РАЗОМ з hardware_spoof.sh для глибшої анонімності
 
+# Забезпечуємо базовий PATH
+PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:${PATH:-}"
+export PATH
+
 set -a
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 source "$REPO_ROOT/.env" 2>/dev/null || true
 set +a
+
+# Відновлюємо PATH після .env
+PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:${PATH:-}"
+export PATH
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 LOG_FILE="/tmp/deep_hardware_spoof_$(date +%s).log"
@@ -25,19 +33,19 @@ print_header() {
 }
 
 print_info() {
-    echo -e "${BLUE}[ℹ]${NC} $1" | tee -a "$LOG_FILE"
+    echo -e "${BLUE}[ℹ]${NC} $1" | /usr/bin/tee -a "$LOG_FILE"
 }
 
 print_success() {
-    echo -e "${GREEN}[✓]${NC} $1" | tee -a "$LOG_FILE"
+    echo -e "${GREEN}[✓]${NC} $1" | /usr/bin/tee -a "$LOG_FILE"
 }
 
 print_warning() {
-    echo -e "${YELLOW}[⚠]${NC} $1" | tee -a "$LOG_FILE"
+    echo -e "${YELLOW}[⚠]${NC} $1" | /usr/bin/tee -a "$LOG_FILE"
 }
 
 print_error() {
-    echo -e "${RED}[✗]${NC} $1" | tee -a "$LOG_FILE"
+    echo -e "${RED}[✗]${NC} $1" | /usr/bin/tee -a "$LOG_FILE"
 }
 
 # 1. Спуфування UUID (основний вектор fingerprint)
@@ -149,11 +157,12 @@ clean_apple_metadata() {
     # Apple ID metadata
     rm -f "$HOME/Library/Application Support/iCloud/metadata" 2>/dev/null || true
     
-    # iCloud metadata
-    find "$HOME/Library/Mobile Documents" -name "*.metadata" -delete 2>/dev/null || true
+    # iCloud metadata (обмежуємо глибину пошуку)
+    find "$HOME/Library/Mobile Documents" -maxdepth 3 -name "*.metadata" -delete 2>/dev/null || true
     
-    # Synchronization metadata
-    find "$HOME/Library" -path "*metadata*" -name "*.plist" -delete 2>/dev/null || true
+    # Synchronization metadata (тільки в конкретних директоріях)
+    find "$HOME/Library/Preferences" -maxdepth 2 -path "*metadata*" -name "*.plist" -delete 2>/dev/null || true
+    find "$HOME/Library/Application Support" -maxdepth 3 -path "*metadata*" -name "*.plist" -delete 2>/dev/null || true
     
     print_success "Apple Metadata очищено"
 }
@@ -187,12 +196,25 @@ clean_machine_tokens() {
     print_success "Machine Tokens регенеровано"
 }
 
-# 11. Спуфування Quarantine (File Metadata)
+# 11. Спуфування Quarantine (File Metadata) - тільки для Downloads та Applications
 spoof_quarantine_attributes() {
     print_info "Спуфування Quarantine атрибутів файлів..."
     
-    # Видалити всі quarantine атрибути
-    find "$HOME" -type f -exec xattr -d com.apple.quarantine {} \; 2>/dev/null || true
+    # Видалити quarantine атрибути тільки з типових директорій (не весь $HOME!)
+    # Обмежуємо глибину та додаємо timeout
+    local dirs_to_clean=(
+        "$HOME/Downloads"
+        "$HOME/Desktop"
+        "$HOME/Applications"
+        "/Applications"
+    )
+    
+    for dir in "${dirs_to_clean[@]}"; do
+        if [[ -d "$dir" ]]; then
+            # Використовуємо maxdepth для швидкості
+            find "$dir" -maxdepth 3 -type f -exec xattr -d com.apple.quarantine {} \; 2>/dev/null || true
+        fi
+    done
     
     print_success "Quarantine атрибути очищено"
 }
