@@ -1,5 +1,5 @@
 ## Metadata
-Generated: Sun Dec 21 18:59:17  2025
+Generated: Sun Dec 21 19:03:40  2025
 
 ## Program Execution Logs
 (See logs/cli.log for details)
@@ -27,14 +27,16 @@ Last message:
 [VOICE] Ліміт перепланувань вичерпано (10).
 
 Changed files:
-- (no uncommitted changes detected)
+- mcp_integration/README.md
+- mcp_integration/check_servers.py
+- mcp_integration/setup_mcp_servers.sh
 
-Verification:
-- status: unknown (no explicit signal)
+Diff stat:
+mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
+ 1 file changed, 318 insertions(+), 315 deletions(-)
 
-Tests:
-- not executed by Trinity (no deterministic test runner in pipeline)
 
+[...скорочено...]
 ```
 
 ## Log Locations (Логи та Діагностика)
@@ -54,14 +56,15 @@ Tests:
 
 
 ### Project Statistics
-  - Python files: 20351
+  - Python files: 20352
   - Test files: 16
   - Documentation files: 13
   - Configuration sets: 44
 
 ## Git History (Last 10 Commits)
 ```
-  ddc18e12 Trinity task completed: Прочитай файл README.md, потім виведи перші 20 рядків, і перевір, що є…
+  56afdf4f Trinity task completed: Прочитай файл README.md, потім виведи перші 20 рядків, і перевір, що є…
+  e334deac Trinity task completed: Прочитай файл README.md, потім виведи перші 20 рядків, і перевір, що є…
   194457cc Add integration tests for MCP Browser functionality
   f0ff8c0e fix: improved logging and agent panel separation
   804a7113 feat: Enhance SonarQube integration with Context7 by adding context7-docs server and helper functions
@@ -70,7 +73,6 @@ Tests:
   adf2cd90 refactor: Consolidate cleanup scripts with common_functions.sh for 4 editors (VS Code, Windsurf, Cursor, Antigravity)
   ce7905b5 feat: Disable Windsurf cleanup scripts and add browser history timestamps spoofing
   374eab95 feat: Add M1 Max Fingerprint Spoof and Sonoma Detection Bypass scripts
-  b008568d feat: Add VPN detection and mapping for locale and timezone adjustments
 ```
 
 ## Project Structure
@@ -422,6 +424,7 @@ Tests:
 │   ├── INTEGRATION_REPORT.md
 │   ├── README.md
 │   ├── __init__.py
+│   ├── check_servers.py
 │   ├── config
 │   │   ├── mcp_config.json
 │   │   └── server_specific
@@ -432,6 +435,7 @@ Tests:
 │   │   ├── dev_project_mode.py
 │   │   ├── dev_project_mode_fixed.py
 │   │   └── dev_project_mode_minimal.py
+│   ├── setup_mcp_servers.sh
 │   ├── test_integration.py
 │   ├── tests
 │   │   └── test_sonarqube_context7_integration.py
@@ -590,6 +594,6 @@ Tests:
 │   └── tools.py
 └── verify_memory.py
 
-190 directories, 324 files
+190 directories, 326 files
 
 ```

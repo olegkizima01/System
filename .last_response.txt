@@ -9,7 +9,13 @@ Last message:
 [VOICE] Ліміт перепланувань вичерпано (10).
 
 Changed files:
-- (no uncommitted changes detected)
+- mcp_integration/README.md
+- mcp_integration/check_servers.py
+- mcp_integration/setup_mcp_servers.sh
+
+Diff stat:
+mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
+ 1 file changed, 318 insertions(+), 315 deletions(-)
 
 Verification:
 - status: unknown (no explicit signal)
