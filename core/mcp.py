@@ -68,6 +68,8 @@ class ExternalMCPProvider:
         self._thread = threading.Thread(target=self._run_loop, daemon=True)
         self._thread.start()
         self._connected = False
+        self._exit_stack = None
+        self._session = None
         
     def _run_loop(self):
         asyncio.set_event_loop(self._loop)
@@ -118,6 +120,39 @@ class ExternalMCPProvider:
             }
         except Exception as e:
             return {"tool": tool_name, "status": "error", "error": str(e)}
+    
+    def disconnect(self):
+        """Properly disconnect from the MCP server and cleanup resources."""
+        if not self._connected:
+            return
+        
+        try:
+            future = asyncio.run_coroutine_threadsafe(self._async_disconnect(), self._loop)
+            future.result(timeout=10)
+        except Exception as e:
+            print(f"Warning: Error during disconnect: {e}")
+        finally:
+            self._connected = False
+    
+    async def _async_disconnect(self):
+        """Async cleanup of MCP connection."""
+        if self._exit_stack:
+            try:
+                await self._exit_stack.aclose()
+            except Exception as e:
+                print(f"Warning: Error closing exit stack: {e}")
+            finally:
+                self._exit_stack = None
+                self._session = None
+    
+    def __del__(self):
+        """Cleanup when object is destroyed."""
+        if self._connected:
+            self.disconnect()
+        
+        # Stop the event loop if it's running
+        if self._loop and self._loop.is_running():
+            self._loop.call_soon_threadsafe(self._loop.stop)
 
 class MCPToolRegistry:
     """

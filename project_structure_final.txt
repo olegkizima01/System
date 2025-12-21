@@ -1,5 +1,5 @@
 ## Metadata
-Generated: Sun Dec 21 22:01:49  2025
+Generated: Sun Dec 21 22:11:56  2025
 
 ## Program Execution Logs
 (See logs/cli.log for details)
@@ -63,7 +63,8 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
 
 ## Git History (Last 10 Commits)
 ```
-  0afb193e feat: Update AppleScript MCP server installation to use @iflow-mcp/applescript-mcp
+  fe80ce5f feat: Add disconnect method and async cleanup to ExternalMCPProvider for proper resource management
+  47927e93 feat: Update AppleScript MCP server installation to use @iflow-mcp/applescript-mcp
   b3f96863 feat: Update PaddleOCR integration to utilize the new API and improve text extraction logic
   1d1db7cb feat: Update PaddleOCR integration to use the new predict() method without cls parameter
   30dcc2b1 feat: Update MCP server configurations and enhance health check logic for Playwright and AppleScript
@@ -72,7 +73,6 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
   6563eda1 feat: Complete MCP integration with RAG system - 21,500+ tool examples
   f2fda54c feat: Implement comprehensive MCP server registration system with tool schema management and vectorization
   51b35a1f feat: Implement advanced task classification and tool selection system with RAG database setup
-  dc83bc08 Trinity task completed: Прочитай файл README.md, потім виведи перші 20 рядків, і перевір, що є…
 ```
 
 ## Project Structure
@@ -99,6 +99,7 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
 │   ├── test_playwright_local.py
 │   ├── test_pyautogui_direct.py
 │   └── verify_mcp_patch.py
+├── ASYNCIO_FIX_REPORT.md
 ├── auto_commit.sh
 ├── cleanup_memories.py
 ├── cleanup_modules.json
@@ -634,6 +635,6 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
 ├── VERIFICATION_REPORT.md
 └── verify_memory.py
 
-195 directories, 361 files
+195 directories, 362 files
 
 ```
