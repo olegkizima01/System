@@ -1,5 +1,5 @@
 ## Metadata
-Generated: Mon Dec 22 00:05:26  2025
+Generated: Mon Dec 22 00:13:31  2025
 
 ## Program Execution Logs
 (See logs/cli.log for details)
@@ -63,7 +63,8 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
 
 ## Git History (Last 10 Commits)
 ```
-  d03c4468 feat: Add SonarCloud project configuration and update gitignore.
+  d2bc57b7 chore: Update SonarCloud project key and name.
+  2b3dff5a feat: Add SonarCloud project configuration and update gitignore.
   46dad878 feat: Add Anthropic and local MCP servers, enhance RAG tool prioritization, integrate SonarQube scripts, and remove old project artifacts.
   012eb491 feat: Implement the initial weapon shop website, including a terminal-themed loading screen, core UI, and backend setup.
   5ab1533a refactor(tui/cli): remove 583 lines of duplicate and dead code
@@ -72,7 +73,6 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
   f0958e0e feat: Enhance run_script and run_cleanup functions to support logging output via callback
   3529aab0 Refactor cleanup scripts to ensure proper PATH settings and permissions
   abcdc10f feat: Update antigraviti_cleanup.sh to improve application checks and ensure compatibility with system commands
-  092ef9f6 Implement ChromaDB persistent client with backup and repair functionality
 ```
 
 ## Project Structure
