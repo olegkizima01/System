@@ -221,8 +221,11 @@ randomize_dns_query_timing() {
     print_info "Рандомізація DNS query timing для уникнення correlation..."
     
     # Очистка DNS cache що показує які сайти запитувалися
-    sudo dscacheutil -flushcache 2>/dev/null
-    sudo dscacheutil -flushcache 2>/dev/null
+    if [ -n "$SUDO_PASSWORD" ]; then
+        echo "$SUDO_PASSWORD" | sudo -S dscacheutil -flushcache 2>/dev/null
+    else
+        sudo dscacheutil -flushcache 2>/dev/null
+    fi
     
     # Видалення mDNS cache
     rm -rf /var/db/mDNSResponder* 2>/dev/null
