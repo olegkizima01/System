@@ -74,6 +74,67 @@ RANDOM_TIMEZONES=(
     "Africa/Cairo"
 )
 
+# 🔧 VPN-до-Locale маппінг (новий - для ClearVPN автодетекції)
+declare -A VPN_LOCALE_MAP=(
+    ["Ukraine"]="uk_UA.UTF-8"
+    ["Україна"]="uk_UA.UTF-8"
+    ["UA"]="uk_UA.UTF-8"
+    ["USA"]="en_US.UTF-8"
+    ["America"]="en_US.UTF-8"
+    ["United States"]="en_US.UTF-8"
+    ["US"]="en_US.UTF-8"
+    ["Germany"]="de_DE.UTF-8"
+    ["Deutschland"]="de_DE.UTF-8"
+    ["DE"]="de_DE.UTF-8"
+    ["France"]="fr_FR.UTF-8"
+    ["FR"]="fr_FR.UTF-8"
+    ["UK"]="en_GB.UTF-8"
+    ["United Kingdom"]="en_GB.UTF-8"
+    ["GB"]="en_GB.UTF-8"
+    ["Spain"]="es_ES.UTF-8"
+    ["ES"]="es_ES.UTF-8"
+    ["Japan"]="ja_JP.UTF-8"
+    ["JP"]="ja_JP.UTF-8"
+    ["Poland"]="pl_PL.UTF-8"
+    ["PL"]="pl_PL.UTF-8"
+    ["Russia"]="ru_RU.UTF-8"
+    ["RU"]="ru_RU.UTF-8"
+    ["Canada"]="en_CA.UTF-8"
+    ["CA"]="en_CA.UTF-8"
+    ["Brazil"]="pt_BR.UTF-8"
+    ["BR"]="pt_BR.UTF-8"
+)
+
+declare -A VPN_TIMEZONE_MAP=(
+    ["Ukraine"]="Europe/Kyiv"
+    ["Україна"]="Europe/Kyiv"
+    ["UA"]="Europe/Kyiv"
+    ["USA"]="America/New_York"
+    ["America"]="America/New_York"
+    ["United States"]="America/New_York"
+    ["US"]="America/New_York"
+    ["Germany"]="Europe/Berlin"
+    ["Deutschland"]="Europe/Berlin"
+    ["DE"]="Europe/Berlin"
+    ["France"]="Europe/Paris"
+    ["FR"]="Europe/Paris"
+    ["UK"]="Europe/London"
+    ["United Kingdom"]="Europe/London"
+    ["GB"]="Europe/London"
+    ["Spain"]="Europe/Madrid"
+    ["ES"]="Europe/Madrid"
+    ["Japan"]="Asia/Tokyo"
+    ["JP"]="Asia/Tokyo"
+    ["Poland"]="Europe/Warsaw"
+    ["PL"]="Europe/Warsaw"
+    ["Russia"]="Europe/Moscow"
+    ["RU"]="Europe/Moscow"
+    ["Canada"]="America/Toronto"
+    ["CA"]="America/Toronto"
+    ["Brazil"]="America/Sao_Paulo"
+    ["BR"]="America/Sao_Paulo"
+)
+
 # 1. Зберегти поточні налаштування
 backup_locale_settings() {
     print_info "Зберігаємо поточні локаль налаштування..."
@@ -99,6 +160,75 @@ backup_locale_settings() {
     } > "$backup_file"
     
     print_success "Backup збережено: $backup_file"
+}
+
+# 🔧 НОВА ФУНКЦІЯ: Детекція VPN з ClearVPN
+detect_vpn_country() {
+    print_info "Виявлення поточного VPN..."
+    
+    local vpn_country=""
+    
+    # Спосіб 1: Прочитати з ClearVPN defaults
+    vpn_country=$(defaults read com.clearvpn.mac Country 2>/dev/null || echo "")
+    
+    if [[ -n "$vpn_country" ]]; then
+        print_success "VPN виявлена з ClearVPN: $vpn_country"
+        echo "$vpn_country"
+        return 0
+    fi
+    
+    # Спосіб 2: Спробувати через launchctl/system preferences
+    vpn_country=$(defaults read NSGlobalDomain AppleLocale 2>/dev/null | grep -o "[A-Z][A-Z]" || echo "")
+    
+    if [[ -n "$vpn_country" ]]; then
+        print_success "VPN виявлена з системи: $vpn_country"
+        echo "$vpn_country"
+        return 0
+    fi
+    
+    # Спосіб 3: Користувацька переменна з .env
+    if [[ -n "$VPN_COUNTRY" ]]; then
+        print_info "Використання VPN_COUNTRY з .env: $VPN_COUNTRY"
+        echo "$VPN_COUNTRY"
+        return 0
+    fi
+    
+    # Fallback: запитати користувача
+    print_warning "Не вдалося автоматично виявити VPN"
+    print_info "Доступні опції: Ukraine, USA, Germany, France, UK, Japan"
+    echo "Ukraine"  # Default fallback
+}
+
+# 🔧 НОВА ФУНКЦІЯ: Отримати locale по країні VPN
+get_locale_for_vpn() {
+    local country="$1"
+    
+    # Нормалізувати назву країни
+    country=$(echo "$country" | tr '[:lower:]' '[:upper:]')
+    
+    # Перевірити в маппінгу
+    if [[ -n "${VPN_LOCALE_MAP[$country]}" ]]; then
+        echo "${VPN_LOCALE_MAP[$country]}"
+    else
+        # Fallback на рандомну
+        select_random_locale
+    fi
+}
+
+# 🔧 НОВА ФУНКЦІЯ: Отримати timezone по країні VPN
+get_timezone_for_vpn() {
+    local country="$1"
+    
+    # Нормалізувати назву країни
+    country=$(echo "$country" | tr '[:lower:]' '[:upper:]')
+    
+    # Перевірити в маппінгу
+    if [[ -n "${VPN_TIMEZONE_MAP[$country]}" ]]; then
+        echo "${VPN_TIMEZONE_MAP[$country]}"
+    else
+        # Fallback на рандомну
+        select_random_timezone
+    fi
 }
 
 # 2. Вибрати рандомну локаль
@@ -287,12 +417,17 @@ main() {
     backup_locale_settings
     echo ""
     
-    # Вибрати рандомні параметри
-    local new_locale=$(select_random_locale)
-    local new_tz=$(select_random_timezone)
+    # 🔧 НОВА ЛОГІКА: Спробувати виявити VPN
+    local vpn_country=$(detect_vpn_country)
+    print_info "Визначена країна VPN: $vpn_country"
+    echo ""
     
-    print_info "Вибрана локаль: $new_locale"
-    print_info "Вибраний timezone: $new_tz"
+    # Вибрати параметри на основі VPN або рандомні
+    local new_locale=$(get_locale_for_vpn "$vpn_country")
+    local new_tz=$(get_timezone_for_vpn "$vpn_country")
+    
+    print_info "Встановлення локалі: $new_locale"
+    print_info "Встановлення timezone: $new_tz"
     echo ""
     
     # Застосувати зміни
@@ -311,7 +446,7 @@ main() {
     verify_changes
     
     echo ""
-    print_success "✅ Маскування локалі ЗАВЕРШЕНО"
+    print_success "✅ Маскування локалі ЗАВЕРШЕНО (синхронізовано з VPN)"
     print_warning "⚠️  Перезавантажте систему для повного застосування змін"
     print_info "Деталі: $LOG_FILE"
 }
