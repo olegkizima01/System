@@ -5,7 +5,7 @@ echo "🚀 Setting up all MCP servers and tools..."
 # Install Node.js packages
 echo "📦 Installing Node.js packages..."
 npm install -g @executeautomation/playwright-mcp-server
-npm install -g @mseep/applescript-mcp
+npm install -g @iflow-mcp/applescript-mcp
 npm install -g mcp-pyautogui-server
 
 # Install Python packages

@@ -443,7 +443,8 @@ class MCPToolRegistry:
         playwright_args = ["-y", "@executeautomation/playwright-mcp-server"]
         
         # AppleScript MCP server for native macOS automation
-        applescript_args = ["-y", "@mseep/applescript-mcp"]
+        # NOTE: @mseep/applescript-mcp has no bin file, use @iflow-mcp/applescript-mcp instead
+        applescript_args = ["-y", "@iflow-mcp/applescript-mcp"]
         
         # PyAutoGUI MCP server for GUI automation
         pyautogui_args = []

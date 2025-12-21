@@ -13,7 +13,7 @@ fi
 
 # Install AppleScript MCP Server (PRIORITY 2)
 echo "📦 Installing AppleScript MCP Server..."
-npm install -g @mseep/applescript-mcp
+npm install -g @iflow-mcp/applescript-mcp
 if [ $? -eq 0 ]; then
     echo "✅ AppleScript MCP Server installed"
 else
