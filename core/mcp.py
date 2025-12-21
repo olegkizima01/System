@@ -4,9 +4,22 @@ import asyncio
 import threading
 import os
 import contextlib
-from typing import Dict, Any, Callable, List, Optional, Union
+from typing import Dict, Any, Callable, List, Optional, Union, Tuple
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
+
+# Import RAG integration for intelligent tool selection
+try:
+    from mcp_integration.rag_integration import (
+        select_tool_for_task,
+        get_best_tool_for_task,
+        classify_task,
+        tool_selector
+    )
+    RAG_AVAILABLE = True
+except ImportError:
+    RAG_AVAILABLE = False
+    tool_selector = None
 
 # Import all tools
 from system_ai.tools.automation import (
@@ -711,7 +724,96 @@ class MCPToolRegistry:
                         call_kwargs[k] = v
             
             result = func(**call_kwargs)
-                
+            
             return json.dumps(result, indent=2, ensure_ascii=False)
         except Exception as e:
             return f"Error executing '{tool_name}': {str(e)}"
+
+    # ===== RAG-based Intelligent Tool Selection =====
+    
+    def select_tool_for_task(self, task_description: str, n_candidates: int = 5) -> List[Dict[str, Any]]:
+        """
+        Use RAG to intelligently select the best tools for a given task.
+        
+        Args:
+            task_description: Natural language description of what to do
+            n_candidates: Number of tool candidates to return
+            
+        Returns:
+            List of tool candidates with scores
+        """
+        if RAG_AVAILABLE and tool_selector:
+            return tool_selector.select_tool(task_description, n_candidates)
+        
+        # Fallback: simple keyword matching
+        return self._fallback_tool_selection(task_description, n_candidates)
+    
+    def get_best_tool(self, task_description: str) -> Optional[Dict[str, Any]]:
+        """Get the single best tool for a task."""
+        candidates = self.select_tool_for_task(task_description, n_candidates=1)
+        return candidates[0] if candidates else None
+    
+    def classify_task(self, task_description: str) -> tuple:
+        """
+        Classify a task into a category (browser, system, gui, ai, etc.)
+        
+        Returns:
+            Tuple of (category, confidence)
+        """
+        if RAG_AVAILABLE and tool_selector:
+            return tool_selector.classify_task(task_description)
+        
+        # Fallback classification
+        task_lower = task_description.lower()
+        
+        if any(kw in task_lower for kw in ["browser", "web", "url", "google", "search", "navigate"]):
+            return ("browser", 0.8)
+        elif any(kw in task_lower for kw in ["click", "mouse", "keyboard", "type", "gui"]):
+            return ("gui", 0.8)
+        elif any(kw in task_lower for kw in ["file", "read", "write", "copy", "delete"]):
+            return ("filesystem", 0.8)
+        elif any(kw in task_lower for kw in ["analyze", "ai", "summarize", "generate"]):
+            return ("ai", 0.8)
+        elif any(kw in task_lower for kw in ["shell", "terminal", "command", "applescript"]):
+            return ("system", 0.8)
+        
+        return ("general", 0.5)
+    
+    def _fallback_tool_selection(self, task: str, n: int) -> List[Dict[str, Any]]:
+        """Simple keyword-based tool selection as fallback."""
+        task_lower = task.lower()
+        scores = []
+        
+        for name, desc in self._descriptions.items():
+            # Simple scoring based on keyword overlap
+            desc_lower = desc.lower()
+            score = 0
+            
+            for word in task_lower.split():
+                if len(word) > 3 and word in desc_lower:
+                    score += 1
+                if word in name.lower():
+                    score += 2
+            
+            if score > 0:
+                scores.append({
+                    "tool": name,
+                    "description": desc,
+                    "score": score / 10.0,
+                    "server": "local"
+                })
+        
+        # Sort by score and return top n
+        scores.sort(key=lambda x: x["score"], reverse=True)
+        return scores[:n]
+    
+    def get_rag_stats(self) -> Dict[str, Any]:
+        """Get statistics about the RAG system."""
+        if RAG_AVAILABLE and tool_selector:
+            return tool_selector.get_stats()
+        return {
+            "rag_available": False,
+            "fallback_mode": True,
+            "local_tools": len(self._tools)
+        }
+

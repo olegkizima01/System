@@ -59,25 +59,26 @@ class ServerRegistry:
     def initialize_storage(self):
         """Initialize ChromaDB and Redis"""
         try:
-            # Initialize ChromaDB
+            # Initialize ChromaDB with persistent storage
             persist_directory = Path(__file__).parent / "data" / "chroma_db"
             persist_directory.mkdir(parents=True, exist_ok=True)
             
-            self.chroma_client = chromadb.Client(Settings(
-                persist_directory=str(persist_directory),
-                anonymized_telemetry=False
-            ))
+            # Use PersistentClient for data persistence
+            self.chroma_client = chromadb.PersistentClient(path=str(persist_directory))
             
-            # Create or get collection
+            # Delete existing collection to start fresh
             try:
-                self.collection = self.chroma_client.get_collection("mcp_tool_schemas")
-                logger.info("📊 Using existing ChromaDB collection")
+                self.chroma_client.delete_collection("mcp_tool_schemas")
+                logger.info("🗑️  Deleted existing ChromaDB collection")
             except:
-                self.collection = self.chroma_client.create_collection(
-                    name="mcp_tool_schemas",
-                    metadata={"description": "MCP tool schemas and examples"}
-                )
-                logger.info("📊 Created new ChromaDB collection")
+                pass
+            
+            # Create new collection
+            self.collection = self.chroma_client.create_collection(
+                name="mcp_tool_schemas",
+                metadata={"description": "MCP tool schemas and examples"}
+            )
+            logger.info("📊 Created new ChromaDB collection")
             
             # Initialize Redis connection
             try:
@@ -133,34 +134,47 @@ class ServerRegistry:
             logger.info(f"🔍 Discovering tools for: {server_name}")
             
             server_config = self.config.get('mcpServers', {}).get(server_name, {})
+            server_category = server_config.get('category', 'general')
             
             # Load tool examples from existing JSON files
             tools = []
             tool_examples_dir = Path(__file__).parent / "core" / "tool_examples"
             
-            # Mapping of server types to example files
-            server_to_examples = {
-                "context7": ["ai_examples.json", "system_examples.json"],
-                "context7-docs": ["ai_examples.json"],
-                "sonarqube": ["system_examples.json"],
-                "playwright": ["browser_examples.json"],
-                "applescript": ["gui_examples.json"],
-                "pyautogui": ["gui_examples.json"],
+            # Mapping of server names to categories
+            server_to_categories = {
+                "context7": ["ai", "system"],
+                "playwright": ["browser"],
+                "pyautogui": ["gui"],
+                "applescript": ["system"],
+                "anthropic": ["ai"],
+                "filesystem": ["filesystem"],
+                "sonarqube": ["code_analysis"],
+                "local_fallback": ["system", "gui", "browser"]
             }
             
-            example_files = server_to_examples.get(server_name, [])
+            categories = server_to_categories.get(server_name, [server_category])
             
-            for example_file in example_files:
-                file_path = tool_examples_dir / example_file
-                if file_path.exists():
-                    with open(file_path, 'r') as f:
-                        try:
-                            examples = json.load(f)
-                            if isinstance(examples, dict):
-                                examples = examples.get('examples', [])
-                            tools.extend(examples)
-                        except json.JSONDecodeError as e:
-                            logger.warning(f"⚠️  Error parsing {example_file}: {e}")
+            # Try to load combined dataset first
+            combined_file = tool_examples_dir / "all_examples_combined.json"
+            if combined_file.exists():
+                with open(combined_file, 'r') as f:
+                    all_examples = json.load(f)
+                    # Filter by server or category
+                    tools = [ex for ex in all_examples 
+                            if ex.get('server') == server_name or ex.get('category') in categories]
+            else:
+                # Fallback to individual files
+                for category in categories:
+                    file_path = tool_examples_dir / f"{category}_examples.json"
+                    if file_path.exists():
+                        with open(file_path, 'r') as f:
+                            try:
+                                examples = json.load(f)
+                                if isinstance(examples, dict):
+                                    examples = examples.get('examples', [])
+                                tools.extend(examples)
+                            except json.JSONDecodeError as e:
+                                logger.warning(f"⚠️  Error parsing {category}_examples.json: {e}")
             
             logger.info(f"✅ Discovered {len(tools)} tools for {server_name}")
             return tools
@@ -236,13 +250,21 @@ class ServerRegistry:
                 })
                 ids.append(f"{server_name}_{idx}")
             
-            # Add to ChromaDB collection
+            # Add to ChromaDB collection in batches (max 5000 per batch)
+            BATCH_SIZE = 5000
             if documents:
-                self.collection.add(
-                    documents=documents,
-                    metadatas=metadatas,
-                    ids=ids
-                )
+                for i in range(0, len(documents), BATCH_SIZE):
+                    batch_docs = documents[i:i + BATCH_SIZE]
+                    batch_metas = metadatas[i:i + BATCH_SIZE]
+                    batch_ids = ids[i:i + BATCH_SIZE]
+                    
+                    self.collection.add(
+                        documents=batch_docs,
+                        metadatas=batch_metas,
+                        ids=batch_ids
+                    )
+                    logger.info(f"  📦 Added batch {i//BATCH_SIZE + 1}: {len(batch_docs)} items")
+                    
                 logger.info(f"✅ Vectorized {len(documents)} tool schemas")
             
             # Store in Redis for quick access
