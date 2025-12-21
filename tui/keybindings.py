@@ -34,7 +34,7 @@ def build_keybindings(
     get_cleanup_cfg: Callable[[], Any],
     set_cleanup_cfg: Callable[[Any], None],
     load_cleanup_config: Callable[[], Any],
-    run_cleanup: Callable[[Any, str, bool], Tuple[bool, str]],
+    run_cleanup: Callable[..., Tuple[bool, str]],
     perform_install: Callable[[Any, str], Tuple[bool, str]],
     find_module: Callable[[Any, str, str], Any],
     set_module_enabled: Callable[[Any, Any, bool], bool],
@@ -402,7 +402,7 @@ def build_keybindings(
             return
         key = editors[state.menu_index][0]
         state.selected_editor = key
-        ok, msg = run_cleanup(load_cleanup_config(), key, True)
+        ok, msg = run_cleanup(load_cleanup_config(), key, dry_run=True)
         log(msg, "action" if ok else "error")
 
     @kb.add("space", filter=show_menu)
@@ -663,6 +663,7 @@ def build_keybindings(
             log(f"Chat language set: {state.chat_lang} ({lang_name(state.chat_lang)})", "action")
             return
 
+
         if state.menu_level == MenuLevel.CLEANUP_EDITORS:
             editors = get_editors_list()
             if not editors:
@@ -690,7 +691,7 @@ def build_keybindings(
             except Exception:
                 pass
             
-            ok, msg = run_cleanup(load_cleanup_config(), key, False, log_callback=cleanup_log)
+            ok, msg = run_cleanup(load_cleanup_config(), key, dry_run=False, log_callback=cleanup_log)
             log(msg, "action" if ok else "error")
             return
 

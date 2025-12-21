@@ -691,8 +691,8 @@ def _set_module_enabled(cfg: Dict[str, Any], ref: ModuleRef, enabled: bool) -> b
     return _set_module_enabled_new(cfg, ref, enabled)
 
 
-def _run_cleanup(cfg: Dict[str, Any], editor: str, dry_run: bool = False) -> Tuple[bool, str]:
-    return _run_cleanup_new(cfg, editor, dry_run=dry_run)
+def _run_cleanup(cfg: Dict[str, Any], editor: str, dry_run: bool = False, log_callback=None) -> Tuple[bool, str]:
+    return _run_cleanup_new(cfg, editor, dry_run=dry_run, log_callback=log_callback)
 
 
 def _perform_install(cfg: Dict[str, Any], editor: str) -> Tuple[bool, str]:
@@ -1686,7 +1686,7 @@ def run_tui() -> None:
         get_cleanup_cfg=_get_cleanup_cfg,
         set_cleanup_cfg=_set_cleanup_cfg,
         load_cleanup_config=_load_cleanup_config,
-        run_cleanup=lambda cfg, editor, dry: _run_cleanup(cfg, editor, dry_run=dry),
+        run_cleanup=_run_cleanup,
         perform_install=_perform_install,
         find_module=_find_module,
         set_module_enabled=_set_module_enabled,

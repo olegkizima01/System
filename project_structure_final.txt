@@ -1,5 +1,5 @@
 ## Metadata
-Generated: Sun Dec 21 22:15:13  2025
+Generated: Sun Dec 21 22:18:05  2025
 
 ## Program Execution Logs
 (See logs/cli.log for details)
@@ -63,7 +63,8 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
 
 ## Git History (Last 10 Commits)
 ```
-  38eac078 feat: Enhance run_script and run_cleanup functions to support logging output via callback
+  c713c2dd feat: Update run_cleanup function to support logging via callback and adjust keybindings accordingly
+  f0958e0e feat: Enhance run_script and run_cleanup functions to support logging output via callback
   3529aab0 Refactor cleanup scripts to ensure proper PATH settings and permissions
   abcdc10f feat: Update antigraviti_cleanup.sh to improve application checks and ensure compatibility with system commands
   092ef9f6 Implement ChromaDB persistent client with backup and repair functionality
@@ -72,7 +73,6 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
   47927e93 feat: Update AppleScript MCP server installation to use @iflow-mcp/applescript-mcp
   b3f96863 feat: Update PaddleOCR integration to utilize the new API and improve text extraction logic
   1d1db7cb feat: Update PaddleOCR integration to use the new predict() method without cls parameter
-  30dcc2b1 feat: Update MCP server configurations and enhance health check logic for Playwright and AppleScript
 ```
 
 ## Project Structure
