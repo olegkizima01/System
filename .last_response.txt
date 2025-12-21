@@ -1,6 +1,6 @@
 [Atlas] Final report
 
-Task: Найди через гугл фільм сучасний якийсь про штучний інтелект для перегляду його онлайн. Після того включи його на весь екран для перегляду, пересвідчись що він запущений і на весь екран.
+Task: Прочитай файл README.md, потім виведи перші 20 рядків, і перевір, що є розділ 'Installation'.
 Outcome: completed
 Replans: 10
 Last agent: meta_planner
@@ -9,23 +9,7 @@ Last message:
 [VOICE] Ліміт перепланувань вичерпано (10).
 
 Changed files:
-- cleanup_scripts/advanced_antigraviti_cleanup.sh
-- cleanup_scripts/advanced_windsurf_cleanup.sh
-- cleanup_scripts/antigraviti_cleanup.sh
-- cleanup_scripts/vscode_identifier_cleanup.sh
-- cleanup_scripts/windsurf_identifier_cleanup.sh
-- cleanup_scripts/common_functions.sh
-- cleanup_scripts/cursor_cleanup.sh
-- cleanup_scripts/editor_cleanup.sh
-- cleanup_scripts/hostname_spoof.sh
-
-Diff stat:
-cleanup_scripts/advanced_antigraviti_cleanup.sh | 281 +++++++++++-------------
- cleanup_scripts/advanced_windsurf_cleanup.sh    | 271 +++++++----------------
- cleanup_scripts/antigraviti_cleanup.sh          | 275 +++++++++++------------
- cleanup_scripts/vscode_identifier_cleanup.sh    | 239 ++++++++------------
- cleanup_scripts/windsurf_identifier_cleanup.sh  | 241 ++++++++------------
- 5 files changed, 522 insertions(+), 785 deletions(-)
+- (no uncommitted changes detected)
 
 Verification:
 - status: unknown (no explicit signal)
