@@ -175,12 +175,13 @@ def script_env() -> Dict[str, str]:
     return env
 
 
-def run_script(script_path: str, timeout: int = 300) -> int:
+def run_script(script_path: str, timeout: int = 300, log_callback=None) -> int:
     """Run a cleanup script and return exit code.
     
     Args:
         script_path: Path to the script (absolute or relative to SCRIPT_DIR)
         timeout: Maximum execution time in seconds (default: 5 minutes)
+        log_callback: Optional callback function to log output lines
     
     Returns:
         Exit code (0 = success, non-zero = error)
@@ -194,27 +195,54 @@ def run_script(script_path: str, timeout: int = 300) -> int:
 
     try:
         subprocess.run(["chmod", "+x", full], check=False)
-        # Use stdin=DEVNULL to prevent script from waiting for input
-        # Use timeout to prevent hanging indefinitely
-        proc = subprocess.run(
+        
+        # Use Popen for streaming output
+        proc = subprocess.Popen(
             [full], 
             cwd=SCRIPT_DIR, 
             env=script_env(),
             stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            timeout=timeout
+            stderr=subprocess.STDOUT,
+            text=True,
+            bufsize=1  # Line buffered
         )
-        return int(proc.returncode)
+        
+        import time
+        start_time = time.time()
+        
+        # Stream output line by line
+        while True:
+            # Check timeout
+            if time.time() - start_time > timeout:
+                proc.kill()
+                return 124
+            
+            line = proc.stdout.readline()
+            if not line and proc.poll() is not None:
+                break
+            
+            if line:
+                line = line.rstrip()
+                if log_callback and line:
+                    log_callback(line)
+        
+        return int(proc.returncode or 0)
     except subprocess.TimeoutExpired:
-        # Script timed out
-        return 124  # Standard timeout exit code
+        return 124
     except Exception:
         return 1
 
 
-def run_cleanup(cfg: Dict[str, Any], editor: str, dry_run: bool = False) -> Tuple[bool, str]:
-    """Run cleanup for specified editor."""
+def run_cleanup(cfg: Dict[str, Any], editor: str, dry_run: bool = False, log_callback=None) -> Tuple[bool, str]:
+    """Run cleanup for specified editor.
+    
+    Args:
+        cfg: Cleanup configuration
+        editor: Editor key to clean
+        dry_run: If True, only show what would be done
+        log_callback: Optional callback function to log output lines
+    """
     editors = cfg.get("editors", {}) or {}
     if editor not in editors:
         return False, f"Невідомий редактор: {editor}"
@@ -235,7 +263,7 @@ def run_cleanup(cfg: Dict[str, Any], editor: str, dry_run: bool = False) -> Tupl
         script = m.get("script")
         if not script:
             continue
-        code = run_script(str(script))
+        code = run_script(str(script), log_callback=log_callback)
         if code != 0:
             return False, f"Модуль {m.get('id')} завершився з кодом {code}"
 

@@ -669,7 +669,28 @@ def build_keybindings(
                 return
             key = editors[state.menu_index][0]
             state.selected_editor = key
-            ok, msg = run_cleanup(load_cleanup_config(), key, False)
+            
+            # Define log callback to stream cleanup output to TUI
+            def cleanup_log(line: str):
+                # Strip ANSI color codes for cleaner display
+                import re
+                clean_line = re.sub(r'\x1b\[[0-9;]*m', '', line)
+                if clean_line.strip():
+                    log(clean_line, "action")
+                    try:
+                        from tui.layout import force_ui_update
+                        force_ui_update()
+                    except Exception:
+                        pass
+            
+            log(f"Запуск очистки {key}...", "info")
+            try:
+                from tui.layout import force_ui_update
+                force_ui_update()
+            except Exception:
+                pass
+            
+            ok, msg = run_cleanup(load_cleanup_config(), key, False, log_callback=cleanup_log)
             log(msg, "action" if ok else "error")
             return
 
