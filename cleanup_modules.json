@@ -65,6 +65,46 @@
           "description": "Очищення кешів, локального сховища та індексів Windsurf"
         },
         {
+          "id": "browser_fingerprint_cleanup",
+          "name": "Browser Fingerprint Cleanup",
+          "script": "./cleanup_scripts/browser_fingerprint_cleanup.sh",
+          "enabled": true,
+          "description": "Очищує IndexedDB, Service Workers, Canvas, WebGL, аудіо,Font fingerprints",
+          "order": 10
+        },
+        {
+          "id": "evercookie_killer",
+          "name": "EverCookie Killer",
+          "script": "./cleanup_scripts/evercookie_killer.sh",
+          "enabled": true,
+          "description": "Видаляє персистентні дані: ETag, HTTP Cache, DNS Cache, Beacon API логи",
+          "order": 20
+        },
+        {
+          "id": "locale_spoof",
+          "name": "Locale & Timezone Spoofing",
+          "script": "./cleanup_scripts/locale_spoof.sh",
+          "enabled": true,
+          "description": "Спуфує системну локаль, timezone, мову браузера (вектор fingerprint)",
+          "order": 30
+        },
+        {
+          "id": "deep_hardware_spoof",
+          "name": "Deep Hardware Fingerprint Spoof",
+          "script": "./cleanup_scripts/deep_hardware_spoof.sh",
+          "enabled": true,
+          "description": "20+ векторів: UUID, HWID, XPC, SMBIOS, IOKit, Device ID (Гл 4)",
+          "order": 40
+        },
+        {
+          "id": "network_isolation",
+          "name": "Network Isolation & DNS Privacy",
+          "script": "./cleanup_scripts/network_isolation.sh",
+          "enabled": true,
+          "description": "Видаляє мережеві логи, DNS Cache, ARP, Route, ISP дані, спуфує MAC (Гл 5)",
+          "order": 50
+        },
+        {
           "id": "mikrotik_wifi_spoof",
           "name": "🔚 ОСТАННІЙ: MikroTik WiFi & MAC Spoofing",
           "script": "./cleanup_scripts/mikrotik_wifi_spoof.sh",
@@ -110,6 +150,46 @@
           "script": "./cleanup_scripts/check_vscode_backup.sh",
           "enabled": false,
           "description": "Перевірка бекапів VS Code"
+        },
+        {
+          "id": "browser_fingerprint_cleanup",
+          "name": "Browser Fingerprint Cleanup",
+          "script": "./cleanup_scripts/browser_fingerprint_cleanup.sh",
+          "enabled": true,
+          "description": "Очищує IndexedDB, Service Workers, Canvas, WebGL, аудіо,Font fingerprints",
+          "order": 10
+        },
+        {
+          "id": "evercookie_killer",
+          "name": "EverCookie Killer",
+          "script": "./cleanup_scripts/evercookie_killer.sh",
+          "enabled": true,
+          "description": "Видаляє персистентні дані: ETag, HTTP Cache, DNS Cache, Beacon API логи",
+          "order": 20
+        },
+        {
+          "id": "locale_spoof",
+          "name": "Locale & Timezone Spoofing",
+          "script": "./cleanup_scripts/locale_spoof.sh",
+          "enabled": true,
+          "description": "Спуфує системну локаль, timezone, мову браузера (вектор fingerprint)",
+          "order": 30
+        },
+        {
+          "id": "deep_hardware_spoof",
+          "name": "Deep Hardware Fingerprint Spoof",
+          "script": "./cleanup_scripts/deep_hardware_spoof.sh",
+          "enabled": true,
+          "description": "20+ векторів: UUID, HWID, XPC, SMBIOS, IOKit, Device ID (Гл 4)",
+          "order": 40
+        },
+        {
+          "id": "network_isolation",
+          "name": "Network Isolation & DNS Privacy",
+          "script": "./cleanup_scripts/network_isolation.sh",
+          "enabled": true,
+          "description": "Видаляє мережеві логи, DNS Cache, ARP, Route, ISP дані, спуфує MAC (Гл 5)",
+          "order": 50
         },
         {
           "id": "mikrotik_wifi_spoof",
@@ -159,6 +239,46 @@
           "description": "VS Code cleanup якщо Antigravity працював поверх VS Code"
         },
         {
+          "id": "browser_fingerprint_cleanup",
+          "name": "Browser Fingerprint Cleanup",
+          "script": "./cleanup_scripts/browser_fingerprint_cleanup.sh",
+          "enabled": true,
+          "description": "Очищує IndexedDB, Service Workers, Canvas, WebGL, аудіо,Font fingerprints",
+          "order": 10
+        },
+        {
+          "id": "evercookie_killer",
+          "name": "EverCookie Killer",
+          "script": "./cleanup_scripts/evercookie_killer.sh",
+          "enabled": true,
+          "description": "Видаляє персистентні дані: ETag, HTTP Cache, DNS Cache, Beacon API логи",
+          "order": 20
+        },
+        {
+          "id": "locale_spoof",
+          "name": "Locale & Timezone Spoofing",
+          "script": "./cleanup_scripts/locale_spoof.sh",
+          "enabled": true,
+          "description": "Спуфує системну локаль, timezone, мову браузера (вектор fingerprint)",
+          "order": 30
+        },
+        {
+          "id": "deep_hardware_spoof",
+          "name": "Deep Hardware Fingerprint Spoof",
+          "script": "./cleanup_scripts/deep_hardware_spoof.sh",
+          "enabled": true,
+          "description": "20+ векторів: UUID, HWID, XPC, SMBIOS, IOKit, Device ID (Гл 4)",
+          "order": 40
+        },
+        {
+          "id": "network_isolation",
+          "name": "Network Isolation & DNS Privacy",
+          "script": "./cleanup_scripts/network_isolation.sh",
+          "enabled": true,
+          "description": "Видаляє мережеві логи, DNS Cache, ARP, Route, ISP дані, спуфує MAC (Гл 5)",
+          "order": 50
+        },
+        {
           "id": "mikrotik_wifi_spoof",
           "name": "🔚 ОСТАННІЙ: MikroTik WiFi & MAC Spoofing",
           "script": "./cleanup_scripts/mikrotik_wifi_spoof.sh",
@@ -177,6 +297,46 @@
         "hint": "Відкриється офіційна сторінка завантаження Cursor"
       },
       "modules": [
+        {
+          "id": "browser_fingerprint_cleanup",
+          "name": "Browser Fingerprint Cleanup",
+          "script": "./cleanup_scripts/browser_fingerprint_cleanup.sh",
+          "enabled": true,
+          "description": "Очищує IndexedDB, Service Workers, Canvas, WebGL, аудіо,Font fingerprints",
+          "order": 10
+        },
+        {
+          "id": "evercookie_killer",
+          "name": "EverCookie Killer",
+          "script": "./cleanup_scripts/evercookie_killer.sh",
+          "enabled": true,
+          "description": "Видаляє персистентні дані: ETag, HTTP Cache, DNS Cache, Beacon API логи",
+          "order": 20
+        },
+        {
+          "id": "locale_spoof",
+          "name": "Locale & Timezone Spoofing",
+          "script": "./cleanup_scripts/locale_spoof.sh",
+          "enabled": true,
+          "description": "Спуфує системну локаль, timezone, мову браузера (вектор fingerprint)",
+          "order": 30
+        },
+        {
+          "id": "deep_hardware_spoof",
+          "name": "Deep Hardware Fingerprint Spoof",
+          "script": "./cleanup_scripts/deep_hardware_spoof.sh",
+          "enabled": true,
+          "description": "20+ векторів: UUID, HWID, XPC, SMBIOS, IOKit, Device ID (Гл 4)",
+          "order": 40
+        },
+        {
+          "id": "network_isolation",
+          "name": "Network Isolation & DNS Privacy",
+          "script": "./cleanup_scripts/network_isolation.sh",
+          "enabled": true,
+          "description": "Видаляє мережеві логи, DNS Cache, ARP, Route, ISP дані, спуфує MAC (Гл 5)",
+          "order": 50
+        },
         {
           "id": "mikrotik_wifi_spoof",
           "name": "🔚 ОСТАННІЙ: MikroTik WiFi & MAC Spoofing",
@@ -202,6 +362,46 @@
           "script": "echo 'Not implemented'",
           "enabled": false,
           "description": "Cleanup ~/.continue folder"
+        },
+        {
+          "id": "browser_fingerprint_cleanup",
+          "name": "Browser Fingerprint Cleanup",
+          "script": "./cleanup_scripts/browser_fingerprint_cleanup.sh",
+          "enabled": true,
+          "description": "Очищує IndexedDB, Service Workers, Canvas, WebGL, аудіо,Font fingerprints",
+          "order": 10
+        },
+        {
+          "id": "evercookie_killer",
+          "name": "EverCookie Killer",
+          "script": "./cleanup_scripts/evercookie_killer.sh",
+          "enabled": true,
+          "description": "Видаляє персистентні дані: ETag, HTTP Cache, DNS Cache, Beacon API логи",
+          "order": 20
+        },
+        {
+          "id": "locale_spoof",
+          "name": "Locale & Timezone Spoofing",
+          "script": "./cleanup_scripts/locale_spoof.sh",
+          "enabled": true,
+          "description": "Спуфує системну локаль, timezone, мову браузера (вектор fingerprint)",
+          "order": 30
+        },
+        {
+          "id": "deep_hardware_spoof",
+          "name": "Deep Hardware Fingerprint Spoof",
+          "script": "./cleanup_scripts/deep_hardware_spoof.sh",
+          "enabled": true,
+          "description": "20+ векторів: UUID, HWID, XPC, SMBIOS, IOKit, Device ID (Гл 4)",
+          "order": 40
+        },
+        {
+          "id": "network_isolation",
+          "name": "Network Isolation & DNS Privacy",
+          "script": "./cleanup_scripts/network_isolation.sh",
+          "enabled": true,
+          "description": "Видаляє мережеві логи, DNS Cache, ARP, Route, ISP дані, спуфує MAC (Гл 5)",
+          "order": 50
         },
         {
           "id": "mikrotik_wifi_spoof",
