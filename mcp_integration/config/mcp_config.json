@@ -40,6 +40,15 @@
       "retryAttempts": 3,
       "category": "ai"
     },
+    "copilot": {
+      "command": "python3",
+      "args": ["-m", "mcp_integration.core.copilot_mcp_client"],
+      "description": "Copilot MCP Client for AI analysis (alternative to Anthropic)",
+      "timeout": 60000,
+      "retryAttempts": 3,
+      "category": "ai",
+      "provider": "copilot"
+    },
     "filesystem": {
       "command": "npx",
       "args": ["-y", "@anthropic-ai/filesystem-mcp"],
@@ -70,8 +79,9 @@
       "category": "fallback"
     }
   },
-  "fallbackChain": ["local_fallback"],
+  "fallbackChain": ["copilot", "local_fallback"],
   "defaultServer": "context7",
+  "defaultAIServer": "copilot",
   "logging": {
     "level": "info",
     "file": "mcp_integration.log",

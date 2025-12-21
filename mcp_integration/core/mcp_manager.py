@@ -314,6 +314,14 @@ class MCPManager:
                 self.clients[server_name] = Context7Client(server_config)
             elif server_name == "sonarqube":
                 self.clients[server_name] = SonarQubeClient(server_config)
+            elif server_name == "copilot":
+                # Import and initialize Copilot MCP client
+                try:
+                    from .copilot_mcp_client import CopilotMCPClient
+                    self.clients[server_name] = CopilotMCPClient(server_config)
+                    logger.info("Initialized Copilot MCP client")
+                except Exception as e:
+                    logger.error(f"Failed to initialize Copilot MCP client: {e}")
             else:
                 logger.warning(f"Unknown server type: {server_name}")
         
