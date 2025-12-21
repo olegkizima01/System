@@ -43,11 +43,12 @@ def load_image_b64(image_path: str) -> Optional[str]:
         return None
 
 
-def load_image_png_b64(image_path: str, max_dimension: int = 1024) -> Optional[str]:
+def load_image_png_b64(image_path: str, max_dimension: int = 1024, max_side_limit: int = 3800) -> Optional[str]:
     """Return a PNG base64 payload, resized if needed to avoid payload limits.
 
     Copilot Vision is picky about accepted media types; we normalize to PNG.
     We also resize to max_dimension (default 1024px) to avoid HTTP 413 errors.
+    Additionally, we ensure no side exceeds max_side_limit (default 3800px) for Claude API compatibility.
     """
     if not image_path or not os.path.exists(image_path):
         return None
@@ -57,8 +58,15 @@ def load_image_png_b64(image_path: str, max_dimension: int = 1024) -> Optional[s
 
         img = Image.open(image_path)
         
-        # Resize if too large
+        # First, ensure no side exceeds Claude API limit (4000px, we use 3800 for safety margin)
         width, height = img.size
+        if width > max_side_limit or height > max_side_limit:
+            ratio = min(max_side_limit / width, max_side_limit / height)
+            new_size = (int(width * ratio), int(height * ratio))
+            img = img.resize(new_size, Image.Resampling.LANCZOS)
+            width, height = img.size
+        
+        # Then resize to max_dimension if still too large
         if width > max_dimension or height > max_dimension:
             ratio = min(max_dimension / width, max_dimension / height)
             new_size = (int(width * ratio), int(height * ratio))
