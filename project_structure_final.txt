@@ -1,5 +1,5 @@
 ## Metadata
-Generated: Sun Dec 21 22:18:05  2025
+Generated: Sun Dec 21 22:19:38  2025
 
 ## Program Execution Logs
 (See logs/cli.log for details)
@@ -63,7 +63,8 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
 
 ## Git History (Last 10 Commits)
 ```
-  c713c2dd feat: Update run_cleanup function to support logging via callback and adjust keybindings accordingly
+  4cbc7903 feat: Run cleanup in a background thread to prevent UI blocking and improve responsiveness
+  941063c4 feat: Update run_cleanup function to support logging via callback and adjust keybindings accordingly
   f0958e0e feat: Enhance run_script and run_cleanup functions to support logging output via callback
   3529aab0 Refactor cleanup scripts to ensure proper PATH settings and permissions
   abcdc10f feat: Update antigraviti_cleanup.sh to improve application checks and ensure compatibility with system commands
@@ -72,7 +73,6 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
   7855d396 feat: Add disconnect method and async cleanup to ExternalMCPProvider for proper resource management
   47927e93 feat: Update AppleScript MCP server installation to use @iflow-mcp/applescript-mcp
   b3f96863 feat: Update PaddleOCR integration to utilize the new API and improve text extraction logic
-  1d1db7cb feat: Update PaddleOCR integration to use the new predict() method without cls parameter
 ```
 
 ## Project Structure
