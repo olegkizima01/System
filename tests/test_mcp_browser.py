@@ -69,10 +69,11 @@ class TestMCPRouting:
         
         registry = MCPToolRegistry()
         
-        local_args = {"selector": "input[name='q']", "text": "hello world", "press_enter": True}
+        # Use a selector that won't be auto-corrected by _smart_selector
+        local_args = {"selector": "input[id='custom-input']", "text": "hello world", "press_enter": True}
         mcp_args = registry._adapt_args_for_mcp("browser_type_text", "Playwright_fill", local_args)
         
-        assert mcp_args["selector"] == "input[name='q']"
+        assert mcp_args["selector"] == "input[id='custom-input']"
         assert mcp_args["value"] == "hello world"
         # press_enter is handled separately, not in MCP args
         assert "press_enter" not in mcp_args

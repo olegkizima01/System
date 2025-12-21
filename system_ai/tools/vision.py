@@ -371,8 +371,9 @@ class DifferentialVisionAnalyzer:
         if self._ocr_engine is None:
             try:
                 from paddleocr import PaddleOCR
-                # Initialize PaddleOCR with ukrainian and english support
-                self._ocr_engine = PaddleOCR(use_angle_cls=True, lang='en', show_log=False)
+                # Initialize PaddleOCR with english support
+                # Note: use_textline_orientation replaces deprecated use_angle_cls
+                self._ocr_engine = PaddleOCR(use_textline_orientation=True, lang='en')
             except ImportError:
                 # Fallback to a dummy or logger if not installed
                 self._ocr_engine = "unavailable"
@@ -637,7 +638,8 @@ class DifferentialVisionAnalyzer:
             return {"status": "unavailable", "note": "PaddleOCR not installed"}
             
         try:
-            result = engine.ocr(image_path, cls=True)
+            # Use predict() instead of deprecated ocr()
+            result = engine.predict(image_path, cls=True)
             text_regions = []
             
             if result and result[0]:

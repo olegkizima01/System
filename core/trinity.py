@@ -1152,14 +1152,16 @@ Return JSON with ONLY the replacement step. I will prepend it to the remaining p
         # Bind tools to LLM for structured tool_calls output.
         tool_defs = self.registry.get_all_tool_definitions()
         
-        # Use Tetyana-specific LLM
+        # Use Tetyana-specific LLM or fallback to self.llm for testing
         tetyana_model = os.getenv("TETYANA_MODEL") or os.getenv("COPILOT_MODEL") or "gpt-4o"
-        tetyana_llm = CopilotLLM(model_name=tetyana_model)
+        # Allow test override via self.llm
+        tetyana_llm = self.llm if hasattr(self, 'llm') and self.llm else CopilotLLM(model_name=tetyana_model)
         
         bound_llm = tetyana_llm.bind_tools(tool_defs)
         
         pause_info = None
         content = ""  # Initialize content variable
+        tool_calls = []  # Initialize tool_calls variable
         
         try:
             # For tool-bound calls, use invoke_with_stream to capture deltas for the TUI
