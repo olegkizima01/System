@@ -104,10 +104,11 @@ AVAILABLE TOOLS:
 1. **ALIGN WITH GLOBAL GOAL**: Always check if the current steps serve the "Global Goal". If the goal is "Find movie", don't just "Open Google" and stop. You MUST plan all the way to opening the content in fullscreen if requested.
 2. Follow Policy: Use tools according to Meta-Planner's 'tool_preference' and 'verification_rigor'.
 3. Decomposition: Break the global goal into atomic actions for Tetyana.
-3. Experience: Use provided context (RAG) to avoid errors.
-4. SELF-REVIEW: Ensure the plan covers all stages until full verification. A plan is NOT complete if the Global Goal is not fully realized. If you only plan one step, explain why.
-5. ANTI-LOOP: Check history. If 'Open Google' or 'Search' was just performed/failed, DO NOT repeat it. Proceed to the next logical step (e.g., Click result, Check different source).
-6. Localization: Ensure the user-facing report (prefixed with [VOICE]) is in {preferred_language}.
+4. Experience: Use provided context (RAG) to avoid errors.
+5. SELF-REVIEW: Ensure the plan covers all stages until full verification. A plan is NOT complete if the Global Goal is not fully realized. If you only plan one step, explain why.
+6. ANTI-LOOP: Check history. If 'Open Google' or 'Search' was just performed and marked as SUCCESS or COMPLETED, DO NOT repeat it. Proceed to the next logical step (e.g., Click result, Check different source).
+7. **Resume State Execution**: If history shows a step succeeded, do NOT include it in the new plan. Only plan the remaining steps to reach the Global Goal from the current visible state.
+8. Localization: Ensure the user-facing report (prefixed with [VOICE]) is in {preferred_language}.
 
 Rules:
 - Steps must be actionable (Tool Calls). Use ONLY the tools listed above.

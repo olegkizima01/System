@@ -129,14 +129,24 @@ class AdaptiveVerifier:
             description = step.get("description", "").lower()
             
             # CRITICAL: Force verification after search/navigation to prevent blind loops
-            is_search_step = any(kw in description for kw in ["find", "search", "google", "navigate", "browser"])
+            is_search_step = any(kw in description for kw in ["find", "search", "google", "navigate", "browser", "url", "click"])
             if is_search_step and "verify" not in step_type:
                  # Check if next step is already verify
                  if i + 1 < len(plan) and plan[i+1].get("type") == "verify":
                      continue
+                 
+                 # Dynamic description based on context
+                 v_desc = "Перевірити результат дії"
+                 if "search" in description or "google" in description:
+                     v_desc = "Verify search results are visible and contain relevant links."
+                 elif "click" in description or "open" in description:
+                     v_desc = "Verify that the target page/element is loaded and visible."
+                 elif "play" in description or "video" in description:
+                     v_desc = "Verify that the video player is active and content is playable."
+                 
                  enhanced_plan.append({
                      "type": "verify",
-                     "description": f"Verify results of: {description[:50]}..."
+                     "description": v_desc
                  })
                  continue
 

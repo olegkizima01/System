@@ -725,8 +725,14 @@ class TrinityRuntime:
                 current_step_fail_count = 0
                 if self.verbose: print(f"🧠 [Meta-Planner] Step succeeded: {desc}. Remaining: {len(plan)}")
                 if not plan:
-                     msg = "All plan steps completed successfully." if self.preferred_language != "uk" else "Усі кроки плану успішно виконано."
-                     return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] {msg}")]}
+                    # Robust termination: Only end if the Global Goal is explicitly verified
+                    if "[VERIFIED]" in last_msg.upper() or "[ACHIEVEMENT_CONFIRMED]" in last_msg.upper():
+                        msg = "All plan steps completed successfully. Task achieved." if self.preferred_language != "uk" else "Усі кроки плану успішно виконано. Ціль досягнута."
+                        return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] {msg}")]}
+                    else:
+                        if self.verbose: print("🧠 [Meta-Planner] Plan exhausted but Global Goal NOT verified. Triggering replan for next steps.")
+                        # Do not return 'end' here; let the decision logic below set action = 'replan'
+
             elif last_step_status == "failed":
                 current_step_fail_count += 1
                 if self.verbose: print(f"🧠 [Meta-Planner] Step failed ({current_step_fail_count}/3).")
@@ -1294,12 +1300,16 @@ class TrinityRuntime:
                                 "last_step_status": "failed",
                             }
 
-                    # Track failures for fallback decision
+                    # Track failures and captchas for fallback decision
                     try:
                         res_dict = json.loads(res_str)
                         if isinstance(res_dict, dict):
-                            if str(res_dict.get("status", "")).lower() == "error":
+                            status = str(res_dict.get("status", "")).lower()
+                            if status == "error":
                                 had_failure = True
+                            if res_dict.get("has_captcha"):
+                                had_failure = True
+                                if self.verbose: print("⚠️ [Tetyana] Captcha detected. Marking as failure to trigger GUI mode.")
                     except Exception:
                         # If not JSON, check for error string pattern from MCP executor
                         if str(res_str).strip().startswith("Error"):
@@ -1322,7 +1332,7 @@ class TrinityRuntime:
                 content += "\n\nTool Results:\n" + "\n".join(results)
                 # Add explicit success marker if no errors occurred
                 if not had_failure and not pause_info:
-                    content += "\n\n[STEP_COMPLETED] Всі інструменти виконано успішно."
+                    content += "\n\n[STEP_COMPLETED] Всі дії виконано, верифікацію можна починати."
 
             # Save successful action to RAG memory (only if no pause)
             if not pause_info:
@@ -1613,11 +1623,13 @@ class TrinityRuntime:
             verdict_prompt_txt = (
                 "Here are the verification results obtained from the tools:\n" + 
                 "\n".join(executed_tools_results) + 
-                "\n\nBased on these results and the global goal, what is your FINAL verdict?\n"
-                "You must respond with explicitly one of these markers at the end:\n"
-                "- [VERIFIED] (if goal is achieved)\n"
-                "- [FAILED] (if goal failed or error found)\n"
-                "- [UNCERTAIN] (only if results are truly inconclusive)\n\n"
+                "\n\nBased on these results and history, provide your FINAL verdict.\n"
+                "IMPORTANT: Distinguish between CURRENT STEP success and GLOBAL GOAL success.\n"
+                "You MUST respond with exactly ONE of these markers at the VERY END of your message:\n"
+                "- [VERIFIED] (if the Global Goal is fully achieved and no more actions are needed)\n"
+                "- [STEP_COMPLETED] (if the current step succeeded and we should move to the next part of the plan, but the Global Goal is NOT yet reached)\n"
+                "- [FAILED] (if the current step failed, an error occurred, or the goal is unachievable)\n"
+                "- [UNCERTAIN] (if results are truly inconclusive)\n\n"
                 "Explain your reasoning briefly before the marker."
             )
             
@@ -1641,11 +1653,8 @@ class TrinityRuntime:
 
         # 1. Check for explicit FAILURE markers first (Priority)
         explicit_failure_markers = [
-            "[failed]", "critical error", "fatal error", "не можу підтвердити", 
-            "cannot confirm", "verification failed", "unable to verify", 
-            "не вдалося", "помилка", "не підтверджено", "не виконано", 
-            "не вдалося виконати", "не бачу", "немає", "відсутній",
-            "not achieved", "goal not met"
+            "[failed]", "critical error", "fatal error", "verification failed", 
+            "unable to verify", "not achieved", "goal not met"
         ]
         has_explicit_fail = any(m in lower_content for m in explicit_failure_markers)
         
