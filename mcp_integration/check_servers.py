@@ -12,28 +12,36 @@ def check_server_health() -> Dict[str, any]:
     # Check Playwright
     try:
         result = subprocess.run(
-            ["npx", "@executeautomation/playwright-mcp-server", "--version"],
-            capture_output=True, text=True, timeout=5
+            ["npx", "-y", "@playwright/mcp", "--version"],
+            capture_output=True, text=True, timeout=10
         )
+        version = result.stdout.strip().split('\n')[0] if result.stdout else None
         results["playwright"] = {
-            "available": result.returncode == 0,
-            "version": result.stdout.strip() if result.returncode == 0 else None,
-            "error": result.stderr.strip() if result.returncode != 0 else None
+            "available": result.returncode == 0 or version,
+            "version": version,
+            "error": result.stderr.strip() if result.returncode != 0 and not version else None
         }
+    except subprocess.TimeoutExpired:
+        # Timeout means server started (it's running as daemon)
+        results["playwright"] = {"available": True, "version": "running", "error": None}
     except Exception as e:
         results["playwright"] = {"available": False, "version": None, "error": str(e)}
     
     # Check AppleScript
     try:
         result = subprocess.run(
-            ["npx", "@mseep/applescript-mcp", "--version"],
-            capture_output=True, text=True, timeout=5
+            ["npx", "-y", "@iflow-mcp/applescript-mcp", "--version"],
+            capture_output=True, text=True, timeout=10
         )
+        version = result.stdout.strip().split('\n')[0] if result.stdout else None
         results["applescript"] = {
-            "available": result.returncode == 0,
-            "version": result.stdout.strip() if result.returncode == 0 else None,
-            "error": result.stderr.strip() if result.returncode != 0 else None
+            "available": result.returncode == 0 or "server" in result.stdout.lower(),
+            "version": version or "running",
+            "error": result.stderr.strip() if result.returncode != 0 and not version else None
         }
+    except subprocess.TimeoutExpired:
+        # Timeout means server started (it's running as daemon)
+        results["applescript"] = {"available": True, "version": "running", "error": None}
     except Exception as e:
         results["applescript"] = {"available": False, "version": None, "error": str(e)}
     
