@@ -172,17 +172,27 @@ def script_env() -> Dict[str, str]:
     return env
 
 
+def _stream_output(proc: subprocess.Popen, timeout: int, start_time: float, log_callback=None) -> int:
+    """Helper to stream output line by line with timeout."""
+    import time
+    while True:
+        if time.time() - start_time > timeout:
+            proc.kill()
+            return 124
+        
+        line = proc.stdout.readline()
+        if not line and proc.poll() is not None:
+            break
+        
+        if line:
+            line = line.rstrip()
+            if log_callback and line:
+                log_callback(line)
+    return int(proc.returncode or 0)
+
+
 def run_script(script_path: str, timeout: int = 300, log_callback=None) -> int:
-    """Run a cleanup script and return exit code.
-    
-    Args:
-        script_path: Path to the script (absolute or relative to SCRIPT_DIR)
-        timeout: Maximum execution time in seconds (default: 5 minutes)
-        log_callback: Optional callback function to log output lines
-    
-    Returns:
-        Exit code (0 = success, non-zero = error)
-    """
+    """Run a cleanup script and return exit code."""
     full = script_path
     if not os.path.isabs(full):
         full = os.path.join(SCRIPT_DIR, script_path)
@@ -193,7 +203,6 @@ def run_script(script_path: str, timeout: int = 300, log_callback=None) -> int:
     try:
         subprocess.run(["chmod", "+x", full], check=False)
         
-        # Use Popen for streaming output
         proc = subprocess.Popen(
             [full], 
             cwd=SCRIPT_DIR, 
@@ -202,31 +211,11 @@ def run_script(script_path: str, timeout: int = 300, log_callback=None) -> int:
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
-            bufsize=1  # Line buffered
+            bufsize=1
         )
         
         import time
-        start_time = time.time()
-        
-        # Stream output line by line
-        while True:
-            # Check timeout
-            if time.time() - start_time > timeout:
-                proc.kill()
-                return 124
-            
-            line = proc.stdout.readline()
-            if not line and proc.poll() is not None:
-                break
-            
-            if line:
-                line = line.rstrip()
-                if log_callback and line:
-                    log_callback(line)
-        
-        return int(proc.returncode or 0)
-    except subprocess.TimeoutExpired:
-        return 124
+        return _stream_output(proc, timeout, time.time(), log_callback)
     except Exception:
         return 1
 

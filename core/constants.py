@@ -101,5 +101,10 @@ MESSAGES = {
         "clueless_pause": "Doctor Vibe: Виявлено невідому зупинку системи. Будь ласка, уточніть завдання.",
         "native_failed_switching_gui": "[VOICE] Native режим не спрацював. Перемикаюся на GUI режим.",
         "uncertainty_limit": "[SYSTEM] Ліміт невизначеності досягнуто. Помічаю як FAILED."
-    }
-}
+# -----------------------------------------------------------------------------
+# INTERNAL CONSTANTS (Literal replacements)
+# -----------------------------------------------------------------------------
+UNKNOWN_STEP = "Unknown step"
+STEP_COMPLETED_MARKER = "[STEP_COMPLETED]"
+VOICE_MARKER = "[VOICE]"
+DEFAULT_MODEL_FALLBACK = "gpt-4.1"

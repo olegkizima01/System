@@ -27,7 +27,8 @@ from core.constants import (
     DEV_KEYWORDS, GENERAL_KEYWORDS, MEDIA_KEYWORDS, 
     SUCCESS_MARKERS, FAILURE_MARKERS, UNCERTAIN_MARKERS,
     NEGATION_PATTERNS, VISION_FAILURE_KEYWORDS, MESSAGES,
-    TERMINATION_MARKERS
+    TERMINATION_MARKERS, STEP_COMPLETED_MARKER, UNKNOWN_STEP,
+    VOICE_MARKER, DEFAULT_MODEL_FALLBACK
 )
 import threading
 
@@ -334,116 +335,92 @@ class TrinityRuntime:
         return [issue.to_dict() for issue in issues]
     
     def _check_for_vibe_assistant_intervention(self, state: TrinityState) -> Optional[Dict[str, Any]]:
-        """
-        Check if Doctor Vibe intervention is needed based on current state.
-        This method integrates with Atlas meta-planning to create a seamless workflow.
-        
-        Args:
-            state: Current Trinity state
-            
-        Returns:
-            Dict with pause information if intervention needed, None otherwise
-        """
-        # Check if we already have an active pause
+        """Check if Doctor Vibe intervention is needed based on current state."""
         if state.get("vibe_assistant_pause"):
             return state["vibe_assistant_pause"]
-        
-        # Check if self-healing detected critical issues that need human attention
-        if self.self_healing_enabled and self.self_healer:
-            issues = self.self_healer.detected_issues
-            critical_issues = [issue for issue in issues if issue.severity in {IssueSeverity.CRITICAL, IssueSeverity.HIGH}]
             
-            if critical_issues:
-                # Create pause context for Doctor Vibe with Atlas integration
-                pause_context = {
-                    "reason": "critical_issues_detected",
-                    "issues": [issue.to_dict() for issue in critical_issues[:5]],  # Top 5 most critical
-                    "message": f"Doctor Vibe: Виявлено {len(critical_issues)} критичних помилок. Атлас призупинив виконання для вашого втручання.",
-                    "timestamp": datetime.now().isoformat(),
-                    "suggested_action": "Будь ласка, виправте помилки. Атлас автоматично продовжить після /continue",
-                    "atlas_status": "paused_waiting_for_human",
-                    "auto_resume_available": True
-                }
-                return pause_context
+        intervention = self._check_critical_issues()
+        if intervention: return intervention
         
-        # Check for repeated failures that might need human intervention
-        current_step_fail_count = state.get("current_step_fail_count", 0)
-        if current_step_fail_count >= 3:
-            lang = self.preferred_language if self.preferred_language in MESSAGES else "en"
-            pause_context = {
-                "reason": "repeated_failures",
-                "message": "Doctor Vibe: Atlas detected repeating errors. System paused." if lang != "uk" else "Doctor Vibe: Атлас виявив повторювані помилки. Система призупинена для аналізу.",
-                "timestamp": datetime.now().isoformat(),
-                "suggested_action": "Please analyze the issue. Use /continue or /cancel" if lang != "uk" else "Будь ласка, проаналізуйте проблему. Використовуйте /continue або /cancel",
-                "atlas_status": "paused_analyzing_failures",
-                "auto_resume_available": True
-            }
-            return pause_context
+        intervention = self._check_repeated_failures(state)
+        if intervention: return intervention
         
-        # Check for complex dev tasks that might need Doctor Vibe's attention
-        task_type = state.get("task_type", "UNKNOWN")
-        is_dev_task = state.get("is_dev", False)
+        intervention = self._check_background_dev_mode(state)
+        if intervention: return intervention
         
-        if task_type == "DEV" and is_dev_task:
-            # For dev tasks, Doctor Vibe works in parallel thread for error correction
-            # Check if there are any unresolved issues that need attention
-            if self.self_healing_enabled and self.self_healer:
-                unresolved_issues = [issue for issue in self.self_healer.detected_issues 
-                                   if issue.severity in {IssueSeverity.MEDIUM, IssueSeverity.HIGH}]
-                
-                if unresolved_issues and len(unresolved_issues) > 2:
-                    # Doctor Vibe works in background mode for dev tasks
-                    lang = self.preferred_language if self.preferred_language in MESSAGES else "en"
-                    pause_context = {
-                        "reason": "background_error_correction_needed",
-                        "issues": [issue.to_dict() for issue in unresolved_issues[:3]],
-                        "message": f"Doctor Vibe: Detected {len(unresolved_issues)} background errors. Atlas continues current task." if lang != "uk" else f"Doctor Vibe: Виявлено {len(unresolved_issues)} помилок в фоновому режимі. Атлас продовжує основне завдання.",
-                        "timestamp": datetime.now().isoformat(),
-                        "suggested_action": "Errors are being fixed automatically." if lang != "uk" else "Помилки виправляються автоматично. Ви можете продовжувати роботу",
-                        "atlas_status": "running_with_background_fixes",
-                        "auto_resume_available": False,  # No pause needed, just notification
-                        "background_mode": True
-                    }
-                    return pause_context
-        
-        # Check for unknown stalls - when system is stuck without clear reason
-        # This happens when last message contains uncertainty or system is waiting
-        if state.get("vibe_assistant_pause"):
-            # Already paused, no need to intervene again
+        return self._check_stalls(state)
+
+    def _check_critical_issues(self) -> Optional[Dict[str, Any]]:
+        if not (self.self_healing_enabled and self.self_healer):
             return None
-        
-        # Detect stall conditions
+        issues = self.self_healer.detected_issues
+        critical = [i for i in issues if i.severity in {IssueSeverity.CRITICAL, IssueSeverity.HIGH}]
+        if not critical:
+            return None
+            
+        return {
+            "reason": "critical_issues_detected",
+            "issues": [i.to_dict() for i in critical[:5]],
+            "message": f"Doctor Vibe: Виявлено {len(critical)} критичних помилок. Атлас призупинив виконання.",
+            "timestamp": datetime.now().isoformat(),
+            "suggested_action": "Будь ласка, виправте помилки. Атлас автоматично продовжить після /continue",
+            "atlas_status": "paused_waiting_for_human",
+            "auto_resume_available": True
+        }
+
+    def _check_repeated_failures(self, state: TrinityState) -> Optional[Dict[str, Any]]:
+        count = state.get("current_step_fail_count", 0)
+        if count < 3:
+            return None
+        lang = self.preferred_language if self.preferred_language in MESSAGES else "en"
+        return {
+            "reason": "repeated_failures",
+            "message": MESSAGES[lang].get("clueless_pause", "Doctor Vibe: System paused."),
+            "timestamp": datetime.now().isoformat(),
+            "suggested_action": "Please analyze the issue. Use /continue or /cancel" if lang != "uk" else "Проаналізуйте проблему. Використовуйте /continue або /cancel",
+            "atlas_status": "paused_analyzing_failures",
+            "auto_resume_available": True
+        }
+
+    def _check_background_dev_mode(self, state: TrinityState) -> Optional[Dict[str, Any]]:
+        if state.get("task_type") != "DEV" or not state.get("is_dev"):
+            return None
+        if not (self.self_healing_enabled and self.self_healer):
+            return None
+        unresolved = [i for i in self.self_healer.detected_issues if i.severity in {IssueSeverity.MEDIUM, IssueSeverity.HIGH}]
+        if len(unresolved) <= 2:
+            return None
+            
+        lang = self.preferred_language if self.preferred_language in MESSAGES else "en"
+        return {
+            "reason": "background_error_correction_needed",
+            "issues": [i.to_dict() for i in unresolved[:3]],
+            "message": f"Doctor Vibe: Detected {len(unresolved)} background errors." if lang != "uk" else f"Doctor Vibe: Виявлено {len(unresolved)} помилок в фоновому режимі.",
+            "timestamp": datetime.now().isoformat(),
+            "suggested_action": "Errors fixed automatically." if lang != "uk" else "Помилки виправляються автоматично.",
+            "atlas_status": "running_with_background_fixes",
+            "auto_resume_available": False,
+            "background_mode": True
+        }
+
+    def _check_stalls(self, state: TrinityState) -> Optional[Dict[str, Any]]:
         messages = state.get("messages", [])
-        last_message = getattr(messages[-1], "content", "") if messages and len(messages) > 0 and messages[-1] is not None else ""
-        last_message_lower = last_message.lower()
-        
-        stall_conditions = [
-            "план порожній",
-            "empty plan",
-            "no steps",
-            "cannot",
-            "не може",
-            "не вдається",
-            "failed to",
-            "немає кроків"
-        ]
-        
-        if any(condition in last_message_lower for condition in stall_conditions):
-            lang = self.preferred_language if self.preferred_language in MESSAGES else "en"
-            # System is stalled with unclear reason - Doctor Vibe should intervene
-            pause_context = {
-                "reason": "unknown_stall_detected",
-                "message": f"Doctor Vibe: Detected unknown stall. Last message: {last_message[:100]}..." if lang != "uk" else f"Doctor Vibe: Виявлено невідому зупинку системи. Останнє повідомлення: {last_message[:100]}...",
-                "timestamp": datetime.now().isoformat(),
-                "suggested_action": "Please clarify the task or restart the system." if lang != "uk" else "Будь ласка, уточніть завдання або перезапустіть систему",
-                "atlas_status": "stalled_unknown_reason",
-                "auto_resume_available": False,
-                "last_message": last_message,
-                "original_task": state.get("original_task")
-            }
-            return pause_context
-        
-        return None
+        last = getattr(messages[-1], "content", "").lower() if messages and messages[-1] else ""
+        stall_keys = ["план порожній", "empty plan", "no steps", "cannot", "не може", "не вдається", "failed to"]
+        if not any(k in last for k in stall_keys):
+            return None
+            
+        lang = self.preferred_language if self.preferred_language in MESSAGES else "en"
+        return {
+            "reason": "unknown_stall_detected",
+            "message": f"Doctor Vibe: Stall detected: {last[:100]}..." if lang != "uk" else f"Doctor Vibe: Виявлено зупинку: {last[:100]}...",
+            "timestamp": datetime.now().isoformat(),
+            "suggested_action": "Clarify task or restart." if lang != "uk" else "Уточніть завдання або перезапустіть",
+            "atlas_status": "stalled_unknown_reason",
+            "auto_resume_available": False,
+            "last_message": last,
+            "original_task": state.get("original_task")
+        }
     
     def _create_vibe_assistant_pause_state(self, state: TrinityState, pause_reason: str, message: str) -> TrinityState:
         """
@@ -675,167 +652,160 @@ class TrinityRuntime:
 
     def _meta_planner_node(self, state: TrinityState):
         """The 'Controller Brain' that sets policies and manages replanning strategy."""
-        if self.verbose: print("🧠 [Meta-Planner] Analyzing strategy...")
+        if self.verbose: print(f"🧠 {VOICE_MARKER} [Meta-Planner] Analyzing strategy...")
         context = state.get("messages", [])
-        # Safe access to last message - check if context is not empty first
-        last_msg = getattr(context[-1], "content", "Start") if context and len(context) > 0 and context[-1] is not None else "Start"
-        original_task = state.get("original_task") or "Unknown"
-        step_count = state.get("step_count", 0)
-        replan_count = state.get("replan_count", 0)
-        last_step_status = state.get("last_step_status", "success")
+        last_msg = getattr(context[-1], "content", "Start") if context and context[-1] else "Start"
+        
+        # 1. Initialize and maintain state
+        meta_config = self._prepare_meta_config(state, last_msg)
+        summary = self._update_periodic_summary(state, context)
+        
+        # 2. Check hard limits
+        limit_reached = self._check_master_limits(state, context)
+        if limit_reached: return limit_reached
+        
+        # 3. Consume or handle previous step result
         plan = state.get("plan") or []
-        meta_config = state.get("meta_config") or {}
+        last_status = state.get("last_step_status", "success")
+        fail_count = int(state.get("current_step_fail_count") or 0)
         
-        # Ensure meta_config has all required keys with safe defaults
-        if isinstance(meta_config, dict):
-            meta_config.setdefault("strategy", "hybrid")
-            meta_config.setdefault("verification_rigor", "standard")
-            meta_config.setdefault("recovery_mode", "local_fix")
-            meta_config.setdefault("tool_preference", "hybrid")
-            meta_config.setdefault("reasoning", "")
-            meta_config.setdefault("retrieval_query", last_msg)
-            meta_config.setdefault("n_results", 3)
-        else:
-            # If meta_config is not a dict for some reason, reset it
-            meta_config = {
-                "strategy": "hybrid",
-                "verification_rigor": "standard",
-                "recovery_mode": "local_fix",
-                "tool_preference": "hybrid",
-                "reasoning": "",
-                "retrieval_query": last_msg,
-                "n_results": 3
-            }
-        
-        current_step_fail_count = int(state.get("current_step_fail_count") or 0)
-
-        # 1. Update Summary Memory periodically
-        summary = state.get("summary", "")
-        if len(context) > 6 and step_count % 3 == 0:
-             try:
-                # Safe content extraction - handle objects without .content attribute
-                recent_contents = []
-                for m in (context[-4:] if len(context) >= 4 else context):
-                    msg_content = getattr(m, "content", "") if m is not None else ""
-                    if msg_content:
-                        recent_contents.append(str(msg_content)[:4000])
-                
-                summary_prompt = [
-                    SystemMessage(content=f"You are the Trinity archivist. Create a concise summary (2-3 sentences) of the current task state in {self.preferred_language}. What has been done? What remains?"),
-                    HumanMessage(content=f"Current summary: {summary}\n\nRecent events:\n" + "\n".join(recent_contents))
-                ]
-                sum_resp = self.llm.invoke(summary_prompt)
-                summary = getattr(sum_resp, "content", "")
-                if self.verbose: print(f"🧠 [Meta-Planner] Summary update: {summary[:50] if summary else '(empty)'}...")
-             except Exception:
-                pass
-
-        # 1b. Check Master Limits
-        lang = self.preferred_language if self.preferred_language in MESSAGES else "en"
-        if step_count >= self.MAX_STEPS:
-            msg = MESSAGES[lang]["step_limit_reached"].format(limit=self.MAX_STEPS)
-            return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] {msg}")]}
-        if replan_count >= self.MAX_REPLANS:
-            msg = MESSAGES[lang]["replan_limit_reached"].format(limit=self.MAX_REPLANS)
-            return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] {msg}")]}
-
-        # 2. Plan Maintenance (Consumption)
         if plan:
-            if last_step_status == "success":
-                # Success - record it in history and consume
-                completed_step = plan.pop(0)
-                hist = state.get("history_plan_execution") or []
-                desc = completed_step.get('description', 'Unknown step')
-                hist.append(f"SUCCESS: {desc}")
-                state["history_plan_execution"] = hist
-                current_step_fail_count = 0
-                state["gui_fallback_attempted"] = False # Reset for next step
-                if self.verbose: print(f"🧠 [Meta-Planner] Step succeeded: {desc}. Remaining: {len(plan)}")
-                if not plan:
-                    # Robust termination: Only end if the Global Goal is explicitly verified
-                    has_verified = any(m.upper() in last_msg.upper() for m in TERMINATION_MARKERS) or "[ACHIEVEMENT_CONFIRMED]" in last_msg.upper()
-                    if has_verified:
-                        lang = self.preferred_language if self.preferred_language in MESSAGES else "en"
-                        msg = MESSAGES[lang]["task_achieved"]
-                        return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] {msg}")]}
-                    else:
-                        if self.verbose: print("🧠 [Meta-Planner] Plan exhausted but Global Goal NOT verified. Triggering replan for next steps.")
-                        # Do not return 'end' here; let the decision logic below set action = 'replan'
+            plan, last_status, fail_count = self._consume_execution_step(state, plan, last_status, fail_count, last_msg)
+            
+        # 4. Decide next action
+        action = self._decide_meta_action(plan, last_status, fail_count, state)
+        
+        # 5. Execute meta-action (replan/repair/initialize)
+        if action in ["initialize", "replan", "repair"]:
+            return self._handle_meta_action(state, action, plan, last_msg, meta_config, fail_count, summary)
 
-            elif last_step_status == "failed":
-                current_step_fail_count += 1
-                if self.verbose: print(f"🧠 [Meta-Planner] Step failed ({current_step_fail_count}/3).")
-                
-                # Record failure
-                hist = state.get("history_plan_execution") or []
-                desc = plan[0].get('description', 'Unknown step') if plan else 'Unknown step'
-                hist.append(f"FAILED: {desc} (Try #{current_step_fail_count})")
-                state["history_plan_execution"] = hist
-                
-            elif last_step_status == "uncertain":
-                # Treat uncertain as soft failure - increment count but don't replan immediately
-                current_step_fail_count += 1
-                if self.verbose: print(f"🧠 [Meta-Planner] Step uncertain ({current_step_fail_count}/4).")
-                
-                # Record uncertainty
-                hist = state.get("history_plan_execution") or []
-                desc = plan[0].get('description', 'Unknown step') if plan else 'Unknown step'
-                hist.append(f"UNCERTAIN: {desc} (Check #{current_step_fail_count})")
-                state["history_plan_execution"] = hist
+        # 6. Default flow: Atlas dispatch
+        out = self._atlas_dispatch(state, plan)
+        out["summary"] = summary
+        return out
 
-                # Increase allowance for uncertainty to avoid premature failure
-                if current_step_fail_count >= 4:
-                    if self.verbose: print(f"🧠 [Meta-Planner] Uncertainty limit reached ({current_step_fail_count}). Marking step as FAILED to trigger recovery.")
-                    last_step_status = "failed"
-                    # Capture failed action for forbidden list (Manual Retry)
+    def _prepare_meta_config(self, state: TrinityState, last_msg: str) -> Dict[str, Any]:
+        cfg = state.get("meta_config") or {}
+        if not isinstance(cfg, dict): cfg = {}
+        defaults = {
+            "strategy": "hybrid", "verification_rigor": "standard",
+            "recovery_mode": "local_fix", "tool_preference": "hybrid",
+            "reasoning": "", "retrieval_query": last_msg, "n_results": 3
+        }
+        for k, v in defaults.items():
+            cfg.setdefault(k, v)
+        return cfg
+
+    def _update_periodic_summary(self, state: TrinityState, context: List[Any]) -> str:
+        summary = state.get("summary", "")
+        step_count = state.get("step_count", 0)
+        if len(context) > 6 and step_count % 3 == 0:
+            try:
+                recent = [str(getattr(m, "content", ""))[:4000] for m in context[-4:] if m]
+                prompt = [
+                    SystemMessage(content=f"Trinity archivist. Summarize (2-3 sentences) in {self.preferred_language}."),
+                    HumanMessage(content=f"Summary: {summary}\n\nEvents:\n" + "\n".join(recent))
+                ]
+                summary = getattr(self.llm.invoke(prompt), "content", "")
+            except Exception: pass
+        return summary
+
+    def _check_master_limits(self, state: TrinityState, context: List[Any]) -> Optional[Dict[str, Any]]:
+        lang = self.preferred_language if self.preferred_language in MESSAGES else "en"
+        if state.get("step_count", 0) >= self.MAX_STEPS:
+            msg = MESSAGES[lang]["step_limit_reached"].format(limit=self.MAX_STEPS)
+            return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"{VOICE_MARKER} {msg}")]}
+        if state.get("replan_count", 0) >= self.MAX_REPLANS:
+            msg = MESSAGES[lang]["replan_limit_reached"].format(limit=self.MAX_REPLANS)
+            return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"{VOICE_MARKER} {msg}")]}
+        return None
+
+    def _consume_execution_step(self, state: TrinityState, plan: List[Dict], status: str, fail_count: int, last_msg: str) -> tuple:
+        hist = state.get("history_plan_execution") or []
+        desc = plan[0].get('description', UNKNOWN_STEP) if plan else UNKNOWN_STEP
+        
+        if status == "success":
+            plan.pop(0)
+            hist.append(f"SUCCESS: {desc}")
+            fail_count = 0
+            state["gui_fallback_attempted"] = False
+        elif status == "failed":
+            fail_count += 1
+            hist.append(f"FAILED: {desc} (Try #{fail_count})")
+        elif status == "uncertain":
+            fail_count += 1
+            hist.append(f"UNCERTAIN: {desc} (Check #{fail_count})")
+            if fail_count >= 4:
+                status = "failed"
+                forbidden = state.get("forbidden_actions") or []
+                forbidden.append(f"FAILED ACTION: {desc}")
+                state["forbidden_actions"] = forbidden
+                
+        state["history_plan_execution"] = hist
+        return plan, status, fail_count
+
+    def _decide_meta_action(self, plan: List[Dict], status: str, fail_count: int, state: TrinityState) -> str:
+        if not state.get("meta_config"): return "initialize"
+        if not plan: return "replan"
+        if status == "failed":
+            if fail_count >= 3:
+                hist = state.get("history_plan_execution") or []
+                if hist:
                     forbidden = state.get("forbidden_actions") or []
-                    forbidden.append(f"FAILED ACTION: {desc}")
+                    forbidden.append(f"FAILED ACTION: {hist[-1]}")
                     state["forbidden_actions"] = forbidden
-                    # Do NOT pop the plan. Let the decision logic below handle 'failed' -> 'replan'.
-
-        # 3. Decision Logic with Doctor Vibe integration
-        action = "proceed" # Default: continue to tetyana with current plan
+                return "replan"
+            
+            cfg = state.get("meta_config") or {}
+            return "replan" if cfg.get("recovery_mode") == "full_replan" else "repair"
+            
+        vibe_ctx = state.get("vibe_assistant_context", "")
+        if "background_mode" in vibe_ctx: return "proceed"
         
-        if not meta_config:
-            action = "initialize"
-        elif not plan:
-            # Check if this is a planning failure that needs Doctor Vibe intervention
-            if step_count > 0 and last_step_status == "success":
-                # Empty plan after successful step - just replan
-                if self.verbose:
-                    self.logger.info("Plan completed. Triggering replan for next steps.")
-                action = "replan"
-            else:
-                action = "replan" # out of steps
-        elif last_step_status == "failed":
-            if current_step_fail_count >= 3:
-                 action = "replan"
-                 # Capture failed action for forbidden list
-                 hist = state.get("history_plan_execution") or []
-                 if hist:
-                     forbidden = state.get("forbidden_actions") or []
-                     forbidden.append(f"FAILED ACTION: {hist[-1]}")
-                     state["forbidden_actions"] = forbidden
-                 
-                 # Smart strategy change: if Google keeps failing, suggest alternative search
-                 last_forbidden = forbidden[-1] if forbidden else ""
-                 if "google" in last_forbidden.lower() or "captcha" in last_forbidden.lower():
-                     if self.verbose:
-                         self.logger.info("🔄 [Meta-Planner] Google repeatedly failing. Adding hint to use DuckDuckGo.")
-                     meta_config["search_hint"] = "USE_DUCKDUCKGO"
-                     meta_config["avoid_google"] = True
-            else:
-                 recovery_mode = meta_config.get("recovery_mode", "local_fix")
-                 action = "replan" if recovery_mode == "full_replan" else "repair"
-        
-        # Doctor Vibe integration: Check if we're in background error correction mode
-        vibe_assistant_context = state.get("vibe_assistant_context", "")
-        if "background_mode" in vibe_assistant_context:
+        return "proceed"
 
-            # If Doctor Vibe is working in background, let him continue
-            if self.verbose:
-                self.logger.info("🧠 [Meta-Planner] Doctor Vibe working in background mode - continuing execution")
-            action = "proceed"
+    def _handle_meta_action(self, state: TrinityState, action: str, plan: List[Dict], last_msg: str, 
+                           meta_config: Dict, fail_count: int, summary: str):
+        from core.agents.atlas import get_meta_planner_prompt
+        task_ctx = f"Goal: {state.get('original_task')}\nReq: {last_msg}\nStep: {state.get('step_count')}\nStatus: {state.get('last_step_status')}"
+        prompt = get_meta_planner_prompt(task_ctx, preferred_language=self.preferred_language)
+        
+        try:
+            resp = self.llm.invoke(prompt.format_messages())
+            data = self._extract_json_object(getattr(resp, "content", ""))
+            if data and "meta_config" in data:
+                meta_config.update(data["meta_config"])
+                if meta_config.get("strategy") == "rag_heavy" or action in ["initialize", "replan", "repair"]:
+                    self._perform_selective_rag(state, meta_config, last_msg)
+        except Exception: pass
+
+        plan_for_atlas = plan[1:] if action == "repair" and len(plan) > 0 else None
+        meta_config["repair_mode"] = (action == "repair")
+        meta_config["failed_step"] = plan[0].get("description", UNKNOWN_STEP) if action == "repair" and plan else UNKNOWN_STEP
+        
+        return {
+            "current_agent": "atlas", "meta_config": meta_config, "plan": plan_for_atlas,
+            "current_step_fail_count": fail_count, "summary": summary,
+            "gui_fallback_attempted": False if action == "replan" else state.get("gui_fallback_attempted"),
+            "retrieved_context": state.get("retrieved_context", "")
+        }
+
+    def _perform_selective_rag(self, state: TrinityState, meta_config: Dict, last_msg: str):
+        query = meta_config.get("retrieval_query", last_msg)
+        limit = int(meta_config.get("n_results", 3))
+        mem_res = self.memory.query_memory("knowledge_base", query, n_results=limit)
+        relevant = []
+        for r in mem_res:
+            m = r.get("metadata", {})
+            if m.get("status") == "success" and float(m.get("confidence", 1.0)) > 0.3:
+                relevant.append(f"[SUCCESS] {r.get('content')}")
+            elif m.get("status") == "failed":
+                relevant.append(f"[WARNING: FAILED] Avoid: {r.get('content')}")
+        
+        if not relevant:
+            mem_res = self.memory.query_memory("strategies", query, n_results=limit)
+            relevant = [r.get("content", "") for r in mem_res]
+        state["retrieved_context"] = "\n".join(relevant)
         # NOTE: Removed the old "uncertain -> replan" logic. Uncertain is now handled above as a soft failure.
         
         # 4. Meta-Reasoning (LLM)
