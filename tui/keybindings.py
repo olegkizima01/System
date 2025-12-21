@@ -415,60 +415,80 @@ def build_keybindings(
     @kb.add("enter", filter=show_menu)
     def handle_menu_enter(event=None):
         lvl = state.menu_level
-        if lvl == MenuLevel.MAIN:
+
+        def _main():
             itm = MAIN_MENU_ITEMS[state.menu_index]
             state.menu_level, state.menu_index = itm[1], 0
-        elif lvl == MenuLevel.CUSTOM_TASKS:
+
+        def _custom_tasks():
             items = get_custom_tasks_menu_items()
-            if items:
-                action = items[max(0, min(state.menu_index, len(items) - 1))][1]
-                if callable(action):
-                    try: ok, msg = action(); log(msg, "action" if ok else "error")
-                    except Exception as e: log(f"Task failed: {e}", "error")
-        elif lvl == MenuLevel.MONITORING:
+            if not items: return
+            action = items[max(0, min(state.menu_index, len(items) - 1))][1]
+            if callable(action):
+                try: ok, msg = action(); log(msg, "action" if ok else "error")
+                except Exception as e: log(f"Task failed: {e}", "error")
+
+        def _monitoring():
             items = get_monitoring_menu_items()
             if items: state.menu_level, state.menu_index = items[max(0, min(state.menu_index, len(items) - 1))][1], 0
-        elif lvl == MenuLevel.SETTINGS:
+
+        def _settings():
             items = get_settings_menu_items()
-            if items:
-                idx = _settings_next_selectable_index(items, max(0, min(state.menu_index, len(items) - 1)), 1)
-                item = items[idx]
-                if not _is_section_item(item): state.menu_level, state.menu_index = item[1], 0
-        elif lvl == MenuLevel.LLM_SETTINGS:
+            if not items: return
+            idx = _settings_next_selectable_index(items, max(0, min(state.menu_index, len(items) - 1)), 1)
+            item = items[idx]
+            if not _is_section_item(item): state.menu_level, state.menu_index = item[1], 0
+
+        def _llm_settings():
             items = get_llm_menu_items()
             if items: state.menu_level, state.menu_index = items[max(0, min(state.menu_index, len(items) - 1))][1], 0
-        elif lvl in {MenuLevel.LLM_ATLAS, MenuLevel.LLM_TETYANA, MenuLevel.LLM_GRISHA, MenuLevel.LLM_VISION, MenuLevel.LLM_DEFAULTS}:
-             log("To edit model, use CLI: /llm set section=<name> model=<model>", "info")
-        elif lvl == MenuLevel.UNSAFE_MODE: _handle_general_toggle("ui_unsafe_mode", "Unsafe")
-        elif lvl == MenuLevel.SELF_HEALING: _handle_general_toggle("ui_self_healing", "Self-healing")
-        elif lvl == MenuLevel.LEARNING_MODE: _handle_general_toggle("learning_mode", "Learning")
-        elif lvl == MenuLevel.AUTOMATION_PERMISSIONS: handle_automation_enter()
-        elif lvl == MenuLevel.DEV_SETTINGS:
+
+        def _dev_settings():
             cur = str(getattr(state, "ui_dev_code_provider", "vibe-cli") or "vibe-cli").strip().lower()
             state.ui_dev_code_provider = "continue" if cur == "vibe-cli" else "vibe-cli"
             save_ui_settings(); log(f"Dev provider: {state.ui_dev_code_provider.upper()}", "action")
-        elif lvl == MenuLevel.APPEARANCE:
+
+        def _appearance():
             themes = list(THEME_NAMES)
             state.ui_theme = themes[max(0, min(state.menu_index, len(themes) - 1))]
             save_ui_settings(); log(f"Theme set: {state.ui_theme}", "action")
-        elif lvl == MenuLevel.LANGUAGE: _handle_language_menu_enter()
-        elif lvl == MenuLevel.CLEANUP_EDITORS: _handle_cleanup_editors_enter()
-        elif lvl == MenuLevel.MODULE_EDITORS:
-            editors = get_editors_list()
-            if editors: state.selected_editor, state.menu_level, state.menu_index = editors[state.menu_index][0], MenuLevel.MODULE_LIST, 0
-        elif lvl == MenuLevel.INSTALL_EDITORS:
-            editors = get_editors_list()
-            if editors: ok, msg = perform_install(load_cleanup_config(), editors[state.menu_index][0]); log(msg, "action" if ok else "error")
-        elif lvl == MenuLevel.LOCALES:
+
+        def _module_editors():
+            items = get_editors_list()
+            if items: state.selected_editor, state.menu_level, state.menu_index = items[state.menu_index][0], MenuLevel.MODULE_LIST, 0
+
+        def _install_editors():
+            items = get_editors_list()
+            if items: ok, msg = perform_install(load_cleanup_config(), items[state.menu_index][0]); log(msg, "action" if ok else "error")
+
+        def _locales():
             loc = AVAILABLE_LOCALES[state.menu_index]
             localization.primary = loc.code
             localization.selected = [loc.code] + [c for c in localization.selected if c != loc.code]
             localization.save(); log(f"Primary set: {loc.code}", "action")
-        elif lvl == MenuLevel.MONITOR_TARGETS:
+
+        def _monitor_targets():
             if save_monitor_targets(): log(f"Monitor targets saved", "action")
             else: log("Failed to save", "error")
             state.menu_level, state.menu_index = MenuLevel.MAIN, 0
-        elif lvl == MenuLevel.MONITOR_CONTROL: _handle_monitor_control_enter()
+
+        def _llm_sub_hint(): log("To edit model, use CLI: /llm set section=<name> model=<model>", "info")
+
+        dispatch = {
+            MenuLevel.MAIN: _main, MenuLevel.CUSTOM_TASKS: _custom_tasks, MenuLevel.MONITORING: _monitoring,
+            MenuLevel.SETTINGS: _settings, MenuLevel.LLM_SETTINGS: _llm_settings,
+            MenuLevel.UNSAFE_MODE: lambda: _handle_general_toggle("ui_unsafe_mode", "Unsafe"),
+            MenuLevel.SELF_HEALING: lambda: _handle_general_toggle("ui_self_healing", "Self-healing"),
+            MenuLevel.LEARNING_MODE: lambda: _handle_general_toggle("learning_mode", "Learning"),
+            MenuLevel.AUTOMATION_PERMISSIONS: handle_automation_enter, MenuLevel.DEV_SETTINGS: _dev_settings,
+            MenuLevel.APPEARANCE: _appearance, MenuLevel.LANGUAGE: _handle_language_menu_enter,
+            MenuLevel.CLEANUP_EDITORS: _handle_cleanup_editors_enter, MenuLevel.MODULE_EDITORS: _module_editors,
+            MenuLevel.INSTALL_EDITORS: _install_editors, MenuLevel.LOCALES: _locales,
+            MenuLevel.MONITOR_TARGETS: _monitor_targets, MenuLevel.MONITOR_CONTROL: _handle_monitor_control_enter,
+            **{ml: _llm_sub_hint for ml in [MenuLevel.LLM_ATLAS, MenuLevel.LLM_TETYANA, MenuLevel.LLM_GRISHA, MenuLevel.LLM_VISION, MenuLevel.LLM_DEFAULTS]}
+        }
+
+        if lvl in dispatch: dispatch[lvl]()
 
     return kb, handle_menu_enter
 

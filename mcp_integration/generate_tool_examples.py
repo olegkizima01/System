@@ -205,56 +205,35 @@ class ToolExamplesGenerator:
         ]
         
         for i in range(count):
-            # Create varied description
             action = random.choice(action_verbs)
             context = random.choice(contexts)
-            
-            # Substitute placeholders with random values
             desc = base_desc
-            if "{url}" in desc:
-                desc = desc.replace("{url}", f"https://{random.choice(self.variations['websites'])}")
-            if "{selector}" in desc:
-                selectors = [f"#btn-{i}", f".class-{i}", f"button[data-id='{i}']", f"//div[@id='{i}']"]
-                desc = desc.replace("{selector}", random.choice(selectors))
-            if "{text}" in desc:
-                desc = desc.replace("{text}", f"Sample text variation {i}")
-            if "{app_name}" in desc:
-                desc = desc.replace("{app_name}", random.choice(self.variations['apps']))
-            if "{command}" in desc:
-                commands = [f"ls -la", f"echo 'test {i}'", f"cat file_{i}.txt", f"grep -r 'pattern' ."]
-                desc = desc.replace("{command}", random.choice(commands))
-            if "{x}" in desc:
-                desc = desc.replace("{x}", str(random.randint(0, 1920)))
-            if "{y}" in desc:
-                desc = desc.replace("{y}", str(random.randint(0, 1080)))
-            if "{key}" in desc:
-                keys = ["enter", "tab", "escape", "space", "backspace", "delete"]
-                desc = desc.replace("{key}", random.choice(keys))
-            if "{keys}" in desc:
-                hotkeys = ["cmd+c", "cmd+v", "cmd+z", "cmd+s", "cmd+shift+p", "ctrl+alt+t"]
-                desc = desc.replace("{keys}", random.choice(hotkeys))
-            if "{path}" in desc:
-                paths = [f"/Users/dev/file_{i}{random.choice(self.variations['file_types'])}" for _ in range(5)]
-                desc = desc.replace("{path}", random.choice(paths))
-            if "{directory}" in desc:
-                desc = desc.replace("{directory}", f"/Users/dev/project_{i}")
-            if "{data}" in desc:
-                desc = desc.replace("{data}", f"dataset_{i}")
-            if "{content}" in desc:
-                desc = desc.replace("{content}", f"content sample {i}")
-            if "{purpose}" in desc:
-                purposes = ["pattern detection", "anomaly detection", "classification", "optimization"]
-                desc = desc.replace("{purpose}", random.choice(purposes))
-            if "{topic}" in desc:
-                topics = ["machine learning", "web development", "data science", "automation"]
-                desc = desc.replace("{topic}", random.choice(topics))
-            if "{language}" in desc:
-                languages = ["Spanish", "French", "German", "Japanese", "Chinese", "Ukrainian"]
-                desc = desc.replace("{language}", random.choice(languages))
-            if "{file}" in desc:
-                desc = desc.replace("{file}", f"file_{i}{random.choice(self.variations['file_types'])}")
-            if "{project}" in desc:
-                desc = desc.replace("{project}", f"project_{i}")
+            
+            # Use a dictionary for cleaner replacement
+            replacements = {
+                "{url}": lambda: f"https://{random.choice(self.variations['websites'])}",
+                "{selector}": lambda: random.choice([f"#btn-{i}", f".class-{i}", f"button[data-id='{i}']", f"//div[@id='{i}']"]),
+                "{text}": lambda: f"Sample text variation {i}",
+                "{app_name}": lambda: random.choice(self.variations['apps']),
+                "{command}": lambda: random.choice([f"ls -la", f"echo 'test {i}'", f"cat file_{i}.txt", f"grep -r 'pattern' ."]),
+                "{x}": lambda: str(random.randint(0, 1920)),
+                "{y}": lambda: str(random.randint(0, 1080)),
+                "{key}": lambda: random.choice(["enter", "tab", "escape", "space", "backspace", "delete"]),
+                "{keys}": lambda: random.choice(["cmd+c", "cmd+v", "cmd+z", "cmd+s", "cmd+shift+p", "ctrl+alt+t"]),
+                "{path}": lambda: random.choice([f"/Users/dev/file_{i}{random.choice(self.variations['file_types'])}" for _ in range(5)]),
+                "{directory}": lambda: f"/Users/dev/project_{i}",
+                "{data}": lambda: f"dataset_{i}",
+                "{content}": lambda: f"content sample {i}",
+                "{purpose}": lambda: random.choice(["pattern detection", "anomaly detection", "classification", "optimization"]),
+                "{topic}": lambda: random.choice(["machine learning", "web development", "data science", "automation"]),
+                "{language}": lambda: random.choice(["Spanish", "French", "German", "Japanese", "Chinese", "Ukrainian"]),
+                "{file}": lambda: f"file_{i}{random.choice(self.variations['file_types'])}",
+                "{project}": lambda: f"project_{i}"
+            }
+
+            for placeholder, func in replacements.items():
+                if placeholder in desc:
+                    desc = desc.replace(placeholder, func())
             
             # Replace remaining placeholders
             import re

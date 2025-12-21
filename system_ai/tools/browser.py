@@ -92,12 +92,12 @@ class BrowserManager:
         if self.browser:
             try:
                 self.browser.close()
-            except:
+            except Exception:
                 pass
         if self.pw:
             try:
                 self.pw.stop()
-            except:
+            except Exception:
                 pass
         self.pw = None
         self.browser = None
@@ -138,7 +138,7 @@ def browser_click_element(selector: str) -> str:
         try:
              page.wait_for_load_state("domcontentloaded", timeout=5000)
              time.sleep(1.0)
-        except:
+        except Exception:
              time.sleep(1.0)
         return json.dumps({"status": "success"})
     except Exception as e:
@@ -157,7 +157,7 @@ def browser_type_text(selector: str, text: str, press_enter: bool = False) -> st
             try:
                 page.wait_for_load_state("domcontentloaded", timeout=5000)
                 time.sleep(2.0)
-            except:
+            except Exception:
                 time.sleep(3.0)
         return json.dumps({"status": "success"})
     except Exception as e:

@@ -96,66 +96,75 @@ def force_ui_update():
             pass
 
 
+def _handle_mouse_scroll_up(name: str, state: Any, scroll_delta: int):
+    if name == "log":
+        state.ui_log_follow = False
+        state.ui_log_cursor_y = max(0, int(getattr(state, "ui_log_cursor_y", 0)) - scroll_delta)
+    elif name == "agents":
+        state.ui_agents_follow = False
+        state.ui_agents_cursor_y = max(0, int(getattr(state, "ui_agents_cursor_y", 0)) - scroll_delta)
+    
+    from prompt_toolkit.application.current import get_app
+    app = get_app()
+    for w in app.layout.find_all_windows():
+        if getattr(w, "name", None) == name:
+            w.vertical_scroll = max(0, w.vertical_scroll - scroll_delta)
+
+def _handle_mouse_scroll_down(name: str, state: Any, scroll_delta: int):
+    if name == "log":
+        state.ui_log_cursor_y = int(getattr(state, "ui_log_cursor_y", 0)) + scroll_delta
+        if state.ui_log_cursor_y >= max(0, int(getattr(state, "ui_log_line_count", 1)) - 1):
+            state.ui_log_follow = True
+    elif name == "agents":
+        state.ui_agents_cursor_y = int(getattr(state, "ui_agents_cursor_y", 0)) + scroll_delta
+        if state.ui_agents_cursor_y >= max(0, int(getattr(state, "ui_agents_line_count", 1)) - 1):
+            state.ui_agents_follow = True
+    
+    from prompt_toolkit.application.current import get_app
+    app = get_app()
+    for w in app.layout.find_all_windows():
+        if getattr(w, "name", None) == name:
+            info = w.render_info
+            if info:
+                max_scroll = max(0, info.content_height - info.window_height)
+                w.vertical_scroll = min(max_scroll, w.vertical_scroll + scroll_delta)
+            else:
+                w.vertical_scroll += scroll_delta
+
+def _handle_mouse_up(name: str, get_logs: Callable, get_agent_messages: Callable):
+    try:
+        from tui.clipboard_utils import copy_to_clipboard
+        content = ""
+        if name == "log" and get_logs:
+            content = "".join(str(t or "") for _, t in get_logs())
+        elif name == "agents" and get_agent_messages:
+            content = "".join(str(t or "") for _, t in get_agent_messages())
+        if content:
+            copy_to_clipboard(content)
+    except Exception:
+        pass
+
+
 def _create_mouse_handler(name: str, force_ui_update: Callable, get_logs: Callable = None, get_agent_messages: Callable = None):
     def _handler(mouse_event: Any):
         from prompt_toolkit.mouse_events import MouseEventType
         from system_cli.state import state
         
-        # Scroll speed
         scroll_delta = 10 
         
         if mouse_event.event_type == MouseEventType.SCROLL_UP:
-            if name == "log":
-                state.ui_log_follow = False
-                state.ui_log_cursor_y = max(0, int(getattr(state, "ui_log_cursor_y", 0)) - scroll_delta)
-            elif name == "agents":
-                state.ui_agents_follow = False
-                state.ui_agents_cursor_y = max(0, int(getattr(state, "ui_agents_cursor_y", 0)) - scroll_delta)
-            
-            from prompt_toolkit.application.current import get_app
-            app = get_app()
-            for w in app.layout.find_all_windows():
-                if getattr(w, "name", None) == name:
-                    w.vertical_scroll = max(0, w.vertical_scroll - scroll_delta)
+            _handle_mouse_scroll_up(name, state, scroll_delta)
             force_ui_update()
             return None
             
-        elif mouse_event.event_type == MouseEventType.SCROLL_DOWN:
-            if name == "log":
-                state.ui_log_cursor_y = int(getattr(state, "ui_log_cursor_y", 0)) + scroll_delta
-                if state.ui_log_cursor_y >= max(0, int(getattr(state, "ui_log_line_count", 1)) - 1):
-                    state.ui_log_follow = True
-            elif name == "agents":
-                state.ui_agents_cursor_y = int(getattr(state, "ui_agents_cursor_y", 0)) + scroll_delta
-                if state.ui_agents_cursor_y >= max(0, int(getattr(state, "ui_agents_line_count", 1)) - 1):
-                    state.ui_agents_follow = True
-            
-            from prompt_toolkit.application.current import get_app
-            app = get_app()
-            for w in app.layout.find_all_windows():
-                if getattr(w, "name", None) == name:
-                    info = w.render_info
-                    if info:
-                        max_scroll = max(0, info.content_height - info.window_height)
-                        w.vertical_scroll = min(max_scroll, w.vertical_scroll + scroll_delta)
-                    else:
-                        w.vertical_scroll += scroll_delta
+        if mouse_event.event_type == MouseEventType.SCROLL_DOWN:
+            _handle_mouse_scroll_down(name, state, scroll_delta)
             force_ui_update()
             return None
         
-        elif mouse_event.event_type == MouseEventType.MOUSE_UP:
+        if mouse_event.event_type == MouseEventType.MOUSE_UP:
             if hasattr(mouse_event, 'button') and mouse_event.button is not None:
-                try:
-                    from tui.clipboard_utils import copy_to_clipboard
-                    content = ""
-                    if name == "log" and get_logs:
-                        content = "".join(str(t or "") for _, t in get_logs())
-                    elif name == "agents" and get_agent_messages:
-                        content = "".join(str(t or "") for _, t in get_agent_messages())
-                    if content:
-                        copy_to_clipboard(content)
-                except Exception:
-                    pass
+                _handle_mouse_up(name, get_logs, get_agent_messages)
             return NotImplemented
         
         return NotImplemented

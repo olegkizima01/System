@@ -70,11 +70,10 @@ class ServerRegistry:
                 raise RuntimeError("ChromaDB persistence unavailable")
             self.chroma_client = init_res.client
             
-            # Delete existing collection to start fresh
             try:
                 self.chroma_client.delete_collection("mcp_tool_schemas")
                 logger.info("🗑️  Deleted existing ChromaDB collection")
-            except:
+            except Exception:
                 pass
             
             # Create new collection
@@ -395,11 +394,10 @@ def main():
     try:
         # Start Redis if not running
         logger.info("🔧 Checking Redis status...")
-        try:
             subprocess.run(['redis-server', '--daemonize', 'yes'], 
-                         capture_output=True, timeout=5)
+                         capture_output=True, timeout=5, check=False)
             logger.info("✅ Redis server started")
-        except:
+        except Exception:
             logger.warning("⚠️  Could not start Redis, will continue without it")
         
         # Create registry and register all servers

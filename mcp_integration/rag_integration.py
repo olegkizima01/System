@@ -46,119 +46,124 @@ class MCPToolSelector:
     def _initialize(self):
         """Initialize the tool selector with graceful fallback for ChromaDB issues."""
         try:
-            # Load configuration
-            config_file = self.base_dir / "config" / "mcp_config.json"
-            if config_file.exists():
-                with open(config_file, 'r') as f:
-                    self.config = json.load(f)
-                self.fallback_chain = self.config.get('fallbackChain', ['local_fallback'])
-            
-            # Initialize ChromaDB with persistent storage
-            persist_dir = get_default_chroma_persist_dir() / "mcp_integration"
-            
-            # Use PersistentClient for data persistence (repair+retry once on Rust panic)
-            init_res = create_persistent_client(persist_dir=persist_dir, logger=logger)
-            if init_res is not None:
-                self.chroma_client = init_res.client
-            else:
-                # If persistence is not available, fall back to in-memory as last resort
-                logger.warning("⚠️ ChromaDB persistence unavailable; using in-memory client")
-                try:
-                    self.chroma_client = chromadb.Client()
-                except BaseException as disc_err:
-                    if isinstance(disc_err, (KeyboardInterrupt, SystemExit)):
-                        raise
-                    self.chroma_client = None
-                    logger.error(f"❌ ChromaDB completely unavailable, RAG disabled: {disc_err}")
-            
-            if self.chroma_client:
-                try:
-                    self.collection = self.chroma_client.get_collection("mcp_tool_schemas")
-                    count = self.collection.count()
-                    logger.info(f"✅ Connected to existing RAG collection ({count} items)")
-                except Exception:
-                    try:
-                        self.collection = self.chroma_client.create_collection(
-                            name="mcp_tool_schemas",
-                            metadata={"description": "MCP tool schemas and examples"}
-                        )
-                        logger.info("📊 Created new RAG collection")
-                    except Exception as col_err:
-                        self.collection = None
-                        logger.warning(f"⚠️ Could not create collection: {col_err}")
-            
-            # Initialize Redis
-            try:
-                self.redis_client = redis.Redis(
-                    host='localhost',
-                    port=6379,
-                    db=0,
-                    decode_responses=True
-                )
-                self.redis_client.ping()
-                logger.info("✅ Connected to Redis cache")
-            except Exception as redis_err:
-                self.redis_client = None
-                logger.warning(f"⚠️  Redis not available, using direct search: {redis_err}")
-                
+            self._load_config()
+            self._init_chroma()
+            self._init_redis()
         except Exception as e:
             logger.error(f"❌ Initialization error: {e}")
+
+    def _load_config(self):
+        config_file = self.base_dir / "config" / "mcp_config.json"
+        if config_file.exists():
+            with open(config_file, 'r', encoding='utf-8') as f:
+                self.config = json.load(f)
+            self.fallback_chain = self.config.get('fallbackChain', ['local_fallback'])
+
+    def _init_chroma(self):
+        persist_dir = get_default_chroma_persist_dir() / "mcp_integration"
+        init_res = create_persistent_client(persist_dir=persist_dir, logger=logger)
+        
+        if init_res is not None:
+            self.chroma_client = init_res.client
+        else:
+            logger.warning("⚠️ ChromaDB persistence unavailable; using in-memory client")
+            try:
+                self.chroma_client = chromadb.Client()
+            except BaseException as disc_err:
+                if isinstance(disc_err, (KeyboardInterrupt, SystemExit)):
+                    raise
+                self.chroma_client = None
+                logger.error(f"❌ ChromaDB completely unavailable, RAG disabled: {disc_err}")
+        
+        if self.chroma_client:
+            self._setup_collection()
+
+    def _setup_collection(self):
+        try:
+            self.collection = self.chroma_client.get_collection("mcp_tool_schemas")
+            logger.info(f"✅ Connected to existing RAG collection ({self.collection.count()} items)")
+        except Exception:
+            try:
+                self.collection = self.chroma_client.create_collection(
+                    name="mcp_tool_schemas",
+                    metadata={"description": "MCP tool schemas and examples"}
+                )
+                logger.info("📊 Created new RAG collection")
+            except Exception as col_err:
+                self.collection = None
+                logger.warning(f"⚠️ Could not create collection: {col_err}")
+
+    def _init_redis(self):
+        try:
+            self.redis_client = redis.Redis(
+                host='localhost', port=6379, db=0, decode_responses=True
+            )
+            self.redis_client.ping()
+            logger.info("✅ Connected to Redis cache")
+        except Exception as redis_err:
+            self.redis_client = None
+            logger.warning(f"⚠️  Redis not available, using direct search: {redis_err}")
     
     def select_tool(self, task_description: str, n_candidates: int = 5) -> List[Dict[str, Any]]:
-        """
-        Select the best tools for a given task using semantic search.
-        
-        Args:
-            task_description: Natural language description of the task
-            n_candidates: Number of candidate tools to return
-            
-        Returns:
-            List of tool candidates with scores
-        """
+        """Select the best tools for a given task using semantic search."""
         try:
-            # Check Redis cache first
-            cache_key = f"tool_selection:{hash(task_description)}"
-            if self.redis_client:
-                cached = self.redis_client.get(cache_key)
-                if cached:
-                    return json.loads(cached)
+            cached = self._check_cache(task_description)
+            if cached:
+                return cached
             
-            # Perform semantic search
-            if self.collection:
-                results = self.collection.query(
-                    query_texts=[task_description],
-                    n_results=n_candidates
-                )
-                
-                candidates = []
-                if results and results['documents'] and results['documents'][0]:
-                    for i, (doc, meta, dist) in enumerate(zip(
-                        results['documents'][0],
-                        results['metadatas'][0],
-                        results['distances'][0]
-                    )):
-                        candidate = {
-                            "rank": i + 1,
-                            "tool": meta.get("tool", "unknown"),
-                            "server": meta.get("server", "local"),
-                            "category": meta.get("category", "general"),
-                            "description": doc,
-                            "score": 1.0 - (dist / 2.0),  # Convert distance to similarity
-                            "full_schema": json.loads(meta.get("full_schema", "{}")) if meta.get("full_schema") else {}
-                        }
-                        candidates.append(candidate)
-                
-                # Cache results
-                if self.redis_client and candidates:
-                    self.redis_client.setex(cache_key, 300, json.dumps(candidates))
-                
-                return self._prioritize_mcp_tools(candidates)
+            if not self.collection:
+                return []
+
+            results = self.collection.query(
+                query_texts=[task_description],
+                n_results=n_candidates
+            )
             
-            return []
+            candidates = self._process_query_results(results)
+            
+            if candidates:
+                self._update_cache(task_description, candidates)
+            
+            return self._prioritize_mcp_tools(candidates)
             
         except Exception as e:
             logger.error(f"❌ Tool selection error: {e}")
             return []
+
+    def _check_cache(self, task_description: str) -> Optional[List[Dict[str, Any]]]:
+        if not self.redis_client:
+            return None
+        cache_key = f"tool_selection:{hash(task_description)}"
+        cached = self.redis_client.get(cache_key)
+        return json.loads(cached) if cached else None
+
+    def _update_cache(self, task_description: str, candidates: List[Dict[str, Any]]):
+        if not self.redis_client:
+            return
+        cache_key = f"tool_selection:{hash(task_description)}"
+        self.redis_client.setex(cache_key, 300, json.dumps(candidates))
+
+    def _process_query_results(self, results: Dict[str, Any]) -> List[Dict[str, Any]]:
+        candidates = []
+        if not (results and results.get('documents') and results['documents'][0]):
+            return candidates
+
+        for i, (doc, meta, dist) in enumerate(zip(
+            results['documents'][0],
+            results['metadatas'][0],
+            results['distances'][0]
+        )):
+            candidate = {
+                "rank": i + 1,
+                "tool": meta.get("tool", "unknown"),
+                "server": meta.get("server", "local"),
+                "category": meta.get("category", "general"),
+                "description": doc,
+                "score": 1.0 - (dist / 2.0),
+                "full_schema": json.loads(meta.get("full_schema", "{}")) if meta.get("full_schema") else {}
+            }
+            candidates.append(candidate)
+        return candidates
 
     def _prioritize_mcp_tools(self, candidates: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """
@@ -287,7 +292,7 @@ class MCPToolSelector:
         if self.collection:
             try:
                 stats["total_tools"] = self.collection.count()
-            except:
+            except Exception:
                 pass
         
         return stats
