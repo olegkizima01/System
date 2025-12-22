@@ -1655,8 +1655,8 @@ Return JSON with ONLY the replacement step.'''))
                     print("⚠️ [Trinity] Not a git repo, skipping structure regeneration")
                 return False
             
-            # Save response to .last_response.txt
-            response_file = os.path.join(git_root, ".last_response.txt")
+            # Save response to LAST_RESPONSE_FILE
+            response_file = os.path.join(git_root, self.LAST_RESPONSE_FILE)
             with open(response_file, 'w', encoding='utf-8') as f:
                 f.write(response_text)
             
@@ -1831,11 +1831,11 @@ Return JSON with ONLY the replacement step.'''))
 
             structure_ok = self._regenerate_project_structure(report)
             amended = False
-            response_path = os.path.join(root, ".last_response.txt")
+            response_path = os.path.join(root, self.LAST_RESPONSE_FILE)
 
             if os.path.exists(response_path):
                 subprocess.run(
-                    ["git", "add", ".last_response.txt"],
+                    ["git", "add", self.LAST_RESPONSE_FILE],
                     cwd=root,
                     capture_output=True,
                     text=True,
@@ -1949,15 +1949,10 @@ Return JSON with ONLY the replacement step.'''))
         lines.append("- not executed by Trinity (no deterministic test runner in pipeline)")
         return "\n".join(lines).strip() + "\n"
 
-    def run(
-        self,
-        input_text: str,
-        *,
-        gui_mode: Optional[str] = None,
-        execution_mode: Optional[str] = None,
-        recursion_limit: Optional[int] = None,
-    ):
-        # Step 1: Classify task (LLM intent routing; keyword fallback)
+    # ============ run() helper methods ============
+
+    def _classify_and_route_task(self, input_text: str) -> Dict[str, Any]:
+        """Classify task and determine routing parameters."""
         llm_res = self._classify_task_llm(input_text)
         if llm_res:
             task_type = str(llm_res.get("task_type") or "").strip().upper()
@@ -1970,38 +1965,38 @@ Return JSON with ONLY the replacement step.'''))
             intent_reason = str(fb.get("reason") or "").strip()
 
         is_dev = task_type != "GENERAL"
-
         routing_mode = str(os.getenv("TRINITY_ROUTING_MODE", "dev_only")).strip().lower() or "dev_only"
         allow_general = (
             routing_mode in {"hybrid", "all", "general"}
             or str(os.getenv("TRINITY_ALLOW_GENERAL", "")).strip().lower() in {"1", "true", "yes", "on"}
         )
 
-        if not is_dev and not allow_general:
-            blocked_message = (
-                f"❌ **Trinity блокує це завдання**\n\n"
-                f"Тип: {task_type}\n\n"
-                f"Trinity працює **ТІЛЬКИ для dev-завдань** (код, рефакторинг, тести, git, архітектура).\n\n"
-                f"Ваше завдання стосується: {input_text[:100]}...\n\n"
-                f"Це **не dev-завдання**, тому Trinity не буде його виконувати.\n\n"
-                f"💡 **Приклади dev-завдань, які Trinity МОЖЕ виконувати:**\n"
-                f"- Напиши скрипт на Python\n"
-                f"- Виправи баг у файлі core/trinity.py\n"
-                f"- Додай нову функцію до API\n"
-                f"- Запусти тести\n"
-                f"- Зроби комміт з описом змін"
-            )
+        return {
+            "task_type": task_type,
+            "requires_windsurf": requires_windsurf,
+            "intent_reason": intent_reason,
+            "is_dev": is_dev,
+            "allow_general": allow_general,
+        }
 
-            if self.verbose:
-                print(blocked_message)
+    def _get_blocked_message(self, task_type: str, input_text: str) -> str:
+        """Generate blocked task message."""
+        return (
+            f"❌ **Trinity блокує це завдання**\n\n"
+            f"Тип: {task_type}\n\n"
+            f"Trinity працює **ТІЛЬКИ для dev-завдань** (код, рефакторинг, тести, git, архітектура).\n\n"
+            f"Ваше завдання стосується: {input_text[:100]}...\n\n"
+            f"Це **не dev-завдання**, тому Trinity не буде його виконувати.\n\n"
+            f"💡 **Приклади dev-завдань, які Trinity МОЖЕ виконувати:**\n"
+            f"- Напиши скрипт на Python\n"
+            f"- Виправи баг у файлі core/trinity.py\n"
+            f"- Додай нову функцію до API\n"
+            f"- Запусти тести\n"
+            f"- Зроби комміт з описом змін"
+        )
 
-            final_messages = [HumanMessage(content=input_text), AIMessage(content=blocked_message)]
-            yield {"atlas": {"messages": final_messages, "current_agent": "end", "task_status": "blocked"}}
-            return
-
-        if self.verbose:
-            print(f"✅ [Trinity] Task classified as: {task_type} (is_dev={is_dev}, requires_windsurf={requires_windsurf})")
-        
+    def _normalize_run_params(self, gui_mode: Optional[str], execution_mode: Optional[str], recursion_limit: Optional[int]) -> tuple:
+        """Normalize and validate run parameters."""
         gm = str(gui_mode or "auto").strip().lower() or "auto"
         if gm not in {"off", "on", "auto"}:
             gm = "auto"
@@ -2009,6 +2004,7 @@ Return JSON with ONLY the replacement step.'''))
         em = str(execution_mode or "native").strip().lower() or "native"
         if em not in {"native", "gui"}:
             em = "native"
+
         if recursion_limit is None:
             try:
                 recursion_limit = int(os.getenv("TRINITY_RECURSION_LIMIT", "200"))
@@ -2021,9 +2017,13 @@ Return JSON with ONLY the replacement step.'''))
         if recursion_limit < 25:
             recursion_limit = 25
 
-        initial_state = {
+        return gm, em, recursion_limit
+
+    def _build_initial_state(self, input_text: str, routing: Dict[str, Any], gm: str, em: str) -> Dict[str, Any]:
+        """Build initial state dictionary for workflow."""
+        return {
             "messages": [HumanMessage(content=input_text)],
-            "current_agent": "meta_planner",  # Align with graph entry point
+            "current_agent": "meta_planner",
             "task_status": "started",
             "final_response": None,
             "plan": [],
@@ -2038,11 +2038,11 @@ Return JSON with ONLY the replacement step.'''))
             "gui_mode": gm,
             "execution_mode": em,
             "gui_fallback_attempted": False,
-            "task_type": task_type,
-            "is_dev": bool(is_dev),
-            "requires_windsurf": bool(requires_windsurf),
+            "task_type": routing["task_type"],
+            "is_dev": bool(routing["is_dev"]),
+            "requires_windsurf": bool(routing["requires_windsurf"]),
             "dev_edit_mode": "cli",
-            "intent_reason": intent_reason,
+            "intent_reason": routing["intent_reason"],
             "last_step_status": "success",
             "meta_config": {
                 "strategy": "hybrid",
@@ -2062,132 +2062,95 @@ Return JSON with ONLY the replacement step.'''))
             "learning_mode": self.learning_mode
         }
 
-        # Initialize snapshot session
+    def _init_screenshot_session(self) -> str:
+        """Initialize screenshot session and return session ID."""
         session_id = datetime.now().strftime("%Y%m%d_%H%M%S")
         try:
             from system_ai.tools.screenshot import VisionDiffManager
             VisionDiffManager.get_instance().set_session_id(session_id)
-            if self.verbose: 
+            if self.verbose:
                 print(f"📸 [Trinity] Screenshot session initialized: {session_id}")
         except Exception as e:
             if self.verbose:
                 print(f"⚠️ [Trinity] Could not initialize screenshot session: {e}")
+        return session_id
 
-        last_node_name: str = ""
-        last_state_update: Dict[str, Any] = {}
-        last_agent_message: str = ""
-        last_agent_label: str = ""
-        last_replan_count: int = 0
-
-        try:
-            trace(self.logger, "trinity_run_start", {
-                "task_type": task_type,
-                "requires_windsurf": bool(requires_windsurf),
-                "gui_mode": gm,
-                "execution_mode": em,
-                "recursion_limit": recursion_limit,
-                "input_preview": str(input_text)[:200],
-            })
-        except Exception:
-            pass
- 
-        for event in self.workflow.stream(initial_state, config={"recursion_limit": recursion_limit}):
-            try:
-                # Keep track of the last emitted node/message for the final report.
-                for node_name, state_update in (event or {}).items():
-                    last_node_name = str(node_name or "")
-                    last_state_update = state_update if isinstance(state_update, dict) else {}
-                    if isinstance(last_state_update, dict) and "replan_count" in last_state_update:
-                        try:
-                            last_replan_count = int(last_state_update.get("replan_count") or 0)
-                        except Exception:
-                            pass
-                    msgs = last_state_update.get("messages", []) if isinstance(last_state_update, dict) else []
-                    if msgs:
-                        m = msgs[-1]
-                        last_agent_message = str(getattr(m, "content", "") or "")
-                    last_agent_label = str(node_name or "")
-
-                    try:
-                        trace(self.logger, "trinity_graph_event", {
-                            "node": last_node_name,
-                            "current_agent": last_state_update.get("current_agent") if isinstance(last_state_update, dict) else None,
-                            "last_step_status": last_state_update.get("last_step_status") if isinstance(last_state_update, dict) else None,
-                            "step_count": last_state_update.get("step_count") if isinstance(last_state_update, dict) else None,
-                            "replan_count": last_replan_count,
-                        })
-                    except Exception:
-                        pass
-            except Exception:
-                pass
-            yield event
-
-        # Emit final Atlas report as the last message.
-        outcome = "completed"
-        try:
-            task_status = str((last_state_update or {}).get("task_status") or "").strip().lower()
-            if task_status:
-                outcome = task_status
-            if "limit" in (last_agent_message or "").lower():
-                outcome = "limit_reached"
-            if "paused" in (last_agent_message or "").lower() or "пауза" in (last_agent_message or "").lower():
-                outcome = "paused"
-            # If the run ended with clarification/confirmation questions, don't treat it as completed.
-            # This prevents misleading "Task completed" when agents are still waiting for input.
-            lower_msg = (last_agent_message or "").lower()
-            needs_input_markers = [
-                "уточни",
-                "уточнити",
-                "підтверди",
-                "підтвердження",
-                "confirm",
-                "confirmation",
-                "clarify",
-                "need уточ",
-                "чи ",
-            ]
-            if outcome not in {"paused", "blocked", "limit_reached"}:
-                if any(m in lower_msg for m in needs_input_markers) and ("[verified]" not in lower_msg and "[confirmed]" not in lower_msg):
-                    outcome = "needs_input"
-
-            # Task-specific artifact sanity check to avoid false "completed" outcomes.
-            # (Used for macOS automation tasks that should produce concrete files.)
-            task_l = str(input_text or "").lower()
-            if outcome in {"completed", "success"} and "system_report_2025" in task_l:
-                report_dir = os.path.expanduser("~/Desktop/System_Report_2025")
-                zip_path = os.path.expanduser("~/Desktop/System_Report_2025.zip")
-                required_files = [
-                    os.path.join(report_dir, "desktop_screenshot.png"),
-                    os.path.join(report_dir, "safari_apple.png"),
-                    os.path.join(report_dir, "finder_downloads.png"),
-                    os.path.join(report_dir, "chrome_search.png"),
-                    os.path.join(report_dir, "system_info.txt"),
-                    os.path.join(report_dir, "report_summary.md"),
-                ]
-                missing = []
+    def _process_workflow_event(self, event: Dict[str, Any], tracking: Dict[str, Any]) -> None:
+        """Process a single workflow event and update tracking state."""
+        for node_name, state_update in (event or {}).items():
+            tracking["last_node_name"] = str(node_name or "")
+            tracking["last_state_update"] = state_update if isinstance(state_update, dict) else {}
+            if isinstance(tracking["last_state_update"], dict) and "replan_count" in tracking["last_state_update"]:
                 try:
-                    if not os.path.isdir(report_dir):
-                        missing.append(report_dir)
-                    for p in required_files:
-                        if not os.path.exists(p):
-                            missing.append(p)
-                    if not os.path.exists(zip_path):
-                        missing.append(zip_path)
+                    tracking["last_replan_count"] = int(tracking["last_state_update"].get("replan_count") or 0)
                 except Exception:
-                    missing = []
+                    pass
+            msgs = tracking["last_state_update"].get("messages", []) if isinstance(tracking["last_state_update"], dict) else []
+            if msgs:
+                m = msgs[-1]
+                tracking["last_agent_message"] = str(getattr(m, "content", "") or "")
+            tracking["last_agent_label"] = str(node_name or "")
 
-                if missing:
-                    outcome = "failed_artifacts_missing"
-                    last_agent_message = (
-                        "System_Report_2025 artifacts missing. Expected files were not found on Desktop. "
-                        + "Missing (first 6): "
-                        + ", ".join(missing[:6])
-                    )
+    def _determine_outcome(self, last_state_update: Dict[str, Any], last_agent_message: str) -> str:
+        """Determine task outcome from state and message."""
+        outcome = "completed"
+        task_status = str((last_state_update or {}).get("task_status") or "").strip().lower()
+        if task_status:
+            outcome = task_status
+        if "limit" in (last_agent_message or "").lower():
+            outcome = "limit_reached"
+        if "paused" in (last_agent_message or "").lower() or "пауза" in (last_agent_message or "").lower():
+            outcome = "paused"
+
+        lower_msg = (last_agent_message or "").lower()
+        needs_input_markers = ["уточни", "уточнити", "підтверди", "підтвердження", "confirm", "confirmation", "clarify", "need уточ", "чи "]
+        if outcome not in {"paused", "blocked", "limit_reached"}:
+            if any(m in lower_msg for m in needs_input_markers) and ("[verified]" not in lower_msg and "[confirmed]" not in lower_msg):
+                outcome = "needs_input"
+        return outcome
+
+    def _check_artifact_sanity(self, input_text: str, outcome: str) -> tuple:
+        """Check for missing artifacts in specific tasks. Returns (outcome, message)."""
+        task_l = str(input_text or "").lower()
+        if outcome not in {"completed", "success"} or "system_report_2025" not in task_l:
+            return outcome, None
+
+        report_dir = os.path.expanduser("~/Desktop/System_Report_2025")
+        zip_path = os.path.expanduser("~/Desktop/System_Report_2025.zip")
+        required_files = [
+            os.path.join(report_dir, "desktop_screenshot.png"),
+            os.path.join(report_dir, "safari_apple.png"),
+            os.path.join(report_dir, "finder_downloads.png"),
+            os.path.join(report_dir, "chrome_search.png"),
+            os.path.join(report_dir, "system_info.txt"),
+            os.path.join(report_dir, "report_summary.md"),
+        ]
+        missing = []
+        try:
+            if not os.path.isdir(report_dir):
+                missing.append(report_dir)
+            for p in required_files:
+                if not os.path.exists(p):
+                    missing.append(p)
+            if not os.path.exists(zip_path):
+                missing.append(zip_path)
         except Exception:
-            pass
+            missing = []
 
+        if missing:
+            return "failed_artifacts_missing", (
+                "System_Report_2025 artifacts missing. Expected files were not found on Desktop. "
+                + "Missing (first 6): "
+                + ", ".join(missing[:6])
+            )
+        return outcome, None
+
+    def _handle_run_completion(self, input_text: str, outcome: str, last_agent_message: str,
+                                last_agent_label: str, last_node_name: str, last_replan_count: int) -> tuple:
+        """Handle run completion: commit, report generation. Returns (report, commit_hash)."""
         repo_changes = self._get_repo_changes()
         commit_hash: Optional[str] = None
+
         base_report = self._format_final_report(
             task=input_text,
             outcome=outcome,
@@ -2212,63 +2175,165 @@ Return JSON with ONLY the replacement step.'''))
             replan_count=last_replan_count,
             commit_hash=commit_hash,
         )
+        return report, commit_hash
 
+    def _save_response_file(self, report: str) -> None:
+        """Save report to response file when no commit was made."""
         try:
-            trace(self.logger, "trinity_run_end", {
-                "outcome": outcome,
-                "last_agent": last_agent_label or last_node_name or "unknown",
-                "replan_count": last_replan_count,
+            existing_content = ""
+            my_response_section = ""
+            trinity_reports_section = ""
+
+            try:
+                with open(self.LAST_RESPONSE_FILE, "r", encoding="utf-8") as f:
+                    existing_content = f.read().strip()
+            except FileNotFoundError:
+                pass
+
+            if existing_content:
+                if "## My Last Response" in existing_content:
+                    parts = existing_content.split(self.TRINITY_REPORT_HEADER)
+                    my_response_section = parts[0].strip()
+                    if len(parts) > 1:
+                        trinity_reports_section = self.TRINITY_REPORT_HEADER + self.TRINITY_REPORT_HEADER.join(parts[1:])
+                else:
+                    trinity_reports_section = existing_content
+
+            new_content = ""
+            if my_response_section:
+                new_content = my_response_section
+
+            if trinity_reports_section:
+                new_content += "\n\n---\n\n" + trinity_reports_section
+
+            new_content += f"\n\n---\n\n{self.TRINITY_REPORT_HEADER}\n\n" + report
+
+            with open(self.LAST_RESPONSE_FILE, "w", encoding="utf-8") as f:
+                f.write(new_content)
+
+            try:
+                subprocess.run(
+                    ["python3", "generate_structure.py"],
+                    capture_output=True,
+                    text=True,
+                    timeout=60,
+                    cwd=self._get_git_root() or ".",
+                )
+            except Exception:
+                pass
+        except Exception:
+            pass
+
+
+    def run(
+        self,
+        input_text: str,
+        *,
+        gui_mode: Optional[str] = None,
+        execution_mode: Optional[str] = None,
+        recursion_limit: Optional[int] = None,
+    ):
+        """Main execution entry point for Trinity runtime."""
+        # Step 1: Classify and route task
+        routing = self._classify_and_route_task(input_text)
+        task_type = routing["task_type"]
+        requires_windsurf = routing["requires_windsurf"]
+        is_dev = routing["is_dev"]
+
+        # Step 2: Block non-dev tasks if not allowed
+        if not is_dev and not routing["allow_general"]:
+            blocked_message = self._get_blocked_message(task_type, input_text)
+            if self.verbose:
+                print(blocked_message)
+            final_messages = [HumanMessage(content=input_text), AIMessage(content=blocked_message)]
+            yield {"atlas": {"messages": final_messages, "current_agent": "end", "task_status": "blocked"}}
+            return
+
+        if self.verbose:
+            print(f"✅ [Trinity] Task classified as: {task_type} (is_dev={is_dev}, requires_windsurf={requires_windsurf})")
+
+        # Step 3: Normalize parameters
+        gm, em, recursion_limit = self._normalize_run_params(gui_mode, execution_mode, recursion_limit)
+
+        # Step 4: Build initial state
+        initial_state = self._build_initial_state(input_text, routing, gm, em)
+
+        # Step 5: Initialize screenshot session
+        self._init_screenshot_session()
+
+        # Step 6: Setup tracking state
+        tracking = {
+            "last_node_name": "",
+            "last_state_update": {},
+            "last_agent_message": "",
+            "last_agent_label": "",
+            "last_replan_count": 0
+        }
+
+        # Step 7: Log run start
+        try:
+            trace(self.logger, "trinity_run_start", {
+                "task_type": task_type,
+                "requires_windsurf": bool(requires_windsurf),
+                "gui_mode": gm,
+                "execution_mode": em,
+                "recursion_limit": recursion_limit,
+                "input_preview": str(input_text)[:200],
             })
         except Exception:
             pass
 
-        if commit_hash is None:
+        # Step 8: Execute workflow and stream events
+        for event in self.workflow.stream(initial_state, config={"recursion_limit": recursion_limit}):
             try:
-                existing_content = ""
-                my_response_section = ""
-                trinity_reports_section = ""
-
+                self._process_workflow_event(event, tracking)
                 try:
-                    with open(".last_response.txt", "r", encoding="utf-8") as f:
-                        existing_content = f.read().strip()
-                except FileNotFoundError:
-                    pass
-
-                if existing_content:
-                    if "## My Last Response" in existing_content:
-                        parts = existing_content.split("## Trinity Report")
-                        my_response_section = parts[0].strip()
-                        if len(parts) > 1:
-                            trinity_reports_section = "## Trinity Report" + "## Trinity Report".join(parts[1:])
-                    else:
-                        trinity_reports_section = existing_content
-
-                new_content = ""
-                if my_response_section:
-                    new_content = my_response_section
-
-                if trinity_reports_section:
-                    new_content += "\n\n---\n\n" + trinity_reports_section
-
-                new_content += "\n\n---\n\n## Trinity Report\n\n" + report
-
-                with open(".last_response.txt", "w", encoding="utf-8") as f:
-                    f.write(new_content)
-
-                try:
-                    subprocess.run(
-                        ["python3", "generate_structure.py"],
-                        capture_output=True,
-                        text=True,
-                        timeout=60,
-                        cwd=self._get_git_root() or ".",
-                    )
+                    trace(self.logger, "trinity_graph_event", {
+                        "node": tracking["last_node_name"],
+                        "current_agent": tracking["last_state_update"].get("current_agent") if isinstance(tracking["last_state_update"], dict) else None,
+                        "last_step_status": tracking["last_state_update"].get("last_step_status") if isinstance(tracking["last_state_update"], dict) else None,
+                        "step_count": tracking["last_state_update"].get("step_count") if isinstance(tracking["last_state_update"], dict) else None,
+                        "replan_count": tracking["last_replan_count"],
+                    })
                 except Exception:
                     pass
-
             except Exception:
                 pass
+            yield event
 
+        # Step 9: Determine outcome
+        outcome = self._determine_outcome(tracking["last_state_update"], tracking["last_agent_message"])
+
+        # Step 10: Check artifact sanity
+        try:
+            new_outcome, artifact_msg = self._check_artifact_sanity(input_text, outcome)
+            if artifact_msg:
+                outcome = new_outcome
+                tracking["last_agent_message"] = artifact_msg
+        except Exception:
+            pass
+
+        # Step 11: Handle completion (commit, report)
+        report, commit_hash = self._handle_run_completion(
+            input_text, outcome, tracking["last_agent_message"],
+            tracking["last_agent_label"], tracking["last_node_name"], tracking["last_replan_count"]
+        )
+
+        # Step 12: Log run end
+        try:
+            trace(self.logger, "trinity_run_end", {
+                "outcome": outcome,
+                "last_agent": tracking["last_agent_label"] or tracking["last_node_name"] or "unknown",
+                "replan_count": tracking["last_replan_count"],
+            })
+        except Exception:
+            pass
+
+        # Step 13: Save response file if no commit
+        if commit_hash is None:
+            self._save_response_file(report)
+
+        # Step 14: Yield final result
         final_messages = [HumanMessage(content=input_text), AIMessage(content=report)]
-        
         yield {"atlas": {"messages": final_messages, "current_agent": "end", "task_status": outcome}}
+
