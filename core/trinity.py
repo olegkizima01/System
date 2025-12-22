@@ -146,6 +146,20 @@ class TrinityRuntime:
         
         # Initialize Vibe CLI Assistant
         self.vibe_assistant = VibeCLIAssistant(name="Doctor Vibe")
+
+        # Optional background Sonar scanner
+        try:
+            if str(os.getenv("TRINITY_SONAR_BACKGROUND") or "").strip().lower() in {"1", "true", "yes", "on"}:
+                interval = int(os.getenv("TRINITY_SONAR_SCAN_INTERVAL") or "60")
+                from core.sonar_scanner import SonarBackgroundScanner
+                self._sonar_scanner = SonarBackgroundScanner(self, interval_minutes=interval)
+                if self.verbose:
+                    self.logger.info(f"🔁 Sonar background scanner enabled (interval={interval} min)")
+                self._sonar_scanner.start()
+            else:
+                self._sonar_scanner = None
+        except Exception:
+            self._sonar_scanner = None
         
         # Register core tools including enhanced vision
         self._register_tools()
@@ -2118,11 +2132,45 @@ Return JSON with ONLY the replacement step.'''))
                 parts.append(f"- [{it.get('severity')}] {it.get('message')} ({it.get('component')}:{it.get('line')})")
 
             summary = "\n".join(parts)
+
+            # Try to index into MCP Context7 (context7-docs) if available
+            try:
+                import mcp_integration
+                from mcp_integration.utils.sonarqube_context7_helper import create_sonarqube_context7_helper
+
+                integration = mcp_integration.create_mcp_integration()
+                mcp_manager = integration.get("manager") if isinstance(integration, dict) else None
+                if mcp_manager:
+                    helper = create_sonarqube_context7_helper(mcp_manager)
+                    idx_res = helper.index_analysis_to_context7(sonar)
+                    if idx_res and idx_res.get("stored_in"):
+                        # attach a pointer to the stored doc
+                        doc_meta = idx_res.get("doc") or {}
+                        pointer = f"[SonarDoc:{doc_meta.get('title')}]"
+                        current = str(state.get("retrieved_context") or "").strip()
+                        state["retrieved_context"] = (current + "\n\n" + summary + "\n" + pointer).strip() if current else (summary + "\n" + pointer)
+                        if self.verbose:
+                            self.logger.info(f"🔎 Sonar indexed into Context7 ({idx_res.get('stored_in')}) for project={sonar.get('project_key')}")
+                        return state
+            except Exception:
+                # MCP integration not available or failed -> fallback to local storage
+                pass
+
+            # Fallback: attach summary to state and add local Context7 doc
             current = str(state.get("retrieved_context") or "").strip()
-            if current:
-                state["retrieved_context"] = current + "\n\n" + summary
-            else:
-                state["retrieved_context"] = summary
+            state["retrieved_context"] = current + "\n\n" + summary if current else summary
+
+            try:
+                # store locally for quick retrieval
+                doc = self.context_layer.add_document(
+                    title=f"SonarQube Analysis - {sonar.get('project_key')}",
+                    content=summary,
+                    metadata={"project_key": sonar.get('project_key'), "issues_count": sonar.get('issues_count')}
+                )
+                if self.verbose:
+                    self.logger.info(f"🔎 Sonar stored locally in Context7 (id={doc.get('id')})")
+            except Exception:
+                pass
 
             if self.verbose:
                 self.logger.info(f"🔎 Sonar enrichment added to context (project={sonar.get('project_key')})")

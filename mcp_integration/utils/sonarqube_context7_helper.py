@@ -6,6 +6,8 @@ Helper functions for integrating SonarQube with Context7 documentation
 """
 
 import logging
+import os
+from datetime import datetime
 from typing import Dict, Any, Optional
 
 logger = logging.getLogger(__name__)
@@ -97,6 +99,72 @@ class SonarQubeContext7Helper:
     def get_sonarqube_issues_docs(self) -> Dict[str, Any]:
         """Get SonarQube issues API documentation"""
         return self.get_sonarqube_api_docs(topic="issues", mode="code")
+
+    def index_analysis_to_context7(self, analysis: Dict[str, Any], title: Optional[str] = None) -> Dict[str, Any]:
+        """Index Sonar analysis into Context7 (prefer context7-docs client when available).
+
+        Returns a dict with storage result and metadata.
+        """
+        try:
+            project_key = analysis.get("project_key") or analysis.get("project")
+            title = title or f"SonarQube Analysis - {project_key or 'unknown'} - {datetime.now().isoformat()}"
+
+            # Build human-readable content
+            # Build structured content and metadata
+            issues = []
+            for it in (analysis.get("issues") or [])[:100]:
+                issues.append({
+                    "key": it.get("key"),
+                    "message": it.get("message"),
+                    "severity": it.get("severity"),
+                    "component": it.get("component"),
+                    "line": it.get("line"),
+                    "rule": it.get("rule"),
+                })
+
+            # Build markdown content with links (best-effort using SONAR_URL)
+            base = os.getenv("SONAR_URL", "https://sonarcloud.io").rstrip("/")
+            lines = [f"# SonarQube Analysis for project: {project_key}", f"**Issues**: {analysis.get('issues_count')}"]
+            for it in issues[:50]:
+                issue_link = None
+                if it.get("key") and project_key:
+                    issue_link = f"{base}/project/issues?id={project_key}&open={it.get('key')}"
+                link_part = f" ([link]({issue_link}))" if issue_link else ""
+                lines.append(f"- **{it.get('severity')}**: {it.get('message')} — `{it.get('component')}`:{it.get('line')}{link_part}")
+
+            content = "\n".join(lines)
+
+            context_doc = {
+                "type": "sonarqube.analysis",
+                "title": title,
+                "content": content,
+                "metadata": {
+                    "project_key": project_key,
+                    "issues_count": analysis.get("issues_count"),
+                    "issues": issues,
+                },
+            }
+
+            # Try to store with context7-docs client first
+            if self.context7_docs_client:
+                try:
+                    res = self.context7_docs_client.store_context(context_doc)
+                    return {"stored_in": "context7-docs", "result": res, "doc": context_doc}
+                except Exception:
+                    pass
+
+            # Fallback to main context7 client
+            if self.context7_client:
+                try:
+                    res = self.context7_client.store_context(context_doc)
+                    return {"stored_in": "context7", "result": res, "doc": context_doc}
+                except Exception:
+                    pass
+
+            # Last resort: return doc for local storage by caller
+            return {"stored_in": None, "result": None, "doc": context_doc}
+        except Exception as e:
+            return {"error": str(e)}
     
     def get_sonarqube_quality_gates_docs(self) -> Dict[str, Any]:
         """Get SonarQube quality gates documentation"""
