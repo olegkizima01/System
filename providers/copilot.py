@@ -199,8 +199,12 @@ class CopilotLLM(BaseChatModel):
         if self._tools:
             tools_desc_lines: List[str] = []
             for tool in self._tools:
-                name = getattr(tool, "name", getattr(tool, "__name__", "tool"))
-                description = getattr(tool, "description", "")
+                if isinstance(tool, dict):
+                    name = tool.get("name", "tool")
+                    description = tool.get("description", "")
+                else:
+                    name = getattr(tool, "name", getattr(tool, "__name__", "tool"))
+                    description = getattr(tool, "description", "")
                 tools_desc_lines.append(f"- {name}: {description}")
             tools_desc = "\n".join(tools_desc_lines)
             

@@ -1331,6 +1331,11 @@ Return JSON with ONLY the replacement step.'''))
         # 2. Invoke LLM
         tetyana_llm = self._init_tetyana_llm()
         
+        # Ensure LLM knows how to use tools via custom JSON protocol in CopilotLLM
+        tools_defs = self.registry.get_all_tool_definitions(task_type=state.get("task_type"))
+        if hasattr(tetyana_llm, "bind_tools") and tools_defs:
+            tetyana_llm = tetyana_llm.bind_tools(tools_defs)
+        
         try:
             def on_delta(chunk): self._deduplicated_stream("tetyana", chunk)
             response = tetyana_llm.invoke_with_stream(prompt.format_messages(), on_delta=on_delta)
@@ -1431,8 +1436,9 @@ Return JSON with ONLY the replacement step.'''))
 
     def _check_tetyana_acknowledgment(self, content, context):
         lower_content = content.lower()
-        acknowledgment_patterns = ["зрозуміла", "зрозумів", "ок", "добре", "починаю", "буду використовувати"]
-        if any(p in lower_content for p in acknowledgment_patterns) and len(lower_content) < 300:
+        # Using word boundaries to avoid matching "ок" inside words like "список"
+        acknowledgment_patterns = [r"\bзрозуміла\b", r"\bзрозумів\b", r"\bок\b", r"\bдобре\b", r"\bпочинаю\b", r"\bбуду використовувати\b"]
+        if any(re.search(p, lower_content) for p in acknowledgment_patterns) and len(lower_content) < 300:
             if self.verbose: print("⚠️ [Tetyana] Acknowledgment loop detected.")
             new_msg = AIMessage(content=f"{VOICE_MARKER} Error: No tool call provided. USE A TOOL. {content}")
             return {"messages": context + [new_msg], "last_step_status": "failed"}
