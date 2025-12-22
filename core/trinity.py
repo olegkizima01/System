@@ -1721,7 +1721,7 @@ Return JSON with ONLY the replacement step.'''))
         current_step = plan[0].get("description", "Unknown") if plan else "Final Verification"
         original_task = state.get("original_task") or ""
         
-        verify_context = f"GLOBAL GOAL: {original_task}\nSTEP TO VERIFY: {current_step}\nREPORT: {last_msg[:1000]}"
+        verify_context = f"GLOBAL GOAL: {original_task}\nSTEP TO VERIFY: {current_step}\nREPORT: {last_msg[:30000]}"
         
         if state.get("is_media"):
             return get_grisha_media_prompt(verify_context, tools_desc=self.registry.list_tools(task_type=state.get("task_type")), preferred_language=self.preferred_language)
@@ -1807,12 +1807,17 @@ Return JSON with ONLY the replacement step.'''))
         lower = content.lower()
         res_str = "\n".join(executed_results).lower()
         
+        if "[failed]" in lower:
+            return "failed", "meta_planner"
+        if "[verified]" in lower or "[step_completed]" in lower or "[achievement_confirmed]" in lower:
+            return "success", "meta_planner"
+        if "[uncertain]" in lower or "[captcha]" in lower:
+            return "uncertain", "meta_planner"
+
         if any(m in lower or f"[{m}]" in lower for m in FAILURE_MARKERS) or ("[test_verification]" in lower and "failed" in lower):
             return "failed", "meta_planner"
         if '"status": "error"' in res_str:
             return "failed", "meta_planner"
-        if "[captcha]" in lower:
-            return "uncertain", "meta_planner"
             
         for kw in SUCCESS_MARKERS:
             if kw.lower() in lower:
