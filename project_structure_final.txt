@@ -1,5 +1,5 @@
 ## Metadata
-Generated: Mon Dec 22 17:02:07  2025
+Generated: Mon Dec 22 17:08:54  2025
 
 ## Program Execution Logs
 (See logs/cli.log for details)
@@ -56,14 +56,15 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
 
 
 ### Project Statistics
-  - Python files: 20398
-  - Test files: 30
+  - Python files: 20399
+  - Test files: 31
   - Documentation files: 16
   - Configuration sets: 44
 
 ## Git History (Last 10 Commits)
 ```
-  df3f3243 feat: Add comprehensive plugin development guide and system summary
+  74900d80 feat: Add functionality to ignore temporary and test files in self-healing module
+  5a46bba1 feat: Add comprehensive plugin development guide and system summary
   96d4236f feat: Integrate Doctor Vibe for authoritative dev edits, including mode toggling and content sanitization
   3737e1bf feat: Enhance Doctor Vibe integration for DEV edits, including auto-apply functionality and diagnostics support
   df41d689 feat: Implement diagnostics collection for Vibe pauses and add tests for DEV task handling
@@ -72,7 +73,6 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
   6429924b feat: Enhance cleanup scripts with unmounting functionality and improved app removal process
   73c5357c feat: Enhance cleanup functionality with optional keyword arguments and improved logging in cleanup thread
   1e42fbc8 feat: Enhance Atlas planning with critical anti-premature-completion rules and improve global goal validation in Trinity
-  26b7465f fix: CAPTCHA detection and Grisha override bug for film search
 ```
 
 ## Project Structure
@@ -623,6 +623,7 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
 │   ├── test_parallel_executor.py
 │   ├── test_plugin_creation.py
 │   ├── test_router_vibe_pause.py
+│   ├── test_self_healing_ignore_temp.py
 │   ├── test_self_healing_quick_repair.py
 │   ├── test_tetyana_vibe_content_pause.py
 │   ├── test_trinity_autocommit.py
@@ -689,6 +690,6 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
     ├── test_modern_enhancements.py
     └── verify_website.py
 
-189 directories, 422 files
+189 directories, 423 files
 
 ```

@@ -148,6 +148,17 @@ class CodeSelfHealer:
         "core/mcp.py",
     }
     
+    # Paths to ignore during error detection (temporary/test files)
+    IGNORE_PATHS = [
+        "/tmp/",
+        "/var/folders/",
+        "pytest-of-",
+        ".pytest_cache",
+        "__pycache__",
+        ".pyc",
+        "/private/var/folders/",
+    ]
+    
     def __init__(
         self,
         project_root: Optional[str] = None,
@@ -350,9 +361,32 @@ class CodeSelfHealer:
                 file_match = re.search(r'File "([^"]+)", line (\d+)', line)
                 if file_match:
                     path_str = file_match.group(1)
-                    # Ensure we only track files within the project
-                    if os.path.isabs(path_str) and not path_str.startswith(self.project_root):
-                        current_file = None 
+                    
+                    # Skip temporary/test files and files outside project
+                    should_skip = False
+                    
+                    # First check if file is within project root (absolute path check)
+                    if os.path.isabs(path_str):
+                        # Normalize paths for comparison
+                        normalized_path = os.path.normpath(path_str)
+                        normalized_root = os.path.normpath(self.project_root)
+                        
+                        # If file is outside project root, check ignore patterns
+                        if not normalized_path.startswith(normalized_root):
+                            # File is outside project - check if it's in ignored locations
+                            for ignore_pattern in self.IGNORE_PATHS:
+                                if ignore_pattern in path_str:
+                                    should_skip = True
+                                    break
+                    else:
+                        # Relative path - check ignore patterns
+                        for ignore_pattern in self.IGNORE_PATHS:
+                            if ignore_pattern in path_str:
+                                should_skip = True
+                                break
+                    
+                    if should_skip:
+                        current_file = None
                     else:
                         current_file = path_str
                     
@@ -366,6 +400,10 @@ class CodeSelfHealer:
                         continue
                     match = re.search(pattern, line, re.IGNORECASE)
                     if match:
+                        # Skip if current file should be ignored
+                        if current_file is None:
+                            break
+                        
                         # Prefer the more descriptive capture group when available
                         msg = None
                         try:
@@ -383,7 +421,7 @@ class CodeSelfHealer:
                         issue = CodeIssue(
                             issue_type=issue_type,
                             severity=severity,
-                            file_path=current_file or "unknown",
+                            file_path=current_file,
                             line_number=current_line,
                             message=msg,
                             stack_trace="\n".join(current_stack[-10:]),
