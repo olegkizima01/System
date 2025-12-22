@@ -265,6 +265,8 @@ def _process_menu_space_action(ctx: Dict[str, Any]):
         _handle_monitor_targets_toggle(ctx)
     elif lvl in {MenuLevel.LLM_ATLAS, MenuLevel.LLM_TETYANA, MenuLevel.LLM_GRISHA, MenuLevel.LLM_VISION, MenuLevel.LLM_DEFAULTS}:
         _handle_llm_settings_space(ctx)
+    elif lvl == MenuLevel.AGENT_SETTINGS:
+        _handle_agent_settings_enter(ctx)
 
 
 def _execute_dry_run_cleanup(ctx: Dict[str, Any]):
@@ -418,6 +420,7 @@ def _get_menu_enter_dispatch(ctx, state, MenuLevel, _llm_sub_hint):
         MenuLevel.MONITORING: lambda: _set_menu_from_items(state, ctx["get_monitoring_menu_items"]()),
         MenuLevel.SETTINGS: lambda: _handle_settings_enter(ctx),
         MenuLevel.LLM_SETTINGS: lambda: _set_menu_from_items(state, ctx["get_llm_menu_items"]()),
+        MenuLevel.AGENT_SETTINGS: lambda: _handle_agent_settings_enter(ctx),
         MenuLevel.UNSAFE_MODE: lambda: _handle_general_toggle_ctx(ctx, "ui_unsafe_mode", "Unsafe"),
         MenuLevel.SELF_HEALING: lambda: _handle_general_toggle_ctx(ctx, "ui_self_healing", "Self-healing"),
         MenuLevel.LEARNING_MODE: lambda: _handle_general_toggle_ctx(ctx, "learning_mode", "Learning"),
@@ -433,6 +436,30 @@ def _get_menu_enter_dispatch(ctx, state, MenuLevel, _llm_sub_hint):
         MenuLevel.MONITOR_CONTROL: lambda: _handle_monitor_control_enter_ctx(ctx),
         **{ml: _llm_sub_hint for ml in [MenuLevel.LLM_ATLAS, MenuLevel.LLM_TETYANA, MenuLevel.LLM_GRISHA, MenuLevel.LLM_VISION, MenuLevel.LLM_DEFAULTS]}
     }
+
+def _handle_agent_settings_enter(ctx):
+    state, log = ctx["state"], ctx["log"]
+    items = ctx["get_agent_menu_items"]()
+    if not items:
+        return
+    idx = max(0, min(state.menu_index, len(items) - 1))
+    _, key = items[idx][0], items[idx][1]
+    if key == "ui_recursion_limit":
+        cur = int(getattr(state, "ui_recursion_limit", 100))
+        options = [50, 100, 200, 500]
+        try:
+            ni = (options.index(cur) + 1) % len(options)
+            nxt = options[ni]
+        except Exception:
+            nxt = 100
+        state.ui_recursion_limit = int(nxt)
+        ctx["save_ui_settings"]()
+        log(f"Step limit set: {nxt}", "action")
+    elif key == "learning_mode":
+        new_val = not bool(getattr(state, "learning_mode", False))
+        state.learning_mode = new_val
+        ctx["save_ui_settings"]()
+        log(f"Learning mode: {'ON' if new_val else 'OFF'}", "action")
 
 def _set_menu(state, new_lvl):
     state.menu_level, state.menu_index = new_lvl, 0

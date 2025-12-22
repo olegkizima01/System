@@ -76,6 +76,7 @@ class AppState:
     ui_dev_code_provider: str = "vibe-cli"  # vibe-cli | continue
     ui_self_healing: bool = False
     learning_mode: bool = False
+    ui_recursion_limit: int = 100
 
 
 state = AppState()

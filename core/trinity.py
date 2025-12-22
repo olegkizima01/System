@@ -23,6 +23,8 @@ from core.self_healing import IssueSeverity
 from core.vibe_assistant import VibeCLIAssistant
 from dataclasses import dataclass
 from tui.logger import get_logger, trace
+from core.task_analyzer import TaskAnalyzer
+from core.state_logger import log_initial_state, log_state_transition
 from core.utils import extract_json_object
 from core.constants import (
     DEV_KEYWORDS, GENERAL_KEYWORDS, MEDIA_KEYWORDS, 
@@ -2734,7 +2736,23 @@ Return JSON with ONLY the replacement step.'''))
     def _process_workflow_event(self, event: Dict[str, Any], tracking: Dict[str, Any]) -> None:
         """Process a single workflow event and update tracking state."""
         for node_name, state_update in (event or {}).items():
-            tracking["last_node_name"] = str(node_name or "")
+            new_node = str(node_name or "")
+            # Log transition when node changes
+            try:
+                if tracking.get("last_node_name") and tracking.get("last_node_name") != new_node:
+                    log_state_transition(
+                        tracking.get("last_node_name"),
+                        new_node,
+                        int((state_update or {}).get("step_count") or 0),
+                        str((state_update or {}).get("last_step_status") or ""),
+                        None,
+                    )
+                
+            except Exception as e:
+                self.logger.exception(f"State transition log failed: {e}")
+
+            tracking["prev_node_name"] = tracking.get("last_node_name") or ""
+            tracking["last_node_name"] = new_node
             tracking["last_state_update"] = state_update if isinstance(state_update, dict) else {}
             if isinstance(tracking["last_state_update"], dict) and "replan_count" in tracking["last_state_update"]:
                 try:
@@ -2944,7 +2962,23 @@ Return JSON with ONLY the replacement step.'''))
         initial_state = self._build_initial_state(input_text, routing, gm, em)
         self._init_screenshot_session()
 
+        # Initialize per-task analyzer and state diagnostics
+        try:
+            self.task_analyzer = TaskAnalyzer()
+            self.task_analyzer.start_task_analysis(
+                task_name=f"Trinity: {routing['task_type']}",
+                task_description=str(input_text)[:200]
+            )
+        except Exception as e:
+            self.logger.exception(f"Failed to initialize TaskAnalyzer: {e}")
+
+        try:
+            log_initial_state(str(input_text), initial_state)
+        except Exception as e:
+            self.logger.exception(f"Failed to log initial state: {e}")
+
         tracking = {
+            "prev_node_name": "",
             "last_node_name": "", "last_state_update": {},
             "last_agent_message": "", "last_agent_label": "", "last_replan_count": 0
         }
@@ -2963,7 +2997,7 @@ Return JSON with ONLY the replacement step.'''))
         # Actually, the original 'run' was a generator.
         # Let's keep the yield in a way that doesn't break.
         # Wait, if I want to yield from a helper I need 'yield from'.
-        pass # The parent will check return value
+        # The parent generator will handle final yielding.
 
     def _trace_run_start(self, task_type, requires_windsurf, gm, em, recursion_limit, input_text):
         """Log run start event."""
@@ -2973,8 +3007,8 @@ Return JSON with ONLY the replacement step.'''))
                 "gui_mode": gm, "execution_mode": em, "recursion_limit": recursion_limit,
                 "input_preview": str(input_text)[:200],
             })
-        except Exception:
-            pass
+        except Exception as e:
+            self.logger.exception(f"Trace run_start failed: {e}")
 
     def _handle_run_event(self, event, tracking):
         """Process a single event during run stream."""
@@ -2988,10 +3022,10 @@ Return JSON with ONLY the replacement step.'''))
                     "step_count": tracking["last_state_update"].get("step_count") if isinstance(tracking["last_state_update"], dict) else None,
                     "replan_count": tracking["last_replan_count"],
                 })
-            except Exception:
-                pass
-        except Exception:
-            pass
+            except Exception as e:
+                self.logger.exception(f"Trace graph_event failed: {e}")
+        except Exception as e:
+            self.logger.exception(f"Process workflow event failed: {e}")
 
     def _wrap_up_run(self, input_text, tracking):
         """Finalize run and handle completion."""
@@ -3030,7 +3064,20 @@ Return JSON with ONLY the replacement step.'''))
         except Exception:
             pass
 
-        # Step 11: Handle completion (commit, report)
+        # Before handling completion, finalize TaskAnalyzer and align outcome
+        try:
+            if hasattr(self, "task_analyzer") and self.task_analyzer:
+                msg = "Task completed" if outcome == "completed" else f"Task outcome: {outcome}"
+                level = "info" if outcome == "completed" else "error"
+                self.task_analyzer.log_task_event(level, {"message": msg})
+                res = self.task_analyzer.analyze_task_execution()
+                ta_status = res.get("status")
+                if ta_status == "failed" and outcome in {"completed", "success"}:
+                    outcome = "failed"
+        except Exception as e:
+            self.logger.exception(f"TaskAnalyzer finalize failed: {e}")
+
+        # Step 11: Handle completion (commit, report) with potentially updated outcome
         report, commit_hash = self._handle_run_completion(
             input_text, outcome, tracking["last_agent_message"],
             tracking["last_agent_label"], tracking["last_node_name"], tracking["last_replan_count"]
@@ -3043,8 +3090,8 @@ Return JSON with ONLY the replacement step.'''))
                 "last_agent": tracking["last_agent_label"] or tracking["last_node_name"] or "unknown",
                 "replan_count": tracking["last_replan_count"],
             })
-        except Exception:
-            pass
+        except Exception as e:
+            self.logger.exception(f"Trace run_end (phase 2) failed: {e}")
 
         # Step 13: Save response file if no commit
         if commit_hash is None:
@@ -3057,8 +3104,11 @@ Return JSON with ONLY the replacement step.'''))
             prev_msgs = last_state.get("messages") or []
             # Ensure these are message objects (HumanMessage/AIMessage)
             prev_msgs = [m for m in prev_msgs if hasattr(m, "content")]
-        except Exception:
+        except Exception as e:
+            self.logger.exception(f"Collecting previous messages failed: {e}")
             prev_msgs = []
+
+        # TaskAnalyzer already finalized above
 
         if prev_msgs:
             final_messages = prev_msgs + [AIMessage(content=report)]

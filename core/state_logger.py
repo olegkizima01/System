@@ -1,7 +1,7 @@
 """State initialization logger for Trinity system diagnostics."""
 
 import json
-import logging
+import logging as py_logging
 from typing import Dict, Any, Optional
 from datetime import datetime
 from pathlib import Path
@@ -12,7 +12,7 @@ class StateInitLogger:
     
     def __init__(self, log_file: Optional[str] = None):
         """Initialize the state logger."""
-        self.logger = logging.getLogger("trinity.state_init")
+        self.logger = py_logging.getLogger("trinity.state_init")
         
         # Create logs directory in project root (or use ~/.system_cli as fallback)
         project_root = Path(__file__).parent.parent
@@ -28,11 +28,11 @@ class StateInitLogger:
         if log_file is None:
             log_file = log_dir / f"trinity_state_{datetime.now().strftime('%Y%m%d')}.log"
         
-        handler = logging.FileHandler(log_file)
-        handler.setLevel(logging.DEBUG)
+        handler = py_logging.FileHandler(log_file)
+        handler.setLevel(py_logging.DEBUG)
         
         # Format with detailed info
-        formatter = logging.Formatter(
+        formatter = py_logging.Formatter(
             '%(asctime)s - %(name)s - %(levelname)s - %(funcName)s:%(lineno)d - %(message)s',
             datefmt='%Y-%m-%d %H:%M:%S'
         )
@@ -45,16 +45,16 @@ class StateInitLogger:
             analysis_log = log_dir / "atlas_analysis.jsonl"
             # Use RotatingFileHandler if available, else FileHandler
             # But we don't want to import logging.handlers if not needed, though it is standard.
-            import logging.handlers
-            json_handler = logging.handlers.RotatingFileHandler(
+            import logging.handlers as py_logging_handlers
+            json_handler = py_logging_handlers.RotatingFileHandler(
                 analysis_log,
                 maxBytes=50 * 1024 * 1024,
                 backupCount=5,
                 encoding="utf-8"
             )
-            json_handler.setLevel(logging.DEBUG)
+            json_handler.setLevel(py_logging.DEBUG)
             
-            class JSONFormatter(logging.Formatter):
+            class JSONFormatter(py_logging.Formatter):
                 def format(self, record):
                     log_obj = {
                         "timestamp": datetime.fromtimestamp(record.created).isoformat(),
@@ -72,7 +72,7 @@ class StateInitLogger:
         except Exception:
             pass # Fail silently if we can't set up analysis log
 
-        self.logger.setLevel(logging.DEBUG)
+        self.logger.setLevel(py_logging.DEBUG)
 
     def log_initial_state(self, task: str, state: Dict[str, Any]) -> None:
         """Log the initial state creation."""

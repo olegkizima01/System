@@ -632,6 +632,16 @@ def run_graph_agent_task(
         # but maybe it's too long. Let's just log the last line of the traceback.
         log(f"Traceback: {err_msg.splitlines()[-1]}", "info")
         return
+    finally:
+        # Stop tailing and ensure thread exits cleanly
+        try:
+            tail_active.clear()
+        except Exception:
+            pass
+        try:
+            tail_thread.join(timeout=1.0)
+        except Exception:
+            pass
 
     log("[TRINITY] ✓ Task completed.", "action")
     trim_logs_if_needed()
@@ -748,7 +758,11 @@ def _process_graph_events(runtime, user_text, gui_mode_val, exec_mode, use_strea
     from tui.messages import AgentType
 
     event_count = 0
-    for event in runtime.run(user_text, gui_mode=gui_mode_val, execution_mode=exec_mode, recursion_limit=500):
+    try:
+        limit = int(getattr(state, "ui_recursion_limit", 100))
+    except Exception:
+        limit = 100
+    for event in runtime.run(user_text, gui_mode=gui_mode_val, execution_mode=exec_mode, recursion_limit=limit):
         event_count += 1
         print(f"DEBUG: Event {event_count} received")
         

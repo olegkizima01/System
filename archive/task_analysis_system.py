@@ -192,9 +192,10 @@ class TaskAnalyzer:
         if not self.current_task:
             return {"success": False, "error": "No task to analyze"}
         
-        # Mark task as completed
+        # Mark task end and dynamic status
         self.current_task["end_time"] = datetime.now().isoformat()
-        self.current_task["status"] = "completed"
+        error_count = len(self.current_task.get("errors", []))
+        self.current_task["status"] = "failed" if error_count > 0 else "completed"
         
         # Calculate metrics
         start_time = datetime.fromisoformat(self.current_task["start_time"])
@@ -219,7 +220,20 @@ class TaskAnalyzer:
         
         # Save task_id before cleanup
         task_id = self.current_task["task_id"]
-        
+
+        # Clean up file handler for this task
+        try:
+            target_path = self.current_task.get("log_file")
+            for h in logger.handlers[:]:
+                try:
+                    if isinstance(h, logging.FileHandler) and getattr(h, "baseFilename", None) == target_path:
+                        logger.removeHandler(h)
+                        h.close()
+                except Exception:
+                    logger.exception("Failed to clean up task log handler")
+        except Exception:
+            logger.exception("Unexpected error during handler cleanup")
+
         # Clean up
         self.current_task = None
         
