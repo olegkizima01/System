@@ -288,7 +288,26 @@ class MessageFormatter:
             compact: If True, use ultra-compact format for TTS streaming
         """
         result: List[Tuple[str, str]] = []
+        last_verbal_agent = None
+        last_verbal_text = None
+        
+        # Deduplicate consecutive identical verbal messages from same agent
+        deduplicated = []
         for msg in messages:
+            is_verbal = "[VOICE]" in msg.text
+            if not is_verbal:
+                deduplicated.append(msg)
+                continue
+                
+            clean_text = MessageFilter.clean_message(msg.text)
+            if msg.agent == last_verbal_agent and clean_text == last_verbal_text:
+                continue # Skip visual duplicate
+            
+            deduplicated.append(msg)
+            last_verbal_agent = msg.agent
+            last_verbal_text = clean_text
+
+        for msg in deduplicated:
             if compact:
                 result.extend(MessageFormatter.format_message_compact(msg))
             else:
@@ -314,9 +333,32 @@ class MessageBuffer:
             self.messages = self.messages[-self.max_messages:]
 
     def upsert_stream(self, agent: AgentType, text: str, is_technical: bool = False) -> None:
+        """Add or update a streaming message.
+        
+        If the last verbal message in the buffer belongs to the same agent,
+        update it instead of appending, even if there are technical messages
+        in between. This prevents visual duplication in the AGENTS panel.
+        """
+        is_verbal = "[VOICE]" in text
         msg = AgentMessage(agent=agent, text=text, is_technical=is_technical)
-        if self.messages and self.messages[-1].agent == agent and not self.messages[-1].is_technical:
-            self.messages[-1] = msg
+        
+        if is_verbal:
+            # Look for the last verbal message
+            idx = len(self.messages) - 1
+            while idx >= 0:
+                m = self.messages[idx]
+                if "[VOICE]" in m.text:
+                    if m.agent == agent:
+                        self.messages[idx] = msg
+                        return
+                    else:
+                        # Found a verbal message from a DIFFERENT agent, so must append
+                        break
+                idx -= 1
+        
+        # Default: check literal last message (for technical/non-voice updates)
+        if self.messages and self.messages[-1].agent == agent and (self.messages[-1].is_technical == is_technical):
+             self.messages[-1] = msg
         else:
             self.messages.append(msg)
             if len(self.messages) > self.max_messages:

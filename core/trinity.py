@@ -840,6 +840,13 @@ class TrinityRuntime:
         
         # 5. Execute meta-action (replan/repair/initialize)
         if action in ["initialize", "replan", "repair"]:
+            verbals = {
+                "initialize": "Розпочинаю планування завдання.",
+                "replan": "Попередній підхід не спрацював, розробляю новий план.",
+                "repair": "Крок не вдався, спробую виправити ситуацію іншим способом."
+            }
+            msg = verbals.get(action, "Аналізую стратегію.")
+            state["messages"] = list(context) + [AIMessage(content=f"[VOICE] {msg}")]
             return self._handle_meta_action(state, action, plan, last_msg, meta_config, fail_count, summary)
 
         # 6. Default flow: Atlas dispatch
@@ -1024,6 +1031,8 @@ class TrinityRuntime:
             return self._atlas_dispatch(state, optimized_plan, replan_count=replan_count)
 
         except Exception as e:
+            err_msg = f"[VOICE] Вибачте, у мене виникла помилка під час планування: {str(e)[:100]}. Спробую ще раз."
+            state["messages"] = list(context) + [AIMessage(content=err_msg)]
             return self._handle_atlas_planning_error(e, state, last_msg, context, replan_count)
 
     def _check_atlas_loop(self, state, replan_count, last_msg):
