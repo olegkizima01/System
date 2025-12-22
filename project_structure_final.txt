@@ -1,5 +1,5 @@
 ## Metadata
-Generated: Mon Dec 22 03:42:53  2025
+Generated: Mon Dec 22 03:43:22  2025
 
 ## Program Execution Logs
 (See logs/cli.log for details)
@@ -63,7 +63,8 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
 
 ## Git History (Last 10 Commits)
 ```
-  c9b5775b Refactor handle_command in commands.py to reduce cognitive complexity
+  9bbdc92c Refactor copy_to_clipboard to reduce cognitive complexity
+  8f211b97 Refactor handle_command in commands.py to reduce cognitive complexity
   7b50c245 Refactor verification.py and utils.py for lower cognitive complexity
   911e7ffd Refactor test_logic.py to reduce cognitive complexity
   f5306a10 Refactor high complexity functions: _tetyana_node, trinity.run, cli_command handlers, and keybindings
@@ -72,7 +73,6 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
   44bd8a6e Major refactoring: reduce cognitive complexity across multiple functions
   a6b6cad8 Refactor TUI agents and reduce cognitive complexity
   81649f38 Refactor TrinityRuntime: reduce complexity in _router and _auto_commit_on_success
-  f496d234 Major refactoring: reduce cognitive complexity in TrinityRuntime
 ```
 
 ## Project Structure
