@@ -25,6 +25,8 @@ class VibeCLIAssistant:
         self.name = name
         self.intervention_history: List[Dict[str, Any]] = []
         self.current_pause_context: Optional[Dict[str, Any]] = None
+        # Optional callback to publish live updates (runtime/TUI can subscribe)
+        self._on_update: Optional[callable] = None
         
         # Auto-repair integration
         self.auto_repair_enabled: bool = True
@@ -49,8 +51,44 @@ class VibeCLIAssistant:
         }
         self.intervention_history.append(intervention_record)
         
-        # Display message to user
+        # Initialize live output buffer on pause context
+        try:
+            if isinstance(self.current_pause_context, dict) and "live_output" not in self.current_pause_context:
+                self.current_pause_context["live_output"] = []
+        except Exception:
+            pass
+
+        # Publish initial pause summary and print for interactive CLI
+        self._publish_update(f"PAUSE CREATED: {pause_context.get('message', '')}")
         self._display_pause_message(pause_context)
+
+    def set_update_callback(self, cb: callable) -> None:
+        """Set a callback to receive live updates from the Vibe assistant.
+
+        The callback is called with a single string argument describing the
+        latest update. The runtime/TUI can use this to stream output live.
+        """
+        self._on_update = cb
+
+    def _publish_update(self, message: str) -> None:
+        """Publish a short live update and append it to the current pause context."""
+        try:
+            # Append to per-pause live output buffer
+            if isinstance(self.current_pause_context, dict):
+                buf = self.current_pause_context.setdefault("live_output", [])
+                buf.append(f"{datetime.now().isoformat()} - {message}")
+                # Keep buffer reasonably small
+                if len(buf) > 200:
+                    del buf[:-200]
+        except Exception:
+            pass
+
+        # Call runtime/TUI callback if provided
+        try:
+            if self._on_update:
+                self._on_update(message)
+        except Exception:
+            pass
     
     def _display_pause_message(self, pause_context: Dict[str, Any]) -> None:
         """Display pause message to the user."""
@@ -119,6 +157,12 @@ class VibeCLIAssistant:
         print("   - /cancel    - Скасувати поточне завдання")
         print("   - /help      - Показати додаткову інформацію")
         print("="*60 + "\n")
+
+        # Also publish a short live message for CLI/TUI
+        try:
+            self._publish_update(f"Displayed pause: {pause_context.get('reason', '')} - {pause_context.get('message', '')}")
+        except Exception:
+            pass
     
     def handle_user_command(self, command: str) -> Dict[str, Any]:
         """
@@ -160,8 +204,12 @@ class VibeCLIAssistant:
                 record["resolution"] = "user_continue"
                 break
         
-        # Clear current pause context
+        # Publish continue and clear current pause context
         pause_context = self.current_pause_context
+        try:
+            self._publish_update("User issued /continue - resuming execution")
+        except Exception:
+            pass
         self.current_pause_context = None
         
         return {
@@ -186,8 +234,12 @@ class VibeCLIAssistant:
                 record["resolution"] = "user_cancel"
                 break
         
-        # Clear current pause context
+        # Publish cancel and clear current pause context
         pause_context = self.current_pause_context
+        try:
+            self._publish_update("User issued /cancel - task cancelled")
+        except Exception:
+            pass
         self.current_pause_context = None
         
         return {

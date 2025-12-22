@@ -428,7 +428,7 @@ def _get_menu_enter_dispatch(ctx, state, MenuLevel, _llm_sub_hint):
         MenuLevel.SELF_HEALING: lambda: _handle_general_toggle_ctx(ctx, "ui_self_healing", "Self-healing"),
         MenuLevel.MEMORY_MANAGER: lambda: _handle_memory_manager_enter(ctx),
         MenuLevel.AUTOMATION_PERMISSIONS: lambda: ctx.get("handle_automation_permissions_enter", lambda: None)(),
-        MenuLevel.DEV_SETTINGS: lambda: _toggle_dev_provider(ctx),
+        MenuLevel.DEV_SETTINGS: lambda: _handle_dev_settings_enter(ctx),
         MenuLevel.APPEARANCE: lambda: _set_theme(ctx),
         MenuLevel.LANGUAGE: lambda: _handle_language_menu_enter_ctx(ctx),
         MenuLevel.CLEANUP_EDITORS: lambda: _handle_cleanup_editors_enter_ctx(ctx),
@@ -497,6 +497,45 @@ def _handle_agent_settings_enter(ctx):
         state.learning_mode = new_val
         ctx["save_ui_settings"]()
         log(f"Learning mode: {'ON' if new_val else 'OFF'}", "action")
+
+
+def _handle_dev_settings_enter(ctx):
+    """Handle enter in DEV settings menu (toggle provider and Doctor Vibe settings)."""
+    state, log = ctx["state"], ctx["log"]
+    idx = max(0, min(state.menu_index, 3))
+
+    if idx == 0:
+        # Toggle provider
+        _toggle_dev_provider(ctx)
+        return
+
+    var_map = {1: "TRINITY_DEV_BY_VIBE", 2: "TRINITY_VIBE_AUTO_APPLY", 3: "TRINITY_VIBE_AUTO_RESUME"}
+    var = var_map.get(idx)
+    if not var:
+        return
+
+    cur_val = str(os.getenv(var) or "0").strip().lower()
+    new_val = "0" if cur_val in {"1", "true", "yes", "on"} else "1"
+
+    try:
+        from tui.cli import _update_env_var
+        ok = _update_env_var(var, new_val)
+        if ok:
+            os.environ[var] = new_val
+            log(f"{var} set to: {'ON' if new_val == '1' else 'OFF'}", "action")
+        else:
+            log(f"Failed to update {var} in .env", "error")
+    except Exception as e:
+        log(f"Error toggling {var}: {e}", "error")
+
+    if var == "TRINITY_DEV_BY_VIBE":
+        try:
+            state.ui_dev_code_provider = "vibe-cli" if os.getenv("TRINITY_DEV_BY_VIBE", "0").strip().lower() in {"1","true","yes","on"} else "continue"
+            ctx["save_ui_settings"]()
+        except Exception:
+            pass
+
+    ctx["force_ui_update"]()
 
 def _set_menu(state, new_lvl):
     state.menu_level, state.menu_index = new_lvl, 0

@@ -488,11 +488,31 @@ def _render_dev_settings_menu(ctx: dict) -> List[Tuple[str, str]]:
     provider = str(getattr(state, "ui_dev_code_provider", "vibe-cli") or "vibe-cli").strip().lower()
     provider_label = "VIBE-CLI" if provider == "vibe-cli" else "CONTINUE"
     
+    # Provider
     result.append((STYLE_MENU_SELECTED, f" > {tr('menu.dev_settings.provider_label', state.ui_lang)}: ", make_click(0)))
     style = "class:toggle.on" if provider == "vibe-cli" else "class:toggle.off"
     result.append((style, f" {provider_label} "))
     result.append(("", "\n\n"))
-    result.append((STYLE_MENU_ITEM, " Enter: Toggle between VIBE-CLI / CONTINUE\n"))
+
+    # Doctor Vibe toggles
+    vibe_on = os.getenv("TRINITY_DEV_BY_VIBE", "0").strip().lower() in {"1", "true", "yes", "on"}
+    auto_apply = os.getenv("TRINITY_VIBE_AUTO_APPLY", "0").strip().lower() in {"1", "true", "yes", "on"}
+    auto_resume = os.getenv("TRINITY_VIBE_AUTO_RESUME", "0").strip().lower() in {"1", "true", "yes", "on"}
+
+    result.append((STYLE_MENU_ITEM, "\n"))
+    result.append((STYLE_MENU_SELECTED, f" > {tr('menu.dev_settings.vibe_enabled', state.ui_lang)}: ", make_click(1)))
+    result.extend(_get_toggle_text(vibe_on))
+    result.append(("", "\n"))
+
+    result.append((STYLE_MENU_SELECTED, f" > {tr('menu.dev_settings.auto_apply', state.ui_lang)}: ", make_click(2)))
+    result.extend(_get_toggle_text(auto_apply))
+    result.append(("", "\n"))
+
+    result.append((STYLE_MENU_SELECTED, f" > {tr('menu.dev_settings.auto_resume', state.ui_lang)}: ", make_click(3)))
+    result.extend(_get_toggle_text(auto_resume))
+    result.append(("", "\n\n"))
+
+    result.append((STYLE_MENU_ITEM, " Enter: Toggle item | Q/Esc: Back\n"))
     return result
 
 

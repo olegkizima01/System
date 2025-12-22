@@ -162,6 +162,12 @@ class TrinityRuntime:
         
         # Initialize Vibe CLI Assistant
         self.vibe_assistant = VibeCLIAssistant(name="Doctor Vibe")
+        # Subscribe to live updates from the Vibe assistant so we can stream
+        # them to the UI (TUI) and runtime logs.
+        try:
+            self.vibe_assistant.set_update_callback(self._on_vibe_update)
+        except Exception:
+            pass
 
         # Optional background Sonar scanner
         try:
@@ -191,6 +197,22 @@ class TrinityRuntime:
                 return  # Skip duplicate
             self._last_stream_content[agent] = content
         self.on_stream(agent, content)
+
+    def _on_vibe_update(self, message: str) -> None:
+        """Callback from Vibe assistant for live updates.
+
+        We forward the message to the runtime stream (TUI subscribes to on_stream)
+        and log a debug line.
+        """
+        try:
+            # Forward to TUI / any on_stream subscriber
+            self._deduplicated_stream("vibe", message)
+        except Exception:
+            pass
+        try:
+            self.logger.debug(f"[Vibe] {message}")
+        except Exception:
+            pass
 
     def _register_tools(self) -> None:
         """Register all local tools and MCP tools."""
@@ -1902,6 +1924,26 @@ Return JSON with ONLY the replacement step.'''))
         if pause_info is None:
             state["vibe_assistant_pause"] = None
             return current
+
+        # Auto-resume behavior: if operator enabled auto-resume and pause
+        # is not caused by a missing permission or critical issues, then
+        # resume automatically to reduce blocking.
+        try:
+            if self._is_env_true("TRINITY_VIBE_AUTO_RESUME", False):
+                # Do not auto-resume if a permission is required or there
+                # are critical issues attached to the pause.
+                if not pause_info.get("permission") and not pause_info.get("issues"):
+                    # Invoke Vibe continue command to perform any cleanup
+                    res = self.vibe_assistant.handle_user_command("/continue")
+                    if res.get("action") == "resume":
+                        # Clear pause and mark context
+                        state["vibe_assistant_pause"] = None
+                        state["vibe_assistant_context"] = "AUTO-RESUMED: TRINITY_VIBE_AUTO_RESUME"
+                        if self.verbose:
+                            self.logger.info("🔁 Doctor Vibe: Auto-resumed pause (TRINITY_VIBE_AUTO_RESUME)")
+                        return "meta_planner"
+        except Exception:
+            pass
 
         # Try auto-repair
         repair_result = self._try_auto_repair(state, pause_info)

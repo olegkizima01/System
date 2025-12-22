@@ -665,10 +665,25 @@ def _handle_agent_stream(agent_name: str, delta: str, accumulated_by_agent: dict
     log_replace_at(idx, f"[{tag}] {curr}", "action")
     
     try:
-        agent_type_map = {"atlas": AgentType.ATLAS, "tetyana": AgentType.TETYANA, "grisha": AgentType.GRISHA}
+        agent_type_map = {
+            "atlas": AgentType.ATLAS,
+            "tetyana": AgentType.TETYANA,
+            "grisha": AgentType.GRISHA,
+            "vibe": AgentType.VIBE,
+        }
         agent_type = agent_type_map.get(agent_name.lower(), AgentType.SYSTEM)
         log_agent_message(agent_type, curr)
-    except Exception: pass
+
+        # Mark TUI state to indicate recent Vibe activity (for status bar blink)
+        if agent_name and agent_name.lower() == "vibe":
+            try:
+                from tui.state import state
+                import time
+                state.vibe_last_update = time.time()
+            except Exception:
+                pass
+    except Exception:
+        pass
 
     try:
         from tui.layout import force_ui_update

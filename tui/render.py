@@ -541,7 +541,21 @@ def get_status() -> List[Tuple[str, str]]:
     if getattr(state, "agent_paused", False):
         paused_hint = [("class:status", " | "), ("class:status.key", "Type: /resume")]
 
-    return mode_indicator + [
+    # Vibe live activity indicator (blinking)
+    try:
+        import time
+        last = float(getattr(state, "vibe_last_update", 0.0) or 0.0)
+        if time.time() - last < 3.0:
+            # Blink at ~2Hz
+            blink_on = (int(time.time() * 2) % 2) == 0
+            vibe_text = " VIBE " if blink_on else "     "
+            vibe_indicator = [("class:status.vibe", vibe_text), ("class:status", " | ")]
+        else:
+            vibe_indicator = []
+    except Exception:
+        vibe_indicator = []
+
+    base = mode_indicator + [
         ("class:status.ready", f" {state.status} "),
         ("class:status", " "),
         ("class:status.key", monitor_tag),
@@ -551,7 +565,12 @@ def get_status() -> List[Tuple[str, str]]:
         ("class:status.key", "F2: Menu"),
         ("class:status", " | "),
         ("class:status.key", "Ctrl+C: Quit"),
-    ] + paused_hint
+    ]
+
+    if vibe_indicator:
+        base = mode_indicator + vibe_indicator + base[len(mode_indicator) :]
+
+    return base + paused_hint
 
 
 # Backward compatibility aliases

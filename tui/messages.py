@@ -14,6 +14,7 @@ class AgentType(Enum):
     ATLAS = "atlas"          # 🌐 Strategist (cyan/blue)
     TETYANA = "tetyana"      # 💻 Developer (green)
     GRISHA = "grisha"        # 👁️ Verifier (yellow/orange)
+    VIBE = "vibe"            # ⚕️ Doctor Vibe (magenta)
     USER = "user"            # 👤 User (white/default)
     SYSTEM = "system"        # ⚙️ System (gray)
 
@@ -116,6 +117,7 @@ class MessageFormatter:
         AgentType.ATLAS: "class:agent.atlas",
         AgentType.TETYANA: "class:agent.tetyana",
         AgentType.GRISHA: "class:agent.grisha",
+        AgentType.VIBE: "class:agent.vibe",
         AgentType.USER: "class:agent.user",
         AgentType.SYSTEM: "class:agent.system",
     }
@@ -124,6 +126,7 @@ class MessageFormatter:
         AgentType.ATLAS: "ATLAS",
         AgentType.TETYANA: "TETYANA",
         AgentType.GRISHA: "GRISHA",
+        AgentType.VIBE: "VIBE",
         AgentType.USER: "USER",
         AgentType.SYSTEM: "SYSTEM",
     }
@@ -132,6 +135,7 @@ class MessageFormatter:
         AgentType.ATLAS: "🌐",
         AgentType.TETYANA: "💻",
         AgentType.GRISHA: "👁️",
+        AgentType.VIBE: "⚕️",
         AgentType.USER: "👤",
         AgentType.SYSTEM: "⚙️",
     }
@@ -198,10 +202,11 @@ class MessageFormatter:
         
         # STRICT TTS FILTER: Only show [VOICE] messages
         # Agent panel is for verbal communication only, not technical logs
-        if "[VOICE]" not in msg.text:
-            return result  # Skip ALL non-voice messages
+        # Allow Vibe messages to be shown even without explicit [VOICE]
+        if "[VOICE]" not in msg.text and msg.agent != AgentType.VIBE:
+            return result  # Skip ALL non-voice messages unless from Vibe
 
-        if msg.agent not in {AgentType.ATLAS, AgentType.TETYANA, AgentType.GRISHA}:
+        if msg.agent not in {AgentType.ATLAS, AgentType.TETYANA, AgentType.GRISHA, AgentType.VIBE}:
             return result
         
         # Clean the message - remove unnecessary tags and make it more natural

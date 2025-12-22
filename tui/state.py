@@ -80,6 +80,8 @@ class AppState:
     learning_mode: bool = False
     ui_recursion_limit: int = 100
     mcp_client_type: str = "open_mcp"  # open_mcp | continue
+    # Vibe activity indicator (timestamp of last live update)
+    vibe_last_update: float = 0.0
     
     # Selection state
     selection_panel: Optional[str] = None

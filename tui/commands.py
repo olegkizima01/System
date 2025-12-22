@@ -163,6 +163,12 @@ def check_vibe_assistant_status() -> None:
             print(f"\n⚠️  Current Pause Active:")
             print(f"  Reason: {status['current_pause'].get('reason', 'unknown')}")
             print(f"  Message: {status['current_pause'].get('message', 'no message')}")
+            # Show recent live output if available
+            live = status['current_pause'].get('live_output') or []
+            if live:
+                print(f"\n🟢 Live Output (recent):")
+                for l in live[-6:]:
+                    print(f"  {l}")
         else:
             print("\n✅ No active pauses")
             
