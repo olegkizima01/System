@@ -27,7 +27,7 @@ def test_context7_fallback_on_too_many_args(monkeypatch):
 
     monkeypatch.setattr(client, "_run_command", fake_run)
 
-    client.execute_command("store", data="small")
+    res = client.execute_command("store", data="small")
 
     assert res.get("success") is True
     assert any("context7" in c[0] or c[0] == "context7" for c in calls)
