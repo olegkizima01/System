@@ -715,6 +715,14 @@ class TrinityRuntime:
                     self.logger.info("⚕️ Doctor Vibe enabled for DEV tasks (TRINITY_DEV_BY_VIBE)")
         except Exception:
             pass
+
+        # Proactively enrich context with SonarQube findings for DEV tasks
+        try:
+            if is_dev:
+                initial_state = self._enrich_context_with_sonar(initial_state)
+        except Exception:
+            # Best-effort only
+            pass
         
         if self.verbose:
             mode_desc = "background error correction" if is_dev else "critical error intervention"
@@ -2090,6 +2098,37 @@ Return JSON with ONLY the replacement step.'''))
         except Exception:
             return None
         return None
+
+    def _enrich_context_with_sonar(self, state: TrinityState) -> TrinityState:
+        """Best-effort: fetch Sonar issues and append a summary to state['retrieved_context'].
+
+        This enriches Context7 inputs for Atlas and Doctor Vibe prior to planning/pause.
+        """
+        try:
+            if not state.get("is_dev"):
+                return state
+
+            sonar = self._fetch_sonar_issues()
+            if not sonar:
+                return state
+
+            parts = []
+            parts.append(f"SonarQube summary (project={sonar.get('project_key')}): issues={sonar.get('issues_count')}")
+            for it in (sonar.get('issues') or [])[:10]:
+                parts.append(f"- [{it.get('severity')}] {it.get('message')} ({it.get('component')}:{it.get('line')})")
+
+            summary = "\n".join(parts)
+            current = str(state.get("retrieved_context") or "").strip()
+            if current:
+                state["retrieved_context"] = current + "\n\n" + summary
+            else:
+                state["retrieved_context"] = summary
+
+            if self.verbose:
+                self.logger.info(f"🔎 Sonar enrichment added to context (project={sonar.get('project_key')})")
+            return state
+        except Exception:
+            return state
 
     def _fetch_sonar_issues(self, project_key: Optional[str] = None, severities: str = "CRITICAL,BLOCKER,MAJOR") -> Optional[Dict[str, Any]]:
         """Fetch SonarQube issues and quality gate status for the given project key.

@@ -69,3 +69,17 @@ def test_pause_includes_sonar(monkeypatch):
     diags = new_state["vibe_assistant_pause"].get("diagnostics") or {}
     assert "sonar" in diags
     assert diags["sonar"]["issues_count"] == 2
+
+
+def test_proactive_sonar_enrichment(monkeypatch):
+    monkeypatch.setenv("SONAR_API_KEY", "dummy")
+    monkeypatch.setenv("SONAR_URL", "https://sonarcloud.io")
+    monkeypatch.setenv("SONAR_PROJECT_KEY", "test_proj")
+    monkeypatch.setenv("COPILOT_API_KEY", "dummy")
+    monkeypatch.setattr("requests.get", _mock_requests_get)
+
+    rt = TrinityRuntime(verbose=False)
+    state = {"is_dev": True, "retrieved_context": "", "original_task": "Make dev change"}
+    new_state = rt._enrich_context_with_sonar(state)
+    assert "SonarQube summary" in new_state.get("retrieved_context", "")
+    assert "test_proj" in new_state.get("retrieved_context", "")
