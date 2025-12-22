@@ -1613,10 +1613,91 @@ def _get_automation_permissions_menu_items() -> List[Tuple[str, Any, Optional[st
     shortcuts = "ON" if bool(getattr(state, "automation_allow_shortcuts", False)) else "OFF"
     exec_mode = str(getattr(state, "ui_execution_mode", "native") or "native").strip().lower() or "native"
     exec_label = "NATIVE" if exec_mode == "native" else "GUI"
+    
+    def _env_on_off(var, default="0"):
+        val = str(os.getenv(var) or default).strip().lower()
+        return "ON" if val in {"1", "true", "yes", "on"} else "OFF"
+        
     return [
         (f"Execution mode: {exec_label}", "ui_execution_mode", None),
         (f"Shortcuts: {shortcuts}", "automation_allow_shortcuts", None),
+        (f"Allow Shell: {_env_on_off('TRINITY_ALLOW_SHELL')}", "env_shell", None),
+        (f"Allow Write: {_env_on_off('TRINITY_ALLOW_WRITE', '1')}", "env_write", None),
+        (f"Allow AppleScript: {_env_on_off('TRINITY_ALLOW_APPLESCRIPT')}", "env_applescript", None),
+        (f"Allow GUI: {_env_on_off('TRINITY_ALLOW_GUI')}", "env_gui", None),
+        (f"Hyper Mode (Auto): {_env_on_off('TRINITY_HYPER_MODE')}", "env_hyper", None),
     ]
+
+
+def _handle_automation_permissions_enter(ctx: Dict[str, Any]):
+    """Handle enter key in automation permissions menu."""
+    state, log = ctx["state"], ctx["log"]
+    items = _get_automation_permissions_menu_items()
+    if not items:
+        return
+    idx = max(0, min(state.menu_index, len(items) - 1))
+    key = items[idx][1]
+    
+    if key == "ui_execution_mode":
+        cur = str(getattr(state, "ui_execution_mode", "native") or "native").strip().lower()
+        state.ui_execution_mode = "gui" if cur == "native" else "native"
+        _save_ui_settings()
+        log(f"Execution mode set to: {state.ui_execution_mode.upper()}", "action")
+    elif key == "automation_allow_shortcuts":
+        new_val = not bool(getattr(state, "automation_allow_shortcuts", False))
+        state.automation_allow_shortcuts = new_val
+        _save_ui_settings()
+        _update_env_var("TRINITY_ALLOW_SHORTCUTS", "1" if new_val else "0")
+        log(f"Shortcuts: {'ON' if new_val else 'OFF'}", "action")
+    elif key.startswith("env_"):
+        var_map = {
+            "env_shell": "TRINITY_ALLOW_SHELL",
+            "env_write": "TRINITY_ALLOW_WRITE",
+            "env_applescript": "TRINITY_ALLOW_APPLESCRIPT",
+            "env_gui": "TRINITY_ALLOW_GUI",
+            "env_hyper": "TRINITY_HYPER_MODE",
+        }
+        var = var_map.get(key)
+        if var:
+            cur_val = str(os.getenv(var) or ("1" if var == "TRINITY_ALLOW_WRITE" else "0")).strip().lower()
+            new_val = "0" if cur_val in {"1", "true", "yes", "on"} else "1"
+            if _update_env_var(var, new_val):
+                os.environ[var] = new_val
+                log(f"{var} set to: {'ON' if new_val == '1' else 'OFF'}", "action")
+            else:
+                log(f"Failed to update {var} in .env", "error")
+    
+    ctx["force_ui_update"]()
+
+
+def _update_env_var(key: str, value: str) -> bool:
+    """Update or add a variable in the .env file."""
+    env_path = os.path.join(_repo_root, ".env")
+    try:
+        lines = []
+        found = False
+        if os.path.exists(env_path):
+            with open(env_path, "r", encoding="utf-8") as f:
+                lines = f.readlines()
+        
+        new_lines = []
+        for line in lines:
+            if line.strip().startswith(f"{key}="):
+                new_lines.append(f"{key}={value}\n")
+                found = True
+            else:
+                new_lines.append(line)
+        
+        if not found:
+            if new_lines and not new_lines[-1].endswith("\n"):
+                new_lines[-1] += "\n"
+            new_lines.append(f"{key}={value}\n")
+            
+        with open(env_path, "w", encoding="utf-8") as f:
+            f.writelines(new_lines)
+        return True
+    except Exception as e:
+        return False
 
 
 def _get_dev_settings_menu_items() -> List[Tuple[str, Any, Optional[str]]]:
@@ -1680,6 +1761,7 @@ def run_tui() -> None:
         get_llm_sub_menu_items=get_llm_sub_menu_items_cb,
         get_agent_menu_items=get_agent_menu_items_cb,
         get_automation_permissions_menu_items=_get_automation_permissions_menu_items,
+        handle_automation_permissions_enter=_handle_automation_permissions_enter,
         get_editors_list=_get_editors_list,
         get_cleanup_cfg=_get_cleanup_cfg,
         set_cleanup_cfg=_set_cleanup_cfg,

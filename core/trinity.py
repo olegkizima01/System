@@ -45,6 +45,20 @@ class TrinityPermissions:
     allow_shortcuts: bool = False
     hyper_mode: bool = False # Automation without confirmation
 
+    def __post_init__(self):
+        # Allow environment overrides
+        def _is_env_true(var: str, default: bool) -> bool:
+            val = str(os.getenv(var) or "").strip().lower()
+            if not val: return default
+            return val in {"1", "true", "yes", "on"}
+
+        self.allow_shell = _is_env_true("TRINITY_ALLOW_SHELL", self.allow_shell)
+        self.allow_applescript = _is_env_true("TRINITY_ALLOW_APPLESCRIPT", self.allow_applescript)
+        self.allow_file_write = _is_env_true("TRINITY_ALLOW_WRITE", self.allow_file_write)
+        self.allow_gui = _is_env_true("TRINITY_ALLOW_GUI", self.allow_gui)
+        self.allow_shortcuts = _is_env_true("TRINITY_ALLOW_SHORTCUTS", self.allow_shortcuts)
+        self.hyper_mode = _is_env_true("TRINITY_HYPER_MODE", self.hyper_mode)
+
 # Define the state of the Trinity system
 class TrinityState(TypedDict):
     messages: List[BaseMessage]
@@ -138,7 +152,7 @@ class TrinityRuntime:
             self.permissions.hyper_mode = True
         
         # Initialize self-healing module
-        self.self_healing_enabled = enable_self_healing
+        self.self_healing_enabled = enable_self_healing or self._is_env_true("TRINITY_SELF_HEALING", False)
         self.self_healer = None
         if self.self_healing_enabled:
             self._initialize_self_healing()
@@ -1443,6 +1457,13 @@ Return JSON with ONLY the replacement step.'''))
             new_msg = AIMessage(content=f"{VOICE_MARKER} Error: No tool call provided. USE A TOOL. {content}")
             return {"messages": context + [new_msg], "last_step_status": "failed"}
         return None
+
+    def _is_env_true(self, var: str, default: bool = False) -> bool:
+        """Check if environment variable is true."""
+        val = str(os.getenv(var) or "").strip().lower()
+        if not val:
+            return default
+        return val in {"1", "true", "yes", "on"}
 
     def _execute_tetyana_tools(self, state, tool_calls):
         results = []

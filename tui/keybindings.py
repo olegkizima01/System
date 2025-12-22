@@ -28,7 +28,8 @@ def build_keybindings(
     get_llm_menu_items: Callable[[], List[Tuple[str, Any]]],
     get_llm_sub_menu_items: Callable[[Any], List[Tuple[str, Any]]],
     get_agent_menu_items: Callable[[], List[Tuple[str, Any]]],
-    get_automation_permissions_menu_items: Callable[[], List[Tuple[str, Any]]],
+    get_automation_permissions_menu_items: Callable[[], List[Tuple[str, Any, Optional[str]]]],
+    handle_automation_permissions_enter: Callable[[Dict[str, Any]], None],
     get_editors_list: Callable[[], List[Tuple[str, str]]],
     # cleanup/module operations
     get_cleanup_cfg: Callable[[], Any],
@@ -71,6 +72,7 @@ def build_keybindings(
         "MAIN_MENU_ITEMS": MAIN_MENU_ITEMS, "TOP_LANGS": TOP_LANGS, "get_llm_menu_items": get_llm_menu_items,
         "get_llm_sub_menu_items": get_llm_sub_menu_items, "get_agent_menu_items": get_agent_menu_items,
         "get_automation_permissions_menu_items": get_automation_permissions_menu_items,
+        "handle_automation_permissions_enter": handle_automation_permissions_enter,
         "perform_install": perform_install, "find_module": find_module, "set_module_enabled": set_module_enabled,
     }
 
@@ -425,7 +427,7 @@ def _get_menu_enter_dispatch(ctx, state, MenuLevel, _llm_sub_hint):
         MenuLevel.UNSAFE_MODE: lambda: _handle_general_toggle_ctx(ctx, "ui_unsafe_mode", "Unsafe"),
         MenuLevel.SELF_HEALING: lambda: _handle_general_toggle_ctx(ctx, "ui_self_healing", "Self-healing"),
         MenuLevel.MEMORY_MANAGER: lambda: _handle_memory_manager_enter(ctx),
-        MenuLevel.AUTOMATION_PERMISSIONS: lambda: None, # Placeholder, original had handle_automation_enter
+        MenuLevel.AUTOMATION_PERMISSIONS: lambda: ctx.get("handle_automation_permissions_enter", lambda: None)(),
         MenuLevel.DEV_SETTINGS: lambda: _toggle_dev_provider(ctx),
         MenuLevel.APPEARANCE: lambda: _set_theme(ctx),
         MenuLevel.LANGUAGE: lambda: _handle_language_menu_enter_ctx(ctx),

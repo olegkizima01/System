@@ -528,7 +528,7 @@ def run_graph_agent_task(
             allow_file_write=allow_file_write,
             allow_gui=allow_gui,
             allow_shortcuts=allow_shortcuts,
-            hyper_mode=True,
+            hyper_mode=False,
         )
         
         log("[ATLAS] Initializing NeuroMac System (Atlas/Tetyana/Grisha)...", "info")
