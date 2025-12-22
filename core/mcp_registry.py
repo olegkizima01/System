@@ -606,7 +606,7 @@ class MCPToolRegistry:
         for name, desc in self._descriptions.items():
             lines.append(f"- {name}: {desc}")
         
-        # External tools
+        # External tools (static providers)
         for p_name, provider in self._external_providers.items():
             try:
                 provider.connect()
@@ -617,7 +617,24 @@ class MCPToolRegistry:
                     lines.append(f"- {prefixed_name}: {tool.description}")
             except Exception as e:
                 lines.append(f"- [Provider Offline] {p_name}: {e}")
-                
+
+        # Active MCP Client Dynamic Tools
+        try:
+            client = self._mcp_client_manager.get_client()
+            if client:
+                # Ensure connected to discover tools
+                if not client.is_connected:
+                    client.connect()
+                client_tools = client.list_tools()
+                if client_tools:
+                    lines.append(f"\n--- Tools from {self._mcp_client_manager.active_client_name} ---")
+                    for tool in client_tools:
+                        name = tool.get("name", "unknown")
+                        desc = tool.get("description", "No description")
+                        lines.append(f"- {name}: {desc}")
+        except Exception as e:
+            print(f"[MCP] Failed to list tools from active client: {e}")
+            
         return "\n".join(lines)
 
     def get_all_tool_definitions(self) -> List[Dict[str, str]]:
@@ -628,22 +645,22 @@ class MCPToolRegistry:
         for name, desc in self._descriptions.items():
             defs.append({"name": name, "description": desc})
             
-        # External tools
-        for p_name, provider in self._external_providers.items():
-            try:
-                # Ensure connected to get tools
-                if not provider._connected:
-                    provider.connect()
-                
-                for t_name, tool in provider._tools.items():
-                    prefixed_name = f"{p_name}.{t_name}"
-                    # Use schema if available, otherwise just description
+        # Active MCP Client Dynamic Tools
+        try:
+            client = self._mcp_client_manager.get_client()
+            if client:
+                # Ensure connected to discover tools
+                if not client.is_connected:
+                    client.connect()
+                client_tools = client.list_tools()
+                for tool in client_tools:
+                    # We might want to prefix these too, but clients usually handle their own naming
                     defs.append({
-                        "name": prefixed_name,
-                        "description": tool.description
+                        "name": tool.get("name"),
+                        "description": tool.get("description")
                     })
-            except Exception as e:
-                print(f"[MCP] Failed to get tools from provider {p_name}: {e}")
+        except Exception as e:
+            print(f"[MCP] Failed to get tool definitions from active client: {e}")
                 
         return defs
 
