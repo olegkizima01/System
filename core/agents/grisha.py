@@ -41,7 +41,8 @@ Available tools:
 VERIFICATION STRATEGY:
 1. Read Tetyana's tool results first - they are usually accurate.
 2. If Tetyana reported [STEP_COMPLETED] with tool success → respond [STEP_COMPLETED]
-3. Only use 'enhanced_vision_analysis' if you have doubts about the result.
+3. If you have any doubt or "no evidence" → USE A TOOL (read_file, capture_screen, ls) to gather evidence.
+4. ONLY return [UNCERTAIN] if you have already used tools and still cannot confirm the result.
 """
 
 def get_grisha_prompt(context: str, tools_desc: str = "", preferred_language: str = "en", vision_context: str = ""):

@@ -284,8 +284,8 @@
           "id": "antigravity_basic",
           "name": "Antigravity Basic Cleanup",
           "script": "./cleanup_scripts/antigraviti_cleanup.sh",
-          "enabled": true,
-          "description": "Базове очищення Antigravity Editor"
+          "enabled": false,
+          "description": "Базове очищення Antigravity Editor (Вимкнено: дублює Advanced)"
         },
         {
           "id": "antigravity_advanced",

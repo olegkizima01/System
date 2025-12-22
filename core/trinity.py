@@ -917,6 +917,8 @@ class TrinityRuntime:
     def _decide_meta_action(self, plan: List[Dict], status: str, fail_count: int, state: TrinityState) -> str:
         if not state.get("meta_config"): return "initialize"
         if not plan: return "replan"
+        
+        # If we are failing or stuck in uncertainty, trigger replan or repair
         if status == "failed":
             if fail_count >= 3:
                 hist = state.get("history_plan_execution") or []
@@ -928,6 +930,16 @@ class TrinityRuntime:
             
             cfg = state.get("meta_config") or {}
             return "replan" if cfg.get("recovery_mode") == "full_replan" else "repair"
+            
+        if status == "uncertain":
+            # If we've been uncertain for more than 2 attempts on the same step, 
+            # something is wrong with the plan or the agent's ability to verify.
+            # Trigger 'repair' to try an alternative approach or context gathering.
+            if fail_count >= 2:
+                if self.verbose: 
+                    print(f"⚠️ [Meta-Planner] Persistent uncertainty ({fail_count} tries). Triggering repair.")
+                return "repair"
+            return "proceed"
             
         vibe_ctx = state.get("vibe_assistant_context", "")
         if "background_mode" in vibe_ctx: return "proceed"
@@ -1796,10 +1808,16 @@ Return JSON with ONLY the replacement step.'''))
         if not executed_results and not test_results: return content
         
         prompt = (f"Analyze these results:\n" + "\n".join(executed_results) + (f"\nTests:\n{test_results}" if test_results else "") +
-                 f"\n\nRespond with Reasoning + Marker: [VERIFIED], [STEP_COMPLETED], [FAILED], or [UNCERTAIN].")
+                 f"\n\nRespond with Reasoning + Marker: [VERIFIED], [STEP_COMPLETED], [FAILED], or [UNCERTAIN]. "
+                 f"Do NOT use [VOICE] tag in this response, provide analysis only.")
         try:
             resp = self.llm.invoke([SystemMessage(content="You are Grisha."), HumanMessage(content=prompt)])
-            return content + "\n\n[VERDICT ANALYSIS]\n" + getattr(resp, "content", "")
+            analysis = getattr(resp, "content", "")
+            # Ensure we don't double the voice icon in UI
+            if VOICE_MARKER in analysis:
+                analysis = analysis.replace(VOICE_MARKER, "").strip()
+            
+            return content + "\n\n[VERDICT ANALYSIS]\n" + analysis
         except Exception as e:
             return content + f"\n\n[VERDICT ERROR] {e}"
 
