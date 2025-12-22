@@ -27,6 +27,18 @@ Quick repair attempt: name_error in /private/var/folders/.../pytest-of-dev/...
 
 ---
 
+### 4. **SonarQube Integration (DEV context enrichment)**
+
+**Що було додано:**
+- Sonar аналіз автоматично додається до контексту DEV задач і включається в паузи для Doctor Vibe.
+- Реалізація: `core/trinity.py` (`_enrich_context_with_sonar`) + `mcp_integration/utils/sonarqube_context7_helper.py`.
+
+**Опції:**
+- Фоновий сканер: `TRINITY_SONAR_BACKGROUND=1` + `TRINITY_SONAR_SCAN_INTERVAL` (хвилини)
+- Якщо є MCP `context7-docs`, результати індексуються туди; інакше зберігаються локально в `Context7.add_document()`.
+
+**Важливо:** API-ключ зчитується з `SONAR_API_KEY`. Інтеграція є безпечна та best-effort — помилки не блокують виконання Trinity.
+
 ### 2. **Doctor Vibe vs Tetyana - Делегування**
 
 **Проблема:**

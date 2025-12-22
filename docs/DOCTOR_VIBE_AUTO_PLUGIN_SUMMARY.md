@@ -177,6 +177,10 @@ plugins/doctor_vibe_extensions/tests/test_plugin.py: 18 passed ✅
 - Валідація вхідних даних
 - Не зберігає credentials в коді
 
+### 5. **Sonar Insights Integration**
+
+- Doctor Vibe will enrich DEV-task context with SonarQube findings when available (via `SONAR_API_KEY`) so generated plugins and code changes consider code-quality findings. See `docs/SONAR_INTEGRATION.md` for configuration and background scanning options.
+
 ## 📝 Приклади використання
 
 ### Приклад 1: REST API Client
