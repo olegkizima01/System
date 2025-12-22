@@ -4,6 +4,7 @@ import os
 from typing import Any, Callable, List, Optional, Tuple
 
 import requests
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 from langchain_core.messages import (
     AIMessage,
     BaseMessage,
@@ -273,13 +274,22 @@ class CopilotLLM(BaseChatModel):
             payload = self._build_payload(messages, stream=stream)
             
             stream_mode = stream if stream is not None else False
-            response = requests.post(
-                f"{api_endpoint}/chat/completions",
-                headers=headers,
-                data=json.dumps(payload),
-                stream=stream_mode,
-                timeout=90
+            @retry(
+                stop=stop_after_attempt(3),
+                wait=wait_exponential(multiplier=1, min=4, max=10),
+                retry=retry_if_exception_type((requests.exceptions.Timeout, requests.exceptions.ConnectionError)),
+                reraise=True
             )
+            def _post_request():
+                return requests.post(
+                    f"{api_endpoint}/chat/completions",
+                    headers=headers,
+                    data=json.dumps(payload),
+                    stream=stream_mode,
+                    timeout=120
+                )
+
+            response = _post_request()
             if stream_mode:
                 return self._stream_response(response, messages, on_delta=on_delta)
             else:
@@ -350,13 +360,22 @@ class CopilotLLM(BaseChatModel):
                     if "vision" in payload.get("model", ""):
                          payload["model"] = "gpt-4.1"
                          
-                    response = requests.post(
-                        f"{api_endpoint}/chat/completions",
-                        headers=headers,
-                        data=json.dumps(payload),
-                        stream=stream_mode,
-                        timeout=90
+                    @retry(
+                        stop=stop_after_attempt(2),
+                        wait=wait_exponential(multiplier=1, min=2, max=5),
+                        retry=retry_if_exception_type((requests.exceptions.Timeout, requests.exceptions.ConnectionError)),
+                        reraise=True
                     )
+                    def _post_retry():
+                        return requests.post(
+                            f"{api_endpoint}/chat/completions",
+                            headers=headers,
+                            data=json.dumps(payload),
+                            stream=stream_mode,
+                            timeout=120
+                        )
+
+                    response = _post_retry()
                     if stream_mode:
                         return self._stream_response(response, messages, on_delta=on_delta)
                     else:
@@ -450,13 +469,26 @@ class CopilotLLM(BaseChatModel):
         }
 
         payload = self._build_payload(messages, stream=True)
-        response = requests.post(
-            f"{api_endpoint}/chat/completions",
-            headers=headers,
-            data=json.dumps(payload),
-            stream=True,
-            timeout=90
+        @retry(
+            stop=stop_after_attempt(3),
+            wait=wait_exponential(multiplier=1, min=4, max=10),
+            retry=retry_if_exception_type((requests.exceptions.Timeout, requests.exceptions.ConnectionError)),
+            reraise=True
         )
+        def _post_stream():
+            return requests.post(
+                f"{api_endpoint}/chat/completions",
+                headers=headers,
+                data=json.dumps(payload),
+                stream=True,
+                timeout=120
+            )
+
+        try:
+            response = _post_stream()
+        except Exception as e:
+            print(f"[COPILOT ERROR] Failed to initialize stream: {e}")
+            return AIMessage(content=f"[COPILOT ERROR] Failed to connect: {e}")
         # If we are in a test mode (dummy token), skip network call and synthesize response
         if str(session_token).startswith("dummy") or str(self.api_key).lower() in {"dummy", "test"} or os.getenv("COPILOT_API_KEY", "").lower() in {"dummy", "test"}:
             # Return the last human message content as the AI response for tests

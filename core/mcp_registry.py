@@ -72,8 +72,9 @@ class ExternalMCPProvider:
         self._thread = threading.Thread(target=self._run_loop, daemon=True)
         self._thread.start()
         self._connected = False
-        self._exit_stack = None
         self._session = None
+        self._disconnect_event: Optional[asyncio.Event] = None
+        self._init_future: Optional[asyncio.Future] = None
         
     def _run_loop(self):
         asyncio.set_event_loop(self._loop)
@@ -82,20 +83,52 @@ class ExternalMCPProvider:
     def connect(self):
         if self._connected:
             return
-        future = asyncio.run_coroutine_threadsafe(self._async_connect(), self._loop)
-        future.result(timeout=30)
-        self._connected = True
+        
+        def _setup():
+            self._init_future = self._loop.create_future()
+            self._loop.create_task(self._async_connect())
+            return self._init_future
+            
+        future = asyncio.run_coroutine_threadsafe(_setup(), self._loop).result()
+        try:
+            future.result(timeout=30)
+        except Exception as e:
+            logger.error(f"Failed to connect MCP provider {self.name}: {e}")
+            raise
 
     async def _async_connect(self):
-        self._exit_stack = contextlib.AsyncExitStack()
-        read, write = await self._exit_stack.enter_async_context(stdio_client(self._server_params))
-        self._session = await self._exit_stack.enter_async_context(ClientSession(read, write))
-        await self._session.initialize()
-        
-        # List tools
-        tools_list = await self._session.list_tools()
-        for tool in tools_list.tools:
-            self._tools[tool.name] = tool
+        """Persistent task that manages the connection lifecycle."""
+        async with contextlib.AsyncExitStack() as stack:
+            try:
+                # 1. Enter Contexts (all in this same Task)
+                read, write = await stack.enter_async_context(stdio_client(self._server_params))
+                self._session = await stack.enter_async_context(ClientSession(read, write))
+                await self._session.initialize()
+                
+                # 2. List tools
+                tools_list = await self._session.list_tools()
+                for tool in tools_list.tools:
+                    self._tools[tool.name] = tool
+                
+                # 3. Mark as connected and signal success
+                self._connected = True
+                self._disconnect_event = asyncio.Event()
+                if self._init_future and not self._init_future.done():
+                    self._init_future.set_result(True)
+                
+                # 4. Wait for stop signal
+                await self._disconnect_event.wait()
+                
+            except Exception as e:
+                self._connected = False
+                logger.error(f"MCP Connection Error ({self.name}): {e}")
+                if self._init_future and not self._init_future.done():
+                    self._init_future.set_exception(e)
+            finally:
+                # 5. Exit Contexts (still in this same Task)
+                self._connected = False
+                self._session = None
+                self._disconnect_event = None
         
     def execute(self, tool_name: str, args: Dict[str, Any]) -> Any:
         if not self._connected:
@@ -126,28 +159,20 @@ class ExternalMCPProvider:
             return {"tool": tool_name, "status": "error", "error": str(e)}
     
     def disconnect(self):
-        """Properly disconnect from the MCP server and cleanup resources."""
-        if not self._connected:
+        """Signal the connection task to exit."""
+        if not self._connected or not self._disconnect_event:
             return
         
-        try:
-            future = asyncio.run_coroutine_threadsafe(self._async_disconnect(), self._loop)
-            future.result(timeout=10)
-        except Exception as e:
-            print(f"Warning: Error during disconnect: {e}")
-        finally:
-            self._connected = False
+        def _trigger_stop():
+            if self._disconnect_event:
+                self._disconnect_event.set()
+                
+        self._loop.call_soon_threadsafe(_trigger_stop)
+        self._connected = False
     
     async def _async_disconnect(self):
-        """Async cleanup of MCP connection."""
-        if self._exit_stack:
-            try:
-                await self._exit_stack.aclose()
-            except Exception as e:
-                print(f"Warning: Error closing exit stack: {e}")
-            finally:
-                self._exit_stack = None
-                self._session = None
+        # Deprecated, lifecycle handled in _async_connect finally block
+        pass
     
     def __del__(self):
         """Cleanup when object is destroyed."""

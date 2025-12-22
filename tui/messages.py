@@ -55,60 +55,58 @@ class MessageFilter:
         return any(pattern.lower() in lower_text for pattern in MessageFilter.TECHNICAL_PATTERNS)
     
     @staticmethod
+    def clean_technical_markers(text: str) -> str:
+        """Remove technical markers like [STEP_COMPLETED], [VERIFIED], etc."""
+        import re
+        patterns = [
+            r'\[(?:STEP_COMPLETED|VERIFIED|FAILED|UNCERTAIN|NOT VERIFIED)\]',
+            r'\[VOICE\]',  # Also remove [VOICE] here if we want absolute cleanliness
+        ]
+        result = text
+        for p in patterns:
+            result = re.sub(p, '', result)
+        return result.strip()
+
+    @staticmethod
     def clean_message(text: str) -> str:
         """Remove technical details from message while prioritizing [VOICE] content."""
-        # Strict Voice Filtering
+        # 1. Prioritize [VOICE] content if present
         if "[VOICE]" in text:
             import re
             match = re.search(r"\[VOICE\]\s*(.*)", text, re.DOTALL)
             if match:
-                # Capture everything after [VOICE], stripping technical blocks if they appear later
-                voice_content = match.group(1).strip()
-                # If there are subsequent technical markers, cut them off
-                for pattern in MessageFilter.TECHNICAL_PATTERNS:
-                     if pattern in voice_content:
-                         # This is a naive cut, but safer for now. 
-                         # Ideally we trust the agent to put [VOICE] at the start or end.
-                         pass
-                return voice_content
+                content = match.group(1).strip()
+                return MessageFilter.clean_technical_markers(content)
         
-        # Fallback cleaning
+        # 2. Fallback cleaning (remove technical lines/JSON)
         lines = text.split("\n")
         clean_lines = []
         skip_until_empty = False
         
         for line in lines:
-            # Skip Tool Results sections
-            if "Tool Results:" in line or "Result for " in line:
+            if any(pattern.lower() in line.lower() for pattern in MessageFilter.TECHNICAL_PATTERNS):
                 skip_until_empty = True
                 continue
             
-            # Skip JSON/technical lines
             if skip_until_empty:
                 if line.strip() == "":
                     skip_until_empty = False
                 continue
             
-            # Skip pure JSON lines
-            if line.strip().startswith("{") or line.strip().startswith("["):
-                continue
-            if line.strip().startswith('"'):  # e.g. "tool_calls": [...]
-                continue
-            if line.strip() in ("}", "]", "},", "],"):
+            if line.strip().startswith(("{", "[", '"')) or line.strip() in ("}", "]", "},", "],"):
                 continue
             
             clean_lines.append(line)
         
-        # Join and clean up extra whitespace
         result = "\n".join(clean_lines).strip()
-        # Fallback: if result is still too technical (multiline JSON or code), truncate
+        
+        # If result looks like JSON, take the first non-JSON line
         if "{" in result and "}" in result:
-             # Heuristic: try to take just the first sentence if it looks normal
              first_line = result.split("\n")[0]
              if not first_line.startswith(("{", "[")):
-                 return first_line.strip()
-                 
-        return result
+                 result = first_line.strip()
+        
+        return MessageFilter.clean_technical_markers(result)
 
 
 class MessageFormatter:
@@ -206,11 +204,8 @@ class MessageFormatter:
         if msg.agent not in {AgentType.ATLAS, AgentType.TETYANA, AgentType.GRISHA}:
             return result
         
-        # Clean the message for TTS - remove unnecessary tags and make it more natural
-        clean_text = MessageFilter.clean_message(msg.text)
-        
-        # Remove [VOICE] tag for display, keep it for TTS processing
-        display_text = clean_text.replace("[VOICE]", "").strip()
+        # Clean the message - remove unnecessary tags and make it more natural
+        display_text = MessageFilter.clean_message(msg.text)
         if not display_text:
             return result
         
@@ -257,16 +252,8 @@ class MessageFormatter:
         if msg.agent not in {AgentType.ATLAS, AgentType.TETYANA, AgentType.GRISHA}:
             return result
         
-        # Clean the message for TTS - remove unnecessary tags and make it more natural
-        clean_text = MessageFilter.clean_message(msg.text)
-        
-        # Remove [VOICE] tag for display
-        display_text = clean_text.replace("[VOICE]", "").strip()
-        
-        # Clean up any remaining technical artifacts
-        # Remove markers like [STEP_COMPLETED], [VERIFIED], etc.
-        import re
-        display_text = re.sub(r'\[(?:STEP_COMPLETED|VERIFIED|FAILED|UNCERTAIN|NOT VERIFIED)\]', '', display_text).strip()
+        # Clean the message - remove unnecessary tags and make it more natural
+        display_text = MessageFilter.clean_message(msg.text)
         
         if not display_text:
             return result

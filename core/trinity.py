@@ -1266,7 +1266,7 @@ Return JSON with ONLY the replacement step.'''))
         next_agent = "grisha" if step_type == "verify" else "tetyana"
         
         voice = f"[VOICE] {next_agent.capitalize()}, {desc}."
-        content = f"{voice}\n\n[Atlas Debug] Step: {desc}. Next: {next_agent}"
+        content = voice
         
         return {
             "current_agent": next_agent,
