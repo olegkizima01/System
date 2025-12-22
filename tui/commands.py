@@ -11,7 +11,7 @@ from __future__ import annotations
 import threading
 from typing import Optional, Tuple
 
-from system_cli.state import state
+from tui.state import state
 
 
 def clear_agent_pause_state() -> None:
@@ -52,7 +52,7 @@ def get_input_prompt() -> str:
 
     try:
         ml = state.menu_level
-        from system_cli.state import MenuLevel
+        from tui.state import MenuLevel
         if ml != MenuLevel.NONE:
             return ""
     except Exception:

@@ -15,7 +15,7 @@ from prompt_toolkit.layout.layout import Layout
 from prompt_toolkit.styles import BaseStyle
 from prompt_toolkit.widgets import Frame
 from prompt_toolkit.layout.margins import ScrollbarMargin
-from system_cli.state import state, MenuLevel
+from tui.state import state, MenuLevel
 
 _app_state = {"instance": None}
 
@@ -148,7 +148,7 @@ def _handle_mouse_up(name: str, get_logs: Callable, get_agent_messages: Callable
 def _create_mouse_handler(name: str, force_ui_update: Callable, get_logs: Callable = None, get_agent_messages: Callable = None):
     def _handler(mouse_event: Any):
         from prompt_toolkit.mouse_events import MouseEventType
-        from system_cli.state import state
+        from tui.state import state
         
         scroll_delta = 10 
         

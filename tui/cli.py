@@ -41,7 +41,7 @@ if _repo_root not in sys.path:
     sys.path.insert(0, _repo_root)
 
 from i18n import TOP_LANGS, lang_name, normalize_lang, tr
-from system_cli.state import AppState, MenuLevel, state
+from tui.state import AppState, MenuLevel, state
 from tui.logger import setup_logging, get_logger, log_exception, log_command_execution, setup_root_file_logging
 
 from prompt_toolkit.buffer import Buffer
@@ -1126,7 +1126,7 @@ class _ProcTraceService:
         # Optionally run under sudo if environment / state indicates it
         use_sudo = False
         try:
-            from system_cli.state import state as _st
+            from tui.state import state as _st
             use_sudo = bool(getattr(_st, "monitor_use_sudo", False))
         except Exception:
             use_sudo = False

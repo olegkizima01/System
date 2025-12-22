@@ -15,7 +15,7 @@ from core.agents.grisha import get_grisha_prompt, get_grisha_media_prompt
 from core.vision_context import VisionContextManager
 from providers.copilot import CopilotLLM
 
-from core.mcp import MCPToolRegistry
+from core.mcp_registry import MCPToolRegistry
 from core.context7 import Context7
 from core.verification import AdaptiveVerifier
 from core.memory import get_memory

@@ -19,7 +19,7 @@ import traceback
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
-from system_cli.state import state
+from tui.state import state
 from i18n import lang_name
 from tui.cli_paths import SYSTEM_CLI_DIR, LLM_SETTINGS_PATH
 

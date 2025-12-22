@@ -161,7 +161,7 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
 
 def tr(key: str, lang: Optional[str] = None, *, fallback_lang: str = DEFAULT_LANG) -> str:
     """Translate a key into the specified or current UI language."""
-    from system_cli.state import state
+    from tui.state import state
     k = str(key)
     l = (lang or getattr(state, "ui_lang", None) or "").strip().lower() or fallback_lang
     if l in TRANSLATIONS and k in TRANSLATIONS[l]:

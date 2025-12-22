@@ -15,7 +15,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from prompt_toolkit.data_structures import Point
 
-from system_cli.state import state
+from tui.state import state
 from tui.messages import MessageBuffer, AgentType
 
 
@@ -460,7 +460,7 @@ def get_context() -> List[Tuple[str, str]]:
 
 def get_status() -> List[Tuple[str, str]]:
     """Generate status bar content for TUI."""
-    from system_cli.state import MenuLevel
+    from tui.state import MenuLevel
     if state.menu_level != MenuLevel.NONE:
         mode_indicator = [("class:status.menu", " MENU "), ("class:status", " ")]
     else:

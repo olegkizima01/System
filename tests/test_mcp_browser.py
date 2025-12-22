@@ -16,7 +16,7 @@ class TestMCPRouting:
     
     def test_mcp_routing_table(self):
         """Verify MCP routing table has correct mappings."""
-        from core.mcp import MCPToolRegistry
+        from core.mcp_registry import MCPToolRegistry
         
         # Initialize registry
         registry = MCPToolRegistry()
@@ -38,7 +38,7 @@ class TestMCPRouting:
     
     def test_adapt_args_navigate(self):
         """Test argument adaptation for browser_navigate."""
-        from core.mcp import MCPToolRegistry
+        from core.mcp_registry import MCPToolRegistry
         
         registry = MCPToolRegistry()
         
@@ -53,7 +53,7 @@ class TestMCPRouting:
     
     def test_adapt_args_click(self):
         """Test argument adaptation for browser_click_element."""
-        from core.mcp import MCPToolRegistry
+        from core.mcp_registry import MCPToolRegistry
         
         registry = MCPToolRegistry()
         
@@ -65,7 +65,7 @@ class TestMCPRouting:
     
     def test_adapt_args_type_text(self):
         """Test argument adaptation for browser_type_text."""
-        from core.mcp import MCPToolRegistry
+        from core.mcp_registry import MCPToolRegistry
         
         registry = MCPToolRegistry()
         
@@ -81,7 +81,7 @@ class TestMCPRouting:
     
     def test_adapt_args_screenshot(self):
         """Test argument adaptation for browser_screenshot."""
-        from core.mcp import MCPToolRegistry
+        from core.mcp_registry import MCPToolRegistry
         
         registry = MCPToolRegistry()
         
@@ -95,7 +95,7 @@ class TestMCPRouting:
     
     def test_external_provider_registration(self):
         """Test that external MCP providers are registered."""
-        from core.mcp import MCPToolRegistry
+        from core.mcp_registry import MCPToolRegistry
         
         registry = MCPToolRegistry()
         
@@ -105,7 +105,7 @@ class TestMCPRouting:
     
     def test_local_fallback(self):
         """Test that local tools still work as fallback."""
-        from core.mcp import MCPToolRegistry
+        from core.mcp_registry import MCPToolRegistry
         
         registry = MCPToolRegistry()
         
@@ -124,7 +124,7 @@ class TestMCPProviderIntegration:
     @pytest.mark.integration
     def test_playwright_mcp_connection(self):
         """Test connecting to Playwright MCP server."""
-        from core.mcp import MCPToolRegistry
+        from core.mcp_registry import MCPToolRegistry
         
         registry = MCPToolRegistry()
         

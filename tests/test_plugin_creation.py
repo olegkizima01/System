@@ -149,7 +149,7 @@ def test_plugin_keywords_in_constants():
 
 def test_create_plugin_tool_registered():
     """Test that create_plugin tool is registered in MCP registry."""
-    from core.mcp import MCPToolRegistry
+    from core.mcp_registry import MCPToolRegistry
     
     registry = MCPToolRegistry()
     

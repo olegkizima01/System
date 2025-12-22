@@ -1,7 +1,7 @@
 import subprocess
 
 from tui import monitoring
-from system_cli.state import state
+from tui.state import state
 
 
 def test_monitor_auto_select_populates_targets(monkeypatch, tmp_path):

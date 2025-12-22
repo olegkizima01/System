@@ -540,7 +540,7 @@ def register_mcp_tools_with_trinity(registry):
 
 # Auto-register with Trinity if available
 try:
-    from core.mcp import MCPToolRegistry
+    from core.mcp_registry import MCPToolRegistry
     
     # This will be called when Trinity initializes
     def _auto_register_with_trinity():

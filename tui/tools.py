@@ -19,7 +19,7 @@ import subprocess
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 
-from system_cli.state import state
+from tui.state import state
 from tui.cli_paths import SCRIPT_DIR, UI_SETTINGS_PATH, LLM_SETTINGS_PATH
 from tui.themes import THEME_NAMES
 
