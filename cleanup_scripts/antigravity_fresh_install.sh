@@ -36,7 +36,43 @@ echo "=================================================="
 echo "This module removes local Antigravity state so next launch behaves like first install."
 echo ""
 
-echo "[1/5] App Support / Caches / Preferences"
+echo "[0/6] Unmount Antigravity volumes and remove app"
+# Unmount any mounted Antigravity DMG volumes
+for vol in /Volumes/Antigravity*; do
+  if [ -d "$vol" ]; then
+    echo "🗑️  Unmounting: $vol"
+    hdiutil detach "$vol" -force 2>/dev/null || diskutil unmount force "$vol" 2>/dev/null
+    sleep 1
+  fi
+done
+
+# Also check for exact mount
+if [ -d "/Volumes/Antigravity" ]; then
+  echo "🗑️  Unmounting: /Volumes/Antigravity"
+  hdiutil detach "/Volumes/Antigravity" -force 2>/dev/null || diskutil unmount force "/Volumes/Antigravity" 2>/dev/null
+  sleep 1
+fi
+
+# Remove Antigravity apps
+ANTIGRAVITY_APPS=(
+    "/Applications/Antigravity.app"
+    "/Applications/Google Antigravity.app"
+    "$HOME/Applications/Antigravity.app"
+    "/Applications/Utilities/Antigravity.app"
+)
+
+for app in "${ANTIGRAVITY_APPS[@]}"; do
+    if [ -e "$app" ]; then
+        echo "🗑️  Removing app: $app"
+        rm -rf "$app" 2>/dev/null
+    fi
+done
+
+# Force remove any remaining
+find /Applications -maxdepth 2 -iname "*antigravity*.app" -exec rm -rf {} + 2>/dev/null
+find "$HOME/Applications" -maxdepth 2 -iname "*antigravity*.app" -exec rm -rf {} + 2>/dev/null
+
+echo "[1/6] App Support / Caches / Preferences"
 remove_glob "$HOME/Library/Application Support/Antigravity"
 remove_glob "$HOME/Library/Application Support/Google/Antigravity"
 remove_glob "$HOME/Library/Application Support/Gemini/Antigravity"
@@ -56,7 +92,7 @@ remove_glob "$HOME/Library/Application Scripts/*antigravity*"
 remove_glob "$HOME/Library/Logs/Antigravity*"
 remove_glob "$HOME/Library/Logs/Google/Antigravity*"
 
-echo "[1/5] Scan for Gemini + Antigravity paths (targeted)"
+echo "[2/6] Scan for Gemini + Antigravity paths (targeted)"
 GEMINI_ANTIGRAVITY_MATCHES=$(find "$HOME/Library" -maxdepth 8 -iname "*gemini*" 2>/dev/null | grep -i "antigravity" | head -n 200)
 if [ -n "$GEMINI_ANTIGRAVITY_MATCHES" ]; then
   echo "$GEMINI_ANTIGRAVITY_MATCHES" | while read -r p; do
@@ -64,11 +100,11 @@ if [ -n "$GEMINI_ANTIGRAVITY_MATCHES" ]; then
   done
 fi
 
-echo "[2/5] Defaults"
+echo "[3/6] Defaults"
 defaults delete com.google.antigravity 2>/dev/null
 defaults delete com.google.Antigravity 2>/dev/null
 
-echo "[3/5] Keychain"
+echo "[4/6] Keychain"
 for service in \
   "Antigravity" \
   "antigravity" \
@@ -81,7 +117,7 @@ for service in \
   security delete-generic-password -l "$service" 2>/dev/null
 done
 
-echo "[4/5] Browser site storage (targeted)"
+echo "[5/6] Browser site storage (targeted)"
 CHROME_DIR="$HOME/Library/Application Support/Google/Chrome"
 if [ -d "$CHROME_DIR" ]; then
   find "$CHROME_DIR" -path "*/IndexedDB/*antigravity*" -exec rm -rf {} + 2>/dev/null
@@ -91,7 +127,7 @@ if [ -d "$CHROME_DIR" ]; then
   find "$CHROME_DIR" -path "*/Service Worker/*antigravity*" -exec rm -rf {} + 2>/dev/null
 fi
 
-echo "[5/5] Summary"
+echo "[6/6] Summary"
 REMAINING=$(find "$HOME/Library" -name "*antigravity*" -o -name "*Antigravity*" 2>/dev/null | wc -l | tr -d ' ')
 echo "Remaining matches under ~/Library: $REMAINING"
 

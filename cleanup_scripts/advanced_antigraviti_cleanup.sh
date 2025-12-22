@@ -22,12 +22,28 @@ echo ""
 # Загальна кількість кроків: 12
 TOTAL_STEPS=12
 
-# 1. Зупинка всіх процесів
+# 1. Зупинка всіх процесів та відмонтування DMG
 print_step 1 $TOTAL_STEPS "Зупинка всіх пов'язаних процесів..."
 pkill -f antigravity 2>/dev/null
 pkill -f Antigravity 2>/dev/null
 sleep 2
-print_success "Процеси зупинено"
+
+# Unmount any mounted Antigravity DMG volumes
+for vol in /Volumes/Antigravity*; do
+    if [ -d "$vol" ]; then
+        print_info "Відмонтування: $vol"
+        hdiutil detach "$vol" -force 2>/dev/null || diskutil unmount force "$vol" 2>/dev/null
+        sleep 1
+    fi
+done
+
+if [ -d "/Volumes/Antigravity" ]; then
+    print_info "Відмонтування: /Volumes/Antigravity"
+    hdiutil detach "/Volumes/Antigravity" -force 2>/dev/null || diskutil unmount force "/Volumes/Antigravity" 2>/dev/null
+    sleep 1
+fi
+
+print_success "Процеси зупинено та DMG відмонтовано"
 
 # 2. Базове очищення Antigravity директорій
 print_step 2 $TOTAL_STEPS "Базове очищення Antigravity..."
@@ -36,13 +52,19 @@ ANTIGRAVITY_APPS=(
     "/Applications/Antigravity.app"
     "/Applications/Google Antigravity.app"
     "$HOME/Applications/Antigravity.app"
+    "/Applications/Utilities/Antigravity.app"
 )
 
 for app in "${ANTIGRAVITY_APPS[@]}"; do
     if [ -e "$app" ]; then
-        print_warning "Знайдено додаток: $(basename "$app")"
+        print_info "Видалення додатку: $app"
+        safe_remove "$app"
     fi
 done
+
+# Force remove any remaining Antigravity apps
+find /Applications -maxdepth 2 -iname "*antigravity*.app" -exec rm -rf {} + 2>/dev/null
+find "$HOME/Applications" -maxdepth 2 -iname "*antigravity*.app" -exec rm -rf {} + 2>/dev/null
 
 ANTIGRAVITY_PATHS=(
     "$HOME/Library/Application Support/Antigravity"

@@ -76,8 +76,8 @@ check_mikrotik_connection() {
     
     local key_path="${SSH_KEY/#\~/$HOME}"
     
-    if timeout 5 timeout 10 ssh -i "$key_path" -o StrictHostKeyChecking=no -o ConnectTimeout=5 \
-        -o ConnectTimeout=5 "${MIKROTIK_USER}@${MIKROTIK_HOST}" \
+    if timeout 10 ssh -i "$key_path" -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=5 \
+        "${MIKROTIK_USER}@${MIKROTIK_HOST}" \
         "system identity print" > /dev/null 2>&1; then
         print_success "MikroTik is accessible"
         return 0
@@ -120,7 +120,7 @@ update_mikrotik_ssid() {
     
     # Update all guest WiFi interfaces
     for iface in "${GUEST_WIFI_INTERFACES[@]}"; do
-        timeout 10 ssh -i "$key_path" -o StrictHostKeyChecking=no -o ConnectTimeout=5 \
+        timeout 10 ssh -i "$key_path" -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=5 \
             "${MIKROTIK_USER}@${MIKROTIK_HOST}" \
             "/interface wifi set [find name=\"${iface}\"] configuration.ssid=\"${new_ssid}\"" \
             2>&1 || return 1
@@ -139,13 +139,13 @@ update_mikrotik_ip_pool() {
     print_info "Updating MikroTik IP pool to: ${pool_range}"
     
     # Try to update existing pool
-    timeout 10 ssh -i "$key_path" -o StrictHostKeyChecking=no -o ConnectTimeout=5 \
+    timeout 10 ssh -i "$key_path" -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=5 \
         "${MIKROTIK_USER}@${MIKROTIK_HOST}" \
         "/ip pool set [find name=\"guest_pool\"] ranges=\"${pool_range}\"" \
         2>&1 || {
         # Create new pool if it doesn't exist
         print_info "Creating new IP pool..."
-        timeout 10 ssh -i "$key_path" -o StrictHostKeyChecking=no -o ConnectTimeout=5 \
+        timeout 10 ssh -i "$key_path" -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=5 \
             "${MIKROTIK_USER}@${MIKROTIK_HOST}" \
             "/ip pool add name=\"guest_pool\" ranges=\"${pool_range}\"" \
             2>&1 || return 1
@@ -415,7 +415,7 @@ show_status() {
     if check_mikrotik_connection; then
         print_info "Retrieving MikroTik WiFi status..."
         local key_path="${SSH_KEY/#\~/$HOME}"
-        timeout 10 ssh -i "$key_path" -o StrictHostKeyChecking=no -o ConnectTimeout=5 \
+        timeout 10 ssh -i "$key_path" -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=5 \
             "${MIKROTIK_USER}@${MIKROTIK_HOST}" \
             "/interface wifi print" || true
     fi

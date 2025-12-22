@@ -493,26 +493,6 @@ def _handle_cleanup_editors_enter_ctx(ctx):
     import threading
     def run_cleanup_thread():
         import re
-        # Use thread-local log override to provide an updating single-line stream
-        try:
-            from tui.render import log_reserve_line, log_replace_at, set_thread_log_override, clear_thread_log_override
-            idx = log_reserve_line("action")
-
-            def override(text: str, category: str = "action"):
-                try:
-                    clean_line = re.sub(r'\x1b\[[0-9;]*m', '', str(text or ""))
-                    log_replace_at(idx, clean_line, category or "action")
-                    try:
-                        ctx["force_ui_update"]()
-                    except Exception:
-                        pass
-                except Exception:
-                    pass
-
-            set_thread_log_override(override)
-        except Exception:
-            idx = None
-
         # Ensure log panel follows new output
         try:
             ctx["state"].ui_log_follow = True
@@ -531,25 +511,12 @@ def _handle_cleanup_editors_enter_ctx(ctx):
                         pass
 
             ok, msg = ctx["run_cleanup"](ctx["load_cleanup_config"](), key, dry_run=False, log_callback=cleanup_log)
-            # Finalize: clear override so final message is appended normally
-            try:
-                from tui.render import clear_thread_log_override
-                clear_thread_log_override()
-            except Exception:
-                pass
-
             ctx["log"](msg, "action" if ok else "error")
             ctx["force_ui_update"]()
         except Exception as e:
             try:
                 ctx["log"](f"Cleanup thread error: {e}", "error")
                 ctx["force_ui_update"]()
-            except Exception:
-                pass
-        finally:
-            try:
-                from tui.render import clear_thread_log_override
-                clear_thread_log_override()
             except Exception:
                 pass
 
