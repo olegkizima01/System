@@ -683,18 +683,25 @@ def _render_mcp_client_menu(ctx: dict) -> List[Tuple[str, str]]:
     result.append((STYLE_MENU_TITLE, " MCP CLIENT SETTINGS\n\n"))
     
     current = str(getattr(state, "mcp_client_type", "open_mcp")).strip().lower()
-    label = "OPEN MCP (CopilotKit)" if current == "open_mcp" else "CONTINUE MCP"
+    
+    if current == "open_mcp":
+        label = "OPEN MCP (CopilotKit)"
+        style = "class:toggle.on"
+    elif current == "continue":
+        label = "CONTINUE MCP"
+        style = "class:toggle.on"
+    else:
+        label = "AUTO (Task-based)"
+        style = "class:toggle.off" # Different style for Auto
     
     result.append((STYLE_MENU_SELECTED, f" > Current Client: ", make_click(0)))
-    style = "class:toggle.on" if current == "open_mcp" else "class:toggle.on" 
-    # Use same style for active, just different label
     result.append((style, f" {label} "))
     result.append(("", "\n\n"))
     
-    result.append((STYLE_MENU_ITEM, " Enter: Toggle between Open MCP / Continue\n"))
+    result.append((STYLE_MENU_ITEM, " Enter: Cycle through Open MCP -> Continue -> Auto\n"))
     
     # Note/Hint
-    result.append((STYLE_MENU_ITEM, "\n Note: Requires restart to take full effect on connection pools.\n"))
+    result.append((STYLE_MENU_ITEM, "\n Note: Auto mode uses Continue for DEV tasks and Open-MCP for others.\n"))
     return result
 
 

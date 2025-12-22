@@ -22,6 +22,7 @@ class MCPClientType(Enum):
     """Available MCP client types."""
     OPEN_MCP = "open_mcp"      # CopilotKit/open-mcp-client
     CONTINUE = "continue"      # @continuedev/cli
+    AUTO = "auto"              # Automatic switching based on task
 
 
 class BaseMCPClient(ABC):
@@ -150,13 +151,25 @@ class MCPClientManager:
         """Get human-readable name of active client."""
         names = {
             MCPClientType.OPEN_MCP: "Open-MCP (CopilotKit)",
-            MCPClientType.CONTINUE: "Continue CLI"
+            MCPClientType.CONTINUE: "Continue CLI",
+            MCPClientType.AUTO: "Auto (Task-based)"
         }
         return names.get(self._active_type, "Unknown")
+
+    def resolve_client_type(self, task_type: Optional[str] = None) -> MCPClientType:
+        """Resolve the client type based on task context if in AUTO mode."""
+        if self._active_type != MCPClientType.AUTO:
+            return self._active_type
+            
+        # Decision logic for AUTO mode
+        if task_type and task_type.upper() == "DEV":
+            return MCPClientType.CONTINUE
+            
+        return MCPClientType.OPEN_MCP
     
-    def get_client(self, client_type: Optional[MCPClientType] = None) -> Optional[BaseMCPClient]:
-        """Get a client instance."""
-        ct = client_type or self._active_type
+    def get_client(self, client_type: Optional[MCPClientType] = None, task_type: Optional[str] = None) -> Optional[BaseMCPClient]:
+        """Get a client instance. If in AUTO, resolves based on task_type."""
+        ct = client_type or self.resolve_client_type(task_type)
         return self._clients.get(ct)
     
     def switch_client(self, client_type: MCPClientType, save: bool = True) -> bool:
@@ -170,7 +183,7 @@ class MCPClientManager:
         Returns:
             True if switch was successful
         """
-        if client_type not in self._clients:
+        if client_type not in self._clients and client_type != MCPClientType.AUTO:
             logger.error(f"Client type {client_type} not available")
             return False
         
@@ -200,9 +213,9 @@ class MCPClientManager:
         self.switch_client(new_type, save=save)
         return self._active_type
     
-    def execute(self, tool_name: str, args: Dict[str, Any]) -> Dict[str, Any]:
-        """Execute a tool using the active client."""
-        client = self.get_client()
+    def execute(self, tool_name: str, args: Dict[str, Any], task_type: Optional[str] = None) -> Dict[str, Any]:
+        """Execute a tool using the active client (or resolved client in AUTO)."""
+        client = self.get_client(task_type=task_type)
         if not client:
             return {
                 "success": False,

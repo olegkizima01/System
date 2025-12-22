@@ -443,13 +443,17 @@ def _handle_mcp_client_enter_ctx(ctx):
     """Handle enter key in MCP client menu."""
     state, log = ctx["state"], ctx["log"]
     
-    # Map index to client type
-    # 0: open_mcp, 1: continue
-    clients = ["open_mcp", "continue"]
-    if state.menu_index < 0 or state.menu_index >= len(clients):
-        return
+    # 0: open_mcp, 1: continue, 2: auto
+    clients = ["open_mcp", "continue", "auto"]
+    current = str(getattr(state, "mcp_client_type", "open_mcp")).strip().lower()
+    
+    try:
+        idx = clients.index(current)
+    except ValueError:
+        idx = 0
         
-    new_client = clients[state.menu_index]
+    next_idx = (idx + 1) % len(clients)
+    new_client = clients[next_idx]
     
     try:
         from mcp_integration.core.mcp_client_manager import get_mcp_client_manager, MCPClientType
@@ -459,12 +463,7 @@ def _handle_mcp_client_enter_ctx(ctx):
         if mgr.switch_client(MCPClientType(new_client)):
             # Update UI state
             state.mcp_client_type = new_client
-            log(f"Switched MCP Client to: {new_client}", "action")
-            
-            # Also update legacy mcp tool registry if needed?
-            # Core mcp functionality should use manager now, so this is implicit.
-            # But we might want to ensure core.mcp is aware if it caches anything.
-            # (Based on my edits to core/mcp.py, it delegates to manager, so it should be fine)
+            log(f"MCP Client Mode: {new_client.upper()}", "action")
         else:
             log(f"Failed to switch to {new_client}", "error")
             

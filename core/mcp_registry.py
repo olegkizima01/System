@@ -599,7 +599,7 @@ class MCPToolRegistry:
     def get_tool(self, name: str) -> Optional[Callable]:
         return self._tools.get(name)
 
-    def list_tools(self) -> str:
+    def list_tools(self, task_type: Optional[str] = None) -> str:
         """Returns a formatted list of tools for the System Prompt."""
         lines = []
         # Local tools
@@ -620,24 +620,44 @@ class MCPToolRegistry:
 
         # Active MCP Client Dynamic Tools
         try:
-            client = self._mcp_client_manager.get_client()
-            if client:
-                # Ensure connected to discover tools
-                if not client.is_connected:
-                    client.connect()
-                client_tools = client.list_tools()
-                if client_tools:
-                    lines.append(f"\n--- Tools from {self._mcp_client_manager.active_client_name} ---")
-                    for tool in client_tools:
-                        name = tool.get("name", "unknown")
-                        desc = tool.get("description", "No description")
-                        lines.append(f"- {name}: {desc}")
+            from mcp_integration.core.mcp_client_manager import MCPClientType
+            mgr = self._mcp_client_manager
+            
+            if mgr.active_client == MCPClientType.AUTO:
+                # In AUTO mode, for the prompt, we might want to show all tools 
+                # or tools for the most likely client.
+                # Let's show a combined list but prioritize the resolved one.
+                resolved_type = mgr.resolve_client_type(task_type)
+                lines.append(f"\n--- MCP Tools (AUTO Mode: {mgr.active_client_name} -> {resolved_type.value}) ---")
+                
+                # Show all tools from both for discoverability
+                for ct in [MCPClientType.OPEN_MCP, MCPClientType.CONTINUE]:
+                    client = mgr.get_client(ct)
+                    if client:
+                        if not client.is_connected: client.connect()
+                        c_tools = client.list_tools()
+                        for tool in c_tools:
+                            name = tool.get("name", "unknown")
+                            desc = tool.get("description", "No description")
+                            prefix = "[DEV] " if ct == MCPClientType.CONTINUE else ""
+                            lines.append(f"- {name}: {prefix}{desc}")
+            else:
+                client = mgr.get_client()
+                if client:
+                    if not client.is_connected: client.connect()
+                    client_tools = client.list_tools()
+                    if client_tools:
+                        lines.append(f"\n--- Tools from {mgr.active_client_name} ---")
+                        for tool in client_tools:
+                            name = tool.get("name", "unknown")
+                            desc = tool.get("description", "No description")
+                            lines.append(f"- {name}: {desc}")
         except Exception as e:
             print(f"[MCP] Failed to list tools from active client: {e}")
             
         return "\n".join(lines)
 
-    def get_all_tool_definitions(self) -> List[Dict[str, str]]:
+    def get_all_tool_definitions(self, task_type: Optional[str] = None) -> List[Dict[str, str]]:
         """Returns a list of tool definitions for LLM binding."""
         defs = []
         
@@ -647,29 +667,33 @@ class MCPToolRegistry:
             
         # Active MCP Client Dynamic Tools
         try:
-            client = self._mcp_client_manager.get_client()
-            if client:
-                # Ensure connected to discover tools
-                if not client.is_connected:
-                    client.connect()
-                client_tools = client.list_tools()
-                for tool in client_tools:
-                    # We might want to prefix these too, but clients usually handle their own naming
-                    defs.append({
-                        "name": tool.get("name"),
-                        "description": tool.get("description")
-                    })
+            from mcp_integration.core.mcp_client_manager import MCPClientType
+            mgr = self._mcp_client_manager
+            
+            # If in AUTO, we provide definitions from both clients so LLM knows what exists
+            clients_to_query = [MCPClientType.OPEN_MCP, MCPClientType.CONTINUE] if mgr.active_client == MCPClientType.AUTO else [mgr.active_client]
+            
+            for ct in clients_to_query:
+                client = mgr.get_client(ct)
+                if client:
+                    if not client.is_connected: client.connect()
+                    client_tools = client.list_tools()
+                    for tool in client_tools:
+                        defs.append({
+                            "name": tool.get("name"),
+                            "description": tool.get("description")
+                        })
         except Exception as e:
             print(f"[MCP] Failed to get tool definitions from active client: {e}")
                 
         return defs
 
-    def execute(self, tool_name: str, args: Dict[str, Any]) -> str:
+    def execute(self, tool_name: str, args: Dict[str, Any], task_type: Optional[str] = None) -> str:
         """Executes a tool safely and returns a string result."""
         
         # 0. Delegate to Active MCP Client Manager if it handles this tool
         # We try to route known MCP tools through the manager first
-        mcp_res = self._try_mcp_routing(tool_name, args)
+        mcp_res = self._try_mcp_routing(tool_name, args, task_type=task_type)
         if mcp_res is not None:
             return mcp_res
 
@@ -681,7 +705,7 @@ class MCPToolRegistry:
         # 3. Local Tool Call
         return self._execute_local_tool(tool_name, args)
 
-    def _try_mcp_routing(self, tool_name: str, args: Dict[str, Any]) -> Optional[str]:
+    def _try_mcp_routing(self, tool_name: str, args: Dict[str, Any], task_type: Optional[str] = None) -> Optional[str]:
         mcp_routing = {
             "browser_open_url": ("playwright", "playwright_navigate"),
             "browser_navigate": ("playwright", "playwright_navigate"),
@@ -709,10 +733,8 @@ class MCPToolRegistry:
         full_tool_name = f"{provider_name}.{mcp_tool}"
         
         try:
-            mcp_args = self._adapt_args_for_mcp(tool_name, mcp_tool, args)
-            
             # Execute via manager
-            res_dict = self._mcp_client_manager.execute(full_tool_name, mcp_args)
+            res_dict = self._mcp_client_manager.execute(full_tool_name, mcp_args, task_type=task_type)
             
             if not res_dict["success"]:
                  # Fallback to legacy ExternalMCPProvider if manager fails? 

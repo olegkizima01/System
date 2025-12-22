@@ -1058,7 +1058,7 @@ class TrinityRuntime:
         
         prompt = get_atlas_plan_prompt(
             f"Global Goal: {state.get('original_task')}\nCurrent Request: {last_msg}\n\nEXECUTION HISTORY SO FAR (Status of steps):\n{history_str}",
-            tools_desc=self.registry.list_tools(),
+            tools_desc=self.registry.list_tools(task_type=state.get("task_type")),
             context=final_context + ("\n\n[MEDIA_MODE] This is a media-related task. Use the Two-Phase Media Strategy." if state.get("is_media") else ""),
             preferred_language=self.preferred_language,
             forbidden_actions="\n".join(state.get("forbidden_actions") or []),
@@ -1296,7 +1296,7 @@ Return JSON with ONLY the replacement step.'''))
         full_context = self._prepare_tetyana_context(state, original_task, last_msg)
         prompt = get_tetyana_prompt(
             full_context,
-            tools_desc=self.registry.list_tools(),
+            tools_desc=self.registry.list_tools(task_type=state.get("task_type")),
             preferred_language=self.preferred_language,
             vision_context=self.vision_context_manager.current_context
         )
@@ -1477,7 +1477,7 @@ Return JSON with ONLY the replacement step.'''))
 
                 # auto-apply: execute write via registry
                 try:
-                    res_str = self.registry.execute(name, args)
+                    res_str = self.registry.execute(name, args, task_type=state.get("task_type"))
                 except Exception as e:
                     res_str = f"Error: {e}"
 
@@ -1501,7 +1501,7 @@ Return JSON with ONLY the replacement step.'''))
 
             res_str = None
             try:
-                res_str = self.registry.execute(name, args)
+                res_str = self.registry.execute(name, args, task_type=state.get("task_type"))
             except Exception as e:
                 res_str = f"Error: {e}"
             results.append(f"Result for {name}: {res_str}")
@@ -1709,11 +1709,11 @@ Return JSON with ONLY the replacement step.'''))
         verify_context = f"GLOBAL GOAL: {original_task}\nSTEP TO VERIFY: {current_step}\nREPORT: {last_msg[:1000]}"
         
         if state.get("is_media"):
-            return get_grisha_media_prompt(verify_context, tools_desc=self.registry.list_tools(), preferred_language=self.preferred_language)
+            return get_grisha_media_prompt(verify_context, tools_desc=self.registry.list_tools(task_type=state.get("task_type")), preferred_language=self.preferred_language)
         
         return get_grisha_prompt(
             verify_context,
-            tools_desc=self.registry.list_tools(),
+            tools_desc=self.registry.list_tools(task_type=state.get("task_type")),
             preferred_language=self.preferred_language,
             vision_context=self.vision_context_manager.current_context
         )
