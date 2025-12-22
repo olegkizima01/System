@@ -5,6 +5,7 @@ import subprocess
 import re
 import time
 from datetime import datetime
+import requests
 from langgraph.graph import StateGraph, END
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage
 
@@ -466,6 +467,13 @@ class TrinityRuntime:
             diags = self._collect_pause_diagnostics(state)
             if diags:
                 pause_info["diagnostics"] = diags
+                try:
+                    s = diags.get("sonar")
+                    if s and isinstance(s, dict):
+                        cnt = s.get("issues_count") or (len(s.get("issues") or []))
+                        self.logger.info(f"🚨 SonarQube: attached {cnt} issue(s) to Vibe pause (project={s.get('project_key')})")
+                except Exception:
+                    pass
         except Exception:
             # Never fail the pause creation if diagnostics collection fails
             pass
@@ -589,6 +597,14 @@ class TrinityRuntime:
                     diagnostics["stack_trace"] = "\n".join(st_lines)
                 except Exception:
                     diagnostics["stack_trace"] = None
+
+            # Best-effort: attach SonarQube findings to diagnostics when available
+            try:
+                sonar_info = self._fetch_sonar_issues()
+                if sonar_info:
+                    diagnostics["sonar"] = sonar_info
+            except Exception:
+                pass
 
         except Exception:
             # best-effort only
@@ -2047,6 +2063,84 @@ Return JSON with ONLY the replacement step.'''))
                 return None
             root = (proc.stdout or "").strip()
             return root or None
+        except Exception:
+            return None
+
+    def _get_sonar_project_key(self) -> Optional[str]:
+        """Determine Sonar project key from environment or sonar-project.properties in repo root."""
+        # 1. env override
+        pk = os.getenv("SONAR_PROJECT_KEY") or os.getenv("SONAR_PROJECT") or os.getenv("SONAR_PROJECT_KEY_OVERRIDE")
+        if pk:
+            return pk.strip()
+
+        # 2. try to read sonar-project.properties at repo root
+        root = self._get_git_root()
+        if not root:
+            return None
+        props = os.path.join(root, "sonar-project.properties")
+        if not os.path.exists(props):
+            return None
+        try:
+            with open(props, 'r', encoding='utf-8') as f:
+                for line in f:
+                    if line.strip().startswith("sonar.projectKey"):
+                        parts = line.split("=", 1)
+                        if len(parts) == 2:
+                            return parts[1].strip()
+        except Exception:
+            return None
+        return None
+
+    def _fetch_sonar_issues(self, project_key: Optional[str] = None, severities: str = "CRITICAL,BLOCKER,MAJOR") -> Optional[Dict[str, Any]]:
+        """Fetch SonarQube issues and quality gate status for the given project key.
+
+        Returns a dict with summary information or None if not configured.
+        This is best-effort and must never raise.
+        """
+        try:
+            api_key = os.getenv("SONAR_API_KEY")
+            if not api_key:
+                return None
+
+            project_key = project_key or self._get_sonar_project_key()
+            if not project_key:
+                return None
+
+            base = os.getenv("SONAR_URL", "https://sonarcloud.io").rstrip("/")
+
+            issues_url = f"{base}/api/issues/search"
+            params = {
+                "componentKeys": project_key,
+                "severities": severities,
+                "resolved": "false",
+                "ps": 50
+            }
+            resp = requests.get(issues_url, params=params, auth=(api_key, ""), timeout=10)
+            if resp.status_code != 200:
+                return {"error": f"sonar_api_failed:{resp.status_code}", "status_code": resp.status_code}
+            data = resp.json()
+            issues = []
+            for it in data.get("issues", [])[:20]:
+                issues.append({
+                    "key": it.get("key"),
+                    "message": it.get("message"),
+                    "severity": it.get("severity"),
+                    "component": it.get("component"),
+                    "line": it.get("textRange", {}).get("startLine"),
+                    "rule": it.get("rule"),
+                })
+
+            # Quality gate
+            qg = None
+            try:
+                qg_url = f"{base}/api/qualitygates/project_status"
+                qg_resp = requests.get(qg_url, params={"projectKey": project_key}, auth=(api_key, ""), timeout=6)
+                if qg_resp.status_code == 200:
+                    qg = qg_resp.json().get("projectStatus")
+            except Exception:
+                qg = None
+
+            return {"project_key": project_key, "issues_count": data.get("total", 0), "issues": issues, "quality_gate": qg}
         except Exception:
             return None
 
