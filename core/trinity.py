@@ -1415,96 +1415,118 @@ Return JSON with ONLY the replacement step.'''))
 
 
     def _router(self, state: TrinityState):
-        current = state.get("current_agent", "meta_planner")  # Safe default to meta_planner
-        
-        # Check for Vibe CLI Assistant pause state
-        if state.get("vibe_assistant_pause"):
-            pause_info = state.get("vibe_assistant_pause")
-            if pause_info is None:
-                # Corrupted pause state, reset
-                state["vibe_assistant_pause"] = None
-                return current
-            
-            # Try auto-repair if enabled
-            if self.vibe_assistant.should_attempt_auto_repair(pause_info):
-                if self.verbose:
-                    self.logger.info("🔧 Doctor Vibe: Attempting auto-repair...")
-                
-                repair_result = self.vibe_assistant.attempt_auto_repair(pause_info)
-                
-                if repair_result and repair_result.get("success"):
-                    # Auto-repair succeeded - clear pause and continue
-                    if self.verbose:
-                        self.logger.info(f"✅ Doctor Vibe: Auto-repair successful! Resuming execution.")
-                    
-                    # Clear pause state in vibe_assistant (already done by attempt_auto_repair)
-                    # Update state to remove pause
-                    state["vibe_assistant_pause"] = None
-                    state["vibe_assistant_context"] = f"AUTO-REPAIRED: {repair_result.get('message', 'Fixed') if repair_result else 'Fixed'}"
-                    
-                    # Reset failure counters to give system fresh start
-                    state["current_step_fail_count"] = 0
-                    state["uncertain_streak"] = 0
-                    
-                    # Return to meta_planner for fresh planning after repair
-                    return "meta_planner"
-                else:
-                    # Auto-repair failed - keep paused, wait for human
-                    if self.verbose:
-                        self.logger.warning(f"⚠️ Doctor Vibe: Auto-repair failed. Waiting for human intervention.")
-                    return current
-            
-            # No auto-repair - stay paused
-            if self.verbose:
-                self.logger.info(f"Vibe CLI Assistant PAUSE: {pause_info.get('message', 'No reason provided')}")
+        """Route to next agent based on current state."""
+        current = state.get("current_agent", "meta_planner")
+
+        # Step 1: Handle existing pause state
+        pause_result = self._handle_existing_pause(state, current)
+        if pause_result is not None:
+            return pause_result
+
+        # Step 2: Check for new intervention needed
+        intervention_result = self._handle_new_intervention(state, current)
+        if intervention_result is not None:
+            return intervention_result
+
+        # Step 3: Check for knowledge transition
+        knowledge_result = self._check_knowledge_transition(state, current)
+        if knowledge_result is not None:
+            return knowledge_result
+
+        return current
+
+    def _handle_existing_pause(self, state: TrinityState, current: str) -> Optional[str]:
+        """Handle existing vibe assistant pause state."""
+        if not state.get("vibe_assistant_pause"):
+            return None
+
+        pause_info = state.get("vibe_assistant_pause")
+        if pause_info is None:
+            state["vibe_assistant_pause"] = None
             return current
-        
-        # Check if Vibe CLI Assistant intervention is needed
+
+        # Try auto-repair
+        repair_result = self._try_auto_repair(state, pause_info)
+        if repair_result is not None:
+            return repair_result
+
+        # Stay paused
+        if self.verbose:
+            self.logger.info(f"Vibe CLI Assistant PAUSE: {pause_info.get('message', 'No reason provided')}")
+        return current
+
+    def _try_auto_repair(self, state: TrinityState, pause_info: dict) -> Optional[str]:
+        """Attempt auto-repair for paused state. Returns new agent or None."""
+        if not self.vibe_assistant.should_attempt_auto_repair(pause_info):
+            return None
+
+        if self.verbose:
+            self.logger.info("🔧 Doctor Vibe: Attempting auto-repair...")
+
+        repair_result = self.vibe_assistant.attempt_auto_repair(pause_info)
+
+        if not (repair_result and repair_result.get("success")):
+            if self.verbose:
+                self.logger.warning("⚠️ Doctor Vibe: Auto-repair failed. Waiting for human intervention.")
+            return state.get("current_agent", "meta_planner")
+
+        # Success - clear pause and reset counters
+        if self.verbose:
+            self.logger.info("✅ Doctor Vibe: Auto-repair successful! Resuming execution.")
+
+        state["vibe_assistant_pause"] = None
+        state["vibe_assistant_context"] = f"AUTO-REPAIRED: {repair_result.get('message', 'Fixed')}"
+        state["current_step_fail_count"] = 0
+        state["uncertain_streak"] = 0
+        return "meta_planner"
+
+    def _handle_new_intervention(self, state: TrinityState, current: str) -> Optional[str]:
+        """Check if new intervention is needed and handle it."""
         pause_context = self._check_for_vibe_assistant_intervention(state)
-        if pause_context:
-            # Check if we should try auto-repair first
-            if pause_context.get("auto_resume_available", False) or pause_context.get("background_mode", False):
-                if self.vibe_assistant.should_attempt_auto_repair(pause_context):
-                    repair_result = self.vibe_assistant.attempt_auto_repair(pause_context)
-                    if repair_result and repair_result.get("success"):
-                        # Fixed before even creating pause - continue normally
-                        if self.verbose:
-                            self.logger.info("🔧 Doctor Vibe: Pre-emptive repair successful!")
-                        return current  # Continue without pause
-            
-            # Create pause state and return to current agent
-            new_state = self._create_vibe_assistant_pause_state(state, 
-                                                               pause_context.get("reason", "unknown"), 
-                                                               pause_context.get("message", "Unknown pause reason"))
-            # Update the state in the workflow
-            # We'll handle this in the node functions
-            if self.verbose:
-                self.logger.info(f"Vibe CLI Assistant INTERVENTION: {pause_context.get('message', 'Unknown reason')}")
-            return current
-        
+        if not pause_context:
+            return None
+
+        # Try pre-emptive repair
+        if pause_context.get("auto_resume_available", False) or pause_context.get("background_mode", False):
+            if self.vibe_assistant.should_attempt_auto_repair(pause_context):
+                repair_result = self.vibe_assistant.attempt_auto_repair(pause_context)
+                if repair_result and repair_result.get("success"):
+                    if self.verbose:
+                        self.logger.info("🔧 Doctor Vibe: Pre-emptive repair successful!")
+                    return None  # Continue without pause
+
+        # Create pause state
+        self._create_vibe_assistant_pause_state(
+            state,
+            pause_context.get("reason", "unknown"),
+            pause_context.get("message", "Unknown pause reason")
+        )
+        if self.verbose:
+            self.logger.info(f"Vibe CLI Assistant INTERVENTION: {pause_context.get('message', 'Unknown reason')}")
+        return current
+
+    def _check_knowledge_transition(self, state: TrinityState, current: str) -> Optional[str]:
+        """Check if we should transition to knowledge node."""
         try:
-            # Check for completion to trigger learning
-            # If current is 'end', we check if we should go to 'knowledge' first
-            if current == "end":
-                # ANTI-LOOP: If we were already in knowledge, just end
-                # We can check the messages or a specific state flag if we added one.
-                # But simpler: if the last message was from Grisha/Meta and contains success, go to knowledge.
-                # If the last message was from Knowledge, then it's really the end.
-                
-                # Check the message history to see who sent the last message
-                messages = state.get("messages", [])
-                if messages and isinstance(messages[-1], AIMessage):
-                    content = getattr(messages[-1], "content", "").lower() if messages[-1] is not None else ""
-                    # If it sounds like success AND it's not a message from the knowledge node itself
-                    if any(x in content for x in ["завершена", "готово", "виконано", "completed", "success"]):
-                        # Simple heuristic: if the message doesn't mention "experience stored" (which knowledge node does)
-                        if "experience stored" not in content and "досвід збережено" not in content:
-                            return "knowledge"
+            if current != "end":
+                return None
+
+            messages = state.get("messages", [])
+            if not messages or not isinstance(messages[-1], AIMessage):
+                return None
+
+            content = getattr(messages[-1], "content", "").lower() if messages[-1] else ""
+            success_markers = ["завершена", "готово", "виконано", "completed", "success"]
+            knowledge_markers = ["experience stored", "досвід збережено"]
+
+            if any(x in content for x in success_markers):
+                if not any(x in content for x in knowledge_markers):
+                    return "knowledge"
 
             trace(self.logger, "router_decision", {"current": current, "next": current})
         except Exception:
             pass
-        return current
+        return None
 
     # _extract_json_object was moved to the top of the class to avoid duplication.
 
@@ -1756,138 +1778,109 @@ Return JSON with ONLY the replacement step.'''))
         return cut + "…"
 
     def _auto_commit_on_success(self, *, task: str, report: str, repo_changes: Dict[str, Any]) -> Dict[str, Any]:
+        """Auto-commit changes on successful task completion."""
         root = self._get_git_root()
         if not root:
             return {"ok": False, "error": "not_a_git_repo"}
 
         try:
-            env = os.environ.copy()
-            env.setdefault("GIT_AUTHOR_NAME", "Trinity")
-            env.setdefault("GIT_AUTHOR_EMAIL", "trinity@local")
-            env.setdefault("GIT_COMMITTER_NAME", env["GIT_AUTHOR_NAME"])
-            env.setdefault("GIT_COMMITTER_EMAIL", env["GIT_AUTHOR_EMAIL"])
+            env = self._prepare_git_env()
 
-            status = subprocess.run(
-                ["git", "status", "--porcelain"],
-                cwd=root,
-                capture_output=True,
-                text=True,
-                env=env,
-            )
+            # Check if there are changes
+            status = self._run_git_command(["git", "status", "--porcelain"], root, env)
             if status.returncode != 0:
                 return {"ok": False, "error": (status.stderr or "").strip() or "git status failed"}
 
             has_changes = bool((status.stdout or "").strip())
 
-            short_task = self._short_task_for_commit(task)
-            subject = f"Trinity task completed: {short_task}"
+            # Create commit
+            commit_result = self._create_commit(root, env, task, repo_changes, has_changes)
+            if commit_result.get("error"):
+                return commit_result
 
-            diff_stat = str(repo_changes.get("diff_stat") or "").strip() if isinstance(repo_changes, dict) else ""
-            body_lines: List[str] = []
-            if diff_stat:
-                body_lines.append("Diff stat:")
-                body_lines.append(diff_stat)
-            body = "\n".join(body_lines).strip()
+            # Stage additional files and amend if needed
+            amended = self._stage_and_amend(root, env, report)
 
-            add = subprocess.run(
-                ["git", "add", "."],
-                cwd=root,
-                capture_output=True,
-                text=True,
-                env=env,
-            )
-            if add.returncode != 0:
-                return {"ok": False, "error": (add.stderr or "").strip() or "git add failed"}
-
-            commit_cmd: List[str] = [
-                "git",
-                "-c",
-                "user.name=Trinity",
-                "-c",
-                "user.email=trinity@local",
-                "commit",
-                "--allow-empty",
-                "-m",
-                subject,
-            ]
-            if body:
-                commit_cmd.extend(["-m", body])
-
-            env_commit = env.copy()
-            env_commit["TRINITY_POST_COMMIT_RUNNING"] = "1"
-            commit = subprocess.run(
-                commit_cmd,
-                cwd=root,
-                capture_output=True,
-                text=True,
-                env=env_commit,
-            )
-            if commit.returncode != 0:
-                combined = (commit.stdout or "") + "\n" + (commit.stderr or "")
-                if "nothing to commit" in combined.lower():
-                    if not has_changes:
-                        return {"ok": True, "skipped": True, "reason": "nothing_to_commit"}
-                return {"ok": False, "error": (commit.stderr or "").strip() or "git commit failed"}
-
-            structure_ok = self._regenerate_project_structure(report)
-            amended = False
-            response_path = os.path.join(root, self.LAST_RESPONSE_FILE)
-
-            if os.path.exists(response_path):
-                subprocess.run(
-                    ["git", "add", self.LAST_RESPONSE_FILE],
-                    cwd=root,
-                    capture_output=True,
-                    text=True,
-                    env=env,
-                )
-
-            if structure_ok and os.path.exists(os.path.join(root, self.PROJECT_STRUCTURE_FILE)):
-                subprocess.run(
-                    ["git", "add", "-f", self.PROJECT_STRUCTURE_FILE],
-                    cwd=root,
-                    capture_output=True,
-                    text=True,
-                    env=env,
-                )
-
-            cached = subprocess.run(
-                ["git", "diff", "--cached", "--quiet"],
-                cwd=root,
-                capture_output=True,
-                text=True,
-                env=env,
-            )
-            if cached.returncode != 0:
-                env_amend = env.copy()
-                env_amend["TRINITY_POST_COMMIT_RUNNING"] = "1"
-                amend = subprocess.run(
-                    ["git", "commit", "--amend", "--no-edit"],
-                    cwd=root,
-                    capture_output=True,
-                    text=True,
-                    env=env_amend,
-                )
-                if amend.returncode == 0:
-                    amended = True
-
-            head = subprocess.run(
-                ["git", "rev-parse", "HEAD"],
-                cwd=root,
-                capture_output=True,
-                text=True,
-                env=env,
-            )
+            # Get final commit hash
+            head = self._run_git_command(["git", "rev-parse", "HEAD"], root, env)
             commit_hash = (head.stdout or "").strip() if head.returncode == 0 else ""
+
             return {
                 "ok": True,
-                "skipped": False,
+                "skipped": commit_result.get("skipped", False),
                 "commit": commit_hash,
-                "structure_ok": bool(structure_ok),
+                "structure_ok": bool(commit_result.get("structure_ok")),
                 "amended": bool(amended),
             }
         except Exception as e:
             return {"ok": False, "error": str(e)}
+
+    def _prepare_git_env(self) -> Dict[str, str]:
+        """Prepare git environment with Trinity author info."""
+        env = os.environ.copy()
+        env.setdefault("GIT_AUTHOR_NAME", "Trinity")
+        env.setdefault("GIT_AUTHOR_EMAIL", "trinity@local")
+        env.setdefault("GIT_COMMITTER_NAME", env["GIT_AUTHOR_NAME"])
+        env.setdefault("GIT_COMMITTER_EMAIL", env["GIT_AUTHOR_EMAIL"])
+        return env
+
+    def _run_git_command(self, cmd: List[str], cwd: str, env: Dict[str, str]) -> subprocess.CompletedProcess:
+        """Run a git command and return result."""
+        return subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, env=env)
+
+    def _create_commit(self, root: str, env: Dict[str, str], task: str, 
+                       repo_changes: Dict[str, Any], has_changes: bool) -> Dict[str, Any]:
+        """Create git commit with task info."""
+        # Stage all changes
+        add = self._run_git_command(["git", "add", "."], root, env)
+        if add.returncode != 0:
+            return {"ok": False, "error": (add.stderr or "").strip() or "git add failed"}
+
+        # Prepare commit message
+        short_task = self._short_task_for_commit(task)
+        subject = f"Trinity task completed: {short_task}"
+        diff_stat = str(repo_changes.get("diff_stat") or "").strip() if isinstance(repo_changes, dict) else ""
+
+        commit_cmd = [
+            "git", "-c", "user.name=Trinity", "-c", "user.email=trinity@local",
+            "commit", "--allow-empty", "-m", subject,
+        ]
+        if diff_stat:
+            commit_cmd.extend(["-m", f"Diff stat:\n{diff_stat}"])
+
+        env_commit = env.copy()
+        env_commit["TRINITY_POST_COMMIT_RUNNING"] = "1"
+        commit = self._run_git_command(commit_cmd, root, env_commit)
+
+        if commit.returncode != 0:
+            combined = (commit.stdout or "") + "\n" + (commit.stderr or "")
+            if "nothing to commit" in combined.lower() and not has_changes:
+                return {"ok": True, "skipped": True, "reason": "nothing_to_commit"}
+            return {"ok": False, "error": (commit.stderr or "").strip() or "git commit failed"}
+
+        return {"ok": True, "skipped": False}
+
+    def _stage_and_amend(self, root: str, env: Dict[str, str], report: str) -> bool:
+        """Stage additional files and amend commit if needed."""
+        structure_ok = self._regenerate_project_structure(report)
+        response_path = os.path.join(root, self.LAST_RESPONSE_FILE)
+
+        # Stage response file
+        if os.path.exists(response_path):
+            self._run_git_command(["git", "add", self.LAST_RESPONSE_FILE], root, env)
+
+        # Stage structure file
+        if structure_ok and os.path.exists(os.path.join(root, self.PROJECT_STRUCTURE_FILE)):
+            self._run_git_command(["git", "add", "-f", self.PROJECT_STRUCTURE_FILE], root, env)
+
+        # Check if we need to amend
+        cached = self._run_git_command(["git", "diff", "--cached", "--quiet"], root, env)
+        if cached.returncode != 0:
+            env_amend = env.copy()
+            env_amend["TRINITY_POST_COMMIT_RUNNING"] = "1"
+            amend = self._run_git_command(["git", "commit", "--amend", "--no-edit"], root, env_amend)
+            return amend.returncode == 0
+        return False
 
     def _format_final_report(
         self,
