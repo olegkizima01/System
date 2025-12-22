@@ -521,7 +521,7 @@ def _handle_settings_enter(ctx):
         action = item[1]
         # Handle special actions (non-MenuLevel items)
         if action == "mcp_settings":
-            ctx["log"]("MCP Client Settings: not yet implemented", "info")
+            _set_menu(ctx["state"], ctx["MenuLevel"].MCP_CLIENT_SETTINGS)
         else:
             _set_menu(ctx["state"], action)
 

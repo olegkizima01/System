@@ -1,5 +1,5 @@
 {
-  "activeClient": "open_mcp",
+  "activeClient": "auto",
   "mcpClients": {
     "open_mcp": {
       "name": "CopilotKit Open-MCP",
