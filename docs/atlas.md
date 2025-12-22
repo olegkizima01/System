@@ -3,7 +3,7 @@ description: Authoritative guide for Project Atlas architecture, Cognitive 2.0 m
 ---
 
 # Project Atlas Workflow Guide
-**Cognitive 2.1 + Trinity Improvements v1.0 | Грудень 2025**
+**Cognitive 2.1 + Trinity Improvements v1.1 | Грудень 2025**
 
 Єдине джерело правди про фундаментальні принципи роботи системи Atlas (Trinity Runtime).
 
@@ -23,7 +23,7 @@ Atlas — **автономний мультиагентний оператор m
 
 5. **Continuous Learning 2.0** — Система витягує досвід (успішний та негативний) та зберігає його у Knowledge Base з оцінкою впевненості.
 
-6. **State Logging** — Деталізовані логи переходів агентів: `logs/trinity_state_*.log`
+6. **State Logging & Resilience** — Деталізовані логи переходів агентів (`logs/trinity_state_*.log`) та автоматичне відновлення LLM запитів (Retries/Timeouts).
 
 ---
 
@@ -57,8 +57,8 @@ graph TD
 | **Context7** | Context Manager | Token budget, sliding window з пріоритезацією недавніх кроків |
 | **Atlas** | Architect | Тактичний план на основі нормалізованого контексту |
 | **Tetyana** | Executor | Виконавець (Native/GUI/Playwright) |
-| **Grisha** | Verifier | Верифікатор з `enhanced_vision_analysis` для візуальної перевірки |
-| **Knowledge** | Learner | Етап рефлексії. Зберігає досвід (`success`/`failed`) |
+| **Grisha** | Verifier | Верифікатор з `enhanced_vision_analysis`. Вимагає доказів (evidence) від Тетяни для підтвердження. |
+| **Knowledge** | Learner | Етап рефлексії. Зберігає досвід (`success`/`failed`) та оновлює Knowledge Base. |
 
 ---
 
@@ -137,6 +137,7 @@ context_manager.update_context(result)
 | **Strategy** | `linear`, `rag_heavy`, `aggressive` | Тип побудови плану |
 | **Active Retrieval** | `retrieval_query` | Оптимізований запит Meta-Planner |
 | **Anti-patterns** | `status: failed` | Уникнення провалених стратегій |
+| **Fail Escalation** | `fail_count >= 4` | Автоматичне перепланування при повторних невдачах верифікації |
 | **Confidence Score** | `0.1...1.0` | Оцінка надійності на основі правок |
 | **Source Tracking** | `trinity_runtime`, `user` | Походження знання |
 
@@ -155,6 +156,11 @@ context_manager.update_context(result)
 - **PyAutoGUI MCP**: Альтернативна емуляція вводу
 - **Context7 MCP**: Доступ до документації бібліотек
 - **SonarQube MCP**: Quality gate та аналіз коду
+
+### Dual MCP Client Support
+Система підтримує два незалежних клієнти з можливістю автоматичного перемикання (`AUTO` mode):
+- **Open-MCP (LangGraph)**: Основний клієнт для складних агентних сценаріїв.
+- **Continue MCP (CLI)**: Оптимізований клієнт для розробки та локальних операцій з файлами.
 
 ---
 
@@ -274,4 +280,4 @@ StateInitLogger().log_initial_state("Завдання", state_dict)
 
 ---
 
-*Останнє оновлення: 20 грудня 2025 р. - Trinity Improvements v1.0*
+*Останнє оновлення: 22 грудня 2025 р. - Trinity Improvements v1.1*
