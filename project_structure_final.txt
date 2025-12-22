@@ -1,5 +1,5 @@
 ## Metadata
-Generated: Mon Dec 22 20:34:10  2025
+Generated: Mon Dec 22 21:17:59  2025
 
 ## Program Execution Logs
 (See logs/cli.log for details)
@@ -54,14 +54,15 @@ Tests:
 
 
 ### Project Statistics
-  - Python files: 20426
+  - Python files: 20429
   - Test files: 39
   - Documentation files: 20
   - Configuration sets: 44
 
 ## Git History (Last 10 Commits)
 ```
-  270fa0be feat: Add Memory Manager TUI and Learning Memory system
+  ba870833 feat: implement dual MCP client architecture with Open-MCP and Continue CLI support
+  136d1586 feat: Add Memory Manager TUI and Learning Memory system
   eb752ac8 fix: Update generated timestamp and correct Git history entries in project_structure_final.txt
   5b6bd146 feat: Implement TaskAnalyzer for per-task logging and analysis, including dynamic status updates and cleanup of file handlers
   d624d096 fix: Store result of execute_command in test_context7_fallback_on_too_many_args
@@ -70,7 +71,6 @@ Tests:
   69303086 feat: Add metrics for Context7 fallbacks and screenshot success/failure tracking
   4a39d05a feat: Enhance error handling and logging in task analysis and Context7 command execution
   9734007b feat: Add SonarQube integration and background scanning options for DEV context enrichment
-  5fc73cbf feat: Add SonarQube integration and background scanning options for DEV context enrichment
 ```
 
 ## Project Structure
@@ -449,8 +449,11 @@ Tests:
 │   │   ├── mcp_config.json
 │   │   └── server_specific
 │   ├── core
+│   │   ├── continue_mcp_client.py
 │   │   ├── copilot_mcp_client.py
+│   │   ├── mcp_client_manager.py
 │   │   ├── mcp_manager.py
+│   │   ├── open_mcp_client.py
 │   │   └── tool_examples
 │   │       ├── ai_examples.json
 │   │       ├── all_examples_combined.json
@@ -740,6 +743,6 @@ Tests:
     ├── test_modern_enhancements.py
     └── verify_website.py
 
-197 directories, 467 files
+197 directories, 470 files
 
 ```

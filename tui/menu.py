@@ -124,6 +124,8 @@ def build_menu(
             MenuLevel.INSTALL_EDITORS: _render_editors_menu,
             MenuLevel.MODULE_LIST: _render_module_list_menu,
             MenuLevel.LOCALES: _render_locales_menu,
+            MenuLevel.LOCALES: _render_locales_menu,
+            MenuLevel.MCP_CLIENT_SETTINGS: _render_mcp_client_menu,
         }
         
         # Check for LLM sub-menus
@@ -262,6 +264,10 @@ def _render_settings_menu(ctx: dict) -> List[Tuple[str, str]]:
     result.append((STYLE_MENU_TITLE, f" {tr('menu.settings.title', state.ui_lang)}\n\n"))
     
     items = ctx["get_settings_menu_items"]()
+    
+    # Add MCP Client Settings item
+    items.append(("MCP Client Settings", "mcp_settings"))
+    
     _clamp_menu_index(state, len(items))
     
     for i, item in enumerate(items):
@@ -270,7 +276,9 @@ def _render_settings_menu(ctx: dict) -> List[Tuple[str, str]]:
         else:
             label = item[0] if isinstance(item, tuple) else item
             prefix, style = _get_item_style(i, state.menu_index)
-            result.append((style, f"{prefix}{tr(label, state.ui_lang)}\n", make_click(i)))
+            # Handle localized string vs raw string
+            display_label = tr(label, state.ui_lang) if "." in label else label
+            result.append((style, f"{prefix}{display_label}\n", make_click(i)))
     return result
 
 

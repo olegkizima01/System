@@ -304,7 +304,8 @@ def _handle_menu_escape(ctx, event):
     llm_submenus = {MenuLevel.LLM_ATLAS, MenuLevel.LLM_TETYANA, MenuLevel.LLM_GRISHA, MenuLevel.LLM_VISION, MenuLevel.LLM_DEFAULTS}
     settings_submenus = {MenuLevel.LLM_SETTINGS, MenuLevel.AGENT_SETTINGS, MenuLevel.APPEARANCE, MenuLevel.LANGUAGE, 
                          MenuLevel.LAYOUT, MenuLevel.UNSAFE_MODE, MenuLevel.AUTOMATION_PERMISSIONS, 
-                         MenuLevel.DEV_SETTINGS, MenuLevel.LOCALES, MenuLevel.SELF_HEALING, MenuLevel.MEMORY_MANAGER}
+                         MenuLevel.DEV_SETTINGS, MenuLevel.LOCALES, MenuLevel.SELF_HEALING, MenuLevel.MEMORY_MANAGER,
+                         MenuLevel.MCP_CLIENT_SETTINGS}
     main_submenus = {MenuLevel.SETTINGS, MenuLevel.CUSTOM_TASKS, MenuLevel.MONITORING, 
                      MenuLevel.CLEANUP_EDITORS, MenuLevel.MODULE_EDITORS, MenuLevel.INSTALL_EDITORS}
     
@@ -434,8 +435,43 @@ def _get_menu_enter_dispatch(ctx, state, MenuLevel, _llm_sub_hint):
         MenuLevel.LOCALES: lambda: _handle_locales_enter(ctx),
         MenuLevel.MONITOR_TARGETS: lambda: _handle_monitor_targets_enter(ctx),
         MenuLevel.MONITOR_CONTROL: lambda: _handle_monitor_control_enter_ctx(ctx),
+        MenuLevel.MCP_CLIENT_SETTINGS: lambda: _handle_mcp_client_enter_ctx(ctx),
         **{ml: _llm_sub_hint for ml in [MenuLevel.LLM_ATLAS, MenuLevel.LLM_TETYANA, MenuLevel.LLM_GRISHA, MenuLevel.LLM_VISION, MenuLevel.LLM_DEFAULTS]}
     }
+
+def _handle_mcp_client_enter_ctx(ctx):
+    """Handle enter key in MCP client menu."""
+    state, log = ctx["state"], ctx["log"]
+    
+    # Map index to client type
+    # 0: open_mcp, 1: continue
+    clients = ["open_mcp", "continue"]
+    if state.menu_index < 0 or state.menu_index >= len(clients):
+        return
+        
+    new_client = clients[state.menu_index]
+    
+    try:
+        from mcp_integration.core.mcp_client_manager import get_mcp_client_manager, MCPClientType
+        mgr = get_mcp_client_manager()
+        
+        # Switch in backend
+        if mgr.switch_client(MCPClientType(new_client)):
+            # Update UI state
+            state.mcp_client_type = new_client
+            log(f"Switched MCP Client to: {new_client}", "action")
+            
+            # Also update legacy mcp tool registry if needed?
+            # Core mcp functionality should use manager now, so this is implicit.
+            # But we might want to ensure core.mcp is aware if it caches anything.
+            # (Based on my edits to core/mcp.py, it delegates to manager, so it should be fine)
+        else:
+            log(f"Failed to switch to {new_client}", "error")
+            
+    except Exception as e:
+        log(f"Error switching client: {e}", "error")
+    
+    ctx["force_ui_update"]()
 
 def _handle_agent_settings_enter(ctx):
     state, log = ctx["state"], ctx["log"]
@@ -747,6 +783,7 @@ def _get_menu_param_calculators(MenuLevel, MAIN_MENU_ITEMS, get_custom_tasks_men
         MenuLevel.LLM_SETTINGS: lambda: max(0, len(get_llm_menu_items()) - 1),
         MenuLevel.AGENT_SETTINGS: lambda: max(0, len(get_agent_menu_items()) - 1),
         MenuLevel.APPEARANCE: lambda: max(0, len(THEME_NAMES) - 1),
+        MenuLevel.MCP_CLIENT_SETTINGS: lambda: 1, # 2 items: open_mcp, continue
         MenuLevel.LANGUAGE: lambda: 1,
     }
         

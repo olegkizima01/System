@@ -576,6 +576,15 @@ def _load_ui_settings() -> None:
         state.learning_mode = bool(data.get("learning_mode", False))
         rl = int(data.get("recursion_limit", 100))
         state.ui_recursion_limit = max(1, rl)
+        
+        # Load MCP Client State
+        try:
+            from mcp_integration.core.mcp_client_manager import get_mcp_client_manager
+            mgr = get_mcp_client_manager()
+            state.mcp_client_type = mgr.active_client.value
+        except ImportError:
+            pass
+            
     except Exception:
         pass
 

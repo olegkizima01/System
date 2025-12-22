@@ -1,4 +1,22 @@
 {
+  "activeClient": "open_mcp",
+  "mcpClients": {
+    "open_mcp": {
+      "name": "CopilotKit Open-MCP",
+      "type": "python",
+      "enabled": true,
+      "config": {
+        "agent_dir": "mcp_integration/agents/open_mcp"
+      }
+    },
+    "continue": {
+      "name": "Continue CLI",
+      "type": "npm_cli",
+      "enabled": true,
+      "command": "cn",
+      "fallback_command": "npx @continuedev/cli"
+    }
+  },
   "mcpServers": {
     "context7": {
       "command": "npx",

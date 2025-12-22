@@ -183,7 +183,26 @@ class MCPToolRegistry:
         self._register_recorder_tools()
         self._register_response_tools()
         self._register_plugin_tools()
+        self._register_plugin_tools()
+        
+        # Initialize Dual Client Manager
+        from mcp_integration.core.mcp_client_manager import get_mcp_client_manager, MCPClientType
+        self._mcp_client_manager = get_mcp_client_manager()
+        
         self._register_external_mcp()
+
+    def set_mcp_client(self, client_type: str) -> bool:
+        """Switch active MCP client (open_mcp/continue)."""
+        try:
+            from mcp_integration.core.mcp_client_manager import MCPClientType
+            ct = MCPClientType(client_type)
+            return self._mcp_client_manager.switch_client(ct)
+        except (ValueError, ImportError):
+            return False
+
+    def get_active_mcp_client_name(self) -> str:
+        """Get the friendly name of the active MCP client."""
+        return self._mcp_client_manager.active_client_name
 
     def _register_foundation_tools(self):
         # Foundation Tools
@@ -620,7 +639,8 @@ class MCPToolRegistry:
     def execute(self, tool_name: str, args: Dict[str, Any]) -> str:
         """Executes a tool safely and returns a string result."""
         
-        # 1. Routing to MCP Priotity
+        # 0. Delegate to Active MCP Client Manager if it handles this tool
+        # We try to route known MCP tools through the manager first
         mcp_res = self._try_mcp_routing(tool_name, args)
         if mcp_res is not None:
             return mcp_res
@@ -655,6 +675,38 @@ class MCPToolRegistry:
             return None
             
         provider_name, mcp_tool = mcp_routing[tool_name]
+        
+        # NEW: Delegate to MCP Client Manager
+        # We construct the tool name as "server.tool" (e.g., "playwright.playwright_navigate")
+        full_tool_name = f"{provider_name}.{mcp_tool}"
+        
+        try:
+            mcp_args = self._adapt_args_for_mcp(tool_name, mcp_tool, args)
+            
+            # Execute via manager
+            res_dict = self._mcp_client_manager.execute(full_tool_name, mcp_args)
+            
+            if not res_dict["success"]:
+                 # Fallback to legacy ExternalMCPProvider if manager fails? 
+                 # Or just return None to allow local fallback?
+                 # If error is "No MCP server found", we might fallback.
+                 if "No MCP server found" in res_dict.get("error", ""):
+                     print(f"[MCP] Manager failed to find {full_tool_name}, falling back to legacy provider logic if available.")
+                     # Check legacy providers below
+                 else:
+                     return None # Real error, don't fallback to local immediately or return error?
+            else:
+                 res = res_dict["data"]
+                 if tool_name == "browser_type_text" and args.get("press_enter"):
+                     # Handle press enter separately via another call
+                     self._mcp_press_enter_fallback_manager(provider_name, mcp_args)
+                 
+                 return json.dumps(res, indent=2, ensure_ascii=False)
+                 
+        except Exception as e:
+            print(f"[MCP] Manager execution failed for {full_tool_name}: {e}")
+            
+        # LEGACY FALLBACK (Keep existing direct execution for stability during transition)
         if provider_name not in self._external_providers:
             return None
             
@@ -673,6 +725,16 @@ class MCPToolRegistry:
         except Exception as e:
             print(f"[MCP] Failed {provider_name}.{mcp_tool}, falling back to local: {e}")
             return None
+
+    def _mcp_press_enter_fallback_manager(self, provider_name, mcp_args):
+        try:
+            time.sleep(0.5)
+            key_args = {"key": "Enter"}
+            if mcp_args.get("selector"):
+                key_args["selector"] = mcp_args["selector"]
+            self._mcp_client_manager.execute(f"{provider_name}.playwright_press_key", key_args)
+        except Exception:
+            pass
 
     def _mcp_press_enter_fallback(self, provider, mcp_args):
         try:

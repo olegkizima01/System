@@ -34,6 +34,7 @@ class MenuLevel(Enum):
     SELF_HEALING = "self_healing"
     LEARNING_MODE = "learning_mode"
     MEMORY_MANAGER = "memory_manager"
+    MCP_CLIENT_SETTINGS = "mcp_client_settings"
 
 
 @dataclass
@@ -78,6 +79,7 @@ class AppState:
     ui_self_healing: bool = False
     learning_mode: bool = False
     ui_recursion_limit: int = 100
+    mcp_client_type: str = "open_mcp"  # open_mcp | continue
 
 
 state = AppState()
