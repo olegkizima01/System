@@ -14,6 +14,8 @@ logger = logging.getLogger(__name__)
 class SonarQubeContext7Helper:
     """Helper class for SonarQube and Context7 integration"""
     
+    SONARQUBE_LIB_ID = "/SonarSource/sonarqube"
+    
     def __init__(self, mcp_manager):
         """
         Initialize helper with MCP manager
@@ -40,7 +42,7 @@ class SonarQubeContext7Helper:
             
             return {
                 "success": True,
-                "library_id": "/SonarSource/sonarqube",
+                "library_id": self.SONARQUBE_LIB_ID,
                 "library_name": "SonarQube",
                 "description": "Continuous Code Quality and Security Analysis",
                 "note": "Use this ID with mcp_io_github_ups_get-library-docs"
@@ -74,7 +76,7 @@ class SonarQubeContext7Helper:
             
             return {
                 "success": True,
-                "library_id": "/SonarSource/sonarqube",
+                "library_id": self.SONARQUBE_LIB_ID,
                 "topic": topic or "general",
                 "mode": mode,
                 "page": page,
@@ -127,7 +129,7 @@ class SonarQubeContext7Helper:
                 "type": "sonarqube_integration",
                 "project_id": project_id,
                 "config": sonarqube_config,
-                "documentation_library": "/SonarSource/sonarqube",
+                "documentation_library": self.SONARQUBE_LIB_ID,
                 "integration_status": "active"
             }
             
@@ -180,7 +182,7 @@ class SonarQubeContext7Helper:
             # Add documentation links if requested
             if include_docs:
                 result["documentation"] = {
-                    "api_reference": "/SonarSource/sonarqube",
+                    "api_reference": self.SONARQUBE_LIB_ID,
                     "topics": {
                         "issues": "Use get_sonarqube_issues_docs()",
                         "quality_gates": "Use get_sonarqube_quality_gates_docs()",

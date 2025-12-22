@@ -1,28 +1,28 @@
 {
-  "total": 175,
+  "total": 173,
   "p": 1,
   "ps": 100,
   "paging": {
     "pageIndex": 1,
     "pageSize": 100,
-    "total": 175
+    "total": 173
   },
-  "effortTotal": 3574,
-  "debtTotal": 3574,
+  "effortTotal": 3286,
+  "debtTotal": 3286,
   "issues": [
     {
-      "key": "AZtDQ6VGIamWuOZACTfu",
+      "key": "AZtDZHSffM8W-tnGrRGN",
       "rule": "python:S3776",
       "severity": "CRITICAL",
       "component": "olegkizima01_System2:tui/keybindings.py",
       "project": "olegkizima01_System2",
-      "line": 10,
-      "hash": "284c91c37ea4136196e88733d765b1b6",
+      "line": 134,
+      "hash": "436e555dd9115b12d951f58fda224f73",
       "textRange": {
-        "startLine": 10,
-        "endLine": 10,
+        "startLine": 134,
+        "endLine": 134,
         "startOffset": 4,
-        "endOffset": 21
+        "endOffset": 28
       },
       "flows": [
         {
@@ -30,24 +30,10 @@
             {
               "component": "olegkizima01_System2:tui/keybindings.py",
               "textRange": {
-                "startLine": 63,
-                "endLine": 63,
-                "startOffset": 8,
-                "endOffset": 10
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 65,
-                "endLine": 65,
-                "startOffset": 60,
-                "endOffset": 62
+                "startLine": 140,
+                "endLine": 140,
+                "startOffset": 67,
+                "endOffset": 69
               },
               "msg": "+1"
             }
@@ -58,348 +44,12 @@
             {
               "component": "olegkizima01_System2:tui/keybindings.py",
               "textRange": {
-                "startLine": 66,
-                "endLine": 66,
-                "startOffset": 42,
-                "endOffset": 44
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 82,
-                "endLine": 82,
-                "startOffset": 8,
-                "endOffset": 10
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 84,
-                "endLine": 84,
-                "startOffset": 63,
-                "endOffset": 65
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 85,
-                "endLine": 85,
-                "startOffset": 24,
-                "endOffset": 26
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 86,
-                "endLine": 86,
-                "startOffset": 8,
-                "endOffset": 10
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 89,
-                "endLine": 89,
-                "startOffset": 8,
-                "endOffset": 12
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 96,
-                "endLine": 96,
-                "startOffset": 8,
-                "endOffset": 10
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 98,
-                "endLine": 98,
-                "startOffset": 63,
-                "endOffset": 65
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 99,
-                "endLine": 99,
-                "startOffset": 24,
-                "endOffset": 26
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 100,
-                "endLine": 100,
-                "startOffset": 8,
-                "endOffset": 10
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 102,
-                "endLine": 102,
+                "startLine": 141,
+                "endLine": 141,
                 "startOffset": 12,
                 "endOffset": 14
               },
-              "msg": "+3 (incl 2 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 104,
-                "endLine": 104,
-                "startOffset": 8,
-                "endOffset": 12
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 106,
-                "endLine": 106,
-                "startOffset": 12,
-                "endOffset": 14
-              },
-              "msg": "+3 (incl 2 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 112,
-                "endLine": 112,
-                "startOffset": 8,
-                "endOffset": 10
-              },
               "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 114,
-                "endLine": 114,
-                "startOffset": 63,
-                "endOffset": 65
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 115,
-                "endLine": 115,
-                "startOffset": 24,
-                "endOffset": 26
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 116,
-                "endLine": 116,
-                "startOffset": 8,
-                "endOffset": 10
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 119,
-                "endLine": 119,
-                "startOffset": 8,
-                "endOffset": 12
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 126,
-                "endLine": 126,
-                "startOffset": 8,
-                "endOffset": 10
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 128,
-                "endLine": 128,
-                "startOffset": 63,
-                "endOffset": 65
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 129,
-                "endLine": 129,
-                "startOffset": 24,
-                "endOffset": 26
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 130,
-                "endLine": 130,
-                "startOffset": 8,
-                "endOffset": 10
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 132,
-                "endLine": 132,
-                "startOffset": 12,
-                "endOffset": 14
-              },
-              "msg": "+3 (incl 2 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 134,
-                "endLine": 134,
-                "startOffset": 8,
-                "endOffset": 12
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 136,
-                "endLine": 136,
-                "startOffset": 12,
-                "endOffset": 14
-              },
-              "msg": "+3 (incl 2 for nesting)"
             }
           ]
         },
@@ -410,10 +60,38 @@
               "textRange": {
                 "startLine": 142,
                 "endLine": 142,
-                "startOffset": 8,
-                "endOffset": 10
+                "startOffset": 40,
+                "endOffset": 42
               },
-              "msg": "+2 (incl 1 for nesting)"
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/keybindings.py",
+              "textRange": {
+                "startLine": 144,
+                "endLine": 144,
+                "startOffset": 12,
+                "endOffset": 16
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/keybindings.py",
+              "textRange": {
+                "startLine": 145,
+                "endLine": 145,
+                "startOffset": 40,
+                "endOffset": 42
+              },
+              "msg": "+1"
             }
           ]
         },
@@ -427,48 +105,6 @@
                 "startOffset": 12,
                 "endOffset": 14
               },
-              "msg": "+3 (incl 2 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 149,
-                "endLine": 149,
-                "startOffset": 8,
-                "endOffset": 12
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 155,
-                "endLine": 155,
-                "startOffset": 12,
-                "endOffset": 14
-              },
-              "msg": "+3 (incl 2 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 161,
-                "endLine": 161,
-                "startOffset": 8,
-                "endOffset": 10
-              },
               "msg": "+2 (incl 1 for nesting)"
             }
           ]
@@ -478,204 +114,8 @@
             {
               "component": "olegkizima01_System2:tui/keybindings.py",
               "textRange": {
-                "startLine": 165,
-                "endLine": 165,
-                "startOffset": 8,
-                "endOffset": 12
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 170,
-                "endLine": 170,
-                "startOffset": 8,
-                "endOffset": 12
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 176,
-                "endLine": 176,
-                "startOffset": 8,
-                "endOffset": 12
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 182,
-                "endLine": 182,
-                "startOffset": 8,
-                "endOffset": 12
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 185,
-                "endLine": 185,
-                "startOffset": 8,
-                "endOffset": 12
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 185,
-                "endLine": 185,
-                "startOffset": 59,
-                "endOffset": 61
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 188,
-                "endLine": 188,
-                "startOffset": 8,
-                "endOffset": 12
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 191,
-                "endLine": 191,
-                "startOffset": 12,
-                "endOffset": 14
-              },
-              "msg": "+3 (incl 2 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 200,
-                "endLine": 200,
-                "startOffset": 67,
-                "endOffset": 69
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 203,
-                "endLine": 203,
-                "startOffset": 12,
-                "endOffset": 14
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 205,
-                "endLine": 205,
-                "startOffset": 40,
-                "endOffset": 42
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 207,
-                "endLine": 207,
-                "startOffset": 12,
-                "endOffset": 16
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 209,
-                "endLine": 209,
-                "startOffset": 40,
-                "endOffset": 42
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 211,
-                "endLine": 211,
-                "startOffset": 12,
-                "endOffset": 14
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 213,
-                "endLine": 213,
+                "startLine": 148,
+                "endLine": 148,
                 "startOffset": 16,
                 "endOffset": 18
               },
@@ -688,8 +128,8 @@
             {
               "component": "olegkizima01_System2:tui/keybindings.py",
               "textRange": {
-                "startLine": 214,
-                "endLine": 214,
+                "startLine": 149,
+                "endLine": 149,
                 "startOffset": 12,
                 "endOffset": 16
               },
@@ -702,8 +142,8 @@
             {
               "component": "olegkizima01_System2:tui/keybindings.py",
               "textRange": {
-                "startLine": 215,
-                "endLine": 215,
+                "startLine": 150,
+                "endLine": 150,
                 "startOffset": 8,
                 "endOffset": 14
               },
@@ -716,8 +156,8 @@
             {
               "component": "olegkizima01_System2:tui/keybindings.py",
               "textRange": {
-                "startLine": 225,
-                "endLine": 225,
+                "startLine": 158,
+                "endLine": 158,
                 "startOffset": 47,
                 "endOffset": 49
               },
@@ -730,12 +170,344 @@
             {
               "component": "olegkizima01_System2:tui/keybindings.py",
               "textRange": {
-                "startLine": 226,
-                "endLine": 226,
+                "startLine": 159,
+                "endLine": 159,
                 "startOffset": 8,
                 "endOffset": 14
               },
               "msg": "+2 (incl 1 for nesting)"
+            }
+          ]
+        }
+      ],
+      "status": "OPEN",
+      "message": "Refactor this function to reduce its Cognitive Complexity from 18 to the 15 allowed.",
+      "effort": "8min",
+      "debt": "8min",
+      "assignee": "olegkizima01-pSUd5@github",
+      "author": "olegkizima01@gmail.com",
+      "tags": [
+        "brain-overload"
+      ],
+      "creationDate": "2025-12-22T00:09:14+0000",
+      "updateDate": "2025-12-22T00:09:14+0000",
+      "type": "CODE_SMELL",
+      "organization": "olegkizima01",
+      "cleanCodeAttribute": "FOCUSED",
+      "cleanCodeAttributeCategory": "ADAPTABLE",
+      "impacts": [
+        {
+          "softwareQuality": "MAINTAINABILITY",
+          "severity": "HIGH"
+        }
+      ],
+      "issueStatus": "OPEN",
+      "projectName": "System"
+    },
+    {
+      "key": "AZtDZHSffM8W-tnGrRGP",
+      "rule": "python:S3776",
+      "severity": "CRITICAL",
+      "component": "olegkizima01_System2:tui/keybindings.py",
+      "project": "olegkizima01_System2",
+      "line": 161,
+      "hash": "48e4b1ee1606c0d9925a92a6e6f4248f",
+      "textRange": {
+        "startLine": 161,
+        "endLine": 161,
+        "startOffset": 4,
+        "endOffset": 32
+      },
+      "flows": [
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/keybindings.py",
+              "textRange": {
+                "startLine": 167,
+                "endLine": 167,
+                "startOffset": 8,
+                "endOffset": 10
+              },
+              "msg": "+2 (incl 1 for nesting)"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/keybindings.py",
+              "textRange": {
+                "startLine": 170,
+                "endLine": 170,
+                "startOffset": 12,
+                "endOffset": 14
+              },
+              "msg": "+3 (incl 2 for nesting)"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/keybindings.py",
+              "textRange": {
+                "startLine": 171,
+                "endLine": 171,
+                "startOffset": 8,
+                "endOffset": 12
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/keybindings.py",
+              "textRange": {
+                "startLine": 174,
+                "endLine": 174,
+                "startOffset": 12,
+                "endOffset": 14
+              },
+              "msg": "+3 (incl 2 for nesting)"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/keybindings.py",
+              "textRange": {
+                "startLine": 184,
+                "endLine": 184,
+                "startOffset": 8,
+                "endOffset": 10
+              },
+              "msg": "+2 (incl 1 for nesting)"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/keybindings.py",
+              "textRange": {
+                "startLine": 186,
+                "endLine": 186,
+                "startOffset": 8,
+                "endOffset": 10
+              },
+              "msg": "+2 (incl 1 for nesting)"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/keybindings.py",
+              "textRange": {
+                "startLine": 193,
+                "endLine": 193,
+                "startOffset": 8,
+                "endOffset": 10
+              },
+              "msg": "+2 (incl 1 for nesting)"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/keybindings.py",
+              "textRange": {
+                "startLine": 195,
+                "endLine": 195,
+                "startOffset": 8,
+                "endOffset": 10
+              },
+              "msg": "+2 (incl 1 for nesting)"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/keybindings.py",
+              "textRange": {
+                "startLine": 201,
+                "endLine": 201,
+                "startOffset": 8,
+                "endOffset": 10
+              },
+              "msg": "+2 (incl 1 for nesting)"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/keybindings.py",
+              "textRange": {
+                "startLine": 201,
+                "endLine": 201,
+                "startOffset": 48,
+                "endOffset": 51
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/keybindings.py",
+              "textRange": {
+                "startLine": 207,
+                "endLine": 207,
+                "startOffset": 8,
+                "endOffset": 10
+              },
+              "msg": "+2 (incl 1 for nesting)"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/keybindings.py",
+              "textRange": {
+                "startLine": 207,
+                "endLine": 207,
+                "startOffset": 48,
+                "endOffset": 51
+              },
+              "msg": "+1"
+            }
+          ]
+        }
+      ],
+      "status": "OPEN",
+      "message": "Refactor this function to reduce its Cognitive Complexity from 23 to the 15 allowed.",
+      "effort": "13min",
+      "debt": "13min",
+      "assignee": "olegkizima01-pSUd5@github",
+      "author": "olegkizima01@gmail.com",
+      "tags": [
+        "brain-overload"
+      ],
+      "creationDate": "2025-12-22T00:09:14+0000",
+      "updateDate": "2025-12-22T00:09:14+0000",
+      "type": "CODE_SMELL",
+      "organization": "olegkizima01",
+      "cleanCodeAttribute": "FOCUSED",
+      "cleanCodeAttributeCategory": "ADAPTABLE",
+      "impacts": [
+        {
+          "softwareQuality": "MAINTAINABILITY",
+          "severity": "HIGH"
+        }
+      ],
+      "issueStatus": "OPEN",
+      "projectName": "System"
+    },
+    {
+      "key": "AZtDZHSffM8W-tnGrRGR",
+      "rule": "python:S3776",
+      "severity": "CRITICAL",
+      "component": "olegkizima01_System2:tui/keybindings.py",
+      "project": "olegkizima01_System2",
+      "line": 211,
+      "hash": "7fae7d95973be46dcf395677d1d163ca",
+      "textRange": {
+        "startLine": 211,
+        "endLine": 211,
+        "startOffset": 4,
+        "endOffset": 25
+      },
+      "flows": [
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/keybindings.py",
+              "textRange": {
+                "startLine": 218,
+                "endLine": 218,
+                "startOffset": 8,
+                "endOffset": 10
+              },
+              "msg": "+2 (incl 1 for nesting)"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/keybindings.py",
+              "textRange": {
+                "startLine": 219,
+                "endLine": 219,
+                "startOffset": 8,
+                "endOffset": 12
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/keybindings.py",
+              "textRange": {
+                "startLine": 220,
+                "endLine": 220,
+                "startOffset": 8,
+                "endOffset": 12
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/keybindings.py",
+              "textRange": {
+                "startLine": 221,
+                "endLine": 221,
+                "startOffset": 8,
+                "endOffset": 12
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/keybindings.py",
+              "textRange": {
+                "startLine": 226,
+                "endLine": 226,
+                "startOffset": 8,
+                "endOffset": 10
+              },
+              "msg": "+2 (incl 1 for nesting)"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/keybindings.py",
+              "textRange": {
+                "startLine": 228,
+                "endLine": 228,
+                "startOffset": 12,
+                "endOffset": 14
+              },
+              "msg": "+3 (incl 2 for nesting)"
             }
           ]
         },
@@ -746,737 +518,9 @@
               "textRange": {
                 "startLine": 231,
                 "endLine": 231,
-                "startOffset": 8,
-                "endOffset": 10
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 233,
-                "endLine": 233,
-                "startOffset": 8,
-                "endOffset": 10
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 247,
-                "endLine": 247,
-                "startOffset": 8,
-                "endOffset": 10
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 249,
-                "endLine": 249,
-                "startOffset": 8,
-                "endOffset": 10
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 255,
-                "endLine": 255,
-                "startOffset": 8,
-                "endOffset": 10
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 255,
-                "endLine": 255,
-                "startOffset": 48,
-                "endOffset": 51
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 261,
-                "endLine": 261,
-                "startOffset": 8,
-                "endOffset": 10
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 261,
-                "endLine": 261,
-                "startOffset": 48,
-                "endOffset": 51
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 267,
-                "endLine": 267,
-                "startOffset": 8,
-                "endOffset": 10
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 269,
-                "endLine": 269,
-                "startOffset": 8,
-                "endOffset": 10
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 273,
-                "endLine": 273,
-                "startOffset": 26,
-                "endOffset": 28
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 277,
-                "endLine": 277,
-                "startOffset": 8,
-                "endOffset": 10
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 278,
-                "endLine": 278,
-                "startOffset": 32,
-                "endOffset": 34
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 280,
-                "endLine": 280,
-                "startOffset": 8,
-                "endOffset": 10
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 284,
-                "endLine": 284,
-                "startOffset": 8,
-                "endOffset": 10
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 286,
-                "endLine": 286,
-                "startOffset": 8,
-                "endOffset": 10
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 288,
-                "endLine": 288,
-                "startOffset": 40,
-                "endOffset": 42
-              },
-              "msg": "+3 (incl 2 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 289,
-                "endLine": 289,
-                "startOffset": 8,
-                "endOffset": 12
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 293,
-                "endLine": 293,
-                "startOffset": 8,
-                "endOffset": 10
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 295,
-                "endLine": 295,
-                "startOffset": 21,
-                "endOffset": 23
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 300,
-                "endLine": 300,
-                "startOffset": 8,
-                "endOffset": 10
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 303,
-                "endLine": 303,
-                "startOffset": 72,
-                "endOffset": 74
-              },
-              "msg": "+3 (incl 2 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 306,
-                "endLine": 306,
-                "startOffset": 8,
-                "endOffset": 12
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 308,
-                "endLine": 308,
-                "startOffset": 82,
-                "endOffset": 84
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 310,
-                "endLine": 310,
-                "startOffset": 73,
-                "endOffset": 75
-              },
-              "msg": "+3 (incl 2 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 311,
-                "endLine": 311,
-                "startOffset": 50,
-                "endOffset": 52
-              },
-              "msg": "+3 (incl 2 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 313,
-                "endLine": 313,
-                "startOffset": 8,
-                "endOffset": 12
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 316,
-                "endLine": 316,
-                "startOffset": 73,
-                "endOffset": 75
-              },
-              "msg": "+3 (incl 2 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 323,
-                "endLine": 323,
-                "startOffset": 8,
-                "endOffset": 10
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 326,
-                "endLine": 326,
-                "startOffset": 8,
-                "endOffset": 10
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 329,
-                "endLine": 329,
-                "startOffset": 8,
-                "endOffset": 12
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 336,
-                "endLine": 336,
-                "startOffset": 8,
-                "endOffset": 10
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 338,
-                "endLine": 338,
-                "startOffset": 8,
-                "endOffset": 10
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 339,
-                "endLine": 339,
-                "startOffset": 8,
-                "endOffset": 10
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 342,
-                "endLine": 342,
-                "startOffset": 8,
-                "endOffset": 12
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 350,
-                "endLine": 350,
-                "startOffset": 8,
-                "endOffset": 10
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 351,
-                "endLine": 351,
-                "startOffset": 8,
-                "endOffset": 12
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 352,
-                "endLine": 352,
-                "startOffset": 8,
-                "endOffset": 12
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 353,
-                "endLine": 353,
-                "startOffset": 8,
-                "endOffset": 12
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 358,
-                "endLine": 358,
-                "startOffset": 8,
-                "endOffset": 10
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 358,
-                "endLine": 358,
-                "startOffset": 57,
-                "endOffset": 59
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 360,
-                "endLine": 360,
-                "startOffset": 35,
-                "endOffset": 37
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 366,
-                "endLine": 366,
-                "startOffset": 8,
-                "endOffset": 10
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 366,
-                "endLine": 366,
-                "startOffset": 57,
-                "endOffset": 59
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 368,
-                "endLine": 368,
-                "startOffset": 62,
-                "endOffset": 64
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 374,
-                "endLine": 374,
-                "startOffset": 29,
-                "endOffset": 31
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 378,
-                "endLine": 378,
-                "startOffset": 8,
-                "endOffset": 10
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 380,
-                "endLine": 380,
-                "startOffset": 8,
-                "endOffset": 10
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 381,
-                "endLine": 381,
-                "startOffset": 32,
-                "endOffset": 34
-              },
-              "msg": "+3 (incl 2 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 384,
-                "endLine": 384,
-                "startOffset": 8,
-                "endOffset": 12
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 385,
-                "endLine": 385,
                 "startOffset": 34,
                 "endOffset": 36
               },
-              "msg": "+3 (incl 2 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 391,
-                "endLine": 391,
-                "startOffset": 8,
-                "endOffset": 10
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 399,
-                "endLine": 399,
-                "startOffset": 16,
-                "endOffset": 18
-              },
               "msg": "+4 (incl 3 for nesting)"
             }
           ]
@@ -1485,1288 +529,12 @@
           "locations": [
             {
               "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 401,
-                "endLine": 401,
-                "startOffset": 30,
-                "endOffset": 32
-              },
-              "msg": "+3 (incl 2 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 405,
-                "endLine": 405,
-                "startOffset": 8,
-                "endOffset": 10
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 407,
-                "endLine": 407,
-                "startOffset": 92,
-                "endOffset": 94
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 408,
-                "endLine": 408,
-                "startOffset": 30,
-                "endOffset": 32
-              },
-              "msg": "+3 (incl 2 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 409,
-                "endLine": 409,
-                "startOffset": 8,
-                "endOffset": 12
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 411,
-                "endLine": 411,
-                "startOffset": 92,
-                "endOffset": 94
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 412,
-                "endLine": 412,
-                "startOffset": 30,
-                "endOffset": 32
-              },
-              "msg": "+3 (incl 2 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 413,
-                "endLine": 413,
-                "startOffset": 8,
-                "endOffset": 12
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 425,
-                "endLine": 425,
-                "startOffset": 12,
-                "endOffset": 14
-              },
-              "msg": "+3 (incl 2 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 427,
-                "endLine": 427,
-                "startOffset": 12,
-                "endOffset": 14
-              },
-              "msg": "+3 (incl 2 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 428,
-                "endLine": 428,
-                "startOffset": 59,
-                "endOffset": 61
-              },
-              "msg": "+4 (incl 3 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 429,
-                "endLine": 429,
-                "startOffset": 16,
-                "endOffset": 22
-              },
-              "msg": "+4 (incl 3 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 433,
-                "endLine": 433,
-                "startOffset": 12,
-                "endOffset": 14
-              },
-              "msg": "+3 (incl 2 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 437,
-                "endLine": 437,
-                "startOffset": 12,
-                "endOffset": 14
-              },
-              "msg": "+3 (incl 2 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 440,
-                "endLine": 440,
-                "startOffset": 12,
-                "endOffset": 14
-              },
-              "msg": "+3 (incl 2 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 444,
-                "endLine": 444,
-                "startOffset": 12,
-                "endOffset": 14
-              },
-              "msg": "+3 (incl 2 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 447,
-                "endLine": 447,
-                "startOffset": 73,
-                "endOffset": 75
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 448,
-                "endLine": 448,
-                "startOffset": 52,
-                "endOffset": 54
-              },
-              "msg": "+3 (incl 2 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 458,
-                "endLine": 458,
-                "startOffset": 12,
-                "endOffset": 14
-              },
-              "msg": "+3 (incl 2 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 462,
-                "endLine": 462,
-                "startOffset": 12,
-                "endOffset": 14
-              },
-              "msg": "+3 (incl 2 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 462,
-                "endLine": 462,
-                "startOffset": 118,
-                "endOffset": 120
-              },
-              "msg": "+4 (incl 3 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 471,
-                "endLine": 471,
-                "startOffset": 12,
-                "endOffset": 14
-              },
-              "msg": "+3 (incl 2 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 472,
-                "endLine": 472,
-                "startOffset": 12,
-                "endOffset": 16
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 491,
-                "endLine": 491,
-                "startOffset": 8,
-                "endOffset": 10
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        }
-      ],
-      "status": "OPEN",
-      "message": "Refactor this function to reduce its Cognitive Complexity from 249 to the 15 allowed.",
-      "effort": "3h59min",
-      "debt": "3h59min",
-      "author": "olegkizyma008@gmail.com",
-      "tags": [
-        "brain-overload"
-      ],
-      "creationDate": "2025-12-21T23:33:23+0000",
-      "updateDate": "2025-12-21T23:55:14+0000",
-      "type": "CODE_SMELL",
-      "organization": "olegkizima01",
-      "cleanCodeAttribute": "FOCUSED",
-      "cleanCodeAttributeCategory": "ADAPTABLE",
-      "impacts": [
-        {
-          "softwareQuality": "MAINTAINABILITY",
-          "severity": "HIGH"
-        }
-      ],
-      "issueStatus": "OPEN",
-      "projectName": "System"
-    },
-    {
-      "key": "AZtDBbEXIamWuOZABWaG",
-      "rule": "python:S3776",
-      "severity": "CRITICAL",
-      "component": "olegkizima01_System2:core/mcp.py",
-      "project": "olegkizima01_System2",
-      "line": 469,
-      "hash": "8837594de9236ccd9c2b5d358181caf9",
-      "textRange": {
-        "startLine": 469,
-        "endLine": 469,
-        "startOffset": 8,
-        "endOffset": 27
-      },
-      "flows": [
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:core/mcp.py",
-              "textRange": {
-                "startLine": 483,
-                "endLine": 483,
-                "startOffset": 8,
-                "endOffset": 10
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:core/mcp.py",
-              "textRange": {
-                "startLine": 486,
-                "endLine": 486,
-                "startOffset": 12,
-                "endOffset": 14
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:core/mcp.py",
-              "textRange": {
-                "startLine": 490,
-                "endLine": 490,
-                "startOffset": 8,
-                "endOffset": 12
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:core/mcp.py",
-              "textRange": {
-                "startLine": 494,
-                "endLine": 494,
-                "startOffset": 8,
-                "endOffset": 12
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:core/mcp.py",
-              "textRange": {
-                "startLine": 500,
-                "endLine": 500,
-                "startOffset": 8,
-                "endOffset": 12
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:core/mcp.py",
-              "textRange": {
-                "startLine": 506,
-                "endLine": 506,
-                "startOffset": 61,
-                "endOffset": 63
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:core/mcp.py",
-              "textRange": {
-                "startLine": 509,
-                "endLine": 509,
-                "startOffset": 8,
-                "endOffset": 12
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:core/mcp.py",
-              "textRange": {
-                "startLine": 512,
-                "endLine": 512,
-                "startOffset": 12,
-                "endOffset": 14
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:core/mcp.py",
-              "textRange": {
-                "startLine": 515,
-                "endLine": 515,
-                "startOffset": 8,
-                "endOffset": 12
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:core/mcp.py",
-              "textRange": {
-                "startLine": 519,
-                "endLine": 519,
-                "startOffset": 8,
-                "endOffset": 12
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:core/mcp.py",
-              "textRange": {
-                "startLine": 524,
-                "endLine": 524,
-                "startOffset": 8,
-                "endOffset": 12
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:core/mcp.py",
-              "textRange": {
-                "startLine": 528,
-                "endLine": 528,
-                "startOffset": 8,
-                "endOffset": 12
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:core/mcp.py",
-              "textRange": {
-                "startLine": 530,
-                "endLine": 530,
-                "startOffset": 12,
-                "endOffset": 14
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:core/mcp.py",
-              "textRange": {
-                "startLine": 534,
-                "endLine": 534,
-                "startOffset": 8,
-                "endOffset": 12
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:core/mcp.py",
-              "textRange": {
-                "startLine": 538,
-                "endLine": 538,
-                "startOffset": 8,
-                "endOffset": 12
-              },
-              "msg": "+1"
-            }
-          ]
-        }
-      ],
-      "status": "OPEN",
-      "message": "Refactor this function to reduce its Cognitive Complexity from 18 to the 15 allowed.",
-      "effort": "8min",
-      "debt": "8min",
-      "author": "olegkizyma008@gmail.com",
-      "tags": [
-        "brain-overload"
-      ],
-      "creationDate": "2025-12-21T07:56:59+0000",
-      "updateDate": "2025-12-21T22:25:41+0000",
-      "type": "CODE_SMELL",
-      "organization": "olegkizima01",
-      "cleanCodeAttribute": "FOCUSED",
-      "cleanCodeAttributeCategory": "ADAPTABLE",
-      "impacts": [
-        {
-          "softwareQuality": "MAINTAINABILITY",
-          "severity": "HIGH"
-        }
-      ],
-      "issueStatus": "OPEN",
-      "projectName": "System"
-    },
-    {
-      "key": "AZtDBbEXIamWuOZABWaB",
-      "rule": "python:S1192",
-      "severity": "CRITICAL",
-      "component": "olegkizima01_System2:core/mcp.py",
-      "project": "olegkizima01_System2",
-      "line": 553,
-      "hash": "4cbfaf211ef13f05020eb9ffacf93866",
-      "textRange": {
-        "startLine": 553,
-        "endLine": 553,
-        "startOffset": 28,
-        "endOffset": 51
-      },
-      "flows": [
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:core/mcp.py",
-              "textRange": {
-                "startLine": 554,
-                "endLine": 554,
-                "startOffset": 23,
-                "endOffset": 46
-              },
-              "msg": "Duplication"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:core/mcp.py",
-              "textRange": {
-                "startLine": 555,
-                "endLine": 555,
-                "startOffset": 31,
-                "endOffset": 54
-              },
-              "msg": "Duplication"
-            }
-          ]
-        }
-      ],
-      "status": "OPEN",
-      "message": "Define a constant instead of duplicating this literal '[name=\"search_query\"]' 3 times.",
-      "effort": "6min",
-      "debt": "6min",
-      "author": "olegkizyma008@gmail.com",
-      "tags": [
-        "design"
-      ],
-      "creationDate": "2025-12-21T07:56:59+0000",
-      "updateDate": "2025-12-21T22:25:41+0000",
-      "type": "CODE_SMELL",
-      "organization": "olegkizima01",
-      "cleanCodeAttribute": "DISTINCT",
-      "cleanCodeAttributeCategory": "ADAPTABLE",
-      "impacts": [
-        {
-          "softwareQuality": "MAINTAINABILITY",
-          "severity": "HIGH"
-        }
-      ],
-      "issueStatus": "OPEN",
-      "projectName": "System"
-    },
-    {
-      "key": "AZtDBbEXIamWuOZABWaH",
-      "rule": "python:S3776",
-      "severity": "CRITICAL",
-      "component": "olegkizima01_System2:core/mcp.py",
-      "project": "olegkizima01_System2",
-      "line": 619,
-      "hash": "c6b5ecc1383eaedacf2af1b1477879db",
-      "textRange": {
-        "startLine": 619,
-        "endLine": 619,
-        "startOffset": 8,
-        "endOffset": 15
-      },
-      "flows": [
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:core/mcp.py",
-              "textRange": {
-                "startLine": 645,
-                "endLine": 645,
-                "startOffset": 8,
-                "endOffset": 10
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:core/mcp.py",
-              "textRange": {
-                "startLine": 647,
-                "endLine": 647,
-                "startOffset": 12,
-                "endOffset": 14
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:core/mcp.py",
-              "textRange": {
-                "startLine": 651,
-                "endLine": 651,
-                "startOffset": 20,
-                "endOffset": 22
-              },
-              "msg": "+3 (incl 2 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:core/mcp.py",
-              "textRange": {
-                "startLine": 661,
-                "endLine": 661,
-                "startOffset": 20,
-                "endOffset": 22
-              },
-              "msg": "+3 (incl 2 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:core/mcp.py",
-              "textRange": {
-                "startLine": 661,
-                "endLine": 661,
-                "startOffset": 56,
-                "endOffset": 59
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:core/mcp.py",
-              "textRange": {
-                "startLine": 667,
-                "endLine": 667,
-                "startOffset": 28,
-                "endOffset": 30
-              },
-              "msg": "+4 (incl 3 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:core/mcp.py",
-              "textRange": {
-                "startLine": 671,
-                "endLine": 671,
-                "startOffset": 24,
-                "endOffset": 30
-              },
-              "msg": "+4 (incl 3 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:core/mcp.py",
-              "textRange": {
-                "startLine": 675,
-                "endLine": 675,
-                "startOffset": 16,
-                "endOffset": 22
-              },
-              "msg": "+3 (incl 2 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:core/mcp.py",
-              "textRange": {
-                "startLine": 681,
-                "endLine": 681,
-                "startOffset": 8,
-                "endOffset": 10
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:core/mcp.py",
-              "textRange": {
-                "startLine": 681,
-                "endLine": 681,
-                "startOffset": 25,
-                "endOffset": 28
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:core/mcp.py",
-              "textRange": {
-                "startLine": 685,
-                "endLine": 685,
-                "startOffset": 58,
-                "endOffset": 60
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:core/mcp.py",
-              "textRange": {
-                "startLine": 688,
-                "endLine": 688,
-                "startOffset": 12,
-                "endOffset": 18
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:core/mcp.py",
-              "textRange": {
-                "startLine": 692,
-                "endLine": 692,
-                "startOffset": 8,
-                "endOffset": 10
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:core/mcp.py",
-              "textRange": {
-                "startLine": 701,
-                "endLine": 701,
-                "startOffset": 12,
-                "endOffset": 14
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:core/mcp.py",
-              "textRange": {
-                "startLine": 701,
-                "endLine": 701,
-                "startOffset": 41,
-                "endOffset": 44
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:core/mcp.py",
-              "textRange": {
-                "startLine": 707,
-                "endLine": 707,
-                "startOffset": 12,
-                "endOffset": 14
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:core/mcp.py",
-              "textRange": {
-                "startLine": 709,
-                "endLine": 709,
-                "startOffset": 12,
-                "endOffset": 16
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:core/mcp.py",
-              "textRange": {
-                "startLine": 715,
-                "endLine": 715,
-                "startOffset": 12,
-                "endOffset": 14
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:core/mcp.py",
-              "textRange": {
-                "startLine": 717,
-                "endLine": 717,
-                "startOffset": 16,
-                "endOffset": 19
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:core/mcp.py",
-              "textRange": {
-                "startLine": 719,
-                "endLine": 719,
-                "startOffset": 20,
-                "endOffset": 22
-              },
-              "msg": "+3 (incl 2 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:core/mcp.py",
-              "textRange": {
-                "startLine": 719,
-                "endLine": 719,
-                "startOffset": 35,
-                "endOffset": 38
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:core/mcp.py",
-              "textRange": {
-                "startLine": 722,
-                "endLine": 722,
-                "startOffset": 12,
-                "endOffset": 16
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:core/mcp.py",
-              "textRange": {
-                "startLine": 724,
-                "endLine": 724,
-                "startOffset": 16,
-                "endOffset": 19
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:core/mcp.py",
-              "textRange": {
-                "startLine": 725,
-                "endLine": 725,
-                "startOffset": 20,
-                "endOffset": 22
-              },
-              "msg": "+3 (incl 2 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:core/mcp.py",
-              "textRange": {
-                "startLine": 731,
-                "endLine": 731,
-                "startOffset": 8,
-                "endOffset": 14
-              },
-              "msg": "+1"
-            }
-          ]
-        }
-      ],
-      "status": "OPEN",
-      "message": "Refactor this function to reduce its Cognitive Complexity from 46 to the 15 allowed.",
-      "effort": "36min",
-      "debt": "36min",
-      "author": "olegkizyma008@gmail.com",
-      "tags": [
-        "brain-overload"
-      ],
-      "creationDate": "2025-12-21T07:56:59+0000",
-      "updateDate": "2025-12-21T22:25:41+0000",
-      "type": "CODE_SMELL",
-      "organization": "olegkizima01",
-      "cleanCodeAttribute": "FOCUSED",
-      "cleanCodeAttributeCategory": "ADAPTABLE",
-      "impacts": [
-        {
-          "softwareQuality": "MAINTAINABILITY",
-          "severity": "HIGH"
-        }
-      ],
-      "issueStatus": "OPEN",
-      "projectName": "System"
-    },
-    {
-      "key": "AZtDBa2ZIamWuOZABWPJ",
-      "rule": "python:S3776",
-      "severity": "CRITICAL",
-      "component": "olegkizima01_System2:system_ai/tools/screenshot.py",
-      "project": "olegkizima01_System2",
-      "line": 205,
-      "hash": "d567e7c6599091fdc4baf19337362e1d",
-      "textRange": {
-        "startLine": 205,
-        "endLine": 205,
-        "startOffset": 4,
-        "endOffset": 19
-      },
-      "flows": [
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:system_ai/tools/screenshot.py",
-              "textRange": {
-                "startLine": 216,
-                "endLine": 216,
-                "startOffset": 8,
-                "endOffset": 10
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:system_ai/tools/screenshot.py",
-              "textRange": {
-                "startLine": 216,
-                "endLine": 216,
-                "startOffset": 25,
-                "endOffset": 28
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:system_ai/tools/screenshot.py",
-              "textRange": {
-                "startLine": 218,
-                "endLine": 218,
-                "startOffset": 12,
-                "endOffset": 14
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:system_ai/tools/screenshot.py",
-              "textRange": {
-                "startLine": 220,
-                "endLine": 220,
-                "startOffset": 16,
-                "endOffset": 18
-              },
-              "msg": "+3 (incl 2 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:system_ai/tools/screenshot.py",
-              "textRange": {
-                "startLine": 223,
-                "endLine": 223,
-                "startOffset": 8,
-                "endOffset": 10
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:system_ai/tools/screenshot.py",
-              "textRange": {
-                "startLine": 223,
-                "endLine": 223,
-                "startOffset": 20,
-                "endOffset": 23
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:system_ai/tools/screenshot.py",
-              "textRange": {
-                "startLine": 233,
-                "endLine": 233,
-                "startOffset": 8,
-                "endOffset": 10
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:system_ai/tools/screenshot.py",
               "textRange": {
                 "startLine": 235,
                 "endLine": 235,
-                "startOffset": 12,
-                "endOffset": 14
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:system_ai/tools/screenshot.py",
-              "textRange": {
-                "startLine": 248,
-                "endLine": 248,
-                "startOffset": 16,
-                "endOffset": 18
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:system_ai/tools/screenshot.py",
-              "textRange": {
-                "startLine": 253,
-                "endLine": 253,
-                "startOffset": 16,
-                "endOffset": 19
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:system_ai/tools/screenshot.py",
-              "textRange": {
-                "startLine": 255,
-                "endLine": 255,
-                "startOffset": 50,
-                "endOffset": 52
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:system_ai/tools/screenshot.py",
-              "textRange": {
-                "startLine": 258,
-                "endLine": 258,
-                "startOffset": 20,
-                "endOffset": 26
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:system_ai/tools/screenshot.py",
-              "textRange": {
-                "startLine": 261,
-                "endLine": 261,
-                "startOffset": 8,
-                "endOffset": 14
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:system_ai/tools/screenshot.py",
-              "textRange": {
-                "startLine": 265,
-                "endLine": 265,
                 "startOffset": 8,
                 "endOffset": 10
               },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:system_ai/tools/screenshot.py",
-              "textRange": {
-                "startLine": 272,
-                "endLine": 272,
-                "startOffset": 16,
-                "endOffset": 18
-              },
               "msg": "+2 (incl 1 for nesting)"
             }
           ]
@@ -2774,40 +542,12 @@
         {
           "locations": [
             {
-              "component": "olegkizima01_System2:system_ai/tools/screenshot.py",
+              "component": "olegkizima01_System2:tui/keybindings.py",
               "textRange": {
-                "startLine": 274,
-                "endLine": 274,
-                "startOffset": 16,
-                "endOffset": 18
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:system_ai/tools/screenshot.py",
-              "textRange": {
-                "startLine": 278,
-                "endLine": 278,
-                "startOffset": 16,
-                "endOffset": 18
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:system_ai/tools/screenshot.py",
-              "textRange": {
-                "startLine": 278,
-                "endLine": 278,
-                "startOffset": 42,
-                "endOffset": 45
+                "startLine": 235,
+                "endLine": 235,
+                "startOffset": 57,
+                "endOffset": 60
               },
               "msg": "+1"
             }
@@ -2816,12 +556,12 @@
         {
           "locations": [
             {
-              "component": "olegkizima01_System2:system_ai/tools/screenshot.py",
+              "component": "olegkizima01_System2:tui/keybindings.py",
               "textRange": {
-                "startLine": 281,
-                "endLine": 281,
-                "startOffset": 20,
-                "endOffset": 26
+                "startLine": 237,
+                "endLine": 237,
+                "startOffset": 39,
+                "endOffset": 41
               },
               "msg": "+3 (incl 2 for nesting)"
             }
@@ -2830,124 +570,12 @@
         {
           "locations": [
             {
-              "component": "olegkizima01_System2:system_ai/tools/screenshot.py",
+              "component": "olegkizima01_System2:tui/keybindings.py",
               "textRange": {
-                "startLine": 289,
-                "endLine": 289,
-                "startOffset": 24,
-                "endOffset": 30
-              },
-              "msg": "+3 (incl 2 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:system_ai/tools/screenshot.py",
-              "textRange": {
-                "startLine": 291,
-                "endLine": 291,
-                "startOffset": 16,
-                "endOffset": 20
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:system_ai/tools/screenshot.py",
-              "textRange": {
-                "startLine": 292,
-                "endLine": 292,
-                "startOffset": 41,
-                "endOffset": 43
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:system_ai/tools/screenshot.py",
-              "textRange": {
-                "startLine": 294,
-                "endLine": 294,
-                "startOffset": 20,
-                "endOffset": 22
-              },
-              "msg": "+3 (incl 2 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:system_ai/tools/screenshot.py",
-              "textRange": {
-                "startLine": 294,
-                "endLine": 294,
-                "startOffset": 49,
-                "endOffset": 51
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:system_ai/tools/screenshot.py",
-              "textRange": {
-                "startLine": 298,
-                "endLine": 298,
-                "startOffset": 41,
-                "endOffset": 43
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:system_ai/tools/screenshot.py",
-              "textRange": {
-                "startLine": 305,
-                "endLine": 305,
-                "startOffset": 87,
-                "endOffset": 89
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:system_ai/tools/screenshot.py",
-              "textRange": {
-                "startLine": 305,
-                "endLine": 305,
-                "startOffset": 101,
-                "endOffset": 103
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:system_ai/tools/screenshot.py",
-              "textRange": {
-                "startLine": 306,
-                "endLine": 306,
-                "startOffset": 12,
-                "endOffset": 18
+                "startLine": 243,
+                "endLine": 243,
+                "startOffset": 8,
+                "endOffset": 10
               },
               "msg": "+2 (incl 1 for nesting)"
             }
@@ -2956,12 +584,12 @@
         {
           "locations": [
             {
-              "component": "olegkizima01_System2:system_ai/tools/screenshot.py",
+              "component": "olegkizima01_System2:tui/keybindings.py",
               "textRange": {
-                "startLine": 309,
-                "endLine": 309,
-                "startOffset": 8,
-                "endOffset": 10
+                "startLine": 243,
+                "endLine": 243,
+                "startOffset": 57,
+                "endOffset": 60
               },
               "msg": "+1"
             }
@@ -2970,42 +598,29 @@
         {
           "locations": [
             {
-              "component": "olegkizima01_System2:system_ai/tools/screenshot.py",
+              "component": "olegkizima01_System2:tui/keybindings.py",
               "textRange": {
-                "startLine": 311,
-                "endLine": 311,
-                "startOffset": 85,
-                "endOffset": 87
+                "startLine": 245,
+                "endLine": 245,
+                "startOffset": 73,
+                "endOffset": 75
               },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:system_ai/tools/screenshot.py",
-              "textRange": {
-                "startLine": 323,
-                "endLine": 323,
-                "startOffset": 4,
-                "endOffset": 10
-              },
-              "msg": "+1"
+              "msg": "+3 (incl 2 for nesting)"
             }
           ]
         }
       ],
       "status": "OPEN",
-      "message": "Refactor this function to reduce its Cognitive Complexity from 46 to the 15 allowed.",
-      "effort": "36min",
-      "debt": "36min",
-      "author": "olegkizyma008@gmail.com",
+      "message": "Refactor this function to reduce its Cognitive Complexity from 26 to the 15 allowed.",
+      "effort": "16min",
+      "debt": "16min",
+      "assignee": "olegkizima01-pSUd5@github",
+      "author": "olegkizima01@gmail.com",
       "tags": [
         "brain-overload"
       ],
-      "creationDate": "2025-12-21T07:56:59+0000",
-      "updateDate": "2025-12-21T22:25:41+0000",
+      "creationDate": "2025-12-22T00:09:14+0000",
+      "updateDate": "2025-12-22T00:09:14+0000",
       "type": "CODE_SMELL",
       "organization": "olegkizima01",
       "cleanCodeAttribute": "FOCUSED",
@@ -23395,6 +21010,154 @@
       ],
       "issueStatus": "OPEN",
       "projectName": "System"
+    },
+    {
+      "key": "AZtDBa2-IamWuOZABWPN",
+      "rule": "python:S1192",
+      "severity": "CRITICAL",
+      "component": "olegkizima01_System2:system_ai/tools/automation.py",
+      "project": "olegkizima01_System2",
+      "line": 37,
+      "hash": "1705ba94b13cfa3c337af301b493b9a1",
+      "textRange": {
+        "startLine": 37,
+        "endLine": 37,
+        "startOffset": 65,
+        "endOffset": 88
+      },
+      "flows": [
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:system_ai/tools/automation.py",
+              "textRange": {
+                "startLine": 88,
+                "endLine": 88,
+                "startOffset": 71,
+                "endOffset": 94
+              },
+              "msg": "Duplication"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:system_ai/tools/automation.py",
+              "textRange": {
+                "startLine": 96,
+                "endLine": 96,
+                "startOffset": 68,
+                "endOffset": 91
+              },
+              "msg": "Duplication"
+            }
+          ]
+        }
+      ],
+      "status": "OPEN",
+      "message": "Define a constant instead of duplicating this literal \"Confirmation required\" 3 times.",
+      "effort": "6min",
+      "debt": "6min",
+      "author": "olegkizyma008@gmail.com",
+      "tags": [
+        "design"
+      ],
+      "creationDate": "2025-12-19T03:57:22+0000",
+      "updateDate": "2025-12-21T22:25:41+0000",
+      "type": "CODE_SMELL",
+      "organization": "olegkizima01",
+      "cleanCodeAttribute": "DISTINCT",
+      "cleanCodeAttributeCategory": "ADAPTABLE",
+      "impacts": [
+        {
+          "softwareQuality": "MAINTAINABILITY",
+          "severity": "HIGH"
+        }
+      ],
+      "issueStatus": "OPEN",
+      "projectName": "System"
+    },
+    {
+      "key": "AZtDBa0NIamWuOZABWN9",
+      "rule": "python:S1192",
+      "severity": "CRITICAL",
+      "component": "olegkizima01_System2:tui/layout.py",
+      "project": "olegkizima01_System2",
+      "line": 335,
+      "hash": "4eb8e388378852d1d64edde7ea02922f",
+      "textRange": {
+        "startLine": 335,
+        "endLine": 335,
+        "startOffset": 39,
+        "endOffset": 59
+      },
+      "flows": [
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/layout.py",
+              "textRange": {
+                "startLine": 341,
+                "endLine": 341,
+                "startOffset": 30,
+                "endOffset": 50
+              },
+              "msg": "Duplication"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/layout.py",
+              "textRange": {
+                "startLine": 352,
+                "endLine": 352,
+                "startOffset": 34,
+                "endOffset": 54
+              },
+              "msg": "Duplication"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/layout.py",
+              "textRange": {
+                "startLine": 367,
+                "endLine": 367,
+                "startOffset": 36,
+                "endOffset": 56
+              },
+              "msg": "Duplication"
+            }
+          ]
+        }
+      ],
+      "status": "OPEN",
+      "message": "Define a constant instead of duplicating this literal \"class:frame.border\" 4 times.",
+      "effort": "8min",
+      "debt": "8min",
+      "author": "olegkizyma008@gmail.com",
+      "tags": [
+        "design"
+      ],
+      "creationDate": "2025-12-19T03:43:33+0000",
+      "updateDate": "2025-12-21T22:25:41+0000",
+      "type": "CODE_SMELL",
+      "organization": "olegkizima01",
+      "cleanCodeAttribute": "DISTINCT",
+      "cleanCodeAttributeCategory": "ADAPTABLE",
+      "impacts": [
+        {
+          "softwareQuality": "MAINTAINABILITY",
+          "severity": "HIGH"
+        }
+      ],
+      "issueStatus": "OPEN",
+      "projectName": "System"
     }
   ],
   "components": [
@@ -23569,16 +21332,6 @@
     },
     {
       "organization": "olegkizima01",
-      "key": "olegkizima01_System2:core/mcp.py",
-      "uuid": "AZtDBaYmIamWuOZABWML",
-      "enabled": true,
-      "qualifier": "FIL",
-      "name": "mcp.py",
-      "longName": "core/mcp.py",
-      "path": "core/mcp.py"
-    },
-    {
-      "organization": "olegkizima01",
       "key": "olegkizima01_System2:core/vibe_assistant.py",
       "uuid": "AZtDBaYmIamWuOZABWMI",
       "enabled": true,
@@ -23656,16 +21409,6 @@
       "name": "mcp_integration.py",
       "longName": "system_ai/tools/mcp_integration.py",
       "path": "system_ai/tools/mcp_integration.py"
-    },
-    {
-      "organization": "olegkizima01",
-      "key": "olegkizima01_System2:system_ai/tools/screenshot.py",
-      "uuid": "AZtDBaYiIamWuOZABWJQ",
-      "enabled": true,
-      "qualifier": "FIL",
-      "name": "screenshot.py",
-      "longName": "system_ai/tools/screenshot.py",
-      "path": "system_ai/tools/screenshot.py"
     },
     {
       "organization": "olegkizima01",

@@ -541,45 +541,13 @@ def run_graph_agent_task(
         accumulated_by_agent: Dict[str, str] = {}
         stream_line_by_agent: Dict[str, int] = {}
 
-        def _on_stream_delta(agent_name: str, delta: str) -> None:
-            if not delta:
-                return
-            prev = accumulated_by_agent.get(agent_name, "")
-            curr = prev + delta
-            accumulated_by_agent[agent_name] = curr
-
-            idx = stream_line_by_agent.get(agent_name)
-            if idx is None:
-                idx = log_reserve_line("action")
-                stream_line_by_agent[agent_name] = idx
-
-            tag = str(agent_name or "TRINITY").strip().upper() or "TRINITY"
-            log_replace_at(idx, f"[{tag}] {curr}", "action")
-            
-            try:
-                # Update Agents clean display too
-                agent_type_map = {
-                    "atlas": AgentType.ATLAS,
-                    "tetyana": AgentType.TETYANA,
-                    "grisha": AgentType.GRISHA,
-                }
-                agent_type = agent_type_map.get(agent_name.lower(), AgentType.SYSTEM)
-                from tui.render import log_agent_message
-                
-                # Only log to agent panel if it has [VOICE] or if we want comprehensive stream
-                # For now, let's stream everything to the agent panel if it's not technical
-                # The MessageFilter will handle [VOICE] extraction.
-                log_agent_message(agent_type, curr)
-            except Exception:
-                pass
-
-            try:
-                from tui.layout import force_ui_update
-                force_ui_update()
-            except Exception:
-                pass
-
-        on_stream_callback = _on_stream_delta if use_stream else None
+        on_stream_callback = (
+            lambda agent_name, delta: _handle_agent_stream(
+                agent_name, delta, accumulated_by_agent, stream_line_by_agent
+            )
+            if use_stream
+            else None
+        )
         gui_mode_val = str(gui_mode or "auto").strip().lower() or "auto"
         
         # Log file tail thread to stream real-time logs from Trinity
@@ -591,86 +559,17 @@ def run_graph_agent_task(
         last_position = [0]
         
         # Get current file position (start from end to only show new logs)
-        try:
-            if log_file_path.exists():
+        if log_file_path.exists():
+            try:
                 last_position[0] = log_file_path.stat().st_size
-        except Exception:
-            pass
+            except Exception:
+                pass
         
-        def _tail_loop():
-            """Tail log file and display new lines in TUI."""
-            while tail_active.is_set():
-                try:
-                    if not log_file_path.exists():
-                        threading.Event().wait(0.5)
-                        continue
-                    
-                    current_size = log_file_path.stat().st_size
-                    if current_size > last_position[0]:
-                        with open(log_file_path, 'r', encoding='utf-8', errors='ignore') as f:
-                            f.seek(last_position[0])
-                            new_content = f.read()
-                            last_position[0] = f.tell()
-                        
-                        # Display raw log lines with minimal processing
-                        for line in new_content.strip().split('\n'):
-                            if not line:
-                                continue
-                            
-                            # Extract the message part (after last |)
-                            parts = line.split('|')
-                            if len(parts) >= 2:
-                                msg = parts[-1].strip()
-                            else:
-                                msg = line.strip()
-                            
-                            # Determine category based on content
-                            msg_lower = msg.lower()
-                            
-                            # Tool execution detection
-                            if 'result for' in msg_lower:
-                                # Tool result - check success/failure
-                                if any(x in msg_lower for x in ['error', 'failed', 'exception', '"status": "error"', 'permission_required']):
-                                    cat = 'tool_fail'
-                                    # Add visual indicator
-                                    msg = '✗ ' + msg
-                                else:
-                                    cat = 'tool_success'
-                                    msg = '✓ ' + msg
-                            elif 'execute' in msg_lower and ('tool' in msg_lower or 'name' in msg_lower):
-                                cat = 'tool_run'
-                                msg = '⚙ ' + msg
-                            elif '[blocked]' in msg_lower:
-                                cat = 'tool_fail'
-                                msg = '✗ ' + msg
-                            elif 'error' in msg_lower or 'ERROR' in line:
-                                cat = 'error'
-                            elif '[TRACE]' in line or 'DEBUG' in line:
-                                cat = 'info'
-                            else:
-                                cat = 'action'
-                            
-                            # Truncate very long messages
-                            if len(msg) > 150:
-                                msg = msg[:147] + '...'
-                            
-                            if msg:
-                                log(msg, cat)
-                        
-                        # Update UI
-                        try:
-                            from tui.layout import force_ui_update
-                            force_ui_update()
-                        except Exception:
-                            pass
-                    
-                except Exception:
-                    pass
-                
-                # Poll interval
-                threading.Event().wait(0.3)
-        
-        tail_thread = threading.Thread(target=_tail_loop, daemon=True)
+        tail_thread = threading.Thread(
+            target=_tail_log_file, 
+            args=(tail_active, log_file_path, last_position), 
+            daemon=True
+        )
         tail_thread.start()
 
         chat_lang = getattr(state, "chat_lang", "en")
@@ -786,6 +685,86 @@ def run_graph_agent_task(
     log("[TRINITY] ✓ Task completed.", "action")
     trim_logs_if_needed()
 
+
+def _handle_agent_stream(agent_name: str, delta: str, accumulated_by_agent: dict, stream_line_by_agent: dict) -> None:
+    if not delta: return
+    from tui.render import log_agent_message, log_replace_at, log_reserve_line
+    from tui.messages import AgentType
+    
+    prev = accumulated_by_agent.get(agent_name, "")
+    curr = prev + delta
+    accumulated_by_agent[agent_name] = curr
+
+    idx = stream_line_by_agent.get(agent_name)
+    if idx is None:
+        idx = log_reserve_line("action")
+        stream_line_by_agent[agent_name] = idx
+
+    tag = str(agent_name or "TRINITY").strip().upper() or "TRINITY"
+    log_replace_at(idx, f"[{tag}] {curr}", "action")
+    
+    try:
+        agent_type_map = {"atlas": AgentType.ATLAS, "tetyana": AgentType.TETYANA, "grisha": AgentType.GRISHA}
+        agent_type = agent_type_map.get(agent_name.lower(), AgentType.SYSTEM)
+        log_agent_message(agent_type, curr)
+    except Exception: pass
+
+    try:
+        from tui.layout import force_ui_update
+        force_ui_update()
+    except Exception: pass
+
+def _tail_log_file(tail_active: threading.Event, log_file_path: Any, last_position: list):
+    """Tail log file and display new lines in TUI."""
+    from tui.render import log
+    while tail_active.is_set():
+        try:
+            if not log_file_path.exists():
+                threading.Event().wait(0.1) # reduced wait
+                continue
+            
+            current_size = log_file_path.stat().st_size
+            if current_size > last_position[0]:
+                with open(log_file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                    f.seek(last_position[0])
+                    new_content = f.read()
+                    last_position[0] = f.tell()
+                
+                for line in new_content.strip().split('\n'):
+                    if not line: continue
+                    _process_log_line(line, log)
+        except Exception: pass
+        threading.Event().wait(0.3)
+
+def _process_log_line(line: str, log: Callable):
+    parts = line.split('|')
+    msg = parts[-1].strip() if len(parts) >= 2 else line.strip()
+    msg_lower = msg.lower()
+    
+    # Categorization
+    if 'result for' in msg_lower:
+        if any(x in msg_lower for x in ['error', 'failed', 'exception', '"status": "error"', 'permission_required']):
+            cat, msg = 'tool_fail', '✗ ' + msg
+        else:
+            cat, msg = 'tool_success', '✓ ' + msg
+    elif 'execute' in msg_lower and ('tool' in msg_lower or 'name' in msg_lower):
+        cat, msg = 'tool_run', '⚙ ' + msg
+    elif '[blocked]' in msg_lower:
+        cat, msg = 'tool_fail', '✗ ' + msg
+    elif 'error' in msg_lower or 'ERROR' in line:
+        cat = 'error'
+    elif '[TRACE]' in line or 'DEBUG' in line:
+        cat = 'info'
+    else:
+        cat = 'action'
+    
+    if len(msg) > 150: msg = msg[:147] + '...'
+    if msg: log(msg, cat)
+    
+    try:
+        from tui.layout import force_ui_update
+        force_ui_update()
+    except Exception: pass
 
 # Backward compatibility aliases
 _load_env = load_env
