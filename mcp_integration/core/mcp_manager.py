@@ -8,6 +8,7 @@ import json
 import subprocess
 import os
 import logging
+import tempfile
 from typing import Dict, Any, Optional, Union
 from abc import ABC, abstractmethod
 
@@ -92,9 +93,24 @@ class Context7Client(MCPServerClient):
     def execute_command(self, command: str, **kwargs) -> Dict[str, Any]:
         """Execute command on Context7 MCP server"""
         try:
+            # Prepare kwargs: if large 'data' is present, write it to a temp file
+            temp_data_file = None
+            if "data" in kwargs and isinstance(kwargs["data"], str):
+                data_str = kwargs.pop("data")
+                # Use a temp file when data is large or contains newlines/whitespace
+                if len(data_str) > 200 or "\n" in data_str or len(data_str.split()) > 20:
+                    fd, temp_path = tempfile.mkstemp(prefix="context7_data_", suffix=".json")
+                    os.close(fd)
+                    with open(temp_path, "w", encoding="utf-8") as fh:
+                        fh.write(data_str)
+                    kwargs["data-file"] = temp_path
+                    temp_data_file = temp_path
+                else:
+                    kwargs["data"] = data_str
+
             # Build the full command
             full_cmd = [self.command] + self.args + [command]
-            
+
             # Add any additional arguments from kwargs
             for key, value in kwargs.items():
                 if isinstance(value, (str, int, float)):
@@ -102,63 +118,71 @@ class Context7Client(MCPServerClient):
                 elif isinstance(value, bool):
                     if value:
                         full_cmd.append(f"--{key}")
-            
-            result = self._run_command(full_cmd)
-            
-            if result.returncode == 0:
-                try:
-                    # Try to parse JSON output
-                    return {
-                        "success": True,
-                        "data": json.loads(result.stdout),
-                        "raw_output": result.stdout
-                    }
-                except json.JSONDecodeError:
-                    # Return raw output if not JSON
-                    return {
-                        "success": True,
-                        "data": result.stdout,
-                        "raw_output": result.stdout
-                    }
-            else:
-                # Handle Context7 specific errors more gracefully
-                error_msg = result.stderr if result.stderr else "Unknown error"
-                
-                # Check for common Context7 errors
-                if "too many arguments" in error_msg:
-                    logger.warning("Context7 argument error - trying simplified command")
-                    # Try with just the basic command
-                    simple_cmd = [self.command] + self.args + [command]
-                    simple_result = self._run_command(simple_cmd)
-                    
-                    if simple_result.returncode == 0:
-                        try:
+
+            # Execute and ensure temp file cleanup afterwards
+            try:
+                result = self._run_command(full_cmd)
+
+                if result.returncode == 0:
+                    try:
+                        # Try to parse JSON output
+                        return {
+                            "success": True,
+                            "data": json.loads(result.stdout),
+                            "raw_output": result.stdout
+                        }
+                    except json.JSONDecodeError:
+                        # Return raw output if not JSON
+                        return {
+                            "success": True,
+                            "data": result.stdout,
+                            "raw_output": result.stdout
+                        }
+                else:
+                    # Handle Context7 specific errors more gracefully
+                    error_msg = result.stderr if result.stderr else "Unknown error"
+
+                    # Check for common Context7 errors
+                    if "too many arguments" in error_msg:
+                        logger.warning("Context7 argument error - trying simplified command")
+                        # Try with just the basic command (no kwargs)
+                        simple_cmd = [self.command] + self.args + [command]
+                        simple_result = self._run_command(simple_cmd)
+
+                        if simple_result.returncode == 0:
+                            try:
+                                return {
+                                    "success": True,
+                                    "data": json.loads(simple_result.stdout),
+                                    "raw_output": simple_result.stdout,
+                                    "fallback": "used_simple_command"
+                                }
+                            except json.JSONDecodeError:
+                                return {
+                                    "success": True,
+                                    "data": simple_result.stdout,
+                                    "raw_output": simple_result.stdout,
+                                }
+                        else:
                             return {
-                                "success": True,
-                                "data": json.loads(simple_result.stdout),
-                                "raw_output": simple_result.stdout,
-                                "fallback": "used_simple_command"
-                            }
-                        except json.JSONDecodeError:
-                            return {
-                                "success": True,
-                                "data": simple_result.stdout,
-                                "raw_output": simple_result.stdout,
-                                "fallback": "used_simple_command"
+                                "success": False,
+                                "error": f"Context7 command failed: {error_msg}",
+                                "returncode": result.returncode,
+                                "fallback_attempted": True
                             }
                     else:
                         return {
                             "success": False,
-                            "error": f"Context7 command failed: {error_msg}",
-                            "returncode": result.returncode,
-                            "fallback_attempted": True
+                            "error": f"Context7 error: {error_msg}",
+                            "returncode": result.returncode
                         }
-                else:
-                    return {
-                        "success": False,
-                        "error": f"Context7 error: {error_msg}",
-                        "returncode": result.returncode
-                    }
+            finally:
+                # Cleanup temp data file if we created one
+                if temp_data_file and os.path.exists(temp_data_file):
+                    try:
+                        os.unlink(temp_data_file)
+                    except Exception:
+                        logger.exception("Failed to cleanup temp data file")
                 
         except Exception as e:
             return {

@@ -168,8 +168,20 @@ class TaskAnalyzer:
                 }
             else:
                 err_msg = screenshot_result.get("error") or "Unknown screenshot error"
-                logger.error(f"Failed to capture screenshot: {err_msg}")
-                return {"success": False, "error": err_msg}
+                tb = screenshot_result.get("traceback")
+                # Log with exception context if available
+                if tb:
+                    logger.error(f"Failed to capture screenshot: {err_msg}\n{tb}")
+                else:
+                    logger.error(f"Failed to capture screenshot: {err_msg}")
+
+                # Record the error in the current task for later analysis
+                try:
+                    self.log_task_event("error", {"message": err_msg, "traceback": tb})
+                except Exception:
+                    logger.exception("Failed to record screenshot error in task")
+
+                return {"success": False, "error": err_msg, "traceback": tb}
                 
         except Exception as e:
             logger.error(f"Screenshot capture error: {e}")

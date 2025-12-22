@@ -2,11 +2,16 @@ import os
 import time
 import subprocess
 import tempfile
+import logging
+import traceback
 from typing import Any, Dict, Optional, Tuple, Union, List
 from PIL import Image, ImageChops
 import mss
 import mss.tools
 from datetime import datetime
+
+# Module logger
+logger = logging.getLogger(__name__)
 
 
 def get_frontmost_app() -> Dict[str, Any]:
@@ -225,7 +230,18 @@ def take_screenshot(app_name: Optional[str] = None, window_title: Optional[str] 
         return _build_success_response("take_screenshot", res, focus_id)
         
     except Exception as e:
-        return {"tool": "take_screenshot", "status": "error", "error": str(e)}
+        tb = traceback.format_exc()
+        try:
+            # Ensure we log full traceback for observability
+            logger.exception("take_screenshot failed")
+        except Exception:
+            pass
+        return {
+            "tool": "take_screenshot",
+            "status": "error",
+            "error": str(e),
+            "traceback": tb
+        }
 
 def _auto_detect_frontmost(window_title: Optional[str]) -> Tuple[Optional[str], Optional[str]]:
     frontmost = get_frontmost_app()
@@ -261,7 +277,9 @@ def _capture_with_mss(region: Optional[Dict[str, int]]) -> Tuple[Optional[Image.
                     time.sleep(0.2)
             return None, last_err
     except Exception as e:
-        return None, str(e)
+        tb = traceback.format_exc()
+        logger.exception("mss capture failed")
+        return None, f"{str(e)}\n{tb}"
 
 def _capture_with_fallback(app_name, window_title, mss_error, manager, focus_id):
     try:
@@ -288,7 +306,9 @@ def _capture_with_fallback(app_name, window_title, mss_error, manager, focus_id)
             if os.path.exists(tmp_path):
                 os.unlink(tmp_path)
     except Exception as e:
-        return {"tool": "take_screenshot", "status": "error", "error": str(e)}
+        tb = traceback.format_exc()
+        logger.exception("screencapture fallback failed")
+        return {"tool": "take_screenshot", "status": "error", "error": str(e), "traceback": tb}
 
 def _handle_screencapture_error(stderr: str, mss_error: Optional[str]) -> Dict[str, Any]:
     err = (stderr or "").strip()
