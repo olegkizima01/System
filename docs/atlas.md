@@ -34,15 +34,19 @@ Atlas — **автономний мультиагентний оператор m
 ```mermaid
 graph TD
     START((START)) --> MP[meta_planner<br/>Голова/Стратег]
-    MP -->|Policy & Strategy| C7[context7<br/>Контекст-Менеджер]
-    C7 -->|Normalized Context| A[atlas<br/>Архітектор Плану]
-    MP -->|план готовий| T[tetyana<br/>Виконавець]
-    MP -->|план готовий| G[grisha<br/>Верифікатор]
+    MP -->|план готовий| A[atlas<br/>Архітектор Плану]
     A --> MP
+    MP -->|затверджено| T[tetyana<br/>Виконавець]
+    MP -->|затверджено| G[grisha<br/>Верифікатор]
     T --> G
     G --> MP
     MP -->|завершено| K[knowledge<br/>Екстрактор Досвіду]
     K --> END((END))
+    
+    subgraph Context Management
+        C7[Context7 Layer]
+    end
+    MP -.-> C7
     
     subgraph Memory
         WM[Working] --> EM[Episodic] --> SM[Semantic]
@@ -87,19 +91,11 @@ memory.consolidate_to_semantic()  # Promote knowledge
 - **Priority Weighting**: Пріоритезація недавніх кроків та критичної інформації
 - **ContextMetrics**: Відстеження використання токенів
 
-### 3.3 Agent Message Protocol (`core/agent_protocol.py`)
+### 3.3 Agent Message Protocol (`core/agent_protocol.py`) - Subsystem
+Модуль для структурованої чергової комунікації. Наразі доступний як бібліотека для складних розширень, але не є обов'язковим для базового циклу Trinity.
 
-Структурована комунікація між агентами:
-- **AgentMessage**: Типізовані повідомлення з метаданими
-- **PriorityMessageQueue**: Черга з пріоритетами
-- **MessageRouter**: Маршрутизація та доставка
-
-### 3.4 Parallel Tool Executor (`core/parallel_executor.py`)
-
-Паралельне виконання незалежних кроків:
-- **DependencyAnalyzer**: Аналіз залежностей між кроками
-- **Thread Pool**: Паралельне виконання незалежних операцій
-- **StepResult**: Відстеження статусу та метрик
+### 3.4 Parallel Tool Executor (`core/parallel_executor.py`) - Subsystem
+Двигун для паралельного виконання незалежних кроків. Використовується для RAG-запитів та пакетних операцій.
 
 ---
 
@@ -187,10 +183,10 @@ from core.trinity_models import TrinityStateModel, MetaConfig
 
 state = TrinityStateModel(
     current_agent="meta_planner",
-    task_type="DEV",
-    meta_config=MetaConfig(strategy="linear")
+    task_type="GENERAL",
+    meta_config=MetaConfig(strategy="hybrid")
 )
-state.validate_state()  # ✅ Все перевірено
+state.validate_state()  # ✅ Повна валідація схеми
 ```
 
 ### 8.2 MyPy Type Checking
