@@ -1,5 +1,5 @@
 ## Metadata
-Generated: Mon Dec 22 12:43:42  2025
+Generated: Mon Dec 22 12:50:05  2025
 
 ## Program Execution Logs
 (See logs/cli.log for details)
@@ -63,7 +63,8 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
 
 ## Git History (Last 10 Commits)
 ```
-  422cf2a5 feat: Enhance Atlas planning with critical anti-premature-completion rules and improve global goal validation in Trinity
+  a66146b2 feat: Enhance cleanup functionality with optional keyword arguments and improved logging in cleanup thread
+  1e42fbc8 feat: Enhance Atlas planning with critical anti-premature-completion rules and improve global goal validation in Trinity
   26b7465f fix: CAPTCHA detection and Grisha override bug for film search
   3524b2d5 feat: Add MAX_REPLANS constant, refactor JSON extraction utility, and update critical issues report totals.
   f9beb344 Refactor copy_to_clipboard to reduce cognitive complexity
@@ -72,7 +73,6 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
   911e7ffd Refactor test_logic.py to reduce cognitive complexity
   f5306a10 Refactor high complexity functions: _tetyana_node, trinity.run, cli_command handlers, and keybindings
   1dca84f5 chore: Add a new critical code smell issue and update details for an existing one, adjusting total counts.
-  87a01e55 Massive refactoring to reduce cognitive complexity
 ```
 
 ## Project Structure

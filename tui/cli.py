@@ -451,8 +451,13 @@ def _run_script(script_path: str) -> int:
     return _run_script_new(script_path)
 
 
-def _run_cleanup(cfg: Dict[str, Any], editor: str, dry_run: bool = False) -> Tuple[bool, str]:
-    return _run_cleanup_new(cfg, editor, dry_run)
+def _run_cleanup(cfg: Dict[str, Any], editor: str, dry_run: bool = False, **kwargs) -> Tuple[bool, str]:
+    """Wrapper for cleanup runner. Accepts optional keyword args (e.g., log_callback) and forwards them."""
+    try:
+        return _run_cleanup_new(cfg, editor, dry_run, **kwargs)
+    except TypeError:
+        # Fallback for older signature: call without kwargs
+        return _run_cleanup_new(cfg, editor, dry_run)
 
 
 def _perform_install(cfg: Dict[str, Any], editor: str) -> Tuple[bool, str]:
