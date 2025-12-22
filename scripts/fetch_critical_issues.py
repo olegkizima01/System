@@ -36,5 +36,6 @@ if __name__ == "__main__":
         print("SONAR_API_KEY not set")
     else:
         issues = get_critical_issues()
-        for issue in issues[:5]:
-            print(f"- {issue.get('severity')}: {issue.get('message')} ({issue.get('component')})")
+        for issue in issues[:10]:
+            line = issue.get('textRange', {}).get('startLine', '?')
+            print(f"- {issue.get('severity')}: {issue.get('message')} (Line {line} in {issue.get('component')})")

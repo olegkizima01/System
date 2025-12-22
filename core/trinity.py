@@ -74,9 +74,10 @@ class TrinityState(TypedDict):
     learning_mode: Optional[bool]
 
 class TrinityRuntime:
-    MAX_REPLANS = 10
     MAX_STEPS = 50
     PROJECT_STRUCTURE_FILE = "project_structure_final.txt"
+    LAST_RESPONSE_FILE = ".last_response.txt"
+    TRINITY_REPORT_HEADER = "## Trinity Report"
     
     # Dev task keywords (allow execution)
     DEV_KEYWORDS = set(DEV_KEYWORDS)
