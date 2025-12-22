@@ -131,21 +131,62 @@ def _handle_mouse_scroll_down(name: str, state: Any, scroll_delta: int):
             else:
                 w.vertical_scroll += scroll_delta
 
-def _handle_mouse_up(name: str, get_logs: Callable, get_agent_messages: Callable):
+def _handle_mouse_up(name: str, get_logs: Callable, get_agent_messages: Callable, get_context: Callable = None):
     try:
+        from tui.state import state
         from tui.clipboard_utils import copy_to_clipboard
-        content = ""
+        
+        if not state.selection_panel or state.selection_start_y is None or state.selection_end_y is None:
+            return
+
+        # Get vertical scroll offset
+        from prompt_toolkit.application.current import get_app
+        app = get_app()
+        v_scroll = 0
+        for wd in app.layout.find_all_windows():
+            if getattr(wd, "name", None) == name:
+                v_scroll = getattr(wd, "vertical_scroll", 0)
+                break
+
+        # Get full content
+        content_lines = []
         if name == "log" and get_logs:
             content = "".join(str(t or "") for _, t in get_logs())
+            content_lines = content.split("\n")
         elif name == "agents" and get_agent_messages:
             content = "".join(str(t or "") for _, t in get_agent_messages())
-        if content:
-            copy_to_clipboard(content)
+            content_lines = content.split("\n")
+        elif name == "context" and get_context:
+            content = "".join(str(t or "") for _, t in get_context())
+            content_lines = content.split("\n")
+            
+        if not content_lines:
+            return
+
+        # Absolutize Y coordinates using scroll
+        start_abs = min(state.selection_start_y, state.selection_end_y) + v_scroll
+        end_abs = max(state.selection_start_y, state.selection_end_y) + v_scroll
+        
+        if start_abs == end_abs:
+            # Simple click - copy the line
+            if 0 <= start_abs < len(content_lines):
+                copy_to_clipboard(content_lines[start_abs])
+        else:
+            # Dragged selection
+            selected = "\n".join(content_lines[start_abs:end_abs+1])
+            if selected:
+                copy_to_clipboard(selected)
+                
+        # Clear selection state
+        state.selection_panel = None
+        state.selection_start_y = None
+        state.selection_end_y = None
+        
     except Exception:
         pass
 
 
-def _create_mouse_handler(name: str, force_ui_update: Callable, get_logs: Callable = None, get_agent_messages: Callable = None):
+def _create_mouse_handler(name: str, force_ui_update: Callable, get_logs: Callable = None, get_agent_messages: Callable = None, get_context: Callable = None):
     def _handler(mouse_event: Any):
         from prompt_toolkit.mouse_events import MouseEventType
         from tui.state import state
@@ -161,10 +202,24 @@ def _create_mouse_handler(name: str, force_ui_update: Callable, get_logs: Callab
             _handle_mouse_scroll_down(name, state, scroll_delta)
             force_ui_update()
             return None
+            
+        if mouse_event.event_type == MouseEventType.MOUSE_DOWN:
+            state.selection_panel = name
+            state.selection_start_y = mouse_event.position.y
+            state.selection_end_y = mouse_event.position.y
+            force_ui_update()
+            return None
+
+        if mouse_event.event_type == MouseEventType.MOUSE_MOVE:
+            if state.selection_panel == name:
+                state.selection_end_y = mouse_event.position.y
+                force_ui_update()
+            return None
         
         if mouse_event.event_type == MouseEventType.MOUSE_UP:
             if hasattr(mouse_event, 'button') and mouse_event.button is not None:
-                _handle_mouse_up(name, get_logs, get_agent_messages)
+                _handle_mouse_up(name, get_logs, get_agent_messages, get_context)
+                force_ui_update()
             return NotImplemented
         
         return NotImplemented
@@ -226,12 +281,16 @@ def build_app(
         style="class:header"
     )
 
+    context_control = FormattedTextControl(_safe_formatted_text(get_context, fallback_style="class:context"))
+    context_control.mouse_handler = _create_mouse_handler("context", force_ui_update, get_logs, get_agent_messages, get_context)
+    
     context_window = Window(
-        FormattedTextControl(_safe_formatted_text(get_context, fallback_style="class:context")), 
+        context_control, 
         style="class:context", 
         wrap_lines=True,
         right_margins=[ScrollbarMargin(display_arrows=True)],
     )
+    setattr(context_window, "name", "context")
 
     safe_get_logs = _cached_getter(_safe_formatted_text(get_logs, fallback_style="class:log.info"))
     log_control = FormattedTextControl(
@@ -239,7 +298,7 @@ def build_app(
         get_cursor_position=_safe_cursor_position(safe_get_logs, get_log_cursor_position),
         focusable=True,
     )
-    log_control.mouse_handler = _create_mouse_handler("log", force_ui_update, get_logs, get_agent_messages)
+    log_control.mouse_handler = _create_mouse_handler("log", force_ui_update, get_logs, get_agent_messages, get_context)
 
     log_window = Window(
         log_control,
@@ -259,7 +318,7 @@ def build_app(
             get_cursor_position=_safe_cursor_position(safe_get_agent_messages, get_agent_cursor_position) if get_agent_cursor_position else None,
             focusable=True,
         )
-        agent_control.mouse_handler = _create_mouse_handler("agents", force_ui_update, get_logs, get_agent_messages)
+        agent_control.mouse_handler = _create_mouse_handler("agents", force_ui_update, get_logs, get_agent_messages, get_context)
 
         agent_messages_window = Window(
             agent_control,

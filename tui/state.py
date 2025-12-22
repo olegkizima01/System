@@ -80,6 +80,11 @@ class AppState:
     learning_mode: bool = False
     ui_recursion_limit: int = 100
     mcp_client_type: str = "open_mcp"  # open_mcp | continue
+    
+    # Selection state
+    selection_panel: Optional[str] = None
+    selection_start_y: Optional[int] = None
+    selection_end_y: Optional[int] = None
 
 
 state = AppState()

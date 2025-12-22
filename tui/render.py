@@ -34,6 +34,9 @@ _render_log_cache_ttl_s: float = 0.05
 _render_agents_cache: Dict[str, Any] = {"ts": 0.0, "messages": [], "cursor": Point(x=0, y=0)}
 _render_agents_cache_ttl_s: float = 0.05
 
+_render_context_cache: Dict[str, Any] = {"ts": 0.0, "content": []}
+_render_context_cache_ttl_s: float = 0.2
+
 # Style mapping
 STYLE_MAP = {
     "info": "class:log.info",
@@ -44,6 +47,44 @@ STYLE_MAP = {
     "tool_fail": "class:log.tool.fail",
     "tool_run": "class:log.tool.run",
 }
+
+
+def _apply_selection_to_formatted_text(formatted: List[Tuple[str, str]], panel_name: str) -> List[Tuple[str, str]]:
+    """Apply selection highlighting to formatted text tuples."""
+    if getattr(state, "selection_panel", None) != panel_name:
+        return formatted
+    if state.selection_start_y is None or state.selection_end_y is None:
+        return formatted
+        
+    start_y = min(state.selection_start_y, state.selection_end_y)
+    end_y = max(state.selection_start_y, state.selection_end_y)
+    
+    new_formatted = []
+    current_y = 0
+    for style, text in formatted:
+        if not text:
+            new_formatted.append((style, text))
+            continue
+            
+        lines = text.split("\n")
+        for i, line in enumerate(lines):
+            # Apply reverse style to selected lines
+            if start_y <= current_y <= end_y:
+                 current_style = style + " reverse" if style else "reverse"
+                 # Special handling for empty lines in selection to show visibility
+                 display_line = line if line else " "
+                 new_formatted.append((current_style, display_line))
+            else:
+                 new_formatted.append((style, line))
+            
+            # Re-add newline if it wasn't the last part of a split
+            if i < len(lines) - 1:
+                 # styled newline
+                 nl_style = style + " reverse" if (style and start_y <= current_y <= end_y) else (style or "")
+                 new_formatted.append((nl_style, "\n"))
+                 current_y += 1
+                 
+    return new_formatted
 
 
 def get_render_log_snapshot() -> Tuple[List[Tuple[str, str]], Point]:
@@ -124,7 +165,10 @@ def get_render_log_snapshot() -> Tuple[List[Tuple[str, str]], Point]:
         _render_log_cache["ts"] = now
         _render_log_cache["logs"] = logs_snapshot
         _render_log_cache["cursor"] = cursor
-        return logs_snapshot, cursor
+        
+        # Apply selection highlighting AFTER caching the raw snapshot
+        highlighted = _apply_selection_to_formatted_text(logs_snapshot, "log")
+        return highlighted, cursor
 
 
 def get_render_agents_snapshot() -> Tuple[List[Tuple[str, str]], Point]:
@@ -205,7 +249,10 @@ def get_render_agents_snapshot() -> Tuple[List[Tuple[str, str]], Point]:
         _render_agents_cache["ts"] = now
         _render_agents_cache["messages"] = formatted
         _render_agents_cache["cursor"] = cursor
-        return formatted, cursor
+        
+        # Apply selection highlighting AFTER caching the raw snapshot
+        highlighted = _apply_selection_to_formatted_text(formatted, "agents")
+        return highlighted, cursor
 
 
 def trim_logs_if_needed() -> None:
@@ -428,7 +475,13 @@ def get_header() -> List[Tuple[str, str]]:
 
 
 def get_context() -> List[Tuple[str, str]]:
-    """Generate context panel content for TUI."""
+    """Generate context panel content for TUI (with selection support)."""
+    now = time.monotonic()
+    ts = float(_render_context_cache.get("ts", 0.0))
+    if (now - ts) < _render_context_cache_ttl_s:
+        cached = _render_context_cache.get("content") or []
+        return _apply_selection_to_formatted_text(cached, "context")
+
     from tui.cli_paths import CLEANUP_CONFIG_PATH, LOCALIZATION_CONFIG_PATH
     result: List[Tuple[str, str]] = []
 
@@ -455,7 +508,10 @@ def get_context() -> List[Tuple[str, str]]:
     result.append(("class:context.label", " /gui_mode status|on|off|auto\n"))
     result.append(("class:context.label", " /trinity <task>\n"))
 
-    return result
+    _render_context_cache["ts"] = now
+    _render_context_cache["content"] = result
+    
+    return _apply_selection_to_formatted_text(result, "context")
 
 
 def get_status() -> List[Tuple[str, str]]:
