@@ -15,6 +15,20 @@ from abc import ABC, abstractmethod
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
+import logging
+import os
+import subprocess
+from abc import ABC, abstractmethod
+from enum import Enum
+from typing import Any, Dict, List, Optional
+
+# Import Prompt Engine for Dynamic Context
+try:
+    from mcp_integration.prompt_engine import prompt_engine
+    PROMPT_ENGINE_AVAILABLE = True
+except ImportError:
+    PROMPT_ENGINE_AVAILABLE = False
+
 logger = logging.getLogger(__name__)
 
 
@@ -257,7 +271,18 @@ class MCPClientManager:
             if not client.is_connected:
                 client.connect()
             
-            return client.execute_prompt(prompt)
+            # Inject Dynamic Context from Vector DB
+            final_prompt = prompt
+            if PROMPT_ENGINE_AVAILABLE:
+                try:
+                    context = prompt_engine.construct_context(prompt)
+                    if context:
+                        logger.info(f"Injecting dynamic context ({len(context)} chars)")
+                        final_prompt = f"{context}\n\nTask: {prompt}"
+                except Exception as e:
+                    logger.warning(f"Failed to inject dynamic context: {e}")
+            
+            return client.execute_prompt(final_prompt)
         except Exception as e:
             logger.error(f"Error executing prompt via MCP client: {e}")
             return {
