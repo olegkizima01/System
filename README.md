@@ -94,7 +94,7 @@ graph TD
 - **Playwright MCP**: Контроль браузера (headless/headful)
 - **PyAutoGUI MCP**: Альтернативна емуляція вводу
 - **AppleScript MCP**: UI автоматизація macOS
-- **Anthropic MCP**: Генерація тексту та коду (Client-Side)
+- **Anthropic MCP**: _temporarily disabled_ (use Copilot/OpenAI/Gemini providers instead)
 - **Context7 MCP**: Документація бібліотек
 - **SonarQube MCP**: Quality gate та аналіз коду
 
@@ -156,6 +156,35 @@ cd system
 chmod +x setup.sh
 ./setup.sh
 ```
+
+### 🔁 Global pyenv setup & global launcher (optional)
+
+If you want to use a single pyenv-managed Python 3.11.13 globally and install a user-level launcher:
+
+1. Ensure pyenv is installed and available in your shell: https://github.com/pyenv/pyenv#installation
+2. Run the project setup (it will try to `pyenv install -s 3.11.13` and `pyenv global 3.11.13` if pyenv is present):
+
+```bash
+./setup.sh
+```
+
+3. Install the global launcher so you can start the system from anywhere:
+
+```bash
+cd /path/to/System
+chmod +x scripts/install_global_launcher.sh
+./scripts/install_global_launcher.sh /path/to/System
+```
+
+The installer will copy a `system-vision` executable to `~/.local/bin/` and write configuration to `~/.config/system/system.conf`.
+Make sure `~/.local/bin` is in your `PATH` (add `export PATH="$HOME/.local/bin:$PATH"` to your shell profile if needed).
+
+You can then run the project globally as:
+
+```bash
+system-vision [args]
+```
+
 
 ### Використання
 

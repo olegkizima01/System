@@ -368,7 +368,7 @@ def _handle_llm_settings_space(ctx):
     from tui.tools import tool_llm_set, tool_llm_status
     if key == "provider":
         cur = tool_llm_status({"section": sec}).get("provider", "copilot")
-        p = ["copilot", "openai", "anthropic", "gemini"]
+        p = ["copilot", "openai", "gemini"]
         nxt = p[(p.index(cur)+1)%len(p)] if cur in p else "copilot"
         tool_llm_set({"section": sec, "provider": nxt}); log(f"Provider set to: {nxt}", "action")
     elif key in {"model", "main_model"}:

@@ -169,7 +169,7 @@ core/trinity.py
 
 setup.cfg (новий)
 └── MyPy конфігурація
-    - python_version = 3.11
+    - python_version = 3.11.13
     - check_untyped_defs = True
     - no_implicit_optional = True
 ```

@@ -4,12 +4,13 @@ echo "🚀 Setting up all MCP servers and tools..."
 
 # Install Node.js packages
 echo "📦 Installing Node.js packages..."
-npm install -g @executeautomation/playwright-mcp-server
+npm install -g @playwright/mcp
 npm install -g @iflow-mcp/applescript-mcp
-npm install -g mcp-pyautogui-server
+# Install Model Context Protocol filesystem server (file-manager replacement)
+npm install -g @modelcontextprotocol/server-filesystem@2025.8.21 || echo "⚠️  filesystem server install failed (continue)"
 
 # Install Python packages
-pip install chromadb sentence-transformers
+pip install chromadb sentence-transformers mcp-pyautogui-server
 
 # Create tool examples directory
 mkdir -p mcp_integration/core/tool_examples
@@ -42,9 +43,9 @@ EOF
 
 cat > mcp_integration/core/tool_examples/ai_examples.json << 'EOF'
 [
-  {"tool": "anthropic_analyze", "description": "Analyze with AI", "category": "ai", "server": "anthropic"},
-  {"tool": "anthropic_decide", "description": "Make decision", "category": "ai", "server": "anthropic"},
-  {"tool": "anthropic_generate", "description": "Generate content", "category": "ai", "server": "anthropic"}
+  {"tool": "copilot_analyze", "description": "Analyze with Copilot LLM", "category": "ai", "server": "copilot"},
+  {"tool": "openai_generate", "description": "Generate content with OpenAI", "category": "ai", "server": "openai"},
+  {"tool": "gemini_query", "description": "Query Gemini LLM", "category": "ai", "server": "gemini"}
 ]
 EOF
 

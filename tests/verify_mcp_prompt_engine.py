@@ -72,15 +72,8 @@ def test_prompt_engine():
     else:
         print("❌ No prompts found for AppleScript query.")
 
-    # Test retrieval 6: Anthropic
-    query_ant = "ask llm to write a poem"
-    print(f"\nQuerying prompts for: '{query_ant}'")
-    prompts_ant = prompt_engine.get_relevant_prompts(query_ant)
-    if prompts_ant:
-        print(f"✅ Found {len(prompts_ant)} relevant Anthropic prompts.")
-        for p in prompts_ant: print(f"   - [{p['score']:.2f}] {p['source']}: {p['content'][:60]}...")
-    else:
-        print("❌ No prompts found for Anthropic query.")
+    # Test retrieval 6: Anthropic (temporarily disabled)
+    print("\nSkipping Anthropic prompts test — Anthropic MCP is temporarily disabled in setup.")
 
     # Test retrieval 7: SonarQube
     query_sq = "check code quality issues"

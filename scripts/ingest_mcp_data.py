@@ -189,16 +189,16 @@ SERVER_DATA = {
             }
         ]
     },
-    "anthropic": {
+    "openai": {
         "prompts": [
-            "Use Anthropic tools for generating creative text, code snippets, or analyzing complex documents.",
+            "Use OpenAI tools for generating creative text, code snippets, or analyzing complex documents.",
             "For sub-tasks requiring reasoning (e.g., 'summarize this text'), use `generate_text` directly instead of asking the main agent to do it internally.",
             "When generating code, use `generate_code` to ensure proper markdown formatting and language specification."
         ],
         "schemas": [
             {
                 "name": "generate_text",
-                "description": "Generate text using Claude",
+                "description": "Generate text using OpenAI",
                 "inputSchema": {
                     "type": "object",
                     "properties": {"prompt": {"type": "string"}},
@@ -207,7 +207,7 @@ SERVER_DATA = {
             },
             {
                 "name": "generate_code",
-                "description": "Generate code using Claude",
+                "description": "Generate code using OpenAI",
                 "inputSchema": {
                     "type": "object",
                     "properties": {"prompt": {"type": "string"}, "language": {"type": "string"}},

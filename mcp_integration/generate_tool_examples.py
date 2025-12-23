@@ -120,28 +120,28 @@ class ToolExamplesGenerator:
         ]
     
     def _get_ai_tools(self) -> List[Dict]:
-        """AI analysis tools."""
+        """AI analysis tools (Anthropic temporarily disabled; default to OpenAI/Copilot/Gemini)."""
         return [
-            {"tool": "ai_analyze", "base_desc": "Analyze {data} for {purpose}", "server": "anthropic", "params": ["data", "purpose"]},
-            {"tool": "ai_summarize", "base_desc": "Summarize {content}", "server": "anthropic", "params": ["content"]},
-            {"tool": "ai_generate", "base_desc": "Generate {content_type} about {topic}", "server": "anthropic", "params": ["content_type", "topic"]},
-            {"tool": "ai_translate", "base_desc": "Translate {text} to {language}", "server": "anthropic", "params": ["text", "language"]},
-            {"tool": "ai_extract", "base_desc": "Extract {entities} from {text}", "server": "anthropic", "params": ["entities", "text"]},
-            {"tool": "ai_classify", "base_desc": "Classify {content} into {categories}", "server": "anthropic", "params": ["content", "categories"]},
-            {"tool": "ai_compare", "base_desc": "Compare {item1} with {item2}", "server": "anthropic", "params": ["item1", "item2"]},
-            {"tool": "ai_evaluate", "base_desc": "Evaluate {content} against {criteria}", "server": "anthropic", "params": ["content", "criteria"]},
-            {"tool": "ai_predict", "base_desc": "Predict {outcome} based on {data}", "server": "anthropic", "params": ["outcome", "data"]},
-            {"tool": "ai_recommend", "base_desc": "Recommend {items} based on {preferences}", "server": "anthropic", "params": ["items", "preferences"]},
-            {"tool": "ai_explain", "base_desc": "Explain {concept} in {style}", "server": "anthropic", "params": ["concept", "style"]},
-            {"tool": "ai_rewrite", "base_desc": "Rewrite {text} in {style}", "server": "anthropic", "params": ["text", "style"]},
-            {"tool": "ai_code_review", "base_desc": "Review code: {code}", "server": "anthropic", "params": ["code"]},
-            {"tool": "ai_debug", "base_desc": "Debug {error} in {context}", "server": "anthropic", "params": ["error", "context"]},
-            {"tool": "ai_optimize", "base_desc": "Optimize {content} for {goal}", "server": "anthropic", "params": ["content", "goal"]},
-            {"tool": "ai_validate", "base_desc": "Validate {data} against {schema}", "server": "anthropic", "params": ["data", "schema"]},
-            {"tool": "ai_convert", "base_desc": "Convert {data} from {format1} to {format2}", "server": "anthropic", "params": ["data", "format1", "format2"]},
-            {"tool": "ai_sentiment", "base_desc": "Analyze sentiment of {text}", "server": "anthropic", "params": ["text"]},
-            {"tool": "ai_keywords", "base_desc": "Extract keywords from {text}", "server": "anthropic", "params": ["text"]},
-            {"tool": "ai_answer", "base_desc": "Answer question: {question}", "server": "anthropic", "params": ["question"]},
+            {"tool": "ai_analyze", "base_desc": "Analyze {data} for {purpose}", "server": "openai", "params": ["data", "purpose"]},
+            {"tool": "ai_summarize", "base_desc": "Summarize {content}", "server": "openai", "params": ["content"]},
+            {"tool": "ai_generate", "base_desc": "Generate {content_type} about {topic}", "server": "openai", "params": ["content_type", "topic"]},
+            {"tool": "ai_translate", "base_desc": "Translate {text} to {language}", "server": "openai", "params": ["text", "language"]},
+            {"tool": "ai_extract", "base_desc": "Extract {entities} from {text}", "server": "openai", "params": ["entities", "text"]},
+            {"tool": "ai_classify", "base_desc": "Classify {content} into {categories}", "server": "openai", "params": ["content", "categories"]},
+            {"tool": "ai_compare", "base_desc": "Compare {item1} with {item2}", "server": "openai", "params": ["item1", "item2"]},
+            {"tool": "ai_evaluate", "base_desc": "Evaluate {content} against {criteria}", "server": "openai", "params": ["content", "criteria"]},
+            {"tool": "ai_predict", "base_desc": "Predict {outcome} based on {data}", "server": "openai", "params": ["outcome", "data"]},
+            {"tool": "ai_recommend", "base_desc": "Recommend {items} based on {preferences}", "server": "openai", "params": ["items", "preferences"]},
+            {"tool": "ai_explain", "base_desc": "Explain {concept} in {style}", "server": "openai", "params": ["concept", "style"]},
+            {"tool": "ai_rewrite", "base_desc": "Rewrite {text} in {style}", "server": "openai", "params": ["text", "style"]},
+            {"tool": "ai_code_review", "base_desc": "Review code: {code}", "server": "openai", "params": ["code"]},
+            {"tool": "ai_debug", "base_desc": "Debug {error} in {context}", "server": "openai", "params": ["error", "context"]},
+            {"tool": "ai_optimize", "base_desc": "Optimize {content} for {goal}", "server": "openai", "params": ["content", "goal"]},
+            {"tool": "ai_validate", "base_desc": "Validate {data} against {schema}", "server": "openai", "params": ["data", "schema"]},
+            {"tool": "ai_convert", "base_desc": "Convert {data} from {format1} to {format2}", "server": "openai", "params": ["data", "format1", "format2"]},
+            {"tool": "ai_sentiment", "base_desc": "Analyze sentiment of {text}", "server": "openai", "params": ["text"]},
+            {"tool": "ai_keywords", "base_desc": "Extract keywords from {text}", "server": "openai", "params": ["text"]},
+            {"tool": "ai_answer", "base_desc": "Answer question: {question}", "server": "openai", "params": ["question"]},
         ]
     
     def _get_filesystem_tools(self) -> List[Dict]:

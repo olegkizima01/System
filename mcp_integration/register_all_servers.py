@@ -394,8 +394,13 @@ def main():
     try:
         # Start Redis if not running
         logger.info("🔧 Checking Redis status...")
-            subprocess.run(['redis-server', '--daemonize', 'yes'], 
-                         capture_output=True, timeout=5, check=False)
+        try:
+            subprocess.run(
+                ['redis-server', '--daemonize', 'yes'],
+                capture_output=True,
+                timeout=5,
+                check=False,
+            )
             logger.info("✅ Redis server started")
         except Exception:
             logger.warning("⚠️  Could not start Redis, will continue without it")

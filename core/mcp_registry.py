@@ -68,11 +68,12 @@ from system_ai.tools.browser import (
 
 class ExternalMCPProvider:
     """Handles connection to an external MCP server via stdio."""
-    def __init__(self, name: str, command: str, args: List[str]):
+    def __init__(self, name: str, command: str, args: List[str], env: Optional[Dict[str, str]] = None):
         self.name = name
         self.command = command
         self.args = args
-        self._server_params = StdioServerParameters(command=command, args=args, env=os.environ.copy())
+        self.env = env or os.environ.copy()
+        self._server_params = StdioServerParameters(command=command, args=args, env=self.env)
         self._tools: Dict[str, Any] = {}
         self._loop = asyncio.new_event_loop()
         self._thread = threading.Thread(target=self._run_loop, daemon=True)
@@ -535,17 +536,39 @@ class MCPToolRegistry:
                 if name == "copilot" or name == "local_fallback":
                     # Internal/client-side servers are handled by manager directly
                     continue
+
+                if isinstance(s_config, dict) and s_config.get("enabled") is False:
+                    continue
                     
                 cmd = s_config.get("command")
                 args = s_config.get("args", [])
+                env_map = s_config.get("env") if isinstance(s_config, dict) else None
                 
                 if cmd:
                     try:
                         # Skip if already registered (e.g. by a plugin)
                         if name in self._external_providers:
                             continue
-                            
-                        provider = ExternalMCPProvider(name, cmd, args)
+
+                        resolved_env = os.environ.copy()
+                        missing = []
+                        if isinstance(env_map, dict):
+                            for k, v in env_map.items():
+                                if isinstance(v, str) and v.startswith("${") and v.endswith("}"):
+                                    src = v[2:-1]
+                                    val = os.getenv(src)
+                                    if not val:
+                                        missing.append(src)
+                                        continue
+                                    resolved_env[str(k)] = str(val)
+                                elif v is not None:
+                                    resolved_env[str(k)] = str(v)
+
+                        if missing:
+                            print(f"[MCP] Skipping external provider {name}: missing env {', '.join(missing)}")
+                            continue
+
+                        provider = ExternalMCPProvider(name, cmd, args, env=resolved_env)
                         self._external_providers[name] = provider
                         print(f"[MCP] Registered external provider: {name}")
                     except Exception as e:

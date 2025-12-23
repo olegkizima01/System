@@ -13,10 +13,45 @@ fi
 
 # Function to check Python version
 check_python_version() {
-    local required_version="3.11"
-    local python_cmd="python3.11"
-    
-    # Try to find Python 3.11
+    local required_version="3.11.13"
+
+    # Prefer pyenv-managed Python if available
+    if command -v pyenv &> /dev/null; then
+        echo "🔍 pyenv detected"
+
+        # Ensure desired version is installed (pyenv install -s is safe: skips if exists)
+        if ! pyenv versions --bare | grep -x "$required_version" &>/dev/null; then
+            echo "⚠️  Python $required_version not found in pyenv. Attempting to install via pyenv..."
+            if pyenv install -s "$required_version"; then
+                echo "✅ pyenv: installed Python $required_version"
+            else
+                echo "⚠️  pyenv failed to install Python $required_version. You may need to install build dependencies."
+            fi
+        fi
+
+        # Set pyenv global version
+        if pyenv versions --bare | grep -x "$required_version" &>/dev/null; then
+            echo "🔧 Setting pyenv global to $required_version"
+            pyenv global "$required_version"
+            # Initialize pyenv shims for this shell (if not already)
+            if command -v pyenv &>/dev/null; then
+                export PATH="$(pyenv root)/shims:$PATH"
+            fi
+            PYTHON_CMD="$(pyenv which python3.11 2>/dev/null || pyenv which python)"
+            PYTHON_VERSION=$($PYTHON_CMD --version 2>&1 | awk '{print $2}')
+            echo "✅ Using pyenv Python: $PYTHON_VERSION"
+            # Ensure project has .python-version for consistency
+            if [ -w . ] || [ ! -e .python-version ]; then
+                echo "$required_version" > .python-version
+                echo "✅ Wrote .python-version ($required_version) to project root"
+            fi
+            return 0
+        else
+            echo "⚠️  pyenv does not have Python $required_version available. Will fall back to system Python detection."
+        fi
+    fi
+
+    # Fallback: Try to find Python 3.11/3.11.13 in PATH
     if command -v python3.11 &> /dev/null; then
         PYTHON_CMD="python3.11"
         PYTHON_VERSION=$(python3.11 --version 2>&1 | awk '{print $2}')
@@ -25,10 +60,10 @@ check_python_version() {
     elif command -v python3 &> /dev/null; then
         PYTHON_CMD="python3"
         PYTHON_VERSION=$(python3 --version 2>&1 | awk '{print $2}')
-        echo "⚠️  Using Python $PYTHON_VERSION (Python 3.11 recommended)"
+        echo "⚠️  Using Python $PYTHON_VERSION (Python $required_version recommended)"
         return 0
     else
-        echo "❌ Python 3 not found. Please install Python 3.11 or later."
+        echo "❌ Python 3 not found. Please install Python $required_version or newer, e.g. via pyenv: https://github.com/pyenv/pyenv#installation"
         return 1
     fi
 }

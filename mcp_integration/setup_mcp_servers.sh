@@ -4,7 +4,7 @@ echo "🚀 Setting up MCP Servers..."
 
 # Install Playwright MCP Server (PRIORITY 1)
 echo "📦 Installing Playwright MCP Server..."
-npm install -g @executeautomation/playwright-mcp-server
+npm install -g @playwright/mcp
 if [ $? -eq 0 ]; then
     echo "✅ Playwright MCP Server installed"
 else
@@ -28,6 +28,10 @@ if [ $? -eq 0 ]; then
 else
     echo "❌ PyAutoGUI MCP Server failed"
 fi
+
+# Install Model Context Protocol filesystem server (file-manager replacement)
+echo "📦 Installing Model Context Protocol filesystem server..."
+npm install -g @modelcontextprotocol/server-filesystem@2025.8.21 || echo "⚠️  filesystem server install failed (continue)"
 
 echo "🎉 MCP Server setup complete!"
 echo "Run: python mcp_integration/check_servers.py to verify"

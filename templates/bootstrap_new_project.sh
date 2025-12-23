@@ -86,7 +86,9 @@ OPENED_IN_WINDSURF=0
 # Respect Doctor Vibe authority: if TRINITY_DEV_BY_VIBE is truthy, do not auto-open any editor
 VIBE_ENABLED=0
 if [ -n "${TRINITY_DEV_BY_VIBE:-}" ]; then
-    case "${TRINITY_DEV_BY_VIBE,,}" in
+    # Lowercase in a POSIX-compatible way (macOS bash may be older and not support ${var,,})
+    TRINITY_DEV_BY_VIBE_LOWER="$(echo "${TRINITY_DEV_BY_VIBE}" | tr '[:upper:]' '[:lower:]')"
+    case "$TRINITY_DEV_BY_VIBE_LOWER" in
         1|true|yes|on)
             VIBE_ENABLED=1
             ;;

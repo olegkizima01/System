@@ -63,6 +63,7 @@
       "category": "system"
     },
     "anthropic": {
+      "enabled": false,
       "command": "python3",
       "args": [
         "-m",
@@ -86,10 +87,11 @@
       "provider": "copilot"
     },
     "filesystem": {
+      "enabled": true,
       "command": "npx",
       "args": [
         "-y",
-        "@anthropic-ai/filesystem-mcp"
+        "@modelcontextprotocol/server-filesystem"
       ],
       "description": "Filesystem MCP Server for file operations",
       "timeout": 30000,
@@ -97,6 +99,7 @@
       "category": "system"
     },
     "sonarqube": {
+      "enabled": false,
       "command": "docker",
       "args": [
         "run",

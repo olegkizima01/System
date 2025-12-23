@@ -4,19 +4,27 @@
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SCRIPT_DIR"
 
-# Strict check for Python 3.11+ .venv
+# Prefer local .venv if present; otherwise use global/pyenv Python.
 if [ -f "$SCRIPT_DIR/.venv/bin/activate" ]; then
   source "$SCRIPT_DIR/.venv/bin/activate"
   PYTHON_EXE="$SCRIPT_DIR/.venv/bin/python"
 else
-  echo "❌ .venv не знайдено. Будь ласка, запустіть ./setup.sh спочатку." >&2
-  exit 1
+  if command -v python3.11 >/dev/null 2>&1; then
+    PYTHON_EXE="python3.11"
+  elif command -v python3 >/dev/null 2>&1; then
+    PYTHON_EXE="python3"
+  elif command -v python >/dev/null 2>&1; then
+    PYTHON_EXE="python"
+  else
+    echo "❌ Python не знайдено в PATH." >&2
+    exit 1
+  fi
 fi
 
-# Verify version in venv (support 3.11 or 3.12)
-VENV_VERSION=$("$PYTHON_EXE" --version 2>&1 | cut -d' ' -f2 | cut -d'.' -f1,2)
-if [ "$VENV_VERSION" != "3.11" ] && [ "$VENV_VERSION" != "3.12" ]; then
-  echo "❌ .venv використовує Python $VENV_VERSION, але потрібно 3.11 або 3.12. Запустіть ./setup.sh." >&2
+# Verify version (require 3.11+)
+PY_VER=$($PYTHON_EXE -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")' 2>/dev/null)
+if [ "$PY_VER" != "3.11" ] && [ "$PY_VER" != "3.12" ] && [ "$PY_VER" != "3.13" ]; then
+  echo "❌ Потрібен Python 3.11+. Зараз: ${PY_VER:-unknown}." >&2
   exit 1
 fi
 
