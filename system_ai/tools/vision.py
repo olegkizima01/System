@@ -364,6 +364,9 @@ def compare_images(path1: str, path2: str, prompt: str = None) -> Dict[str, Any]
     except Exception as e:
         return {"status": "error", "error": str(e)}
 
+# Global OCR engine singleton - prevents reinitializing models on each call
+_GLOBAL_OCR_ENGINE = None
+
 class DifferentialVisionAnalyzer:
     """Core class for differential visual analysis with OCR and multi-monitor support.
     
@@ -383,31 +386,48 @@ class DifferentialVisionAnalyzer:
         self._last_diff_image_path: Optional[str] = None
 
     def _get_ocr_engine(self):
-        """Lazy load OCR engine to avoid overhead if not used.
+        """Lazy load OCR engine with global singleton to avoid reinitializing models.
         
         Performance optimizations applied:
-        - DISABLE_MODEL_SOURCE_CHECK set to bypass network check (saves 30s+)
-        - use_textline_orientation for proper text orientation detection
+        - PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK to skip network check (saves 30s+)
+        - Global singleton to prevent multiple model loads (saves ~4s per call)
+        - Disabled doc_orientation_classify (not needed for screenshots)
+        - Disabled doc_unwarping (not needed for screenshots)
+        - Disabled textline_orientation (not needed for horizontal text)
         """
+        # Use module-level global to persist across all instances
+        global _GLOBAL_OCR_ENGINE
+        
         if self._ocr_engine is None:
+            # Check global first
+            if '_GLOBAL_OCR_ENGINE' in globals() and _GLOBAL_OCR_ENGINE is not None:
+                self._ocr_engine = _GLOBAL_OCR_ENGINE
+                return self._ocr_engine
+            
             try:
-                # Ensure environment is set before import (in case module was not imported at top level)
+                # Ensure environment is set before import
                 os.environ.setdefault("PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK", "True")
                 
                 from paddleocr import PaddleOCR
-                # Initialize PaddleOCR 3.x with compatible settings:
-                # - use_textline_orientation: enables text orientation detection
-                # - lang='en': English language model
-                # Note: PaddleOCR 3.x removed use_gpu/enable_mkldnn params
+                
+                # Initialize PaddleOCR 3.x with MINIMAL models for screenshot OCR:
+                # - Disable doc_orientation_classify: screenshots are already upright
+                # - Disable doc_unwarping: screenshots don't need unwarping
+                # - Disable textline_orientation: text in screenshots is horizontal
+                # This reduces model loads from 5 to 2 (detection + recognition only)
                 self._ocr_engine = PaddleOCR(
-                    use_textline_orientation=True, 
                     lang='en',
+                    use_doc_orientation_classify=False,  # Skip orientation model
+                    use_doc_unwarping=False,             # Skip UVDoc model
+                    use_textline_orientation=False,      # Skip textline orientation model
                 )
+                
+                # Store globally for reuse
+                _GLOBAL_OCR_ENGINE = self._ocr_engine
+                
             except ImportError:
-                # Fallback to a dummy or logger if not installed
                 self._ocr_engine = "unavailable"
             except Exception as e:
-                # Any other error - mark as unavailable with reason
                 self._ocr_engine = "unavailable"
         return self._ocr_engine
 
