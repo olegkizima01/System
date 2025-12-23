@@ -96,3 +96,5 @@ Visual Studio Code*.app/
 Windsurf*.app/
 kinotavr.md
 data/
+.env*
+!/.env.example
