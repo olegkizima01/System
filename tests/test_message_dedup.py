@@ -21,6 +21,9 @@ def test_add_dedup():
     time.sleep(0.12)
     buf.add(AgentType.ATLAS, "[VOICE] Стартова ініціалізація завершена")
     assert len(buf.messages) == 3
+    # duplicate counter should have counted one suppressed duplicate for ATLAS
+    stats = buf.get_duplicate_stats()
+    assert stats.get("atlas", 0) >= 1
 
 
 def test_upsert_stream_dedup():
@@ -41,3 +44,5 @@ def test_upsert_stream_dedup():
     time.sleep(0.12)
     buf.upsert_stream(AgentType.GRISHA, "[VOICE] Повідомлення отримано та зрозуміло")
     assert len(buf.messages) == 3
+    stats = buf.get_duplicate_stats()
+    assert stats.get("grisha", 0) >= 1

@@ -66,6 +66,11 @@ def create_persistent_client(
     persist_dir = _safe_prepare_dir(persist_dir)
 
     try:
+        # Disable Rust backtraces to avoid noisy native panics printing a large traceback
+        # (some chromadb builds can emit a rust panic on corrupt DBs). Setting
+        # RUST_BACKTRACE=0 reduces the verbosity of those messages in stderr.
+        import os
+        os.environ.setdefault("RUST_BACKTRACE", "0")
         import chromadb
 
         client = chromadb.PersistentClient(path=str(persist_dir))

@@ -4,7 +4,7 @@ Provides formatted, color-coded display of agent communications
 without technical details (Tool Results, JSON, etc).
 """
 
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Dict
 from dataclasses import dataclass
 from enum import Enum
 
@@ -329,9 +329,15 @@ class MessageBuffer:
         self.max_messages = max_messages
         # Track last seen verbal/clean messages per agent to avoid short-term duplicates
         # Mapping: AgentType -> (clean_text, timestamp)
-        import time
+        import time, os
         self._last_seen: Dict[AgentType, Tuple[str, float]] = {}
-        self._dedupe_ttl: float = 2.0  # seconds
+        # TTL (seconds) for deduplication can be tuned via env var TRINITY_AGENT_DEDUPE_TTL
+        try:
+            self._dedupe_ttl: float = float(os.getenv("TRINITY_AGENT_DEDUPE_TTL", "2.0"))
+        except Exception:
+            self._dedupe_ttl = 2.0
+        # Diagnostic counter: number of suppressed duplicates per agent
+        self._duplicate_counter: Dict[AgentType, int] = {}
     
     def add(self, agent: AgentType, text: str, is_technical: bool = False) -> None:
         """Add a message to the buffer."""
@@ -340,6 +346,8 @@ class MessageBuffer:
         clean = MessageFilter.clean_message(text) or text
         last = self._last_seen.get(agent)
         if last and last[0] == clean and (_now() - last[1]) < self._dedupe_ttl:
+            # Increment duplicate counter for diagnostics
+            self._duplicate_counter[agent] = self._duplicate_counter.get(agent, 0) + 1
             return
 
         msg = AgentMessage(agent=agent, text=text, is_technical=is_technical)
@@ -364,6 +372,7 @@ class MessageBuffer:
         last = self._last_seen.get(agent)
         if last and last[0] == clean and (_now() - last[1]) < self._dedupe_ttl:
             # If duplicate within TTL, do not append/replace to avoid noisy repeats
+            self._duplicate_counter[agent] = self._duplicate_counter.get(agent, 0) + 1
             return
         if is_verbal:
             # Look for the last verbal message
@@ -389,6 +398,10 @@ class MessageBuffer:
             self._last_seen[agent] = (clean, _now())
             if len(self.messages) > self.max_messages:
                 self.messages = self.messages[-self.max_messages:]
+
+    def get_duplicate_stats(self) -> Dict[str, int]:
+        """Return a mapping of agent name -> number of suppressed duplicates."""
+        return {agent.value: int(count) for agent, count in self._duplicate_counter.items()}
     
     def get_formatted(self) -> List[Tuple[str, str]]:
         """Get all messages formatted for display."""
