@@ -16,6 +16,8 @@ import json
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
+from tui.state import state
+from tui.constants import LOG_STYLE_MAP
 
 # Log directory
 LOGS_DIR = Path.home() / ".system_cli" / "logs"
@@ -44,7 +46,7 @@ DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
 class MemoryHandler(logging.Handler):
-    """Store logs in memory for TUI display."""
+    """Store logs in memory for TUI display (Legacy)."""
     
     def __init__(self, max_records: int = 1000):
         super().__init__()
@@ -75,9 +77,43 @@ class MemoryHandler(logging.Handler):
         self.records.clear()
 
 
-# Global memory handler
+class TuiStateLogHandler(logging.Handler):
+    """Log directly to TUI state.logs list."""
+    
+    def emit(self, record: logging.LogRecord) -> None:
+        try:
+             # Skip if it is an agent message (handled separately)
+             if record.name.endswith(".right") or record.name == "trinity.right":
+                 return
+             
+             msg = self.format(record)
+             
+             category = getattr(record, "tui_category", "info")
+             # Fallback logic for levels to styles
+             if category == "info":
+                 if record.levelno >= logging.ERROR:
+                     category = "error"
+                 elif record.levelno >= logging.WARNING:
+                     category = "warning"
+                 elif record.levelno == logging.DEBUG:
+                     category = "debug"
+            
+             style = LOG_STYLE_MAP.get(category, LOG_STYLE_MAP["info"])
+
+             with state.logs_lock:
+                 state.logs.append((style, f"{msg}\n"))
+                 # Simple trim (defer if agent is processing to avoid scroll jumps)
+                 if len(state.logs) > 2500:
+                      if not getattr(state, "agent_processing", False):
+                          del state.logs[:-2000]
+        except Exception:
+             self.handleError(record)
+
+# Global memory handler (Legacy)
 _memory_handler = MemoryHandler()
 
+# TUI Handler
+_tui_handler = TuiStateLogHandler()
 
 
 # JSON Formatter
@@ -202,10 +238,10 @@ def setup_logging(verbose: bool = False, name: str = "trinity") -> logging.Logge
         except Exception as e:
             print(f"Failed to setup console handler: {e}", file=sys.stderr)
 
-    # 6. Memory handler (for TUI display)
-    _memory_handler.setLevel(logging.INFO) # Keep TUI display cleaner (INFO+), or DEBUG if preferred? User asked for detailed logs "for me" (likely file), but TUI shouldn't be spammed.
-    _memory_handler.setFormatter(logging.Formatter(LOG_FORMAT_SIMPLE, datefmt=DATE_FORMAT))
-    logger.addHandler(_memory_handler)
+    # 6. TUI Handler (Real-time display)
+    _tui_handler.setLevel(logging.DEBUG) # Catch everything for TUI log window including debugs
+    _tui_handler.setFormatter(logging.Formatter(LOG_FORMAT_SIMPLE, datefmt=DATE_FORMAT))
+    logger.addHandler(_tui_handler)
     
     # 7. Suppress noisy third-party loggers
     logging.getLogger("urllib3").setLevel(logging.CRITICAL)
@@ -330,6 +366,7 @@ def setup_root_file_logging(root_dir: str) -> None:
         )
         left_handler.setFormatter(logging.Formatter(LOG_FORMAT_SIMPLE, datefmt=DATE_FORMAT))
         left_logger.addHandler(left_handler)
+        left_logger.addHandler(_tui_handler)
         if analysis_handler:
             left_logger.addHandler(analysis_handler)
     except Exception as e:

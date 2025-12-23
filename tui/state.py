@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
+import threading
 from typing import List, Optional, Set, Tuple
 
 
@@ -40,6 +41,7 @@ class MenuLevel(Enum):
 @dataclass
 class AppState:
     logs: List[Tuple[str, str]] = field(default_factory=list)
+    logs_lock: threading.RLock = field(default_factory=threading.RLock)
     status: str = "READY"
     menu_level: MenuLevel = MenuLevel.NONE
     menu_index: int = 0

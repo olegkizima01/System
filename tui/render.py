@@ -17,10 +17,11 @@ from prompt_toolkit.data_structures import Point
 
 from tui.state import state
 from tui.messages import MessageBuffer, AgentType
+from tui.constants import LOG_STYLE_MAP
 
 
 # Locks and buffers
-_logs_lock = threading.RLock()
+_logs_lock = state.logs_lock
 _logs_need_trim: bool = False
 _thread_log_override = threading.local()
 
@@ -38,15 +39,7 @@ _render_context_cache: Dict[str, Any] = {"ts": 0.0, "content": []}
 _render_context_cache_ttl_s: float = 0.2
 
 # Style mapping
-STYLE_MAP = {
-    "info": "class:log.info",
-    "user": "class:log.user",
-    "action": "class:log.action",
-    "error": "class:log.error",
-    "tool_success": "class:log.tool.success",
-    "tool_fail": "class:log.tool.fail",
-    "tool_run": "class:log.tool.run",
-}
+STYLE_MAP = LOG_STYLE_MAP
 
 
 def _apply_selection_to_formatted_text(formatted: List[Tuple[str, str]], panel_name: str) -> List[Tuple[str, str]]:
@@ -300,9 +293,7 @@ def log_replace_at(index: int, text: str, category: str = "info") -> None:
 
 
 def log(text: str, category: str = "info") -> None:
-    """Main log function - appends to log buffer."""
-    global _logs_need_trim
-    # Sanitize references to Windsurf when Doctor Vibe is handling dev edits
+    """Main log function - delegates to trinity.left logger."""
     try:
         import os, re
         if str(os.getenv("TRINITY_DEV_BY_VIBE") or "").strip().lower() in {"1", "true", "yes", "on"}:
@@ -310,28 +301,22 @@ def log(text: str, category: str = "info") -> None:
     except Exception:
         pass
     
-    # Log to root file (Left Screen)
-    try:
-        import logging
-        # Pass category as extra for JSON analysis log
-        logging.getLogger("system_cli.left").info(f"[{category.upper()}] {text}", extra={"tui_category": category})
-    except Exception:
-        pass
-
+    # Thread override handling
     override = getattr(_thread_log_override, "handler", None)
     if callable(override):
         try:
             override(text, category)
         except Exception:
             pass
-        return
-    with _logs_lock:
-        state.logs.append((STYLE_MAP.get(category, "class:log.info"), f"{text}\n"))
-        if len(state.logs) > 2000:
-            if getattr(state, "agent_processing", False):
-                _logs_need_trim = True
-            else:
-                state.logs = state.logs[-1500:]
+        # We continue to log to system logs even if override is present,
+        # ensuring "Logs for debug" works consistently.
+
+    # Log to trinity.left (Main Logs)
+    try:
+        import logging
+        logging.getLogger("trinity.left").info(f"[{category.upper()}] {text}", extra={"tui_category": category})
+    except Exception:
+        pass
 
 
 # Track last logged content per agent to avoid duplicate streaming logs
@@ -345,7 +330,7 @@ def log_agent_final(agent: AgentType, text: str) -> None:
         import logging, os, re
         if str(os.getenv("TRINITY_DEV_BY_VIBE") or "").strip().lower() in {"1", "true", "yes", "on"}:
             text = re.sub(r"(?i)windsurf", "Doctor Vibe (paused)", text)
-        logging.getLogger("system_cli.right").info(
+        logging.getLogger("trinity.right").info(
             f"[{agent.value}] {text}", 
             extra={"agent_type": agent.value, "is_final": True}
         )

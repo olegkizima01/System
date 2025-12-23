@@ -3,9 +3,13 @@ description: Authoritative guide for Project Atlas architecture, Cognitive 2.0 m
 ---
 
 # Project Atlas Workflow Guide
-**Cognitive 2.1 + Trinity Improvements v1.1 | Грудень 2025**
+**Cognitive 2.1 + Trinity Modular v2.0 | Грудень 2025**
 
 Єдине джерело правди про фундаментальні принципи роботи системи Atlas (Trinity Runtime).
+
+> [!NOTE]
+> **Грудень 2025**: Trinity Runtime реорганізовано в модульний пакет `core/trinity/`. 
+> Див. [Quick Start](./QUICKSTART.md) для швидкого старту.
 
 ---
 
@@ -68,7 +72,37 @@ graph TD
 
 ## 3. Core Components
 
-### 3.1 Hierarchical Memory System (`core/memory.py`)
+### 3.1 Trinity Runtime Package (`core/trinity/`)
+
+Модульна структура Trinity Runtime:
+
+```
+core/trinity/
+├── __init__.py          # Re-exports: TrinityRuntime, TrinityState, TrinityPermissions
+├── state.py             # TrinityState TypedDict, TrinityPermissions dataclass
+├── nodes/
+│   ├── __init__.py
+│   ├── base.py          # NodeResult, утиліти для nodes
+│   ├── meta_planner.py  # Meta-Planner node (Orchestrator)
+│   ├── atlas.py         # Atlas node (Architect)
+│   ├── tetyana.py       # Tetyana node (Executor)
+│   └── grisha.py        # Grisha node (Verifier)
+├── planning/
+│   └── __init__.py
+└── integration/
+    └── __init__.py
+```
+
+```python
+# Новий імпорт (рекомендовано)
+from core.trinity import TrinityRuntime, TrinityPermissions
+from core.trinity.state import create_initial_state
+
+# Legacy імпорт (підтримується)
+from core.trinity import TrinityRuntime  # Працює через re-exports
+```
+
+### 3.2 Hierarchical Memory System (`core/memory.py`)
 
 Трирівнева система пам'яті:
 
@@ -84,17 +118,17 @@ memory.add_to_working("current_task", {...})
 memory.consolidate_to_semantic()  # Promote knowledge
 ```
 
-### 3.2 Context7 Sliding Window (`core/context7.py`)
+### 3.3 Context7 Sliding Window (`core/context7.py`)
 
 Оптимізований менеджер контексту:
 - **Token Budget**: Динамічне керування бюджетом токенів
 - **Priority Weighting**: Пріоритезація недавніх кроків та критичної інформації
 - **ContextMetrics**: Відстеження використання токенів
 
-### 3.3 Agent Message Protocol (`core/agent_protocol.py`) - Subsystem
+### 3.4 Agent Message Protocol (`core/agent_protocol.py`) - Subsystem
 Модуль для структурованої чергової комунікації. Наразі доступний як бібліотека для складних розширень, але не є обов'язковим для базового циклу Trinity.
 
-### 3.4 Parallel Tool Executor (`core/parallel_executor.py`) - Subsystem
+### 3.5 Parallel Tool Executor (`core/parallel_executor.py`) - Subsystem
 Двигун для паралельного виконання незалежних кроків. Використовується для RAG-запитів та пакетних операцій.
 
 ### 3.5 MCP Prompt Engine (`mcp_integration/prompt_engine.py`)
@@ -232,6 +266,18 @@ mypy core/ --config-file=setup.cfg
 
 📋 **Auto-generated**: `project_structure_final.txt` — оновлюється на кожен commit
 
+### Key Directories
+
+| Directory | Purpose |
+|:---|:---|
+| `core/trinity/` | Модульний Trinity Runtime пакет |
+| `core/agents/` | Промпти агентів (Atlas, Tetyana, Grisha) |
+| `mcp_integration/` | MCP servers та RAG integration |
+| `system_ai/tools/` | Vision, automation tools |
+| `tui/` | Textual UI компоненти |
+| `tests/` | Unit та integration тести |
+| `archive/` | Архівовані файли та документація |
+
 ### Log Locations
 
 | Location | Content |
@@ -284,4 +330,16 @@ StateInitLogger().log_initial_state("Завдання", state_dict)
 
 ---
 
-*Останнє оновлення: 23 грудня 2025 р. - Trinity Improved + MCP Engine*
+## 13. Documentation
+
+| Document | Purpose |
+|:---|:---|
+| **`docs/atlas.md`** | Цей документ - головний workflow guide |
+| **`docs/QUICKSTART.md`** | Швидкий старт з прикладами |
+| **`docs/vision.md`** | Vision Pipeline документація |
+| **`docs/sonar.md`** | SonarQube MCP Server reference |
+| **`archive/docs/`** | Архівована документація |
+
+---
+
+*Останнє оновлення: 24 грудня 2025 р. - Trinity Modular Package v2.0*
