@@ -98,3 +98,6 @@ kinotavr.md
 data/
 .env*
 !/.env.example
+
+# Архів
+archive/

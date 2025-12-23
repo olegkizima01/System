@@ -249,7 +249,7 @@ mypy core/trinity.py --config-file=setup.cfg
 ## 9. Quick Start
 
 ```bash
-# Вимоги: Python 3.11+ (рекомендовано) або 3.12
+# Вимоги: pyenv shell 3.11.13
 ./setup.sh                  # Встановлення залежностей
 ./cli.sh                    # Запуск TUI
 /trinity <завдання>         # Запуск Trinity
