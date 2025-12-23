@@ -139,6 +139,14 @@ class TrinityRuntime:
         
         # Integrate MCP tools with Trinity's registry
         try:
+            # Diagnostics: list the current worktree and index to give full
+            # visibility into why commits may be skipped or amended.
+            try:
+                ls = self._run_git_command(["git", "ls-files", "--others", "--exclude-standard", "--modified"], root, env)
+                tracked = self._run_git_command(["git", "ls-files", "--cached", "--modified"], root, env)
+                self._deterministic_log("diag", f"untracked={repr(ls.stdout)} tracked_mod={repr(tracked.stdout)}")
+            except Exception:
+                pass
             from system_ai.tools.mcp_integration import register_mcp_tools_with_trinity
             register_mcp_tools_with_trinity(self.registry)
         except Exception as e:
@@ -2546,6 +2554,9 @@ Return JSON with ONLY the replacement step.'''))
                 "status_porcelain": (status.stdout or "").strip() if status.returncode == 0 else "",
             }
         except Exception as e:
+            import traceback
+            tb = traceback.format_exc()
+            print(f"[Trinity][ERROR] _auto_commit_on_success exception: {e}\n{tb}")
             return {"ok": False, "error": str(e)}
 
     def _collect_changed_files(self, diff_name, status) -> List[str]:
@@ -2595,6 +2606,7 @@ Return JSON with ONLY the replacement step.'''))
             # snapshot when deciding whether to create a follow-up commit
             # to ensure user edits seen at entry are included in HEAD.
             initial_changed = list(repo_changes.get("changed_files") or [])
+            print(f"[Trinity][DEBUG] entered _auto_commit_on_success, initial_changed={initial_changed}")
             print(f"[Trinity][DEBUG] initial_changed={initial_changed}")
             # Persist last-seen changed files across calls to handle flows
             # where _auto_commit_on_success may be invoked multiple times.
@@ -2605,23 +2617,42 @@ Return JSON with ONLY the replacement step.'''))
             env = self._prepare_git_env()
 
             # Check if there are changes
-            status = self._run_git_command(["git", "status", "--porcelain"], root, env)
-            if self.verbose:
-                print(f"[Trinity] auto_commit: git status --porcelain -> {repr(status.stdout)}")
+            # Debug: ensure we're in the expected repo and list files
+            try:
+                print(f"[Trinity][DEBUG] git_root={root} exists={os.path.exists(root)} cwd={os.getcwd()}")
+                print(f"[Trinity][DEBUG] ls root: {os.listdir(root)}")
+            except Exception as e:
+                print(f"[Trinity][DEBUG] ls root failed: {e}")
+            try:
+                print(f"[Trinity][DEBUG] running: git status --porcelain")
+                status = self._run_git_command(["git", "status", "--porcelain"], root, env)
+                print(f"[Trinity][DEBUG] git status rc={status.returncode} out={status.stdout!r} err={status.stderr!r}")
+            except Exception as e:
+                print(f"[Trinity][ERROR] git status failed: {e}")
+                raise
+            # Always record the porcelain status for deterministic diagnostics
+            self._deterministic_log("status", f"git status --porcelain -> {repr(status.stdout)}")
+            # Also print so pytest captures it in stdout for test debugging
+            print(f"[Trinity][DEBUG] git status --porcelain -> {repr(status.stdout)}")
             if status.returncode != 0:
                 return {"ok": False, "error": (status.stderr or "").strip() or "git status failed"}
 
             has_changes = bool((status.stdout or "").strip())
+            print(f"[Trinity][DEBUG] has_changes={has_changes}")
 
             # Create commit
             if self.verbose:
                 print(f"[Trinity] auto_commit: repo_changes={repo_changes}")
+            self._deterministic_log("commit", f"starting create_commit; repo_changes={repo_changes}")
             commit_result = self._create_commit(root, env, task, repo_changes, has_changes)
+            self._deterministic_log("commit", f"create_commit result: {commit_result}")
             if commit_result.get("error"):
                 return commit_result
 
             # Stage additional files and amend if needed
+            self._deterministic_log("amend", "starting stage_and_amend")
             amended = self._stage_and_amend(root, env, report)
+            self._deterministic_log("amend", f"stage_and_amend result: {amended}")
 
             # Get final commit hash
             head = self._run_git_command(["git", "rev-parse", "HEAD"], root, env)
@@ -2639,25 +2670,24 @@ Return JSON with ONLY the replacement step.'''))
                     missing = [f for f in changed if f not in files_in_head]
                     if missing:
                             # Diagnostic snapshot
-                            print(f"[Trinity] Missing files in HEAD after amend: {missing}. Attempting explicit commit.")
+                            self._deterministic_log("missing", f"Missing files in HEAD after amend: {missing}. Attempting explicit commit.")
                             # Print file existence and git status for each missing file
                             for f in missing:
                                 exists = os.path.exists(os.path.join(root, f))
                                 self.logger.info(f"[Trinity] Missing file '{f}' exists_in_worktree={exists}")
                             status_before = self._run_git_command(["git", "status", "--porcelain"], root, env)
                             ls_untracked = self._run_git_command(["git", "ls-files", "--others", "--exclude-standard"], root, env)
-                            self.logger.info(f"[Trinity] status before explicit commit: {repr(status_before.stdout)}")
-                            self.logger.info(f"[Trinity] untracked files: {repr(ls_untracked.stdout)}")
+                            self._deterministic_log("status", f"before explicit commit status={repr(status_before.stdout)} untracked={repr(ls_untracked.stdout)}")
 
                             for f in missing:
                                 addres = self._run_git_command(["git", "add", f], root, env)
-                                print(f"[Trinity] git add {f} rc={addres.returncode} out={addres.stdout!r} err={addres.stderr!r}")
+                                self._deterministic_log("git-add", f"git add {f} rc={addres.returncode} out={addres.stdout!r} err={addres.stderr!r}")
 
                             commit2 = self._run_git_command([
                                 "git", "-c", "user.name=Trinity", "-c", "user.email=trinity@local",
                                 "commit", "-m", f"Trinity: include missing files: {', '.join(missing)}"
                             ], root, env)
-                            print(f"[Trinity] explicit commit rc={commit2.returncode} out={commit2.stdout!r} err={commit2.stderr!r}")
+                            self._deterministic_log("commit", f"explicit commit rc={commit2.returncode} out={commit2.stdout!r} err={commit2.stderr!r}")
                             if commit2.returncode == 0:
                                 h2 = self._run_git_command(["git", "rev-parse", "HEAD"], root, env)
                                 commit_hash = (h2.stdout or "").strip() if h2.returncode == 0 else commit_hash
@@ -2674,13 +2704,13 @@ Return JSON with ONLY the replacement step.'''))
                                             found_rev = rev
                                             break
                                     if found_rev:
-                                        print(f"[Trinity] Restoring {f} from {found_rev}")
+                                        self._deterministic_log("restore", f"Restoring {f} from {found_rev}")
                                         co = self._run_git_command(["git", "checkout", found_rev, "--", f], root, env)
-                                        print(f"[Trinity] git checkout {found_rev} -- {f} rc={co.returncode} out={co.stdout!r} err={co.stderr!r}")
+                                        self._deterministic_log("git-checkout", f"git checkout {found_rev} -- {f} rc={co.returncode} out={co.stdout!r} err={co.stderr!r}")
                                         addr = self._run_git_command(["git", "add", f], root, env)
-                                        print(f"[Trinity] git add {f} rc={addr.returncode} out={addr.stdout!r} err={addr.stderr!r}")
+                                        self._deterministic_log("git-add", f"git add {f} rc={addr.returncode} out={addr.stdout!r} err={addr.stderr!r}")
                                         commit_restore = self._run_git_command(["git", "-c", "user.name=Trinity", "-c", "user.email=trinity@local", "commit", "-m", f"Trinity: restore missing file {f}"], root, env)
-                                        print(f"[Trinity] restore commit rc={commit_restore.returncode} out={commit_restore.stdout!r} err={commit_restore.stderr!r}")
+                                        self._deterministic_log("commit", f"restore commit rc={commit_restore.returncode} out={commit_restore.stdout!r} err={commit_restore.stderr!r}")
                                         if commit_restore.returncode == 0:
                                             h3 = self._run_git_command(["git", "rev-parse", "HEAD"], root, env)
                                             commit_hash = (h3.stdout or "").strip() if h3.returncode == 0 else commit_hash
@@ -2699,12 +2729,12 @@ Return JSON with ONLY the replacement step.'''))
                                                     commit_old = rev
                                                     break
                                             if commit_old:
-                                                print(f"[Trinity] Cherry-pick fallback: base={commit_old}, cherry from current HEAD")
+                                                self._deterministic_log("cherry", f"Cherry-pick fallback: base={commit_old}")
                                                 current_head = (self._run_git_command(["git", "rev-parse", "HEAD"], root, env).stdout or "").strip()
                                                 tmp_branch = f"trinity-restore-{int(time.time())}"
                                                 self._run_git_command(["git", "checkout", "-b", tmp_branch, commit_old], root, env)
                                                 cp = self._run_git_command(["git", "cherry-pick", current_head], root, env)
-                                                print(f"[Trinity] cherry-pick rc={cp.returncode} out={cp.stdout!r} err={cp.stderr!r}")
+                                                self._deterministic_log("cherry", f"cherry-pick rc={cp.returncode} out={cp.stdout!r} err={cp.stderr!r}")
                                                 if cp.returncode == 0:
                                                     new_head = (self._run_git_command(["git", "rev-parse", "HEAD"], root, env).stdout or "").strip()
                                                     # Move main to the new head
@@ -2722,7 +2752,7 @@ Return JSON with ONLY the replacement step.'''))
                             # Always show HEAD files after explicit commit attempt
                             try:
                                 fh = (self._run_git_command(["git", "show", "--name-only", "--pretty=format:", "HEAD"], root, env).stdout or "").splitlines()
-                                print(f"[Trinity] HEAD files after explicit commit attempt: {fh}")
+                                self._deterministic_log("head", f"HEAD files after explicit commit attempt: {fh}")
                             except Exception:
                                 pass
             except Exception:
@@ -2733,7 +2763,11 @@ Return JSON with ONLY the replacement step.'''))
             # locate a recent commit that does contain the changed files and
             # prefer that as the canonical commit for reporting.
             try:
-                changed = repo_changes.get("changed_files") if isinstance(repo_changes, dict) else None
+                # Prefer the last-seen snapshot of changed files (which may
+                # include earlier observations) when searching for a commit
+                # that contains user changes. Fall back to the current
+                # repo_changes if the snapshot is not available.
+                changed = getattr(self, "_last_seen_changed_files", None) or (repo_changes.get("changed_files") if isinstance(repo_changes, dict) else None)
                 if self.verbose:
                     print(f"[Trinity] auto_commit: initial changed files={changed}")
                 if commit_hash and changed:
@@ -2753,6 +2787,29 @@ Return JSON with ONLY the replacement step.'''))
                                         print(f"[Trinity] auto_commit: found changed files in {rev} -> {new_hash}")
                                     commit_hash = new_hash
                                 break
+                        # If we have an initial snapshot of changed files (what we
+                        # first observed when this method was called) prefer a
+                        # recent commit that contains any of those files. This
+                        # handles the case where later invocations only report a
+                        # subset of changes (e.g., task logs) but we want to
+                        # attribute the full user edits to the canonical commit.
+                        try:
+                            initial = initial_changed or []
+                            if initial and commit_hash:
+                                files_in_head = set((self._run_git_command(["git", "show", "--name-only", "--pretty=format:", "HEAD"], root, env).stdout or "").splitlines())
+                                if not any(f in files_in_head for f in initial):
+                                    for rev in ["HEAD", "HEAD~1", "HEAD~2", "HEAD~3", "HEAD~4"]:
+                                        out = (self._run_git_command(["git", "show", "--name-only", "--pretty=format:", rev], root, env).stdout or "").splitlines()
+                                        if any(f in out for f in initial):
+                                            h = self._run_git_command(["git", "rev-parse", "--verify", rev], root, env)
+                                            if h.returncode == 0:
+                                                new_hash = (h.stdout or "").strip()
+                                                commit_hash = new_hash
+                                                if self.verbose:
+                                                    print(f"[Trinity] auto_commit: preferring commit {rev} -> {new_hash} containing initial changed files {initial}")
+                                                break
+                        except Exception:
+                            pass
                     # If no explicit changed files were passed (second pass), but HEAD
                     # only contains the last-response file, prefer the nearest recent
                     # commit that contains other files (user changes / structure).
@@ -2790,6 +2847,14 @@ Return JSON with ONLY the replacement step.'''))
         env.setdefault("GIT_COMMITTER_EMAIL", env["GIT_AUTHOR_EMAIL"])
         return env
 
+    def _deterministic_log(self, tag: str, message: str) -> None:
+        """Log a deterministic, timestamped message for git operations.
+
+        Format: [Trinity][TS:<iso>] <tag> - <message>
+        """
+        ts = datetime.datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+        self.logger.info(f"[Trinity][TS:{ts}] {tag} - {message}")
+
     def _run_git_command(self, cmd: List[str], cwd: str, env: Dict[str, str]) -> subprocess.CompletedProcess:
         """Run a git command and return result."""
         return subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, env=env)
@@ -2806,9 +2871,21 @@ Return JSON with ONLY the replacement step.'''))
                 changed = repo_changes.get("changed_files") or []
                 # Log regardless of verbose so we can debug CI/test runs
                 self.logger.info(f"[Trinity] _create_commit: attempting to stage changed_files={changed}")
-                for f in changed:
+                print(f"[Trinity][DEBUG] _create_commit: attempting to stage changed_files={changed}")
+                # Explicitly add all untracked files (??) as well
+                status = self._run_git_command(["git", "status", "--porcelain"], root, env)
+                untracked = []
+                if status.returncode == 0:
+                    for line in (status.stdout or '').splitlines():
+                        if line.startswith('?? '):
+                            fname = line[3:].strip()
+                            untracked.append(fname)
+                # Add both changed and untracked files
+                files_to_add = list(dict.fromkeys(list(changed) + untracked))
+                for f in files_to_add:
                     res = self._run_git_command(["git", "add", f], root, env)
                     self.logger.info(f"[Trinity] git add {f} rc={res.returncode} out={res.stdout!r} err={res.stderr!r}")
+                    print(f"[Trinity][DEBUG] git add {f} rc={res.returncode} out={res.stdout!r} err={res.stderr!r}")
         except Exception as e:
             if self.verbose:
                 print(f"[Trinity] _create_commit: failed staging changed files: {e}")
@@ -2818,6 +2895,7 @@ Return JSON with ONLY the replacement step.'''))
         # defensive about earlier explicit adds).
         add = self._run_git_command(["git", "add", "."], root, env)
         self.logger.info(f"[Trinity] git add . rc={add.returncode} out={add.stdout!r} err={add.stderr!r}")
+        print(f"[Trinity][DEBUG] git add . rc={add.returncode} out={add.stdout!r} err={add.stderr!r}")
         if add.returncode != 0:
             return {"ok": False, "error": (add.stderr or "").strip() or "git add failed"}
         if self.verbose:
@@ -2839,13 +2917,13 @@ Return JSON with ONLY the replacement step.'''))
         # We still allow later amend operations to attach response/structure to
         # the existing last commit.
         if not has_changes:
+            print(f"[Trinity][DEBUG] _create_commit: no_changes -> skipping commit")
             return {"ok": True, "skipped": True, "reason": "no_changes"}
 
         env_commit = env.copy()
         env_commit["TRINITY_POST_COMMIT_RUNNING"] = "1"
         commit = self._run_git_command(commit_cmd, root, env_commit)
-        if self.verbose:
-            print(f"[Trinity] _create_commit: commit return={commit.returncode} stdout={commit.stdout!r} stderr={commit.stderr!r}")
+        print(f"[Trinity][DEBUG] _create_commit: commit return={commit.returncode} stdout={commit.stdout!r} stderr={commit.stderr!r}")
 
         if commit.returncode != 0:
             combined = (commit.stdout or "") + "\n" + (commit.stderr or "")
@@ -2883,6 +2961,31 @@ Return JSON with ONLY the replacement step.'''))
         a = self._run_git_command(["git", "add", "-A"], root, env)
         # Always print diagnostics for CI/test visibility
         print(f"[Trinity] _stage_and_amend: reset rc={r.returncode} addA rc={a.returncode} add_stdout={a.stdout!r} add_err={a.stderr!r}")
+
+        # Ensure files that were present in HEAD before the reset are
+        # staged for the amend. Sometimes a mixed reset + add -A can leave
+        # previously-committed files unstaged (or deleted from the worktree),
+        # which causes an amend to drop them from the commit. To avoid this
+        # we explicitly stage any HEAD files that are not currently staged.
+        try:
+            staged_out = (self._run_git_command(["git", "diff", "--cached", "--name-only"], root, env).stdout or "").splitlines()
+            staged_set = set(staged_out)
+            for f in head_files_before:
+                if f not in staged_set:
+                    # If the file is missing from the worktree, restore it from
+                    # HEAD so the amend preserves it; otherwise just add it to
+                    # the index so it remains part of the amended commit.
+                    fp = os.path.join(root, f)
+                    if not os.path.exists(fp):
+                        print(f"[Trinity] Restoring missing HEAD file before amend: {f}")
+                        co = self._run_git_command(["git", "checkout", "HEAD", "--", f], root, env)
+                        print(f"[Trinity] git checkout HEAD -- {f} rc={co.returncode} out={co.stdout!r} err={co.stderr!r}")
+                    # Ensure it's staged
+                    add_f = self._run_git_command(["git", "add", f], root, env)
+                    print(f"[Trinity] git add {f} rc={add_f.returncode} out={add_f.stdout!r} err={add_f.stderr!r}")
+        except Exception:
+            # Best effort only; don't fail the amend flow if this step errors
+            pass
 
         # Stage response file
         if os.path.exists(response_path):
