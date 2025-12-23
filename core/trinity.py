@@ -360,17 +360,49 @@ class TrinityRuntime:
         except Exception:
             return None
 
-    def run(self, task: str):
+    def run(self, task: str, gui_mode: str = "auto", execution_mode: str = "native", recursion_limit: int = 200):
         """Minimal workflow runner used by tests.
 
         Runs the configured workflow stream, performs auto-commit on
         successful completion, and yields events.
+
+        Args:
+            task: The task to execute
+            gui_mode: GUI mode setting (off|on|auto)
+            execution_mode: Execution mode (native|gui)
+            recursion_limit: Maximum recursion depth
         """
+        # Store GUI mode in state for workflow processing
+        state = {
+            "gui_mode": gui_mode,
+            "execution_mode": execution_mode,
+            "recursion_limit": recursion_limit
+        }
         # Collect events from the workflow stream
+        # Provide an explicit initial state to avoid langgraph EmptyInputError
         try:
-            events = list(self.workflow.stream(None, config=None))
-        except TypeError:
-            events = list(self.workflow.stream(None))
+            events = list(self.workflow.stream(state, config={"recursion_limit": recursion_limit}))
+        except Exception as e:
+            # Some langgraph runtimes may raise an error when no concrete input
+            # is supplied to the entry point (e.g. 'Received no input for __start__').
+            # As a fallback, try a minimal canonical initial state similar to tests.
+            if self.verbose:
+                self.logger.warning(f"Workflow stream failed with error: {e}. Retrying with minimal initial state.")
+            try:
+                minimal = {
+                    "messages": [{"role": "user", "content": task}],
+                    "current_agent": "meta_planner",
+                    "task_status": "pending",
+                    "step_count": 0,
+                    "replan_count": 0,
+                    "gui_mode": gui_mode,
+                    "execution_mode": execution_mode,
+                }
+                events = list(self.workflow.stream(minimal, {"recursion_limit": recursion_limit}))
+            except Exception as e2:
+                # If we still fail, log and propagate the error so callers can see the cause.
+                self.logger.error(f"Trinity workflow streaming failed on retry: {e2}")
+                raise
 
         final = events[-1] if events else {"atlas": {"messages": []}}
         atlas = final.setdefault("atlas", {})
