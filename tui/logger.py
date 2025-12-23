@@ -207,6 +207,14 @@ def setup_logging(verbose: bool = False, name: str = "trinity") -> logging.Logge
     _memory_handler.setFormatter(logging.Formatter(LOG_FORMAT_SIMPLE, datefmt=DATE_FORMAT))
     logger.addHandler(_memory_handler)
     
+    # 7. Suppress noisy third-party loggers
+    logging.getLogger("urllib3").setLevel(logging.CRITICAL)
+    logging.getLogger("urllib3.connectionpool").setLevel(logging.CRITICAL)
+    logging.getLogger("chromadb").setLevel(logging.ERROR)
+    logging.getLogger("chromadb.telemetry").setLevel(logging.CRITICAL)
+    logging.getLogger("backoff").setLevel(logging.CRITICAL)
+    logging.getLogger("posthog").setLevel(logging.CRITICAL)
+    
     return logger
 
 
