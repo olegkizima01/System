@@ -79,6 +79,80 @@ SERVER_DATA = {
                 }
             }
         ]
+    },
+    "playwright": {
+        "prompts": [
+            "When automating a browser to watch video, ALWAYS ensure you handle cookie consent popups explicitly before trying to interact with player controls.",
+            "To find a movie online, use a search engine (Google/DuckDuckGo) first, then navigate to a specific high-probability streaming site result.",
+            "If a video player click fails, try using `evaluate_javascript` to trigger the click event directly on the standard video API.",
+            "Wait for the page to fully load (load_state='networkidle') before attempting to find video elements."
+        ],
+        "schemas": [
+            {
+                "name": "navigate",
+                "description": "Navigate to a URL",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {"url": {"type": "string"}},
+                    "required": ["url"]
+                }
+            },
+            {
+                "name": "click",
+                "description": "Click an element",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {"selector": {"type": "string"}},
+                    "required": ["selector"]
+                }
+            },
+            {
+                "name": "input_text",
+                "description": "Input text into a field",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {"selector": {"type": "string"}, "text": {"type": "string"}},
+                    "required": ["selector", "text"]
+                }
+            }
+        ]
+    },
+    "desktop_control": {
+        "prompts": [
+            "To make a video fullscreen, first try the browser's fullscreen button. If that fails, simulate the 'f' key press using `press_key`.",
+            "To verify fullscreen mode, use `take_screenshot` and analyze if the window borders are visible or if the content covers the entire resolution.",
+            "When watching content, ensure the mouse cursor is moved to a safe corner (e.g., 0,0) to hide controls.",
+            "If valid state cannot be confirmed via DOM (e.g. canvas or video), rely on visual verification."
+        ],
+        "schemas": [
+            {
+                "name": "press_key",
+                "description": "Simulate a key press (PyAutoGUI)",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {"key": {"type": "string"}},
+                    "required": ["key"]
+                }
+            },
+            {
+                "name": "move_mouse",
+                "description": "Move the mouse cursor",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {"x": {"type": "integer"}, "y": {"type": "integer"}},
+                    "required": ["x", "y"]
+                }
+            },
+            {
+                "name": "take_screenshot",
+                "description": "Capture the screen for analysis",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {},
+                    "required": []
+                }
+            }
+        ]
     }
 }
 

@@ -35,10 +35,32 @@ def test_prompt_engine():
     
     if prompts_fs:
         print(f"✅ Found {len(prompts_fs)} relevant filesystem prompts.")
-        for p in prompts_fs:
-            print(f"   - [{p['score']:.2f}] {p['source']}: {p['content'][:60]}...")
     else:
-        print("❌ No prompts found for filesystem query (Ingestion might have failed).")
+        print("❌ No prompts found for filesystem query.")
+
+    # Test retrieval 3: Playwright/Browser
+    query_pw = "find a movie online and watch it"
+    print(f"\nQuerying prompts for: '{query_pw}'")
+    prompts_pw = prompt_engine.get_relevant_prompts(query_pw)
+    
+    if prompts_pw:
+        print(f"✅ Found {len(prompts_pw)} relevant browser prompts.")
+        for p in prompts_pw:
+             print(f"   - [{p['score']:.2f}] {p['source']}: {p['content'][:60]}...")
+    else:
+        print("❌ No prompts found for browser query.")
+
+    # Test retrieval 4: Desktop Control
+    query_dc = "make video fullscreen"
+    print(f"\nQuerying prompts for: '{query_dc}'")
+    prompts_dc = prompt_engine.get_relevant_prompts(query_dc)
+    
+    if prompts_dc:
+        print(f"✅ Found {len(prompts_dc)} relevant desktop control prompts.")
+        for p in prompts_dc:
+             print(f"   - [{p['score']:.2f}] {p['source']}: {p['content'][:60]}...")
+    else:
+        print("❌ No prompts found for desktop control query.")
 
     # Test Integration with Client Manager (Mock)
     print("\nTesting Context Injection...")

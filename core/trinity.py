@@ -31,6 +31,7 @@ from core.agents.tetyana import get_tetyana_prompt
 from core.agents.grisha import get_grisha_prompt, get_grisha_media_prompt
 from core.vision_context import VisionContextManager
 from providers.copilot import CopilotLLM
+from mcp_integration.prompt_engine import MCPPromptEngine
 
 from core.mcp_registry import MCPToolRegistry
 from core.context7 import Context7
@@ -772,6 +773,18 @@ class TrinityRuntime:
             "vibe_assistant_context": "eternal_engine_mode: Doctor Vibe monitoring activated",
             "learning_mode": self.learning_mode
         }
+
+        # Inject Dynamic MCP Context (Prompt Engine)
+        try:
+            engine = MCPPromptEngine()
+            mcp_ctx = engine.construct_context(task)
+            if mcp_ctx:
+                if self.verbose:
+                    self.logger.info(f"🧠 Injecting {len(mcp_ctx)} chars of dynamic MCP context")
+                initial_state["retrieved_context"] = mcp_ctx
+        except Exception as e:
+            if self.verbose:
+                self.logger.warning(f"Failed to inject MCP context: {e}")
 
         # If operator prefers Doctor Vibe to handle DEV tasks, enable vibe mode
         try:
