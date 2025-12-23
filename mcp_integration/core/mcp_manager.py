@@ -343,6 +343,10 @@ class MCPManager:
         servers_config = self.config.get('mcpServers', {})
         
         for server_name, server_config in servers_config.items():
+            # Skip servers explicitly marked as disabled in configuration
+            if not server_config.get("enabled", True):
+                logger.info(f"Skipping disabled MCP server: {server_name}")
+                continue
             if server_name == "context7" or server_name == "context7-docs":
                 self.clients[server_name] = Context7Client(server_config)
             elif server_name == "sonarqube":

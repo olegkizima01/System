@@ -165,7 +165,7 @@ Success Rate: 100%
 
 2. **Налаштувати Playwright MCP сервер**
    ```bash
-   npx @anthropic-ai/playwright-mcp
+   npx @playwright/mcp
    ```
 
 3. **Налаштувати AppleScript MCP сервер**

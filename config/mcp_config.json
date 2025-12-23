@@ -73,18 +73,6 @@
       "retryAttempts": 2,
       "category": "system"
     },
-    "anthropic": {
-      "enabled": false,
-      "command": "python3",
-      "args": [
-        "-m",
-        "mcp_integration.servers.anthropic_server"
-      ],
-      "description": "Anthropic MCP Server for AI analysis",
-      "timeout": 60000,
-      "retryAttempts": 3,
-      "category": "ai"
-    },
     "copilot": {
       "command": "python3",
       "args": [

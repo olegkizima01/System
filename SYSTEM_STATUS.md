@@ -57,7 +57,7 @@ mcp-pyautogui-server 0.1.2
 2. **playwright** - 2000 tools (Browser automation)
 3. **pyautogui** - 2000 tools (GUI automation)
 4. **applescript** - 2000 tools (macOS scripting)
-5. **anthropic** - _temporarily disabled_ (AI analysis)
+5. **anthropic** - _removed_ (no longer supported)
 6. **filesystem** - 2000 tools (File operations)
 7. **sonarqube** - 1500 tools (Code analysis)
 8. **local_fallback** - 6000 tools (Fallback operations)

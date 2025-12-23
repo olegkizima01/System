@@ -94,7 +94,7 @@ graph TD
 - **Playwright MCP**: Контроль браузера (headless/headful)
 - **PyAutoGUI MCP**: Альтернативна емуляція вводу
 - **AppleScript MCP**: UI автоматизація macOS
-- **Anthropic MCP**: _temporarily disabled_ (use Copilot/OpenAI/Gemini providers instead)
+- **Anthropic MCP**: _removed_ (no longer supported)
 - **Context7 MCP**: Документація бібліотек
 - **SonarQube MCP**: Quality gate та аналіз коду
 

@@ -21,7 +21,7 @@ graph TD
     B --> D[External MCP Servers]
     D --> E[Playwright MCP Server]
     D --> F[PyAutoGUI MCP Server]
-    D --> G[Anthropic MCP Server]
+    
     D --> H[AppleScript MCP Server]
 
     style A fill:#f9f,stroke:#333
@@ -40,7 +40,7 @@ graph TD
 1. **Playwright MCP Server** - Browser automation (HIGHEST PRIORITY)
 2. **AppleScript MCP Server** - macOS native automation
 3. **PyAutoGUI MCP Server** - GUI automation fallback
-4. **Anthropic MCP Server** - AI-powered tools (when available)
+4. **Anthropic MCP Server** - _removed_ (no longer supported)
 
 ### Selection Logic:
 ```python
@@ -50,7 +50,7 @@ class MCPServerSelector:
             "playwright",  # Browser automation
             "applescript", # macOS native
             "pyautogui",   # GUI fallback
-            "anthropic"    # AI tools (optional)
+            # Anthropic support removed
         ]
         self.available = {}
         self.fallback_chain = {}
@@ -169,10 +169,7 @@ class MCPToolRegistry:
                 "pyautogui_click", "pyautogui_type",
                 "pyautogui_screenshot", "pyautogui_locate"
             ],
-            "anthropic": [
-                "anthropic_analyze", "anthropic_decide",
-                "anthropic_generate", "anthropic_verify"
-            ]
+            # Anthropic integration removed
         }
         
         # Local tool fallbacks

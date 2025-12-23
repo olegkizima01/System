@@ -299,7 +299,7 @@
         from tui.tools import tool_llm_set, tool_llm_status
         if key == "provider":
             cur_prov = tool_llm_status({"section": section}).get("provider", "copilot")
-            provs = ["copilot", "openai", "anthropic", "gemini"]
+            provs = ["copilot", "openai", "gemini"]
             next_prov = provs[(provs.index(cur_prov) + 1) % len(provs)] if cur_prov in provs else "copilot"
             tool_llm_set({"section": section, "provider": next_prov})
             log(f"Provider set to: {next_prov}", "action")

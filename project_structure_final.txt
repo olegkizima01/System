@@ -54,8 +54,7 @@ Tests:
 
 
 ### Project Statistics
-  - Python files: 20429
-  - Test files: 39
+│   │   ├── (Anthropic integration removed)
   - Documentation files: 20
   - Configuration sets: 44
 

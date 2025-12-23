@@ -72,8 +72,8 @@ def test_prompt_engine():
     else:
         print("❌ No prompts found for AppleScript query.")
 
-    # Test retrieval 6: Anthropic (temporarily disabled)
-    print("\nSkipping Anthropic prompts test — Anthropic MCP is temporarily disabled in setup.")
+    # Test retrieval 6: Anthropic - removed from integration
+    # Anthropic MCP support has been permanently removed from configuration.
 
     # Test retrieval 7: SonarQube
     query_sq = "check code quality issues"
