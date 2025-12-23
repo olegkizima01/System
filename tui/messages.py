@@ -327,11 +327,24 @@ class MessageBuffer:
     def __init__(self, max_messages: int = 200):
         self.messages: List[AgentMessage] = []
         self.max_messages = max_messages
+        # Track last seen verbal/clean messages per agent to avoid short-term duplicates
+        # Mapping: AgentType -> (clean_text, timestamp)
+        import time
+        self._last_seen: Dict[AgentType, Tuple[str, float]] = {}
+        self._dedupe_ttl: float = 2.0  # seconds
     
     def add(self, agent: AgentType, text: str, is_technical: bool = False) -> None:
         """Add a message to the buffer."""
+        # Dedupe short-term identical messages for the same agent
+        from time import time as _now
+        clean = MessageFilter.clean_message(text) or text
+        last = self._last_seen.get(agent)
+        if last and last[0] == clean and (_now() - last[1]) < self._dedupe_ttl:
+            return
+
         msg = AgentMessage(agent=agent, text=text, is_technical=is_technical)
         self.messages.append(msg)
+        self._last_seen[agent] = (clean, _now())
         
         # Trim if too many
         if len(self.messages) > self.max_messages:
@@ -346,7 +359,12 @@ class MessageBuffer:
         """
         is_verbal = "[VOICE]" in text
         msg = AgentMessage(agent=agent, text=text, is_technical=is_technical)
-        
+        from time import time as _now
+        clean = MessageFilter.clean_message(text) or text
+        last = self._last_seen.get(agent)
+        if last and last[0] == clean and (_now() - last[1]) < self._dedupe_ttl:
+            # If duplicate within TTL, do not append/replace to avoid noisy repeats
+            return
         if is_verbal:
             # Look for the last verbal message
             idx = len(self.messages) - 1
@@ -355,6 +373,7 @@ class MessageBuffer:
                 if "[VOICE]" in m.text:
                     if m.agent == agent:
                         self.messages[idx] = msg
+                        self._last_seen[agent] = (clean, _now())
                         return
                     else:
                         # Found a verbal message from a DIFFERENT agent, so must append
@@ -364,8 +383,10 @@ class MessageBuffer:
         # Default: check literal last message (for technical/non-voice updates)
         if self.messages and self.messages[-1].agent == agent and (self.messages[-1].is_technical == is_technical):
              self.messages[-1] = msg
+             self._last_seen[agent] = (clean, _now())
         else:
             self.messages.append(msg)
+            self._last_seen[agent] = (clean, _now())
             if len(self.messages) > self.max_messages:
                 self.messages = self.messages[-self.max_messages:]
     
