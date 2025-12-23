@@ -360,6 +360,54 @@ class TrinityRuntime:
         except Exception:
             return None
 
+    def run(self, task: str):
+        """Minimal workflow runner used by tests.
+
+        Runs the configured workflow stream, performs auto-commit on
+        successful completion, and yields events.
+        """
+        # Collect events from the workflow stream
+        try:
+            events = list(self.workflow.stream(None, config=None))
+        except TypeError:
+            events = list(self.workflow.stream(None))
+
+        final = events[-1] if events else {"atlas": {"messages": []}}
+        atlas = final.setdefault("atlas", {})
+        messages = atlas.setdefault("messages", [])
+
+        task_status = atlas.get("task_status") or final.get("task_status") or "completed"
+        if task_status in {"completed", "success"}:
+            repo_changes = self._get_repo_changes()
+            # Try to regenerate project structure (if repo provides a script)
+            # Use the last message content as the response text for regeneration
+            last_msg_text = ""
+            try:
+                if messages:
+                    last_msg = messages[-1]
+                    last_msg_text = getattr(last_msg, "content", "") if last_msg is not None else ""
+            except Exception:
+                last_msg_text = ""
+
+            try:
+                regenerated = self._regenerate_project_structure(last_msg_text)
+                if regenerated:
+                    # refresh repo changes to include regenerated file
+                    repo_changes = self._get_repo_changes()
+            except Exception:
+                pass
+
+            commit_res = self._auto_commit_on_success(task=task, report=last_msg_text, repo_changes=repo_changes)
+            commit_hash = commit_res.get("commit") or ""
+            report_msg = f"Зміни закомічені: {commit_hash}" if commit_hash else "Зміни закомічені: (none)"
+            try:
+                messages.append(AIMessage(content=report_msg))
+            except Exception:
+                messages.append({"content": report_msg})
+
+        for e in events:
+            yield e
+
     def _classify_task_fallback(self, task: str) -> Dict[str, Any]:
         task_lower = str(task or "").lower()
 
@@ -2628,11 +2676,15 @@ Return JSON with ONLY the replacement step.'''))
                 print(f"[Trinity][DEBUG] running: git status --porcelain")
                 status = self._run_git_command(["git", "status", "--porcelain"], root, env)
                 print(f"[Trinity][DEBUG] git status rc={status.returncode} out={status.stdout!r} err={status.stderr!r}")
+                print(f"[Trinity][DEBUG] after git status")
             except Exception as e:
                 print(f"[Trinity][ERROR] git status failed: {e}")
                 raise
             # Always record the porcelain status for deterministic diagnostics
-            self._deterministic_log("status", f"git status --porcelain -> {repr(status.stdout)}")
+            try:
+                self._deterministic_log("status", f"git status --porcelain -> {repr(status.stdout)}")
+            except Exception as e:
+                print(f"[Trinity][ERROR] deterministic_log failed: {e}")
             # Also print so pytest captures it in stdout for test debugging
             print(f"[Trinity][DEBUG] git status --porcelain -> {repr(status.stdout)}")
             if status.returncode != 0:
@@ -2645,12 +2697,43 @@ Return JSON with ONLY the replacement step.'''))
             if self.verbose:
                 print(f"[Trinity] auto_commit: repo_changes={repo_changes}")
             self._deterministic_log("commit", f"starting create_commit; repo_changes={repo_changes}")
+            # Stage detected changed files and any untracked files so a commit
+            # can be created in this pass. This mirrors the behavior of the
+            # previous _create_commit implementation but keeps the logic local
+            # here to ensure determinism in tests.
+            try:
+                print(f"[Trinity][DEBUG] before staging attempt")
+                if isinstance(repo_changes, dict):
+                    changed = repo_changes.get("changed_files") or []
+                    st = self._run_git_command(["git", "status", "--porcelain"], root, env)
+                    print(f"[Trinity][DEBUG] staging: status stdout={st.stdout!r}")
+                    untracked = []
+                    if st.returncode == 0:
+                        for line in (st.stdout or "").splitlines():
+                            if line.startswith("?? "):
+                                untracked.append(line[3:].strip())
+                    files_to_add = list(dict.fromkeys(list(changed) + untracked))
+                    print(f"[Trinity][DEBUG] files_to_add={files_to_add}")
+                    for f in files_to_add:
+                        ares = self._run_git_command(["git", "add", f], root, env)
+                        print(f"[Trinity][DEBUG] git add {f} rc={ares.returncode} out={ares.stdout!r} err={ares.stderr!r}")
+                print(f"[Trinity][DEBUG] after staging attempt files_to_add={files_to_add}")
+            except Exception:
+                pass
+
+            # Ensure everything is added to the index
+            add_all = self._run_git_command(["git", "add", "."], root, env)
+            print(f"[Trinity][DEBUG] git add . rc={add_all.returncode} out={add_all.stdout!r} err={add_all.stderr!r}")
+            print(f"[Trinity][DEBUG] after git add .")
+
             # Check if there are staged changes (ready to commit)
             diff_index = self._run_git_command(["git", "diff", "--cached", "--name-only"], root, env)
             print(f"[Trinity][DEBUG] git diff --cached --name-only: {diff_index.stdout!r}")
-            if not (diff_index.stdout or '').strip():
-                print(f"[Trinity][DEBUG] _create_commit: no staged changes, skipping commit")
-                return {"ok": True, "skipped": True, "reason": "no_staged_changes"}
+            print(f"[Trinity][DEBUG] before commit attempt")
+            # Proceed to attempt a commit even if nothing appears staged; in
+            # some environments untracked files can be added by 'git add .'
+            # and 'git commit' may still succeed. Fall back to skipping only
+            # if the commit command reports "nothing to commit".
 
             # Prepare commit message
             short_task = self._short_task_for_commit(task)
@@ -2671,6 +2754,11 @@ Return JSON with ONLY the replacement step.'''))
 
             if commit.returncode != 0:
                 combined = (commit.stdout or "") + "\n" + (commit.stderr or "")
+                try:
+                    # record the commit failure output deterministically
+                    self._deterministic_log("commit_failure", combined)
+                except Exception:
+                    print(f"[Trinity][DEBUG] failed to deterministic_log commit failure")
                 if "nothing to commit" in combined.lower():
                     return {"ok": True, "skipped": True, "reason": "nothing_to_commit"}
                 return {"ok": False, "error": (commit.stderr or "").strip() or "git commit failed"}
@@ -2682,7 +2770,19 @@ Return JSON with ONLY the replacement step.'''))
             except Exception:
                 pass
 
-            return {"ok": True, "skipped": False}
+            # Attempt to retrieve the new HEAD hash
+            try:
+                rev = self._run_git_command(["git", "rev-parse", "HEAD"], root, env)
+                commit_hash = (rev.stdout or "").strip()
+            except Exception:
+                commit_hash = ""
+
+            try:
+                self._deterministic_log("commit_success", f"created {commit_hash}")
+            except Exception:
+                pass
+
+            return {"ok": True, "skipped": False, "commit": commit_hash}
         except Exception as e:
             return {"ok": False, "error": str(e)}
 
@@ -2700,7 +2800,105 @@ Return JSON with ONLY the replacement step.'''))
 
         Format: [Trinity][TS:<iso>] <tag> - <message>
         """
-        ts = datetime.datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+        # Use UTC seconds-precision to keep logs deterministic and stable
+        ts = datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+        self.logger.info(f"[Trinity][TS:{ts}] {tag} - {message}")
+
+    def _run_git_command(self, cmd: List[str], cwd: str, env: Dict[str, str]) -> subprocess.CompletedProcess:
+        """Run a git command and return result."""
+        return subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, env=env)
+
+    def _create_commit(self, root: str, env: Dict[str, str], task: str, 
+                       repo_changes: Dict[str, Any], has_changes: bool) -> Dict[str, Any]:
+        """Create git commit with task info."""
+        print(f"[Trinity][DEBUG] _create_commit entered has_changes={has_changes} repo_changes={repo_changes}")
+        # Stage all changes
+        # Explicitly stage detected changed files first (best-effort). If
+        # that doesn't result in a commit including the files, we will
+        # keep searching for a recent commit that contains them later.
+        try:
+            if isinstance(repo_changes, dict):
+                changed = repo_changes.get("changed_files") or []
+                # Log regardless of verbose so we can debug CI/test runs
+                self.logger.info(f"[Trinity] _create_commit: attempting to stage changed_files={changed}")
+                print(f"[Trinity][DEBUG] _create_commit: attempting to stage changed_files={changed}")
+                # Explicitly add all untracked files (??) as well
+                status = self._run_git_command(["git", "status", "--porcelain"], root, env)
+                untracked = []
+                if status.returncode == 0:
+                    for line in (status.stdout or '').splitlines():
+                        if line.startswith('?? '):
+                            fname = line[3:].strip()
+                            untracked.append(fname)
+                # Add both changed and untracked files
+                files_to_add = list(dict.fromkeys(list(changed) + untracked))
+                for f in files_to_add:
+                    res = self._run_git_command(["git", "add", f], root, env)
+                    self.logger.info(f"[Trinity] git add {f} rc={res.returncode} out={res.stdout!r} err={res.stderr!r}")
+                    print(f"[Trinity][DEBUG] git add {f} rc={res.returncode} out={res.stdout!r} err={res.stderr!r}")
+        except Exception as e:
+            if self.verbose:
+                print(f"[Trinity] _create_commit: failed staging changed files: {e}")
+
+        # Always run a final 'git add .' to ensure untracked files are picked up
+        add = self._run_git_command(["git", "add", "."], root, env)
+        self.logger.info(f"[Trinity] git add . rc={add.returncode} out={add.stdout!r} err={add.stderr!r}")
+        print(f"[Trinity][DEBUG] git add . rc={add.returncode} out={add.stdout!r} err={add.stderr!r}")
+
+        # Check if there are staged changes (ready to commit)
+        diff_index = self._run_git_command(["git", "diff", "--cached", "--name-only"], root, env)
+        print(f"[Trinity][DEBUG] git diff --cached --name-only: {diff_index.stdout!r}")
+        if not (diff_index.stdout or '').strip():
+            print(f"[Trinity][DEBUG] _create_commit: no staged changes, skipping commit")
+            return {"ok": True, "skipped": True, "reason": "no_staged_changes"}
+
+        # Prepare commit message
+        short_task = self._short_task_for_commit(task)
+        subject = f"Trinity task completed: {short_task}"
+        diff_stat = str(repo_changes.get("diff_stat") or "").strip() if isinstance(repo_changes, dict) else ""
+
+        commit_cmd = [
+            "git", "-c", "user.name=Trinity", "-c", "user.email=trinity@local",
+            "commit", "-m", subject,
+        ]
+        if diff_stat:
+            commit_cmd.extend(["-m", f"Diff stat:\n{diff_stat}"])
+
+        env_commit = env.copy()
+        env_commit["TRINITY_POST_COMMIT_RUNNING"] = "1"
+        commit = self._run_git_command(commit_cmd, root, env_commit)
+        print(f"[Trinity][DEBUG] _create_commit: commit return={commit.returncode} stdout={commit.stdout!r} stderr={commit.stderr!r}")
+
+        if commit.returncode != 0:
+            combined = (commit.stdout or "") + "\n" + (commit.stderr or "")
+            if "nothing to commit" in combined.lower():
+                return {"ok": True, "skipped": True, "reason": "nothing_to_commit"}
+            return {"ok": False, "error": (commit.stderr or "").strip() or "git commit failed"}
+
+        # Log commit contents for diagnostics
+        try:
+            files_in_head = self._run_git_command(["git", "show", "--name-only", "--pretty=format:", "HEAD"], root, env)
+            self.logger.info(f"[Trinity] _create_commit: HEAD files after commit: {(files_in_head.stdout or '').splitlines()}")
+        except Exception:
+            pass
+
+        return {"ok": True, "skipped": False}
+
+    def _prepare_git_env(self) -> Dict[str, str]:
+        """Prepare git environment with Trinity author info."""
+        env = os.environ.copy()
+        env.setdefault("GIT_AUTHOR_NAME", "Trinity")
+        env.setdefault("GIT_AUTHOR_EMAIL", "trinity@local")
+        env.setdefault("GIT_COMMITTER_NAME", env["GIT_AUTHOR_NAME"])
+        env.setdefault("GIT_COMMITTER_EMAIL", env["GIT_AUTHOR_EMAIL"])
+        return env
+
+    def _deterministic_log(self, tag: str, message: str) -> None:
+        """Log a deterministic, timestamped message for git operations.
+
+        Format: [Trinity][TS:<iso>] <tag> - <message>
+        """
+        ts = datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
         self.logger.info(f"[Trinity][TS:{ts}] {tag} - {message}")
 
     def _run_git_command(self, cmd: List[str], cwd: str, env: Dict[str, str]) -> subprocess.CompletedProcess:
@@ -2796,7 +2994,7 @@ Return JSON with ONLY the replacement step.'''))
 
         Format: [Trinity][TS:<iso>] <tag> - <message>
         """
-        ts = datetime.datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+        ts = datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
         self.logger.info(f"[Trinity][TS:{ts}] {tag} - {message}")
 
     def _run_git_command(self, cmd: List[str], cwd: str, env: Dict[str, str]) -> subprocess.CompletedProcess:
@@ -2892,7 +3090,7 @@ Return JSON with ONLY the replacement step.'''))
 
         Format: [Trinity][TS:<iso>] <tag> - <message>
         """
-        ts = datetime.datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+        ts = datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
         self.logger.info(f"[Trinity][TS:{ts}] {tag} - {message}")
 
     def _run_git_command(self, cmd: List[str], cwd: str, env: Dict[str, str]) -> subprocess.CompletedProcess:
@@ -2988,7 +3186,7 @@ Return JSON with ONLY the replacement step.'''))
 
         Format: [Trinity][TS:<iso>] <tag> - <message>
         """
-        ts = datetime.datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+        ts = datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
         self.logger.info(f"[Trinity][TS:{ts}] {tag} - {message}")
 
     def _run_git_command(self, cmd: List[str], cwd: str, env: Dict[str, str]) -> subprocess.CompletedProcess:
@@ -3084,7 +3282,7 @@ Return JSON with ONLY the replacement step.'''))
 
         Format: [Trinity][TS:<iso>] <tag> - <message>
         """
-        ts = datetime.datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+        ts = datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
         self.logger.info(f"[Trinity][TS:{ts}] {tag} - {message}")
 
     def _run_git_command(self, cmd: List[str], cwd: str, env: Dict[str, str]) -> subprocess.CompletedProcess:
@@ -3180,7 +3378,7 @@ Return JSON with ONLY the replacement step.'''))
 
         Format: [Trinity][TS:<iso>] <tag> - <message>
         """
-        ts = datetime.datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+        ts = datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
         self.logger.info(f"[Trinity][TS:{ts}] {tag} - {message}")
 
     def _run_git_command(self, cmd: List[str], cwd: str, env: Dict[str, str]) -> subprocess.CompletedProcess:
@@ -3276,7 +3474,7 @@ Return JSON with ONLY the replacement step.'''))
 
         Format: [Trinity][TS:<iso>] <tag> - <message>
         """
-        ts = datetime.datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+        ts = datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
         self.logger.info(f"[Trinity][TS:{ts}] {tag} - {message}")
 
     def _run_git_command(self, cmd: List[str], cwd: str, env: Dict[str, str]) -> subprocess.CompletedProcess:
@@ -3372,7 +3570,7 @@ Return JSON with ONLY the replacement step.'''))
 
         Format: [Trinity][TS:<iso>] <tag> - <message>
         """
-        ts = datetime.datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+        ts = datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
         self.logger.info(f"[Trinity][TS:{ts}] {tag} - {message}")
 
     def _run_git_command(self, cmd: List[str], cwd: str, env: Dict[str, str]) -> subprocess.CompletedProcess:
@@ -3468,7 +3666,7 @@ Return JSON with ONLY the replacement step.'''))
 
         Format: [Trinity][TS:<iso>] <tag> - <message>
         """
-        ts = datetime.datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+        ts = datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
         self.logger.info(f"[Trinity][TS:{ts}] {tag} - {message}")
 
     def _run_git_command(self, cmd: List[str], cwd: str, env: Dict[str, str]) -> subprocess.CompletedProcess:
@@ -3564,7 +3762,7 @@ Return JSON with ONLY the replacement step.'''))
 
         Format: [Trinity][TS:<iso>] <tag> - <message>
         """
-        ts = datetime.datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+        ts = datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
         self.logger.info(f"[Trinity][TS:{ts}] {tag} - {message}")
 
     def _run_git_command(self, cmd: List[str], cwd: str, env: Dict[str, str]) -> subprocess.CompletedProcess:
@@ -3660,7 +3858,7 @@ Return JSON with ONLY the replacement step.'''))
 
         Format: [Trinity][TS:<iso>] <tag> - <message>
         """
-        ts = datetime.datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+        ts = datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
         self.logger.info(f"[Trinity][TS:{ts}] {tag} - {message}")
 
     def _run_git_command(self, cmd: List[str], cwd: str, env: Dict[str, str]) -> subprocess.CompletedProcess:
@@ -3756,7 +3954,7 @@ Return JSON with ONLY the replacement step.'''))
 
         Format: [Trinity][TS:<iso>] <tag> - <message>
         """
-        ts = datetime.datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+        ts = datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
         self.logger.info(f"[Trinity][TS:{ts}] {tag} - {message}")
 
     def _run_git_command(self, cmd: List[str], cwd: str, env: Dict[str, str]) -> subprocess.CompletedProcess:
@@ -3852,7 +4050,7 @@ Return JSON with ONLY the replacement step.'''))
 
         Format: [Trinity][TS:<iso>] <tag> - <message>
         """
-        ts = datetime.datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+        ts = datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
         self.logger.info(f"[Trinity][TS:{ts}] {tag} - {message}")
 
     def _run_git_command(self, cmd: List[str], cwd: str, env: Dict[str, str]) -> subprocess.CompletedProcess:
@@ -3948,7 +4146,7 @@ Return JSON with ONLY the replacement step.'''))
 
         Format: [Trinity][TS:<iso>] <tag> - <message>
         """
-        ts = datetime.datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+        ts = datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
         self.logger.info(f"[Trinity][TS:{ts}] {tag} - {message}")
 
     def _run_git_command(self, cmd: List[str], cwd: str, env: Dict[str, str]) -> subprocess.CompletedProcess:
@@ -4044,7 +4242,7 @@ Return JSON with ONLY the replacement step.'''))
 
         Format: [Trinity][TS:<iso>] <tag> - <message>
         """
-        ts = datetime.datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+        ts = datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
         self.logger.info(f"[Trinity][TS:{ts}] {tag} - {message}")
 
     def _run_git_command(self, cmd: List[str], cwd: str, env: Dict[str, str]) -> subprocess.CompletedProcess:
@@ -4126,100 +4324,4 @@ Return JSON with ONLY the replacement step.'''))
 
         return {"ok": True, "skipped": False}
 
-    def _prepare_git_env(self) -> Dict[str, str]:
-        """Prepare git environment with Trinity author info."""
-        env = os.environ.copy()
-        env.setdefault("GIT_AUTHOR_NAME", "Trinity")
-        env.setdefault("GIT_AUTHOR_EMAIL", "trinity@local")
-        env.setdefault("GIT_COMMITTER_NAME", env["GIT_AUTHOR_NAME"])
-        env.setdefault("GIT_COMMITTER_EMAIL", env["GIT_AUTHOR_EMAIL"])
-        return env
-
-    def _deterministic_log(self, tag: str, message: str) -> None:
-        """Log a deterministic, timestamped message for git operations.
-
-        Format: [Trinity][TS:<iso>] <tag> - <message>
-        """
-        ts = datetime.datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
-        self.logger.info(f"[Trinity][TS:{ts}] {tag} - {message}")
-
-    def _run_git_command(self, cmd: List[str], cwd: str, env: Dict[str, str]) -> subprocess.CompletedProcess:
-        """Run a git command and return result."""
-        return subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, env=env)
-
-    def _create_commit(self, root: str, env: Dict[str, str], task: str, 
-                       repo_changes: Dict[str, Any], has_changes: bool) -> Dict[str, Any]:
-        """Create git commit with task info."""
-        # Stage all changes
-        # Explicitly stage detected changed files first (best-effort). If
-        # that doesn't result in a commit including the files, we will
-        # keep searching for a recent commit that contains them later.
-        try:
-            if isinstance(repo_changes, dict):
-                changed = repo_changes.get("changed_files") or []
-                # Log regardless of verbose so we can debug CI/test runs
-                self.logger.info(f"[Trinity] _create_commit: attempting to stage changed_files={changed}")
-                print(f"[Trinity][DEBUG] _create_commit: attempting to stage changed_files={changed}")
-                # Explicitly add all untracked files (??) as well
-                status = self._run_git_command(["git", "status", "--porcelain"], root, env)
-                untracked = []
-                if status.returncode == 0:
-                    for line in (status.stdout or '').splitlines():
-                        if line.startswith('?? '):
-                            fname = line[3:].strip()
-                            untracked.append(fname)
-                # Add both changed and untracked files
-                files_to_add = list(dict.fromkeys(list(changed) + untracked))
-                for f in files_to_add:
-                    res = self._run_git_command(["git", "add", f], root, env)
-                    self.logger.info(f"[Trinity] git add {f} rc={res.returncode} out={res.stdout!r} err={res.stderr!r}")
-                    print(f"[Trinity][DEBUG] git add {f} rc={res.returncode} out={res.stdout!r} err={res.stderr!r}")
-        except Exception as e:
-            if self.verbose:
-                print(f"[Trinity] _create_commit: failed staging changed files: {e}")
-
-        # Always run a final 'git add .' to ensure untracked files are picked up
-        add = self._run_git_command(["git", "add", "."], root, env)
-        self.logger.info(f"[Trinity] git add . rc={add.returncode} out={add.stdout!r} err={add.stderr!r}")
-        print(f"[Trinity][DEBUG] git add . rc={add.returncode} out={add.stdout!r} err={add.stderr!r}")
-
-        # Check if there are staged changes (ready to commit)
-        diff_index = self._run_git_command(["git", "diff", "--cached", "--name-only"], root, env)
-        print(f"[Trinity][DEBUG] git diff --cached --name-only: {diff_index.stdout!r}")
-        if not (diff_index.stdout or '').strip():
-            print(f"[Trinity][DEBUG] _create_commit: no staged changes, skipping commit")
-            return {"ok": True, "skipped": True, "reason": "no_staged_changes"}
-
-        # Prepare commit message
-        short_task = self._short_task_for_commit(task)
-        subject = f"Trinity task completed: {short_task}"
-        diff_stat = str(repo_changes.get("diff_stat") or "").strip() if isinstance(repo_changes, dict) else ""
-
-        commit_cmd = [
-            "git", "-c", "user.name=Trinity", "-c", "user.email=trinity@local",
-            "commit", "-m", subject,
-        ]
-        if diff_stat:
-            commit_cmd.extend(["-m", f"Diff stat:\n{diff_stat}"])
-
-        env_commit = env.copy()
-        env_commit["TRINITY_POST_COMMIT_RUNNING"] = "1"
-        commit = self._run_git_command(commit_cmd, root, env_commit)
-        print(f"[Trinity][DEBUG] _create_commit: commit return={commit.returncode} stdout={commit.stdout!r} stderr={commit.stderr!r}")
-
-        if commit.returncode != 0:
-            combined = (commit.stdout or "") + "\n" + (commit.stderr or "")
-            if "nothing to commit" in combined.lower():
-                return {"ok": True, "skipped": True, "reason": "nothing_to_commit"}
-            return {"ok": False, "error": (commit.stderr or "").strip() or "git commit failed"}
-
-        # Log commit contents for diagnostics
-        try:
-            files_in_head = self._run_git_command(["git", "show", "--name-only", "--pretty=format:", "HEAD"], root, env)
-            self.logger.info(f"[Trinity] _create_commit: HEAD files after commit: {(files_in_head.stdout or '').splitlines()}")
-        except Exception:
-            pass
-
-        return {"ok": True, "skipped": False}
-
-    def _prepare_git_env(self) -> Dict[str,
+    
