@@ -1645,7 +1645,20 @@ Return JSON with ONLY the replacement step.'''))
         
         for perm, (tools, allowed) in perm_map.items():
             if name in tools and not (allowed or self.permissions.hyper_mode):
-                return {"permission": perm, "message": f"Permission required for {perm}.", "blocked_tool": name, "blocked_args": args}
+                # Map internal permission name to macOS privacy pane name where they differ
+                mac_pane = perm
+                if perm == "applescript" or perm == "shortcuts" or perm == "shell":
+                    mac_pane = "automation"
+                elif perm == "gui":
+                    mac_pane = "accessibility"
+                
+                return {
+                    "permission": perm, 
+                    "mac_pane": mac_pane,
+                    "message": f"Permission required for {perm} (macOS {mac_pane}).", 
+                    "blocked_tool": name, 
+                    "blocked_args": args
+                }
         return None
 
     def _check_task_constraints(self, state, name, args):
@@ -1740,6 +1753,7 @@ Return JSON with ONLY the replacement step.'''))
             # Attach permission metadata to the pause to allow UIs and auto-resume logic to inspect it
             try:
                 pause["permission"] = pause_info.get("permission")
+                pause["mac_pane"] = pause_info.get("mac_pane")
                 pause["blocked_tool"] = pause_info.get("blocked_tool")
                 pause["blocked_args"] = pause_info.get("blocked_args")
                 # Allow auto-resume for permission pauses if explicitly enabled

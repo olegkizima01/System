@@ -93,7 +93,10 @@ class ExternalMCPProvider:
         try:
             future.result(timeout=30)
         except Exception as e:
-            logger.error(f"Failed to connect MCP provider {self.name}: {e}")
+            hint = ""
+            if sys.platform == "darwin":
+                hint = " (Check macOS Automation/Accessibility permissions if this times out unexpectedly)"
+            logger.error(f"Failed to connect MCP provider {self.name}: {e}{hint}")
             raise
 
     async def _async_connect(self):

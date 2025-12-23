@@ -18,14 +18,16 @@ def clear_agent_pause_state() -> None:
     """Clear agent pause state."""
     state.agent_paused = False
     state.agent_pause_permission = None
+    state.agent_pause_mac_pane = None
     state.agent_pause_message = None
     state.agent_pause_pending_text = None
 
 
-def set_agent_pause(*, pending_text: str, permission: str, message: str) -> None:
+def set_agent_pause(*, pending_text: str, permission: str, message: str, mac_pane: str = None) -> None:
     """Set agent pause state with pending command."""
     state.agent_paused = True
     state.agent_pause_permission = str(permission or "").strip() or None
+    state.agent_pause_mac_pane = str(mac_pane or "").strip() or None
     state.agent_pause_message = str(message or "").strip() or None
     state.agent_pause_pending_text = str(pending_text or "").strip() or None
 
@@ -40,15 +42,20 @@ def get_input_prompt() -> str:
 
     if getattr(state, "agent_paused", False):
         perm = str(getattr(state, "agent_pause_permission", "") or "").strip()
+        suffix = ""
+        pane = str(getattr(state, "agent_pause_mac_pane", "") or "").strip()
+        if pane:
+            suffix = f" (type /privacy to open {pane})"
+        
         if perm == "shell":
-            return tr("prompt.confirm_shell") + " "
+            return tr("prompt.confirm_shell") + suffix + " "
         if perm == "applescript":
-            return tr("prompt.confirm_applescript") + " "
+            return tr("prompt.confirm_applescript") + suffix + " "
         if perm == "gui":
-            return tr("prompt.confirm_gui") + " "
+            return tr("prompt.confirm_gui") + suffix + " "
         if perm == "run":
-            return tr("prompt.confirm_run") + " "
-        return tr("prompt.paused") + " "
+            return tr("prompt.confirm_run") + suffix + " "
+        return tr("prompt.paused") + suffix + " "
 
     try:
         ml = state.menu_level
@@ -347,6 +354,8 @@ def handle_command(cmd: str, wait: bool = False) -> None:
         "/agent-reset": _cmd_agent_reset,
         "/agent-on": _cmd_agent_on,
         "/agent-off": _cmd_agent_off,
+        "/open-privacy": _cmd_open_privacy,
+        "/privacy": _cmd_open_privacy,
         "/memory-clear": _cmd_memory_clear,
         "/memory": _cmd_memory,
     }
@@ -375,6 +384,7 @@ def _cmd_help(cmd, args, wait):
     log("/chat <message> (discussion only; execution via /task)", "info")
     log("/bootstrap <project_name> [parent_dir]", "info")
     log("/agent-reset | /agent-on | /agent-off", "info")
+    log("/open-privacy [accessibility|automation|screen_recording] | /privacy", "info")
     log("/memory stats|history|import|export|clear|help", "info")
 
 
@@ -450,6 +460,22 @@ def _cmd_agent_off(cmd, args, wait):
     from tui.agents import agent_session
     agent_session.enabled = False
     log("Agent chat disabled.", "action")
+
+
+def _cmd_open_privacy(cmd, args, wait):
+    from tui.render import log
+    from tui.permissions import macos_open_privacy_pane
+    
+    pane = str(getattr(state, "agent_pause_mac_pane", "") or "").strip()
+    if not pane and args:
+        pane = args[0].lower()
+    
+    if not pane:
+        log("Usage: /open-privacy [accessibility|automation|screen_recording]", "error")
+        return
+        
+    log(f"Opening macOS privacy pane: {pane}", "action")
+    macos_open_privacy_pane(pane)
 
 
 def _cmd_memory_clear(cmd, args, wait):

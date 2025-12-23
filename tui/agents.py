@@ -836,8 +836,9 @@ def _process_single_event(node_name, state_update, use_stream, stream_line_by_ag
     pause_info = state_update.get("pause_info")
     if pause_info:
         perm = pause_info.get("permission", "unknown")
+        pane = pause_info.get("mac_pane")
         msg = pause_info.get("message", "Permission required")
-        set_agent_pause(pending_text=user_text, permission=perm, message=msg)
+        set_agent_pause(pending_text=user_text, permission=perm, message=msg, mac_pane=pane)
         log(f"[{tag}] ⚠️ PAUSED: {msg}", "error")
         return "paused"
     
