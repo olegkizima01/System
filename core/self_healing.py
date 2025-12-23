@@ -1203,8 +1203,9 @@ Output your repair plan as JSON with this structure:
                 return False
             
             line = lines[idx]
-            if old_name in line:
-                lines[idx] = line.replace(old_name, new_name)
+            pattern = r'\b' + re.escape(old_name) + r'\b'
+            if re.search(pattern, line):
+                lines[idx] = re.sub(pattern, new_name, line)
                 with open(full_path, "w", encoding="utf-8") as f:
                     f.writelines(lines)
                 self._stream(f"Replaced '{old_name}' with '{new_name}' at {file_path}:{line_number}")

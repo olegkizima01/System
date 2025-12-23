@@ -82,9 +82,10 @@ check_mikrotik_connection() {
         print_success "MikroTik is accessible"
         return 0
     else
-        print_error "Cannot connect to MikroTik at ${MIKROTIK_HOST}"
+        print_warning "Cannot connect to MikroTik at ${MIKROTIK_HOST}"
         print_info "Ensure SSH key is added to MikroTik: ssh ${MIKROTIK_USER}@${MIKROTIK_HOST}"
-        return 1
+        # Return 0 to allow script to continue with local cleanup steps
+        return 0
     fi
 }
 

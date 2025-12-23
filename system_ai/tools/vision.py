@@ -1,12 +1,6 @@
 import base64
 import os
-
-# CRITICAL PERFORMANCE FIX: Disable PaddlePaddle/PaddleX network connectivity checks
-# These checks can cause 30+ second delays during initialization
-# The correct env var is PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK (checked in paddlex/utils/flags.py)
-os.environ.setdefault("PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK", "True")
-os.environ.setdefault("PADDLEOCR_SHOW_LOG", "False")
-
+import json
 import tempfile
 import subprocess
 import hashlib
@@ -161,10 +155,10 @@ def analyze_with_copilot(image_path: str = None, prompt: str = "Describe the use
 
 
 def ocr_region(x: int, y: int, width: int, height: int) -> Dict[str, Any]:
-    """Best-effort OCR for a screen region.
+    """Best-effort OCR for a screen region using native macOS Vision.
 
-    Implementation: capture region -> send to Copilot Vision with an extraction prompt.
-    This avoids hardcoding and works across apps, but requires vision model + Screen Recording permission.
+    Implementation: capture region -> use local native OCR.
+    This is much faster than cloud-based vision models.
     """
     try:
         from system_ai.tools.screenshot import capture_screen_region
@@ -174,17 +168,17 @@ def ocr_region(x: int, y: int, width: int, height: int) -> Dict[str, Any]:
             return {"status": "error", **snap}
 
         image_path = str(snap.get("path") or "")
-        analysis = analyze_with_copilot(
-            image_path,
-            prompt=(
-                "Extract ALL visible text from this screenshot region. "
-                "Return ONLY the extracted text (no commentary), keep line breaks." 
-            ),
-        )
-        if analysis.get("status") != "success":
-            return {"status": "error", "error": analysis.get("error"), "image_path": image_path}
-        text = str(analysis.get("analysis") or "").strip()
-        return {"status": "success", "text": text, "image_path": image_path}
+        
+        # Use our enhanced vision tools which now uses native OCR
+        from system_ai.tools.vision import EnhancedVisionTools
+        analyzer = EnhancedVisionTools.get_analyzer()
+        ocr_res = analyzer._perform_ocr_analysis(image_path)
+        
+        if ocr_res.get("status") != "success":
+            return {"status": "error", "error": ocr_res.get("error"), "image_path": image_path}
+            
+        text = ocr_res.get("full_text", "").strip()
+        return {"status": "success", "text": text, "image_path": image_path, "regions": ocr_res.get("regions", [])}
     except Exception as e:
         return {"status": "error", "error": str(e)}
 
@@ -385,52 +379,77 @@ class DifferentialVisionAnalyzer:
         self._monitor_count = 1
         self._last_diff_image_path: Optional[str] = None
 
-    def _get_ocr_engine(self):
-        """Lazy load OCR engine with global singleton to avoid reinitializing models.
+    def _perform_ocr_analysis(self, image_path: str) -> dict:
+        """Perform OCR using native macOS Vision framework via binary.
         
-        Performance optimizations applied:
-        - PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK to skip network check (saves 30s+)
-        - Global singleton to prevent multiple model loads (saves ~4s per call)
-        - Disabled doc_orientation_classify (not needed for screenshots)
-        - Disabled doc_unwarping (not needed for screenshots)
-        - Disabled textline_orientation (not needed for horizontal text)
+        This replaces PaddleOCR for much faster, local, and native performance.
         """
-        # Use module-level global to persist across all instances
-        global _GLOBAL_OCR_ENGINE
-        
-        if self._ocr_engine is None:
-            # Check global first
-            if '_GLOBAL_OCR_ENGINE' in globals() and _GLOBAL_OCR_ENGINE is not None:
-                self._ocr_engine = _GLOBAL_OCR_ENGINE
-                return self._ocr_engine
+        try:
+            # Path to native OCR binary
+            # We assume it's in the bin directory of the project
+            project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            bin_path = os.path.join(project_root, "bin", "macos-vision-ocr")
             
-            try:
-                # Ensure environment is set before import
-                os.environ.setdefault("PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK", "True")
-                
-                from paddleocr import PaddleOCR
-                
-                # Initialize PaddleOCR 3.x with MINIMAL models for screenshot OCR:
-                # - Disable doc_orientation_classify: screenshots are already upright
-                # - Disable doc_unwarping: screenshots don't need unwarping
-                # - Disable textline_orientation: text in screenshots is horizontal
-                # This reduces model loads from 5 to 2 (detection + recognition only)
-                self._ocr_engine = PaddleOCR(
-                    lang='en',
-                    use_doc_orientation_classify=False,  # Skip orientation model
-                    use_doc_unwarping=False,             # Skip UVDoc model
-                    use_textline_orientation=False,      # Skip textline orientation model
-                )
-                
-                # Store globally for reuse
-                _GLOBAL_OCR_ENGINE = self._ocr_engine
-                
-            except ImportError:
-                self._ocr_engine = "unavailable"
-            except Exception as e:
-                self._ocr_engine = "unavailable"
-        return self._ocr_engine
+            if not os.path.exists(bin_path):
+                # Fallback check if it's in path
+                if subprocess.run(["which", "macos-vision-ocr"], capture_output=True).returncode != 0:
+                    return {"status": "error", "error": f"Native OCR binary not found at {bin_path}"}
+                bin_path = "macos-vision-ocr"
 
+            # Prepare output directory
+            with tempfile.TemporaryDirectory() as tmp_out:
+                cmd = [bin_path, "--img", image_path, "--output", tmp_out]
+                subprocess.run(cmd, capture_output=True, check=True)
+                
+                # The tool saves file as [basename].json
+                json_name = os.path.splitext(os.path.basename(image_path))[0] + ".json"
+                json_path = os.path.join(tmp_out, json_name)
+                
+                if not os.path.exists(json_path):
+                    return {"status": "error", "error": "OCR binary succeeded but output file not found"}
+                
+                with open(json_path, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                
+                text_regions = []
+                for obs in data.get("observations", []):
+                    # Convert quad to bounding box format [ [x,y], [x,y], [x,y], [x,y] ]
+                    # to maintain compatibility with PaddleOCR format if needed
+                    quad = obs.get("quad", {})
+                    tl = quad.get("topLeft", {})
+                    tr = quad.get("topRight", {})
+                    br = quad.get("bottomRight", {})
+                    bl = quad.get("bottomLeft", {})
+                    
+                    # Native tool provides relative coordinates (0.0 - 1.0)
+                    # We scale them to pixels using image dimensions
+                    from PIL import Image
+                    with Image.open(image_path) as img:
+                        w, h = img.size
+                    
+                    bbox = [
+                        [tl.get("x", 0) * w, tl.get("y", 0) * h],
+                        [tr.get("x", 0) * w, tr.get("y", 0) * h],
+                        [br.get("x", 0) * w, br.get("y", 0) * h],
+                        [bl.get("x", 0) * w, bl.get("y", 0) * h]
+                    ]
+                    
+                    text_regions.append({
+                        "text": obs.get("text", ""),
+                        "confidence": float(obs.get("confidence", 0)),
+                        "bbox": bbox
+                    })
+
+                return {
+                    "status": "success",
+                    "regions": text_regions,
+                    "full_text": data.get("texts", ""),
+                    "info": data.get("info", {})
+                }
+        except subprocess.CalledProcessError as e:
+            return {"status": "error", "error": f"OCR binary failed: {e.stderr.decode()}"}
+        except Exception as e:
+            return {"status": "error", "error": str(e)}
     def capture_all_monitors(self) -> Dict[str, Any]:
         """Capture screenshot from all monitors using native macOS APIs.
         
@@ -680,44 +699,6 @@ class DifferentialVisionAnalyzer:
         
         return output_path
 
-    def _perform_ocr_analysis(self, image_path: str) -> dict:
-        """Perform OCR using PaddleOCR if available, else fallback to Copilot analysis"""
-        engine = self._get_ocr_engine()
-        
-        if engine == "unavailable":
-            # Fallback to analyze_with_copilot for critical OCR if possible
-            # or return empty result
-            return {"status": "unavailable", "note": "PaddleOCR not installed"}
-            
-        try:
-            # Use predict() method (PaddleOCR 3.x API)
-            result = engine.predict(image_path)
-            text_regions = []
-            
-            # PaddleOCR 3.x returns OCRResult objects
-            if result and len(result) > 0:
-                ocr_result = result[0]  # First page/image
-                rec_texts = ocr_result.get('rec_texts', [])
-                rec_scores = ocr_result.get('rec_scores', [])
-                rec_polys = ocr_result.get('rec_polys', [])
-                
-                for i, text in enumerate(rec_texts):
-                    confidence = rec_scores[i] if i < len(rec_scores) else 0.0
-                    bbox = rec_polys[i].tolist() if i < len(rec_polys) else []
-                    
-                    text_regions.append({
-                        "text": text,
-                        "confidence": float(confidence),
-                        "bbox": bbox
-                    })
-
-            return {
-                "status": "success",
-                "regions": text_regions,
-                "full_text": " ".join([r["text"] for r in text_regions])
-            }
-        except Exception as e:
-            return {"status": "error", "error": str(e)}
 
     def _generate_context_summary(self, diff_data: dict, ocr_data: dict) -> str:
         """Generate human-readable context summary"""
