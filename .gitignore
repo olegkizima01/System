@@ -96,3 +96,7 @@ Visual Studio Code*.app/
 Windsurf*.app/
 kinotavr.md
 data/
+
+# Generated audio / temporary outputs
+out.wav
+
