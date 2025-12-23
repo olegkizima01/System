@@ -757,6 +757,9 @@ class MCPToolRegistry:
         # We construct the tool name as "server.tool" (e.g., "playwright.playwright_navigate")
         full_tool_name = f"{provider_name}.{mcp_tool}"
         
+        # IMPORTANT: Adapt args BEFORE calling execute (was missing, causing NameError)
+        mcp_args = self._adapt_args_for_mcp(tool_name, mcp_tool, args)
+        
         try:
             # Execute via manager
             res_dict = self._mcp_client_manager.execute(full_tool_name, mcp_args, task_type=task_type)
