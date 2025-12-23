@@ -2159,7 +2159,19 @@ Return JSON with ONLY the replacement step.'''))
                 # Auto-resume permission-specific pauses if user enabled the
                 # per-permission auto-resume toggle.
                 if pause_info.get("permission") and self._is_env_true("TRINITY_VIBE_AUTO_RESUME_PERMISSIONS", False):
+                    if self.verbose:
+                        self.logger.debug(f"Permission auto-resume enabled; pause_info={pause_info}")
                     try:
+                        # Ensure Vibe assistant has the current pause context so
+                        # it can process /continue even if handle_pause_request
+                        # was not previously invoked in this runtime session.
+                        if self.verbose:
+                            self.logger.debug("Setting current_pause_context on Vibe assistant before attempting /continue")
+                        if not getattr(self.vibe_assistant, "current_pause_context", None):
+                            try:
+                                self.vibe_assistant.current_pause_context = pause_info
+                            except Exception:
+                                pass
                         res = self.vibe_assistant.handle_user_command("/continue")
                         if res.get("action") == "resume":
                             state["vibe_assistant_pause"] = None
