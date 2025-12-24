@@ -100,7 +100,11 @@ class MCPClientManager:
         self._init_clients()
     
     def _default_config_path(self) -> str:
-        """Get default config path."""
+        """Get default config path. Prefers user home directory for permissions."""
+        user_config = os.path.expanduser("~/.kinotavr/mcp_config.json")
+        if os.path.exists(user_config):
+            return user_config
+            
         base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         return os.path.join(base, "config", "mcp_config.json")
     

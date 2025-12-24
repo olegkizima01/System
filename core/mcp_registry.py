@@ -226,7 +226,9 @@ class MCPToolRegistry:
         from mcp_integration.core.mcp_client_manager import get_mcp_client_manager, MCPClientType
         self._mcp_client_manager = get_mcp_client_manager()
         
-        self._register_external_mcp()
+        # We no longer register external providers here to avoid double-init and session conflicts.
+        # MCPServerManager in mcp_integration handles this centrally.
+        # self._register_external_mcp()
 
     def set_mcp_client(self, client_type: str) -> bool:
         """Switch active MCP client (open_mcp/continue)."""
@@ -635,19 +637,22 @@ class MCPToolRegistry:
         return mcp_args
 
     def _adapt_browser_click(self, args):
-        selector = args.get("selector", "")
+        selector = self._smart_selector(args.get("selector", ""))
         return {
-            "ref": self._smart_ref(selector),
-            "element": args.get("element_description") or f"Element matching {selector}"
+            "code": f'async (page) => {{ await page.click("{selector}"); }}'
         }
 
     def _adapt_browser_type(self, args):
-        selector = args.get("selector", "")
+        selector = self._smart_selector(args.get("selector", ""))
+        text = args.get("text", "").replace('"', '\\"')
+        
+        code = f'async (page) => {{ \n  await page.fill("{selector}", "{text}");'
+        if args.get("press_enter"):
+            code += f'\n  await page.keyboard.press("Enter");'
+        code += '\n}'
+        
         return {
-            "ref": self._smart_ref(selector),
-            "text": args.get("text", ""),
-            "element": args.get("element_description") or f"Input field matching {selector}",
-            "submit": args.get("press_enter", False)
+            "code": code
         }
 
     def _smart_ref(self, selector: str) -> str:
@@ -799,10 +804,11 @@ class MCPToolRegistry:
         if mcp_res is not None:
             return mcp_res
 
-        # 2. Direct External Tool Call
-        ext_res = self._try_external_direct_call(tool_name, args)
-        if ext_res is not None:
-            return ext_res
+        # 2. Direct External Tool Call (Bypassed if manager is active)
+        if not self._mcp_client_manager:
+            ext_res = self._try_external_direct_call(tool_name, args)
+            if ext_res is not None:
+                return ext_res
 
         # 3. Local Tool Call
         return self._execute_local_tool(tool_name, args)
@@ -811,8 +817,8 @@ class MCPToolRegistry:
         mcp_routing = {
             "browser_open_url": ("playwright", "browser_navigate"),
             "browser_navigate": ("playwright", "browser_navigate"),
-            "browser_click_element": ("playwright", "browser_click"),
-            "browser_type_text": ("playwright", "browser_type"),
+            "browser_click_element": ("playwright", "browser_run_code"),
+            "browser_type_text": ("playwright", "browser_run_code"),
             "browser_screenshot": ("playwright", "browser_take_screenshot"),
             "browser_snapshot": ("playwright", "browser_snapshot"),
             "browser_get_content": ("playwright", "browser_evaluate"),
@@ -850,60 +856,29 @@ class MCPToolRegistry:
                 # IMPORTANT: Adapt args BEFORE calling execute
                 mcp_args = self._adapt_args_for_mcp(tool_name, mcp_tool, args)
                 
-                # Try simple name first
-                res = self._mcp_client_manager.execute(mcp_tool, mcp_args, task_type=task_type)
-                if res.get("success"):
-                    return res.get("data", "")
+                # Execute via manager
+                res_dict = self._mcp_client_manager.execute(full_tool_name, mcp_args, task_type=task_type)
                 
-                # Try prefixed name (some servers might require it or manager expects it)
-                res = self._mcp_client_manager.execute(full_tool_name, mcp_args, task_type=task_type)
-                if res.get("success"):
-                    return res.get("data", "")
+                if res_dict.get("success"):
+                    data = res_dict.get("data", "")
+                    
+                    # Truncate massive snapshots to keep LLM context clean
+                    if len(data) > 1000 and tool_name in ["browser_open_url", "browser_navigate"]:
+                        data = data[:1000] + "\n... [TRUNCATED for brevity, use browser_snapshot for details] ..."
+                    
+                    # Special post-processing for press_enter
+                    if tool_name == "browser_type_text" and args.get("press_enter"):
+                        self._mcp_press_enter_fallback_manager(provider_name, mcp_args)
+                    return data
+                else:
+                    # If it failed but it's a real server error (not "server not found"), return it
+                    if "No MCP server found" not in res_dict.get("error", ""):
+                        return json.dumps(res_dict, indent=2, ensure_ascii=False)
         except Exception as e:
             logger.debug(f"MCP Manager routing failed for {full_tool_name}: {e}")
 
-        # 2. FALLBACK: Check legacy/static ExternalMCPProvider
-        if provider_name in self._external_providers:
-            provider = self._external_providers[provider_name]
-            try:
-                if not provider._connected:
-                    provider.connect()
-                
-                mcp_args = self._adapt_args_for_mcp(tool_name, mcp_tool, args)
-                res = provider.execute(mcp_tool, mcp_args)
-                
-                if tool_name == "browser_type_text" and args.get("press_enter"):
-                    self._mcp_press_enter_fallback(provider, mcp_args)
-                
-                return json.dumps(res, indent=2, ensure_ascii=False)
-            except Exception as e:
-                print(f"[MCP] Persistent provider {provider_name} call failed: {e}. Trying manager fallback...")
-
-        # 2. SUB-PRIORITY: Delegate to MCP Client Manager (e.g. for dynamic or new tools)
-        try:
-            # IMPORTANT: Adapt args BEFORE calling execute
-            mcp_args = self._adapt_args_for_mcp(tool_name, mcp_tool, args)
-            res_dict = self._mcp_client_manager.execute(full_tool_name, mcp_args, task_type=task_type)
-            
-            if not res_dict["success"]:
-                 # Fallback to legacy ExternalMCPProvider if manager fails? 
-                 # Or just return None to allow local fallback?
-                 # If error is "No MCP server found", we might fallback.
-                 if "No MCP server found" in res_dict.get("error", ""):
-                     print(f"[MCP] Manager failed to find {full_tool_name}, falling back to legacy provider logic if available.")
-                     # Check legacy providers below
-                 else:
-                     return None # Real error, don't fallback to local immediately or return error?
-            else:
-                 res = res_dict["data"]
-                 if tool_name == "browser_type_text" and args.get("press_enter"):
-                     # Handle press enter separately via another call
-                     self._mcp_press_enter_fallback_manager(provider_name, mcp_args)
-                 
-                 return json.dumps(res, indent=2, ensure_ascii=False)
-                 
-        except Exception as e:
-            print(f"[MCP] Manager execution failed for {full_tool_name}: {e}")
+        # 2. SUB-PRIORITY: Try local tool fallback or other logic if manager didn't handle it
+        return None
             
         return None
 
