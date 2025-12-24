@@ -103,18 +103,18 @@ from tui.permissions import (
 from tui.render import (
     get_render_log_snapshot as _get_render_log_snapshot,
     get_render_agents_snapshot as _get_render_agents_snapshot,
-    log as _log,
-    log_agent_message as _log_agent_message,
+    log as _log_imported,
+    log_agent_message as _log_agent_message_imported,
     log_reserve_line as _log_reserve_line,
     log_replace_at as _log_replace_at,
     trim_logs_if_needed as _trim_logs_if_needed,
-    get_logs as _get_logs,
-    get_agent_messages as _get_agent_messages,
-    get_agent_cursor_position as _get_agent_cursor_position,
-    get_log_cursor_position as _get_log_cursor_position,
-    get_header as _get_header,
-    get_context as _get_context,
-    get_status as _get_status,
+    get_logs as _get_logs_imported,
+    get_agent_messages as _get_agent_messages_imported,
+    get_agent_cursor_position as _get_agent_cursor_position_imported,
+    get_log_cursor_position as _get_log_cursor_position_imported,
+    get_header as _get_header_imported,
+    get_context as _get_context_imported,
+    get_status as _get_status_imported,
     get_agent_messages_buffer,
     get_agent_messages_lock,
     get_logs_lock,
@@ -151,8 +151,8 @@ from tui.agents import (
     agent_send_with_stream, # Unaliased
     agent_send_no_stream, # Unaliased
     run_graph_agent_task as _run_graph_agent_task,
-    load_llm_settings as _load_llm_settings,
-    save_llm_settings as _save_llm_settings,
+    load_llm_settings as _load_llm_settings_imported,
+    save_llm_settings as _save_llm_settings_imported,
     init_agent_tools as _init_agent_tools,
 )
 
@@ -171,14 +171,14 @@ from tui.monitoring import (
     monitor_summary_service as monitor_summary_service,
     monitor_start_selected as _monitor_start_selected,
     monitor_stop_selected as _monitor_stop_selected,
-    monitor_summary_start_if_needed as _monitor_summary_start_if_needed,
-    monitor_summary_stop_if_needed as _monitor_summary_stop_if_needed,
-    tool_monitor_status as _tool_monitor_status,
-    tool_monitor_set_source as _tool_monitor_set_source,
-    tool_monitor_set_use_sudo as _tool_monitor_set_use_sudo,
-    tool_monitor_start as _tool_monitor_start,
-    tool_monitor_stop as _tool_monitor_stop,
-    tool_monitor_targets as _tool_monitor_targets,
+    monitor_summary_start_if_needed as _monitor_summary_start_if_needed_imported,
+    monitor_summary_stop_if_needed as _monitor_summary_stop_if_needed_imported,
+    tool_monitor_status as _tool_monitor_status_imported,
+    tool_monitor_set_source as _tool_monitor_set_source_imported,
+    tool_monitor_set_use_sudo as _tool_monitor_set_use_sudo_imported,
+    tool_monitor_start as _tool_monitor_start_imported,
+    tool_monitor_stop as _tool_monitor_stop_imported,
+    tool_monitor_targets as _tool_monitor_targets_imported,
 )
 
 from tui.recordings import (
@@ -193,24 +193,24 @@ from tui.recordings import (
     recordings_resolve_last_dir as _recordings_resolve_last_dir,
     extract_automation_title as _extract_automation_title,
     extract_automation_prompt as _extract_automation_prompt,
-    get_recorder_service as _get_recorder_service,
-    custom_tasks_allowed as _custom_tasks_allowed,
-    custom_task_recorder_start as _custom_task_recorder_start,
-    custom_task_recorder_stop as _custom_task_recorder_stop,
-    custom_task_recorder_open_last as _custom_task_recorder_open_last,
+    get_recorder_service as _get_recorder_service_imported,
+    custom_tasks_allowed as _custom_tasks_allowed_imported,
+    custom_task_recorder_start as _custom_task_recorder_start_imported,
+    custom_task_recorder_stop as _custom_task_recorder_stop_imported,
+    custom_task_recorder_open_last as _custom_task_recorder_open_last_imported,
     analyze_recording_bg, # Unaliased
     start_recording_analysis as _start_recording_analysis,
 )
 
 from tui.commands import (
-    clear_agent_pause_state as _clear_agent_pause_state,
-    set_agent_pause as _set_agent_pause,
-    resume_paused_agent as _resume_paused_agent,
-    handle_command as _handle_command,
-    tool_app_command as _tool_app_command,
-    handle_input as _handle_input,
-    get_input_prompt as _get_input_prompt,
-    get_prompt_width as _get_prompt_width,
+    clear_agent_pause_state as _clear_agent_pause_state_imported,
+    set_agent_pause as _set_agent_pause_imported,
+    resume_paused_agent as _resume_paused_agent_imported,
+    handle_command as _handle_command_imported,
+    tool_app_command as _tool_app_command_imported,
+    handle_input as _handle_input_imported,
+    get_input_prompt as _get_input_prompt_imported,
+    get_prompt_width as _get_prompt_width_imported,
     parse_command,
     is_command,
 )
@@ -231,10 +231,10 @@ from tui.tools import (
     tool_grep as _tool_grep,
     tool_take_screenshot as _tool_take_screenshot,
     tool_create_module as _tool_create_module,
-    tool_llm_status as _tool_llm_status,
-    tool_llm_set as _tool_llm_set,
-    tool_ui_theme_status as _tool_ui_theme_status,
-    tool_ui_theme_set as _tool_ui_theme_set,
+    tool_llm_status as _tool_llm_status_imported,
+    tool_llm_set as _tool_llm_set_imported,
+    tool_ui_theme_status as _tool_ui_theme_status_imported,
+    tool_ui_theme_set as _tool_ui_theme_set_imported,
     tool_ui_streaming_status as _tool_ui_streaming_status,
     tool_ui_streaming_set as _tool_ui_streaming_set,
 )
@@ -438,11 +438,11 @@ def _get_reply_language_label() -> str:
 
 
 def _load_llm_settings() -> None:
-    return _load_llm_settings_new()
+    return _load_llm_settings_imported()
 
 
 def _save_llm_settings(provider: str, main_model: str, vision_model: str) -> bool:
-    return _save_llm_settings_new(provider, main_model, vision_model)
+    return _save_llm_settings_imported(provider, main_model, vision_model)
 
 
 def _get_llm_signature() -> str:
@@ -926,17 +926,16 @@ def _open_in_finder(path: str) -> Tuple[bool, str]:
         return False, f"Failed to open: {p}\n{e}"
 
 
-def _get_recorder_service() -> Any:
-    return _get_recorder_service_new()
-
+def _get_recorder_service() -> Optional[Any]:
+    return RecorderService() if RecorderService else None
 
 
 def _monitor_summary_start_if_needed() -> None:
-    _monitor_summary_start_if_needed_new()
+    _monitor_summary_start_if_needed_imported()
 
 
 def _monitor_summary_stop_if_needed() -> None:
-    _monitor_summary_stop_if_needed_new()
+    _monitor_summary_stop_if_needed_imported()
 
 
 def _ensure_cleanup_cfg_loaded() -> None:
@@ -1090,8 +1089,8 @@ def _custom_task_automation_permissions_help() -> Tuple[bool, str]:
     return True, "OK"
 
 
-def _custom_tasks_allowed() -> Tuple[bool, str]:
-    return _custom_tasks_allowed_new()
+def _custom_tasks_allowed() -> bool:
+    return _custom_tasks_allowed_imported()
 
 
 def _custom_task_windsurf_register() -> Tuple[bool, str]:
@@ -1134,15 +1133,15 @@ def _custom_task_windsurf_register() -> Tuple[bool, str]:
 
 
 def _custom_task_recorder_start() -> Tuple[bool, str]:
-    return _custom_task_recorder_start_new()
+    return _custom_task_recorder_start_imported()
 
 
 def _custom_task_recorder_stop() -> Tuple[bool, str]:
-    return _custom_task_recorder_stop_new()
+    return _custom_task_recorder_stop_imported()
 
 
-def _custom_task_recorder_open_last() -> Tuple[bool, str]:
-    return _custom_task_recorder_open_last_new()
+def _custom_task_recorder_open_last() -> bool:
+    return _custom_task_recorder_open_last_imported()
 
 
 def _custom_task_recording_analyze_last() -> Tuple[bool, str]:
@@ -1233,7 +1232,7 @@ def _get_llm_sub_menu_items(level: Any) -> List[Tuple[str, Any]]:
         return []
     status = {}
     try:
-        status_res = _tool_llm_status_new({"section": section})
+        status_res = _tool_llm_status()
         if isinstance(status_res, dict):
             status = status_res
     except Exception:
@@ -1534,31 +1533,31 @@ def run_tui() -> None:
 
 
 def _tool_app_command(args: Dict[str, Any]) -> Dict[str, Any]:
-    return _tool_app_command_new(args)
+    return _tool_app_command_imported(args)
 
 
 def _tool_monitor_status() -> Dict[str, Any]:
-    return _tool_monitor_status_new()
+    return _tool_monitor_status_imported()
 
 
 def _tool_monitor_set_source(args: Dict[str, Any]) -> Dict[str, Any]:
-    return _tool_monitor_set_source_new(args)
+    return _tool_monitor_set_source_imported(args)
 
 
 def _tool_monitor_set_use_sudo(args: Dict[str, Any]) -> Dict[str, Any]:
-    return _tool_monitor_set_use_sudo_new(args)
+    return _tool_monitor_set_use_sudo_imported(args)
 
 
 def _tool_monitor_start() -> Dict[str, Any]:
-    return _tool_monitor_start_new()
+    return _tool_monitor_start_imported()
 
 
 def _tool_monitor_stop() -> Dict[str, Any]:
-    return _tool_monitor_stop_new()
+    return _tool_monitor_stop_imported()
 
 
 def _tool_monitor_targets(args: Dict[str, Any]) -> Dict[str, Any]:
-    return _tool_monitor_targets_new(args)
+    return _tool_monitor_targets_imported(args)
 
 
 def _scan_installed_apps(app_dirs: List[str]) -> List[str]:
@@ -1727,84 +1726,91 @@ cleanup_cfg = None
 
 
 def log_agent_message(agent: AgentType, text: str) -> None:
-    _log_agent_message_new(agent, text)
+    _log_agent_message_imported(agent, text)
 
 
 def log(text: str, category: str = "info") -> None:
-    _log_new(text, category)
+    _log_imported(text, category)
 
 
 def get_header():
-    return _get_header_new()
+    return _get_header_imported()
 
 
 def get_context():
-    return _get_context_new()
+    return _get_context_imported()
+
+
+def get_logs():
+    return _get_logs_imported()
+
+
+def get_agent_messages():
+    return _get_agent_messages_imported()
+
+
+def get_agent_cursor_position():
+    return _get_agent_cursor_position_imported()
 
 
 def get_log_cursor_position():
-    try:
-        _, cursor = _get_render_log_snapshot()
-        y = int(getattr(cursor, "y", 0) or 0)
-    except Exception:
-        y = 0
-    return Point(x=0, y=y)
+    return _get_log_cursor_position_imported()
 
 
 # ================== MENU CONTENT ==================
 
 
 def _clear_agent_pause_state() -> None:
-    _clear_agent_pause_state_new()
+    _clear_agent_pause_state_imported()
 
 
 def _set_agent_pause(*, pending_text: str, permission: str, message: str) -> None:
-    _set_agent_pause_new(pending_text=pending_text, permission=permission, message=message)
+    _set_agent_pause_imported(pending_text=pending_text, permission=permission, message=message)
 
 
 def _resume_paused_agent() -> None:
-    _resume_paused_agent_new()
+    _resume_paused_agent_imported()
 
 
 def _handle_command(cmd: str) -> None:
-    _handle_command_new(cmd)
+    _handle_command_imported(cmd)
 
 def _handle_input(buff: Buffer) -> None:
-    _handle_input_new(buff)
+    _handle_input_imported(buff)
 
 
 input_buffer = Buffer(multiline=True, accept_handler=_handle_input)
 
 
 def get_input_prompt():
-    return _get_input_prompt_new()
+    return _get_input_prompt_imported()
 
 
 def get_prompt_width() -> int:
-    return 55 if state.menu_level != MenuLevel.NONE else 3
+    return _get_prompt_width_imported()
 
 
 def get_status():
-    return _get_status_new()
+    return _get_status_imported()
 
 
 # ================== KEY BINDINGS ==================
 
 
 def _tool_llm_status() -> Dict[str, Any]:
-    return _tool_llm_status_new()
+    return _tool_llm_status_imported()
 
 
 def _tool_llm_set(args: Dict[str, Any]) -> Dict[str, Any]:
-    return _tool_llm_set_new(args)
+    return _tool_llm_set_imported(args)
 
 
 def _tool_ui_theme_status() -> Dict[str, Any]:
-    return _tool_ui_theme_status_new()
+    return _tool_ui_theme_status_imported()
 
 
 def _tool_ui_theme_set(args: Dict[str, Any]) -> Dict[str, Any]:
-    return _tool_ui_theme_set_new(args)
+    return _tool_ui_theme_set_imported(args)
 
 
 # ================== CLI SUBCOMMANDS ==================
