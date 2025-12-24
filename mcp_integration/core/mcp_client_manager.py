@@ -154,25 +154,7 @@ class MCPClientManager:
         """Initialize client instances (lazy loading)."""
         clients_config = self._config.get("mcpClients", {})
         
-        # Import clients dynamically to avoid circular imports
-        try:
-            from .open_mcp_client import OpenMCPClient
-            open_mcp_cfg = clients_config.get("open_mcp", {})
-            self._clients[MCPClientType.OPEN_MCP] = OpenMCPClient(open_mcp_cfg)
-        except ImportError as e:
-            logger.warning(f"OpenMCPClient not available (ImportError): {e}")
-        except Exception as e:
-            logger.error(f"Failed to initialize OpenMCPClient: {e}")
-        
-        try:
-            from .continue_mcp_client import ContinueMCPClient
-            continue_cfg = clients_config.get("continue", {})
-            self._clients[MCPClientType.CONTINUE] = ContinueMCPClient(continue_cfg)
-        except ImportError as e:
-            logger.warning(f"ContinueMCPClient not available (ImportError): {e}")
-        except Exception as e:
-            logger.error(f"Failed to initialize ContinueMCPClient: {e}")
-
+        # Only NativeMCPClient is active - other clients archived
         try:
             from .native_sdk_client import NativeMCPClient
             native_cfg = clients_config.get("native", {})
@@ -180,17 +162,9 @@ class MCPClientManager:
             native_cfg["mcp_config_path"] = self._config_path
             self._clients[MCPClientType.NATIVE] = NativeMCPClient(native_cfg)
         except ImportError as e:
-            logger.warning(f"NativeMCPClient not available (ImportError): {e}")
+            logger.error(f"NativeMCPClient not available: {e}")
         except Exception as e:
             logger.error(f"Failed to initialize NativeMCPClient: {e}")
-            
-        # Add Cline if implemented
-        try:
-            from .cline_mcp_client import ClineMCPClient
-            cline_cfg = clients_config.get("cline", {})
-            self._clients[MCPClientType.CLINE] = ClineMCPClient(cline_cfg)
-        except (ImportError, AttributeError):
-            pass
     
     @property
     def active_client(self) -> MCPClientType:

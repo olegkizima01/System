@@ -1,5 +1,5 @@
 {
-  "activeClient": "auto",
+  "activeClient": "native",
   "mcpClients": {
     "native": {
       "name": "Native SDK Client",
@@ -8,44 +8,11 @@
       "config": {},
       "mcp_config_path": "/Users/dev/Documents/GitHub/System/mcp_integration/config/mcp_config.json",
       "categories": [
-        "performance",
+        "browser",
+        "ai",
+        "memory",
         "system",
         "filesystem"
-      ]
-    },
-    "open_mcp": {
-      "name": "CopilotKit Open-MCP",
-      "type": "python",
-      "enabled": true,
-      "config": {
-        "agent_dir": "mcp_integration/agents/open_mcp"
-      },
-      "categories": [
-        "general",
-        "ai"
-      ]
-    },
-    "continue": {
-      "name": "Continue CLI",
-      "type": "npm_cli",
-      "enabled": true,
-      "command": "cn",
-      "fallback_command": "npx @continuedev/cli",
-      "categories": [
-        "dev",
-        "code_analysis",
-        "system"
-      ]
-    },
-    "cline": {
-      "name": "Cline",
-      "type": "npm_cli",
-      "enabled": true,
-      "command": "cline",
-      "categories": [
-        "dev",
-        "browser",
-        "system"
       ]
     }
   },
@@ -72,7 +39,7 @@
       "timeout": 60000,
       "retryAttempts": 2,
       "category": "browser",
-      "ownerClient": "cline"
+      "ownerClient": "native"
     },
     "pyautogui": {
       "enabled": false,
@@ -95,7 +62,8 @@
       "description": "AppleScript MCP Server for macOS automation",
       "timeout": 30000,
       "retryAttempts": 2,
-      "category": "system"
+      "category": "system",
+      "ownerClient": "native"
     },
     "filesystem": {
       "enabled": true,
@@ -107,7 +75,8 @@
       "description": "Filesystem MCP Server for file operations",
       "timeout": 30000,
       "retryAttempts": 2,
-      "category": "system"
+      "category": "system",
+      "ownerClient": "native"
     },
     "sonarqube": {
       "enabled": false,
