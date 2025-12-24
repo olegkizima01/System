@@ -6,6 +6,9 @@ import sys
 # Add project root to sys.path
 sys.path.append(os.getcwd())
 
+from dotenv import load_dotenv
+load_dotenv()
+
 from core.trinity.runtime import TrinityRuntime
 from core.trinity.state import TrinityPermissions
 
@@ -17,8 +20,8 @@ async def run_diagnostic():
     
     print(f"\n🚀 Running diagnostic task: {task}\n")
     
-    # We use a smaller recursion limit to avoid long loops if it's broken
-    for event in runtime.run(task, recursion_limit=10):
+    # We use a larger recursion limit for full execution
+    for event in runtime.run(task, recursion_limit=20):
         for node, state in event.items():
             print(f"\n--- Node: {node} ---")
             if "messages" in state:

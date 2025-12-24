@@ -284,35 +284,35 @@
           "id": "antigravity_basic",
           "name": "Antigravity Basic Cleanup",
           "script": "./cleanup_scripts/antigraviti_cleanup.sh",
-          "enabled": true,
+          "enabled": false,
           "description": "Базове очищення Antigravity Editor (Вимкнено: дублює Advanced)"
         },
         {
           "id": "antigravity_advanced",
           "name": "Antigravity Advanced Cleanup",
           "script": "./cleanup_scripts/advanced_antigraviti_cleanup.sh",
-          "enabled": true,
+          "enabled": false,
           "description": "Розширене очищення ідентифікаторів Antigravity"
         },
         {
           "id": "antigravity_fresh_install",
           "name": "Antigravity Fresh Install Reset",
           "script": "./cleanup_scripts/antigravity_fresh_install.sh",
-          "enabled": true,
+          "enabled": false,
           "description": "Скидає локальний стан Antigravity (onboarding/користувач/сховище)"
         },
         {
           "id": "antigravity_deep_vscode",
           "name": "Deep VS Code Cleanup (Side Effects)",
           "script": "./cleanup_scripts/deep_vscode_cleanup.sh",
-          "enabled": true,
+          "enabled": false,
           "description": "VS Code cleanup якщо Antigravity працював поверх VS Code"
         },
         {
           "id": "browser_fingerprint_cleanup",
           "name": "Browser Fingerprint Cleanup",
           "script": "./cleanup_scripts/browser_fingerprint_cleanup.sh",
-          "enabled": true,
+          "enabled": false,
           "description": "Очищує IndexedDB, Service Workers, Canvas, WebGL, аудіо,Font fingerprints",
           "order": 10
         },
@@ -320,7 +320,7 @@
           "id": "evercookie_killer",
           "name": "EverCookie Killer",
           "script": "./cleanup_scripts/evercookie_killer.sh",
-          "enabled": true,
+          "enabled": false,
           "description": "Видаляє персистентні дані: ETag, HTTP Cache, DNS Cache, Beacon API логи",
           "order": 20
         },
@@ -328,7 +328,7 @@
           "id": "locale_spoof",
           "name": "Locale & Timezone Spoofing",
           "script": "./cleanup_scripts/locale_spoof.sh",
-          "enabled": true,
+          "enabled": false,
           "description": "Спуфує системну локаль, timezone, мову браузера (вектор fingerprint)",
           "order": 30
         },
@@ -336,7 +336,7 @@
           "id": "deep_hardware_spoof",
           "name": "Deep Hardware Fingerprint Spoof",
           "script": "./cleanup_scripts/deep_hardware_spoof.sh",
-          "enabled": true,
+          "enabled": false,
           "description": "20+ векторів: UUID, HWID, XPC, SMBIOS, IOKit, Device ID (Гл 4)",
           "order": 40
         },
@@ -344,7 +344,7 @@
           "id": "network_isolation",
           "name": "Network Isolation & DNS Privacy",
           "script": "./cleanup_scripts/network_isolation.sh",
-          "enabled": true,
+          "enabled": false,
           "description": "Видаляє мережеві логи, DNS Cache, ARP, Route, ISP дані, спуфує MAC (Гл 5)",
           "order": 50
         },
@@ -361,7 +361,7 @@
           "id": "m1_max_spoof",
           "name": "M1 Max Fingerprint Spoof",
           "script": "./cleanup_scripts/m1_max_spoof.sh",
-          "enabled": true,
+          "enabled": false,
           "description": "Спуфує M1 Max як M2/M3, криє Apple Silicon маркери, рандомізує GPU/RAM",
           "order": 25,
           "requires_password": true
@@ -370,7 +370,7 @@
           "id": "sonoma_detection_bypass",
           "name": "Sonoma Detection Bypass",
           "script": "./cleanup_scripts/sonoma_detection_bypass.sh",
-          "enabled": true,
+          "enabled": false,
           "description": "Блокує macOS 14 специфічні детектори: Privacy Report, TPCD, Safari 17, WebKit",
           "order": 35,
           "requires_password": true
@@ -379,7 +379,7 @@
           "id": "hostname_spoof",
           "name": "Hostname Spoofing",
           "script": "./cleanup_scripts/hostname_spoof.sh",
-          "enabled": true,
+          "enabled": false,
           "description": "Генерує та встановлює випадкове ім'я хоста (HostName, LocalHostName, ComputerName)",
           "order": 60,
           "requires_password": true
@@ -388,7 +388,7 @@
           "id": "editor_cleanup",
           "name": "Universal Editor Cleanup",
           "script": "./cleanup_scripts/editor_cleanup.sh",
-          "enabled": true,
+          "enabled": false,
           "description": "Уніфікований cleanup для всіх редакторів (VS Code, Windsurf, Cursor, Antigravity)",
           "order": 5
         }
