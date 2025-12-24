@@ -638,7 +638,13 @@ class MCPToolRegistry:
 
     def _adapt_browser_click(self, args):
         selector = self._smart_selector(args.get("selector", ""))
-        # Use a robust JS snippet that waits for the element
+        
+        # HYBRID LOGIC: Native for refs, JS Bridge for CSS
+        if selector.startswith("ref="):
+            # Native browser_click requires 'ref' argument
+            return {"ref": selector[4:]}
+        
+        # Universal JS Bridge for CSS/XPath (more robust)
         code = f"""async (page) => {{
             await page.waitForSelector("{selector}", {{ state: "visible", timeout: 10000 }});
             await page.click("{selector}");
@@ -648,7 +654,12 @@ class MCPToolRegistry:
     def _adapt_browser_type(self, args):
         selector = self._smart_selector(args.get("selector", ""))
         text = args.get("text", "").replace('"', '\\"')
-        # Use a robust JS snippet that waits for the element and handles navigation
+        
+        # HYBRID LOGIC: Native for refs, JS Bridge for CSS
+        if selector.startswith("ref="):
+            return {"ref": selector[4:], "text": text}
+
+        # Universal JS Bridge for CSS/XPath (more robust)
         code = f"""async (page) => {{
             await page.waitForSelector("{selector}", {{ state: "visible", timeout: 10000 }});
             await page.fill("{selector}", "{text}");
@@ -826,13 +837,9 @@ class MCPToolRegistry:
             "browser_open_url": ("playwright", "browser_run_code"),
             "browser_navigate": ("playwright", "browser_run_code"),
             
-            # Navigation (Wait logic)
-            "browser_open_url": ("playwright", "browser_run_code"),
-            "browser_navigate": ("playwright", "browser_run_code"),
-            
-            # Interaction (Unified JS Bridge for reliability)
-            "browser_click_element": ("playwright", "browser_run_code"),
-            "browser_type_text": ("playwright", "browser_run_code"),
+            # Interaction (Hybrid Logic)
+            "browser_click_element": ("playwright", "NATIVE_OR_BRIDGE"), # Special handled in execute
+            "browser_type_text": ("playwright", "NATIVE_OR_BRIDGE"), # Special handled in execute
             "browser_hover": ("playwright", "browser_run_code"),
             "browser_select": ("playwright", "browser_run_code"),
             
@@ -871,16 +878,6 @@ class MCPToolRegistry:
             from mcp_integration.core.mcp_client_manager import MCPClientType
             # If we are in Native or Auto mode, we should try the manager first as it uses the modern SDK
             if self._mcp_client_manager.active_client in [MCPClientType.NATIVE, MCPClientType.AUTO]:
-                # IMPORTANT: Adapt args BEFORE calling execute
-                mcp_args = self._adapt_args_for_mcp(tool_name, mcp_tool, args)
-                
-                # Execute via manager
-                res_dict = self._mcp_client_manager.execute(full_tool_name, mcp_args, task_type=task_type)
-                
-                if res_dict.get("success"):
-                    data = res_dict.get("data", "")
-                    
-                    # Phase 17: Focus Optimization
                     # Strip snapshots ONLY for action tools that don't need to return page state
                     # We KEEP them for open/navigate so the agent sees the landing page immediately
                     action_tools_to_strip = ["browser_click_element", "browser_type_text"]
