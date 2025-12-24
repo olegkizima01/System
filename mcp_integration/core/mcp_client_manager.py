@@ -1,20 +1,4 @@
-#!/usr/bin/env python3
-"""
-MCP Client Manager - Dual Client Architecture
-
-Supports switching between:
-1. CopilotKit/open-mcp-client (Python/LangGraph based)
-2. Continue MCP Client (@continuedev/cli)
-"""
-
 import json
-import logging
-import os
-import subprocess
-from abc import ABC, abstractmethod
-from enum import Enum
-from typing import Any, Dict, List, Optional
-
 import logging
 import os
 import subprocess
@@ -34,11 +18,8 @@ logger = logging.getLogger(__name__)
 
 class MCPClientType(Enum):
     """Available MCP client types."""
-    OPEN_MCP = "open_mcp"      # CopilotKit/open-mcp-client
-    CONTINUE = "continue"      # @continuedev/cli
     NATIVE = "native"          # Official MCP Python SDK (Recommended)
-    CLINE = "cline"            # Cline (Meta-Orchestrator)
-    AUTO = "auto"              # Automatic switching based on task
+    AUTO = "auto"              # Automatic resolution (defaults to Native)
 
 
 class BaseMCPClient(ABC):
@@ -144,11 +125,11 @@ class MCPClientManager:
     
     def _get_active_from_config(self) -> MCPClientType:
         """Get active client type from config."""
-        active_str = str(self._config.get(self.CONFIG_KEY, "open_mcp")).lower()
+        active_str = str(self._config.get(self.CONFIG_KEY, "native")).lower()
         try:
             return MCPClientType(active_str)
         except ValueError:
-            return MCPClientType.OPEN_MCP
+            return MCPClientType.NATIVE
     
     def _init_clients(self) -> None:
         """Initialize client instances (lazy loading)."""
@@ -175,11 +156,8 @@ class MCPClientManager:
     def active_client_name(self) -> str:
         """Get human-readable name of active client."""
         names = {
-            MCPClientType.OPEN_MCP: "Open-MCP (CopilotKit)",
-            MCPClientType.CONTINUE: "Continue CLI",
             MCPClientType.NATIVE: "Native SDK (High-Performance)",
-            MCPClientType.CLINE: "Cline",
-            MCPClientType.AUTO: "Auto (Task-based)"
+            MCPClientType.AUTO: "Auto (Defaults to Native)"
         }
         return names.get(self._active_type, "Unknown")
 
@@ -195,26 +173,8 @@ class MCPClientManager:
         return None
 
     def resolve_client_type(self, task_type: Optional[str] = None, server_name: Optional[str] = None) -> MCPClientType:
-        """Resolve the client type based on context if in AUTO mode."""
-        # 0. Check for explicit server ownership first
-        if server_name:
-            owner = self.resolve_client_by_server(server_name)
-            if owner and owner in self._clients:
-                return owner
-
-        if self._active_type != MCPClientType.AUTO:
-            return self._active_type
-            
-        # Decision logic for AUTO mode
-        if task_type:
-            task_type = task_type.lower()
-            if task_type in ["dev", "code", "debug"]:
-                return MCPClientType.CONTINUE
-            if task_type in ["browser", "web", "search", "general"]:
-                # Preferred for browser or general high-level tasks via Cline if available, else Native
-                return MCPClientType.CLINE if MCPClientType.CLINE in self._clients else MCPClientType.NATIVE
-            
-        # Default to Native for performance
+        """Resolve the client type. Currently simplified to always use Native."""
+        # Default to Native for performance and compatibility
         return MCPClientType.NATIVE
     
     def get_client(self, client_type: Optional[MCPClientType] = None, task_type: Optional[str] = None, server_name: Optional[str] = None) -> Optional[BaseMCPClient]:
@@ -247,12 +207,8 @@ class MCPClientManager:
         return True
     
     def toggle_client(self, save: bool = True) -> MCPClientType:
-        """Toggle between available clients."""
-        if self._active_type == MCPClientType.OPEN_MCP:
-            new_type = MCPClientType.CONTINUE
-        else:
-            new_type = MCPClientType.OPEN_MCP
-        
+        """Toggle client - Currently only Native is available."""
+        new_type = MCPClientType.NATIVE
         self.switch_client(new_type, save=save)
         return self._active_type
     
@@ -330,13 +286,8 @@ class MCPClientManager:
             client = self._clients.get(ct)
             result.append({
                 "type": ct.value,
-                "name": {
-                    MCPClientType.OPEN_MCP: "Open-MCP (CopilotKit)",
-                    MCPClientType.CONTINUE: "Continue CLI",
-                    MCPClientType.NATIVE: "Native SDK",
-                    MCPClientType.CLINE: "Cline"
-                }.get(ct, ct.value),
-                "available": client is not None,
+                "name": "Native SDK" if ct == MCPClientType.NATIVE else "Auto",
+                "available": client is not None or ct == MCPClientType.AUTO,
                 "connected": client.is_connected if client else False,
                 "active": ct == self._active_type,
                 "categories": self._config.get("mcpClients", {}).get(ct.value, {}).get("categories", [])
