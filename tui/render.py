@@ -439,22 +439,23 @@ def get_header() -> List[Tuple[str, str]]:
     ui_lang = str(getattr(state, "ui_lang", "") or "").strip() or "-"
     chat_lang = str(getattr(state, "chat_lang", "") or "").strip() or "-"
     scroll_target = str(getattr(state, "ui_scroll_target", "log") or "log").strip().lower() or "log"
+    target_label = "АГЕНТИ" if scroll_target == "agents" else "LOG"
 
     return [
         ("class:header", " "),
-        ("class:header.title", "SYSTEM CLI"),
-        ("class:header.sep", " | "),
-        ("class:header.label", "Editor: "),
-        ("class:header.value", selected_editor),
-        ("class:header.sep", " | "),
-        ("class:header.label", "Region: "),
-        ("class:header.value", f"{primary} ({active_locales or 'none'})"),
-        ("class:header.sep", " | "),
-        ("class:header.label", "Lang: "),
-        ("class:header.value", f"ui={ui_lang} chat={chat_lang}"),
-        ("class:header.sep", " | "),
-        ("class:header.label", "Scroll: "),
-        ("class:header.value", "АГЕНТИ" if scroll_target == "agents" else "LOG"),
+        ("class:header.title", " 🧠 SYSTEM ATLAS "),
+        ("class:header.sep", " "),
+        ("class:header.label", " EDITOR: "),
+        ("class:header.value", f" {selected_editor} "),
+        ("class:header.sep", " "),
+        ("class:header.label", " REGION: "),
+        ("class:header.value", f" {primary} ({active_locales or 'none'}) "),
+        ("class:header.sep", " "),
+        ("class:header.label", " LANG: "),
+        ("class:header.value", f" ui={ui_lang} chat={chat_lang} "),
+        ("class:header.sep", " "),
+        ("class:header.label", f" {target_label} "),
+        ("class:header.value", " [ACTIVE] "),
         ("class:header", " "),
     ]
 
@@ -541,19 +542,20 @@ def get_status() -> List[Tuple[str, str]]:
         vibe_indicator = []
 
     base = mode_indicator + [
-        ("class:status.ready", f" {state.status} "),
-        ("class:status", " "),
-        ("class:status.key", monitor_tag),
-        ("class:status", " | "),
-        ("class:status.key", follow_tag),
-        ("class:status", " | "),
-        ("class:status.key", "F2: Menu"),
-        ("class:status", " | "),
-        ("class:status.key", "Ctrl+C: Quit"),
+        ("class:status.ready", f" 🔥 {state.status} "),
+        ("class:status", "  "),
+        ("class:status.key", f" 📡 {monitor_tag} "),
+        ("class:status", "  "),
+        ("class:status.key", f" 📜 {follow_tag} "),
+        ("class:status", "  "),
+        ("class:status.key", " ⌨️  F2: MENU "),
+        ("class:status", "  "),
+        ("class:status.key", " 🚀 Ctrl+C: QUIT "),
     ]
 
     if vibe_indicator:
-        base = mode_indicator + vibe_indicator + base[len(mode_indicator) :]
+        # Replace mode indicator with vibe indicator if it exists
+        base = mode_indicator + [("class:status", " ")] + vibe_indicator + base[len(mode_indicator):]
 
     return base + paused_hint
 

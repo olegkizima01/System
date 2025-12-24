@@ -107,10 +107,10 @@ graph TD
 
 ## 🎨 TUI та Теми
 
-**14 тем у 4 категоріях:**
+**16 тем у 4 категоріях:**
 - **Classic**: monaco, dracula, nord, gruvbox
 - **Modern**: catppuccin, tokyo-night, one-dark, rose-pine
-- **Vibrant**: cyberpunk, aurora, midnight-blue, solarized-dark
+- **Vibrant**: cyberpunk, aurora, midnight-blue, solarized-dark, vibrant, cyberpunk-neon
 - **Special**: hacker-vibe
 
 **Навігація**: `Ctrl+T` швидка зміна, `Settings → Appearance` вибір

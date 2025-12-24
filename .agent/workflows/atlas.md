@@ -204,13 +204,13 @@ context_manager.update_context(result)
 
 ## 7. TUI & Themes
 
-**14 тем у 4 категоріях:**
+**16 тем у 4 категоріях:**
 
 | Category | Themes |
 |:---|:---|
 | **Classic** | monaco, dracula, nord, gruvbox |
 | **Modern** | catppuccin, tokyo-night, one-dark, rose-pine |
-| **Vibrant** | cyberpunk, aurora, midnight-blue, solarized-dark |
+| **Vibrant** | cyberpunk, aurora, midnight-blue, solarized-dark, vibrant, cyberpunk-neon |
 | **Special** | hacker-vibe (dimmed) |
 
 **Навігація**: `Ctrl+T` швидка зміна теми, `Settings → Appearance` вибір з превʼю
@@ -233,7 +233,7 @@ state.validate_state()  # ✅ Повна валідація схеми
 
 ### 8.2 MyPy Type Checking
 ```bash
-mypy core/trinity.py --config-file=setup.cfg
+mypy core/trinity/ --config-file=setup.cfg
 ```
 
 ### 8.3 State Initialization Logging
