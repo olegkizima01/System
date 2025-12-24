@@ -668,6 +668,12 @@ class MCPToolRegistry:
             return f"xpath={selector}"
         return f"css={selector}"
 
+    def _adapt_browser_open_url(self, args):
+        url = args.get("url", "")
+        return {
+            "code": f'async (page) => {{ await page.goto("{url}", {{ waitUntil: "domcontentloaded" }}); }}'
+        }
+
     def _adapt_browser_screenshot(self, args):
         path = args.get("path", "screenshot")
         import os
@@ -815,8 +821,8 @@ class MCPToolRegistry:
 
     def _try_mcp_routing(self, tool_name: str, args: Dict[str, Any], task_type: Optional[str] = None) -> Optional[str]:
         mcp_routing = {
-            "browser_open_url": ("playwright", "browser_navigate"),
-            "browser_navigate": ("playwright", "browser_navigate"),
+            "browser_open_url": ("playwright", "browser_run_code"),
+            "browser_navigate": ("playwright", "browser_run_code"),
             "browser_click_element": ("playwright", "browser_run_code"),
             "browser_type_text": ("playwright", "browser_run_code"),
             "browser_screenshot": ("playwright", "browser_take_screenshot"),
@@ -862,9 +868,12 @@ class MCPToolRegistry:
                 if res_dict.get("success"):
                     data = res_dict.get("data", "")
                     
-                    # Truncate massive snapshots to keep LLM context clean
-                    if len(data) > 1000 and tool_name in ["browser_open_url", "browser_navigate"]:
-                        data = data[:1000] + "\n... [TRUNCATED for brevity, use browser_snapshot for details] ..."
+                    # Truncation logic: protect LLM context while ensuring visibility
+                    limit = 100000 if tool_name in ["browser_snapshot", "browser_get_content"] else 30000
+                    
+                    if len(data) > limit:
+                        tip = " [Use browser_snapshot for full details]" if tool_name != "browser_snapshot" else ""
+                        data = data[:limit] + f"\n... [TRUNCATED at {limit} chars for efficiency{tip}] ..."
                     
                     # Special post-processing for press_enter
                     if tool_name == "browser_type_text" and args.get("press_enter"):
