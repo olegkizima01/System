@@ -4,7 +4,7 @@
 
 Atlas — це не просто автоматизатор, а **автономний мультиагентний оператор macOS**, що сприймає екран (Vision-First), планує (Meta-Planning 2.1), і виконує дії через MCP інструменти.
 
-**Актуальний стан: Грудень 2025 (Cognitive 2.1 + Trinity Improvements v1.1)**
+**Актуальний стан: Грудень 2025 (Pure Native Architecture | Trinity 2.5)**
 
 ---
 
@@ -98,17 +98,11 @@ graph TD
 - **Context7 MCP**: Документація бібліотек
 - **SonarQube MCP**: Quality gate та аналіз коду
 
-### Intelligent MCP Routing (`AUTO` mode)
-Динамічне перемикання між клієнтами та "Оригінальне Парування":
-- **Native SDK**: Високопродуктивне підключення через офіційний Python MCP SDK.
-- **Continue MCP**: Оптимізовано для локальної розробки (використовує `cn` CLI).
-- **Cline (Claude Dev)**: Спеціаліст для складних браузерних та системних завдань (через `npx cline`).
-- **Originality Pairing**: Автоматична маршрутизація інструментів до їхніх "рідних" клієнтів (наприклад, `playwright.*` -> **Cline**).
-
-### Meta-Task Delegation
-Нова парадигма виконання, де **Atlas** може делегувати цілі підзавдання (Meta-Tasks) потужним клієнтам:
-- Використання `meta.execute_task` для складних BROWSER або DEV операцій.
-- Зменшення кількості ітерацій основного циклу за рахунок нативності виконання.
+### Intelligent MCP Architecture
+Всі інструменти тепер працюють через єдиний високопродуктивний **Native SDK Client**, що забезпечує максимальну швидкість та надійність:
+- **Native SDK (Python)**: Пряме підключення до MCP серверів через офіційний протокол.
+- **Dynamic Tool Discovery**: Система автоматично виявляє всі доступні інструменти (`playwright.*`, `context7.*` тощо) без хардкоду.
+- **Simplified Routing**: Відмова від надлишкових CLI-обгорток (Cline/Continue) на користь чистої API-взаємодії.
 
 ---
 
@@ -243,5 +237,5 @@ system-vision [args]
 
 ---
 
-*Останнє оновлення: 24 грудня 2025 р. (Trinity 2.2 + Original Client Routing)*
+*Останнє оновлення: 24 грудня 2025 р. (Trinity 2.5 - Pure Native Architecture)*
 *Детальна документація: [docs/atlas.md](docs/atlas.md)*

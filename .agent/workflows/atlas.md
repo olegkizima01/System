@@ -3,7 +3,7 @@ description: Authoritative guide for Project Atlas architecture, Cognitive 2.0 m
 ---
 
 # Project Atlas Workflow Guide
-**Cognitive 2.1 + Trinity Modular v2.0 | Грудень 2025**
+**Pure Native Architecture | Trinity 2.5 | Грудень 2025**
 
 Єдине джерело правди про фундаментальні принципи роботи системи Atlas (Trinity Runtime).
 
@@ -195,12 +195,12 @@ context_manager.update_context(result)
 - **Context7 MCP**: Доступ до документації бібліотек
 - **SonarQube MCP**: Quality gate та аналіз коду
 
-### Intelligent MCP Client Support
-Система підтримує три взаємодоповнюючі клієнти з автоматичною маршрутизацією (`AUTO` mode):
-- **Native SDK (official)**: Основний клієнт для високопродуктивної прямої взаємодії з MCP серверами.
-- **Continue MCP (cn)**: Оптимізований клієнт для крос-файлових операцій та локальної розробки.
-- **Cline (npx)**: Спеціалізований клієнт для складних браузерних місій та системного аналізу.
-- **Meta-Task Delegation**: Здатність делегувати цілі підмісії (наприклад, "Досліди структуру репозиторію та виправ баги") через `meta.execute_task`.
+### Intelligent MCP Architecture
+Система використовує єдиний, оптимізований стандарт взаємодії з інструментами:
+- **Native SDK Client**: Основний і єдиний клієнт для високопродуктивної прямої взаємодії з MCP серверами через офіційний Python SDK.
+- **Dynamic Discovery**: Відмова від хардкоду інструментів. Всі можливості серверів (`playwright`, `context7`, `memory`) виявляються динамічно при кожному запуску.
+- **Unified Routing**: Всі виклики автоматично маршрутизуються через Native-клієнт, що усуває затримки та конфлікти версій, характерні для CLI-обгорток.
+- **Meta-Task Execution**: Підтримка складних підзавдань через `meta.execute_task`, що дозволяє агенту оперувати високорівневими командами.
 
 ---
 
@@ -344,4 +344,4 @@ StateInitLogger().log_initial_state("Завдання", state_dict)
 
 ---
 
-*Останнє оновлення: 24 грудня 2025 р. - Trinity Modular Package v2.2 (Original Client Routing)*
+*Останнє оновлення: 24 грудня 2025 р. - Trinity 2.5 (Pure Native Architecture)*
