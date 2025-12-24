@@ -447,19 +447,24 @@ class MCPToolRegistry:
         self.register_tool("rag_query", query_memory_tool, "Query memory. Args: category (str), query (str)")
 
     def _register_browser_tools(self):
-        self.register_tool("browser_open_url", browser_open_url, "Open URL in browser. Args: url (str), headless (bool=False). Wait 3-5s after for page load.")
-        self.register_tool("browser_navigate", browser_navigate, "Navigate to URL. Args: url (str), headless (bool=False)")
-        self.register_tool("browser_click_element", browser_click_element, "Click element. Args: selector (CSS selector str). Use playwright.playwright_get_visible_html to find selectors first!")
-        self.register_tool("browser_type_text", browser_type_text, "Type text in input. Args: selector (str), text (str), press_enter (bool). YouTube: [name='search_query'], Google: textarea[name='q']")
-        self.register_tool("browser_press_key", browser_press_key, "Press a key in browser. Args: key (str)")
-        self.register_tool("browser_screenshot", browser_screenshot, "Take screenshot of browser. Args: path (optional str)")
-        self.register_tool("browser_snapshot", browser_snapshot, "Get visible text from page for verification. Args: none")
-        self.register_tool("browser_get_content", browser_get_content, "Get page/element text. Args: none")
-        self.register_tool("browser_get_links", browser_get_links, "Extract all clickable links from the current page. Args: none")
-        self.register_tool("browser_execute_script", browser_execute_script, "Run JS in browser. Args: script (str)")
-        self.register_tool("browser_ensure_ready", browser_ensure_ready, "Check if browser is ready. Args: none")
-        self.register_tool("browser_close", browser_close, "Close browser. Args: none")
-        self.register_tool("browser_search_duckduckgo", browser_search_duckduckgo, "Search using DuckDuckGo (CAPTCHA-resistant, use when Google blocked). Args: query (str), headless (bool=False). Returns search result links.")
+        """
+        Browser tools are now DYNAMICALLY DISCOVERED from Playwright MCP server.
+        
+        Instead of hardcoding browser_* tools here, they are:
+        1. Listed via NativeMCPClient.list_tools() → playwright.browser_*
+        2. Executed via MCPClientManager.execute("playwright.browser_*", args)
+        
+        To use browser tools, call:
+        - playwright.browser_navigate
+        - playwright.browser_click
+        - playwright.browser_type
+        - playwright.browser_snapshot
+        - etc.
+        
+        The MCP server defines the tool schema, no manual adaptation needed.
+        """
+        # Removed 13 hardcoded browser_* tools that duplicated MCP server functionality
+        pass
 
     def _register_recorder_tools(self):
         def _recorder_action(action: str) -> Any:
