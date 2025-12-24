@@ -168,24 +168,34 @@ class GrishaMixin:
         lower = content.lower()
         res_str = "\\n".join(executed_results).lower()
         
+        # Priority 1: Explicit markers in brackets
         if "[failed]" in lower:
             return "failed", "meta_planner"
-        if "[verified]" in lower or "[step_completed]" in lower or "[achievement_confirmed]" in lower:
+        if any(m in lower for m in ["[verified]", "[step_completed]", "[achievement_confirmed]", "[ok]"]):
             return "success", "meta_planner"
         if "[uncertain]" in lower or "[captcha]" in lower:
             return "uncertain", "meta_planner"
 
+        # Priority 2: Failure indicators
         if any(m in lower or f"[{m}]" in lower for m in FAILURE_MARKERS) or ("[test_verification]" in lower and "failed" in lower):
             return "failed", "meta_planner"
-        if '"status": "error"' in res_str:
+        if '"status": "error"' in res_str or '"status": "captcha"' in res_str:
             return "failed", "meta_planner"
             
+        # Priority 3: Success keywords with negation check
         for kw in SUCCESS_MARKERS:
             if kw.lower() in lower:
-                idx = lower.find(kw.lower())
-                pre = lower[max(0, idx-25):idx]
-                if not re.search(NEGATION_PATTERNS.get(self.preferred_language, "not |never "), pre):
+                # Find all occurrences and check for negations
+                pattern = f"(?i)(?:{NEGATION_PATTERNS.get(self.preferred_language, 'not |never ')})?\\s*{re.escape(kw)}"
+                match = re.search(pattern, lower)
+                if match and not any(neg in match.group(0).lower() for neg in NEGATION_PATTERNS.get(self.preferred_language, "not |never ").split('|')):
                     return "success", "meta_planner"
+        
+        # Priority 4: If Tetyana reported success and there are no failure indicators, 
+        # assume success if it's a simple navigation
+        if STEP_COMPLETED_MARKER.lower() in lower and "failed" not in lower:
+             return "success", "meta_planner"
+
         return "uncertain", "meta_planner"
 
     def _handle_grisha_streak(self, state, status, content):

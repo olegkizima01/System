@@ -141,12 +141,12 @@ class MetaPlannerMixin:
             return "replan" if cfg.get("recovery_mode") == "full_replan" else "repair"
             
         if status == "uncertain":
-            # If we've been uncertain for more than 2 attempts on the same step, 
+            # If we've been uncertain for more than 1 attempt on the same step, 
             # something is wrong with the plan or the agent's ability to verify.
-            # Trigger 'repair' to try an alternative approach or context gathering.
-            if fail_count >= 2:
+            # Especially for browser tasks, repeating a click/navigate is a loop.
+            if fail_count >= 1:
                 if self.verbose: 
-                    print(f"⚠️ [Meta-Planner] Persistent uncertainty ({fail_count} tries). Triggering repair.")
+                    print(f"⚠️ [Meta-Planner] Uncertainty detected ({fail_count} tries). Triggering repair to avoid loops.")
                 return "repair"
             return "proceed"
             
