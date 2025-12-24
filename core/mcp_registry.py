@@ -793,8 +793,24 @@ class MCPToolRegistry:
         # We construct the tool name as "server.tool" (e.g., "playwright.playwright_navigate")
         full_tool_name = f"{provider_name}.{mcp_tool}"
         
-        # 1. PRIORITY: Check legacy/standard ExternalMCPProvider first for mapped tools
-        # These tools (browser, applescript) require persistent stdio sessions.
+        # 1. PRIORITY: Delegate to MCP Client Manager (Native SDK preferred)
+        try:
+            from mcp_integration.core.mcp_client_manager import MCPClientType
+            # If we are in Native or Auto mode, we should try the manager first as it uses the modern SDK
+            if self._mcp_client_manager.active_client in [MCPClientType.NATIVE, MCPClientType.AUTO]:
+                # Try simple name first
+                res = self._mcp_client_manager.execute(mcp_tool, args, task_type=task_type)
+                if res.get("success"):
+                    return res.get("data", "")
+                
+                # Try prefixed name (some servers might require it or manager expects it)
+                res = self._mcp_client_manager.execute(full_tool_name, args, task_type=task_type)
+                if res.get("success"):
+                    return res.get("data", "")
+        except Exception as e:
+            logger.debug(f"MCP Manager routing failed for {full_tool_name}: {e}")
+
+        # 2. FALLBACK: Check legacy/static ExternalMCPProvider
         if provider_name in self._external_providers:
             provider = self._external_providers[provider_name]
             try:

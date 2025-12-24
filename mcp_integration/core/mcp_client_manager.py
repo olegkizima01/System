@@ -36,6 +36,7 @@ class MCPClientType(Enum):
     """Available MCP client types."""
     OPEN_MCP = "open_mcp"      # CopilotKit/open-mcp-client
     CONTINUE = "continue"      # @continuedev/cli
+    NATIVE = "native"          # Official MCP Python SDK (Recommended)
     AUTO = "auto"              # Automatic switching based on task
 
 
@@ -154,6 +155,17 @@ class MCPClientManager:
             logger.warning(f"ContinueMCPClient not available (ImportError): {e}")
         except Exception as e:
             logger.error(f"Failed to initialize ContinueMCPClient: {e}")
+
+        try:
+            from .native_sdk_client import NativeMCPClient
+            native_cfg = clients_config.get("native", {})
+            # Ensure native_cfg knows where the main config is for server discovery
+            native_cfg["mcp_config_path"] = self._config_path
+            self._clients[MCPClientType.NATIVE] = NativeMCPClient(native_cfg)
+        except ImportError as e:
+            logger.warning(f"NativeMCPClient not available (ImportError): {e}")
+        except Exception as e:
+            logger.error(f"Failed to initialize NativeMCPClient: {e}")
     
     @property
     def active_client(self) -> MCPClientType:
@@ -166,6 +178,7 @@ class MCPClientManager:
         names = {
             MCPClientType.OPEN_MCP: "Open-MCP (CopilotKit)",
             MCPClientType.CONTINUE: "Continue CLI",
+            MCPClientType.NATIVE: "Native SDK (High-Performance)",
             MCPClientType.AUTO: "Auto (Task-based)"
         }
         return names.get(self._active_type, "Unknown")
@@ -179,7 +192,8 @@ class MCPClientManager:
         if task_type and task_type.upper() == "DEV":
             return MCPClientType.CONTINUE
             
-        return MCPClientType.OPEN_MCP
+        # Default to Native for performance
+        return MCPClientType.NATIVE
     
     def get_client(self, client_type: Optional[MCPClientType] = None, task_type: Optional[str] = None) -> Optional[BaseMCPClient]:
         """Get a client instance. If in AUTO, resolves based on task_type."""
@@ -299,7 +313,8 @@ class MCPClientManager:
                 "type": ct.value,
                 "name": {
                     MCPClientType.OPEN_MCP: "Open-MCP (CopilotKit)",
-                    MCPClientType.CONTINUE: "Continue CLI"
+                    MCPClientType.CONTINUE: "Continue CLI",
+                    MCPClientType.NATIVE: "Native SDK"
                 }.get(ct, ct.value),
                 "available": client is not None,
                 "connected": client.is_connected if client else False,

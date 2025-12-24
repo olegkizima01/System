@@ -1,6 +1,13 @@
 {
-  "activeClient": "auto",
+  "activeClient": "native",
   "mcpClients": {
+    "native": {
+      "name": "Native SDK Client",
+      "type": "python_sdk",
+      "enabled": true,
+      "config": {},
+      "mcp_config_path": "/Users/dev/Documents/GitHub/System/mcp_integration/config/mcp_config.json"
+    },
     "open_mcp": {
       "name": "CopilotKit Open-MCP",
       "type": "python",
