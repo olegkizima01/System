@@ -140,6 +140,19 @@
       "timeout": 10000,
       "retryAttempts": 1,
       "category": "fallback"
+    },
+    "memory": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-memory"
+      ],
+      "env": {},
+      "description": "Official Anthropic Memory Server for knowledge-graph based persistent memory.",
+      "category": "memory",
+      "enabled": true,
+      "timeout": 30000,
+      "retryAttempts": 2
     }
   },
   "fallbackChain": [
