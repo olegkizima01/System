@@ -7,13 +7,14 @@ import sys
 import logging
 from typing import List, Dict, Any
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
+# Configure logging to stderr
+logging.basicConfig(level=logging.INFO, stream=sys.stderr)
 logger = logging.getLogger("local_server")
 
 def main():
     logger.info("Starting Local Fallback MCP Server...")
-    print("Local Fallback MCP Server running...")
+    # Avoid printing to stdout as it breaks MCP protocol
+    pass
 
 if __name__ == "__main__":
     main()

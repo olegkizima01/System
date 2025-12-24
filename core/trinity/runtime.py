@@ -170,6 +170,9 @@ class TrinityRuntime(
 
     def run(self, task: str, gui_mode: str = "auto", execution_mode: str = "native", recursion_limit: int = 200) -> Generator[Dict[str, Any], None, None]:
         """Core execution loop using the LangGraph workflow."""
+        # 1. Classify task
+        task_type, is_dev, is_media = self._classify_task(task)
+        
         state = {
             "messages": [HumanMessage(content=task)],
             "original_task": task,
@@ -184,7 +187,10 @@ class TrinityRuntime(
             "current_step_fail_count": 0,
             "history_plan_execution": [],
             "plan": [],
-            "requires_windsurf": False # Let meta-planner decide
+            "task_type": task_type,
+            "is_dev": is_dev,
+            "is_media": is_media,
+            "requires_windsurf": False 
         }
 
         try:

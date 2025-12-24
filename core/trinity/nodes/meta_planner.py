@@ -182,6 +182,71 @@ class MetaPlannerMixin:
             "retrieved_context": state.get("retrieved_context", "")
         }
 
+    def _classify_task_llm(self, task: str) -> Optional[Dict[str, Any]]:
+        """Classify task using LLM for better intent recognition."""
+        try:
+            sys_prompt = (
+                "You are a task router for a macOS developer assistant. "
+                "Classify the user request into one of: DEV, GENERAL. "
+                "DEV means software development work (debugging, code analysis, git, tests, repo files). "
+                "GENERAL means completely unrelated non-technical/personal tasks. "
+                "Default to DEV if there is any technical context."
+                "Return STRICT JSON only with keys: task_type (DEV|GENERAL), confidence (0..1), reason (string)."
+            )
+            msgs = [
+                SystemMessage(content=sys_prompt),
+                HumanMessage(content=str(task or "")),
+            ]
+            resp = self.llm.invoke(msgs)
+            data = extract_json_object(getattr(resp, "content", ""))
+            if not data: return None
+            
+            task_type = str(data.get("task_type") or "").strip().upper()
+            if task_type not in {"DEV", "GENERAL"}: return None
+            
+            return {
+                "task_type": task_type,
+                "confidence": float(data.get("confidence", 0.0)),
+                "reason": str(data.get("reason") or ""),
+            }
+        except Exception:
+            return None
+
+    def _classify_task_fallback(self, task: str) -> Dict[str, Any]:
+        """Keyword-based fallback for task classification."""
+        task_lower = str(task or "").lower()
+        # Use keywords from self (inherited from TrinityRuntime)
+        dev_keywords = getattr(self, "DEV_KEYWORDS", set())
+        general_keywords = getattr(self, "NON_DEV_KEYWORDS", set())
+
+        for keyword in general_keywords:
+            if keyword in task_lower:
+                return {"task_type": "GENERAL", "confidence": 0.2, "reason": "keyword_fallback: non_dev"}
+
+        for keyword in dev_keywords:
+            if keyword in task_lower:
+                return {"task_type": "DEV", "confidence": 0.2, "reason": "keyword_fallback: dev"}
+
+        return {"task_type": "UNKNOWN", "confidence": 0.1, "reason": "keyword_fallback: unknown"}
+
+    def _classify_task(self, task: str) -> tuple[str, bool, bool]:
+        """
+        Classify task as DEV or GENERAL.
+        Returns: (task_type, is_dev, is_media)
+        """
+        from core.constants import MEDIA_KEYWORDS
+        task_lower = str(task or "").lower()
+        is_media = any(k in task_lower for k in MEDIA_KEYWORDS)
+        
+        llm_res = self._classify_task_llm(task)
+        if llm_res:
+            task_type = llm_res.get("task_type", "UNKNOWN")
+            return (task_type, task_type == "DEV", is_media)
+            
+        fb = self._classify_task_fallback(task)
+        task_type = fb.get("task_type", "UNKNOWN")
+        return (task_type, task_type != "GENERAL", is_media)
+
     def _perform_selective_rag(self, state: TrinityState, meta_config: Dict, last_msg: str):
         query = meta_config.get("retrieval_query", last_msg)
         limit = int(meta_config.get("n_results", 3))

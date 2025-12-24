@@ -98,3 +98,65 @@ class TrinitySelfHealingMixin:
             "auto_resume_available": False,
             "background_mode": True
         }
+    def _enrich_context_with_sonar(self, state: TrinityState) -> TrinityState:
+        """Fetch Sonar issues and append a summary to state['retrieved_context']."""
+        try:
+            if not state.get("is_dev"):
+                return state
+
+            sonar = self._fetch_sonar_issues()
+            if not sonar or "error" in sonar:
+                return state
+
+            parts = [f"SonarQube summary (project={sonar.get('project_key')}): issues={sonar.get('issues_count')}"]
+            for it in (sonar.get('issues') or [])[:10]:
+                parts.append(f"- [{it.get('severity')}] {it.get('message')} ({it.get('component')}:{it.get('line')})")
+
+            summary = "\n".join(parts)
+            current = str(state.get("retrieved_context") or "").strip()
+            state["retrieved_context"] = (current + "\n\n" + summary).strip() if current else summary
+            
+            if hasattr(self, 'verbose') and self.verbose:
+                self.logger.info(f"🔎 Sonar enrichment added to context (project={sonar.get('project_key')})")
+            return state
+        except Exception:
+            return state
+
+    def _fetch_sonar_issues(self, project_key: Optional[str] = None, severities: str = "CRITICAL,BLOCKER,MAJOR") -> Optional[Dict[str, Any]]:
+        """Fetch SonarQube issues and quality gate status."""
+        try:
+            import requests # Ensure requests is available
+            api_key = os.getenv("SONAR_API_KEY")
+            if not api_key: return None
+
+            project_key = project_key or self._get_sonar_project_key()
+            if not project_key: return None
+
+            base = os.getenv("SONAR_URL", "https://sonarcloud.io").rstrip("/")
+            issues_url = f"{base}/api/issues/search"
+            params = {"componentKeys": project_key, "severities": severities, "resolved": "false", "ps": 50}
+            
+            resp = requests.get(issues_url, params=params, auth=(api_key, ""), timeout=10)
+            if resp.status_code != 200:
+                return {"error": f"sonar_api_failed:{resp.status_code}"}
+                
+            data = resp.json()
+            issues = []
+            for it in data.get("issues", [])[:20]:
+                issues.append({
+                    "message": it.get("message"),
+                    "severity": it.get("severity"),
+                    "component": it.get("component"),
+                    "line": it.get("textRange", {}).get("startLine"),
+                })
+
+            return {"project_key": project_key, "issues_count": data.get("total", 0), "issues": issues}
+        except Exception:
+            return None
+
+    def _get_sonar_project_key(self) -> Optional[str]:
+        """Try to determine Sonar project key from environment or files."""
+        key = os.getenv("SONAR_PROJECT_KEY")
+        if key: return key
+        # Fallback to current directory name
+        return os.path.basename(os.getcwd())

@@ -81,6 +81,55 @@ class TrinityExecutionMixin:
         # 5. Success - Check for Completion
         return self._check_knowledge_transition(state, step_count)
 
+    def _create_vibe_assistant_pause_state(self, state: TrinityState, pause_reason: str, message: str) -> Dict[str, Any]:
+        """Create a pause state for Vibe CLI Assistant intervention."""
+        # Use simple dict instead of TrinityState for the pause_info itself to avoid recursion
+        pause_info = {
+            "reason": pause_reason,
+            "message": message,
+            "timestamp": datetime.now().isoformat() if hasattr(self, 'datetime') else str(time.time()),
+            "status": "awaiting_human_input"
+        }
+        
+        if state.get("original_task"):
+            pause_info["original_task"] = state["original_task"]
+        
+        # Attach diagnostics
+        try:
+            diags = self._collect_pause_diagnostics(state)
+            if diags:
+                pause_info["diagnostics"] = diags
+        except Exception:
+            pass
+        
+        # Notify Vibe Assistant
+        if hasattr(self, 'vibe_assistant'):
+            try:
+                self.vibe_assistant.handle_pause_request(pause_info)
+            except Exception:
+                pass
+        
+        return pause_info
+
+    def _collect_pause_diagnostics(self, state: TrinityState, tools: Optional[list] = None) -> Dict[str, Any]:
+        """Collect truncated diagnostics for a Vibe pause."""
+        diagnostics = {"files": [], "diffs": [], "tools": tools or [], "stack_trace": None}
+        # Best-effort collection
+        try:
+            if hasattr(self, '_get_repo_changes'):
+                changes = self._get_repo_changes()
+                if isinstance(changes, dict) and "changed_files" in changes:
+                    diagnostics["files"] = list(changes["changed_files"])[:5]
+            
+            # Add sonar info if available
+            if hasattr(self, '_fetch_sonar_issues'):
+                sonar = self._fetch_sonar_issues()
+                if sonar and "error" not in sonar:
+                    diagnostics["sonar"] = sonar
+        except Exception:
+            pass
+        return diagnostics
+
     def _handle_existing_pause(self, state, pause):
         """Handle execution when a pause state is active."""
         # Check if pause is resolved? (Runtime loop usually handles waiting)

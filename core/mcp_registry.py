@@ -616,7 +616,7 @@ class MCPToolRegistry:
             "browser_type_text": self._adapt_browser_type,
             "browser_screenshot": self._adapt_browser_screenshot,
             "browser_press_key": self._adapt_browser_key,
-            "browser_get_content": lambda a: {"expression": "document.body.innerText"},
+            "browser_get_content": lambda a: {"function": "() => document.body.innerText"},
             "browser_hover": lambda a: {"selector": a.get("selector", "")},
             "browser_select": lambda a: {"selector": a.get("selector", ""), "value": a.get("value", "")},
             "run_applescript": lambda a: {"script": a.get("script", "")}
