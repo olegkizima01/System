@@ -638,25 +638,23 @@ class MCPToolRegistry:
 
     def _adapt_browser_click(self, args):
         selector = self._smart_selector(args.get("selector", ""))
-        return {
-            "code": f'async (page) => {{ await page.click("{selector}"); }}'
-        }
+        # Use a robust JS snippet that waits for the element
+        code = f"""async (page) => {{
+            await page.waitForSelector("{selector}", {{ state: "visible", timeout: 10000 }});
+            await page.click("{selector}");
+        }}"""
+        return {"code": code}
 
     def _adapt_browser_type(self, args):
         selector = self._smart_selector(args.get("selector", ""))
         text = args.get("text", "").replace('"', '\\"')
-        
-        code = f'async (page) => {{ \n  await page.fill("{selector}", "{text}");'
-        if args.get("press_enter"):
-            # Wait for navigation if pressing enter
-            code += f'\n  await Promise.all([\n    page.waitForLoadState("networkidle", {{ timeout: 10000 }}).catch(() => {{}}),\n    page.keyboard.press("Enter")\n  ]);'
-        else:
-            code += f'\n  await page.waitForLoadState("domcontentloaded", {{ timeout: 5000 }}).catch(() => {{}});'
-        code += '\n}'
-        
-        return {
-            "code": code
-        }
+        # Use a robust JS snippet that waits for the element and handles navigation
+        code = f"""async (page) => {{
+            await page.waitForSelector("{selector}", {{ state: "visible", timeout: 10000 }});
+            await page.fill("{selector}", "{text}");
+            {"await page.keyboard.press('Enter'); await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});" if args.get("press_enter") else ""}
+        }}"""
+        return {"code": code}
 
     def _smart_ref(self, selector: str) -> str:
         """Ensure selector is in a format `@playwright/mcp` understands (ref)."""
@@ -824,19 +822,28 @@ class MCPToolRegistry:
 
     def _try_mcp_routing(self, tool_name: str, args: Dict[str, Any], task_type: Optional[str] = None) -> Optional[str]:
         mcp_routing = {
+            # Navigation (Wait logic)
             "browser_open_url": ("playwright", "browser_run_code"),
             "browser_navigate": ("playwright", "browser_run_code"),
+            
+            # Navigation (Wait logic)
+            "browser_open_url": ("playwright", "browser_run_code"),
+            "browser_navigate": ("playwright", "browser_run_code"),
+            
+            # Interaction (Unified JS Bridge for reliability)
             "browser_click_element": ("playwright", "browser_run_code"),
             "browser_type_text": ("playwright", "browser_run_code"),
+            "browser_hover": ("playwright", "browser_run_code"),
+            "browser_select": ("playwright", "browser_run_code"),
+            
+            # Key/Link/Snapshot
             "browser_get_links": ("playwright", "browser_evaluate"),
             "browser_press_key": ("playwright", "browser_press_key"),
             "browser_screenshot": ("playwright", "browser_take_screenshot"),
             "browser_snapshot": ("playwright", "browser_snapshot"),
-            "browser_get_content": ("playwright", "browser_evaluate"),
-            "browser_close": ("playwright", "browser_close"),
-            "browser_press_key": ("playwright", "browser_press_key"),
-            "browser_hover": ("playwright", "browser_hover"),
-            "browser_select": ("playwright", "browser_select_option"),
+            "browser_get_content": ("playwright", "browser_get_content"),
+            "browser_evaluate": ("playwright", "browser_evaluate"),
+            "browser_run_code": ("playwright", "browser_run_code"),
             "browser_go_back": ("playwright", "browser_navigate_back"),
             "browser_go_forward": ("playwright", "browser_navigate_forward"),
             "run_applescript": ("applescript", "run_applescript"),
