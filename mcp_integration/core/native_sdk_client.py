@@ -9,6 +9,7 @@ import json
 import logging
 import os
 import threading
+from contextlib import AsyncExitStack
 from typing import Any, Dict, List, Optional
 
 # Silence ChromaDB/PostHog noise
@@ -31,6 +32,8 @@ class NativeMCPClient(BaseMCPClient):
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         super().__init__(config)
         self._sessions: Dict[str, ClientSession] = {}
+        self._exit_stacks: Dict[str, AsyncExitStack] = {}
+        self._session_locks: Dict[str, asyncio.Lock] = {}
         self._server_params: Dict[str, StdioServerParameters] = {}
         self._loop = asyncio.new_event_loop()
         self._thread = threading.Thread(target=self._run_loop, daemon=True)
@@ -59,11 +62,14 @@ class NativeMCPClient(BaseMCPClient):
         self._connected = False
 
     async def _close_session(self, name: str):
+        """Gracefully close a persistent session and its transport."""
+        if name in self._exit_stacks:
+            stack = self._exit_stacks.pop(name)
+            await stack.aclose()
         if name in self._sessions:
-            # Note: Context manager handling is better, but since we manage 
-            # multiple sessions, we use explicit cleanup if needed.
-            # Official SDK prefers 'async with stdio_client' which we use in execute.
-            pass
+            self._sessions.pop(name)
+        if name in self._session_locks:
+            self._session_locks.pop(name)
 
     def execute_tool(self, name: str, args: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -86,45 +92,60 @@ class NativeMCPClient(BaseMCPClient):
         return fut.result(timeout=60)
 
     async def _async_execute_tool(self, server_name: str, tool_name: str, args: Dict[str, Any]) -> Dict[str, Any]:
-        """Internal async implementation of tool execution."""
-        try:
-            # 1. Get server config
-            s_config = self._get_server_config(server_name)
-            if not s_config:
-                return {"success": False, "error": f"Server '{server_name}' not configured"}
+        """Internal async implementation with persistent session support."""
+        # 1. Ensure we have a lock for this server to prevent race conditions during init
+        if server_name not in self._session_locks:
+            self._session_locks[server_name] = asyncio.Lock()
+        
+        async with self._session_locks[server_name]:
+            try:
+                # 2. Get or create persistent session
+                session = self._sessions.get(server_name)
+                
+                if session is None:
+                    logger.info(f"🚀 Initializing persistent session for MCP server: {server_name}")
+                    s_config = self._get_server_config(server_name)
+                    if not s_config:
+                        return {"success": False, "error": f"Server '{server_name}' not configured"}
 
-            params = StdioServerParameters(
-                command=s_config["command"],
-                args=s_config.get("args", []),
-                env={**os.environ, **s_config.get("env", {})}
-            )
+                    params = StdioServerParameters(
+                        command=s_config["command"],
+                        args=s_config.get("args", []),
+                        env={**os.environ, **s_config.get("env", {})}
+                    )
 
-            # 2. Run session for this call (using modern SDK pattern)
-            async with stdio_client(params) as (read, write):
-                async with ClientSession(read, write) as session:
+                    stack = AsyncExitStack()
+                    read, write = await stack.enter_async_context(stdio_client(params))
+                    session = await stack.enter_async_context(ClientSession(read, write))
+                    
                     await session.initialize()
                     
-                    logger.debug(f"Calling MCP Tool: {server_name}.{tool_name}")
-                    result = await session.call_tool(tool_name, args)
-                    
-                    if result.isError:
-                        return {
-                            "success": False, 
-                            "error": "".join([c.text for c in result.content if hasattr(c, 'text')])
-                        }
-                    
-                    # Flatten output
-                    output_text = "\n".join([c.text for c in result.content if hasattr(c, 'text')])
-                    
+                    self._exit_stacks[server_name] = stack
+                    self._sessions[server_name] = session
+                    logger.info(f"✅ Persistent session for {server_name} ready.")
+                
+                # 3. Call tool
+                logger.debug(f"Calling MCP Tool (Persistent): {server_name}.{tool_name}")
+                result = await session.call_tool(tool_name, args)
+                
+                if result.isError:
                     return {
-                        "success": True,
-                        "data": output_text,
-                        "raw": str(result)
+                        "success": False, 
+                        "error": "".join([c.text for c in result.content if hasattr(c, 'text')])
                     }
+                
+                output_text = "\n".join([c.text for c in result.content if hasattr(c, 'text')])
+                return {
+                    "success": True,
+                    "data": output_text,
+                    "raw": str(result)
+                }
 
-        except Exception as e:
-            logger.error(f"Native MCP Error ({server_name}): {e}")
-            return {"success": False, "error": str(e)}
+            except Exception as e:
+                logger.error(f"Native MCP Error ({server_name}): {e}")
+                # Cleanup failed session to allow retry
+                await self._close_session(server_name)
+                return {"success": False, "error": str(e)}
 
     def _get_server_config(self, name: str) -> Optional[Dict[str, Any]]:
         """Retrieve server parameters from the global mcp_config.json."""
