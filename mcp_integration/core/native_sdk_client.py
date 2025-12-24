@@ -113,7 +113,7 @@ class NativeMCPClient(BaseMCPClient):
         # For now, we return failure or try a generic tool if available.
         return {
             "success": False, 
-            "error": f"Native SDK Client does not yet support high-level task execution. Suggest routing to 'continue' or 'cline'. (Targeted server: {target_server})"
+            "error": f"Native SDK Client: High-level delegation to '{target_server}' is not supported. Use 'continue' (dev) or 'cline' (browser) for task delegation via meta.execute_task."
         }
 
     async def _async_execute_tool(self, server_name: str, tool_name: str, args: Dict[str, Any]) -> Dict[str, Any]:

@@ -236,8 +236,8 @@ class MCPClientManager:
             task_type = task_type.lower()
             if task_type in ["dev", "code", "debug"]:
                 return MCPClientType.CONTINUE
-            if task_type in ["browser", "web", "search"]:
-                # Preferred for browser via Cline if available, else Native
+            if task_type in ["browser", "web", "search", "general"]:
+                # Preferred for browser or general high-level tasks via Cline if available, else Native
                 return MCPClientType.CLINE if MCPClientType.CLINE in self._clients else MCPClientType.NATIVE
             
         # Default to Native for performance
