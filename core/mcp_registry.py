@@ -220,6 +220,7 @@ class MCPToolRegistry:
         self._register_recorder_tools()
         self._register_response_tools()
         self._register_plugin_tools()
+        self._register_mcp_management_tools()
         
         # Initialize Dual Client Manager
         from mcp_integration.core.mcp_client_manager import get_mcp_client_manager, MCPClientType
@@ -510,6 +511,34 @@ class MCPToolRegistry:
                 print(f"✅ [MCP] Loaded {loaded_count} custom plugin(s)")
         except Exception as e:
             print(f"⚠️ [MCP] Plugin auto-discovery failed: {e}")
+
+    def _register_mcp_management_tools(self):
+        """Register tools for dynamic MCP server management."""
+        from system_ai.tools.mcp_management import (
+            mcp_server_list, mcp_server_add, mcp_server_remove,
+            mcp_server_inspect, mcp_launch_inspector_ui
+        )
+        
+        self.register_tool(
+            "mcp_server_list", mcp_server_list,
+            "List all configured MCP servers. Args: none"
+        )
+        self.register_tool(
+            "mcp_server_add", mcp_server_add,
+            "Add/Update an MCP server. Args: name, command, args?, env?, description?, category?"
+        )
+        self.register_tool(
+            "mcp_server_remove", mcp_server_remove,
+            "Remove an MCP server. Args: name"
+        )
+        self.register_tool(
+            "mcp_server_inspect", mcp_server_inspect,
+            "Health check an MCP server using Native SDK. Args: name"
+        )
+        self.register_tool(
+            "mcp_launch_inspector_ui", mcp_launch_inspector_ui,
+            "Launch official MCP Inspector UI for deep debugging. Args: name"
+        )
 
     def _register_external_mcp(self):
         """Register external MCP servers (Playwright, AppleScript, etc.) from config."""
