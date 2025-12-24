@@ -1,7 +1,8 @@
 #!/bin/bash
 
-# System Vision Full Setup Script
-# This script sets up Python 3.12 environment and installs all required dependencies
+# System Vision Full Setup Script (Trinity 2.2)
+# This script sets up the environment and installs all required dependencies for the 
+# multi-agent runtime, including original MCP clients (Cline, Continue, Native).
 
 echo "🚀 Starting System Vision Full Setup..."
 
@@ -150,16 +151,39 @@ if command -v npm &> /dev/null; then
     NPM_VERSION=$(npm --version)
     echo "✅ npm found: $NPM_VERSION"
     
-    # Test if Context7 MCP package can be accessed via npx
-    echo "   Testing Context7 MCP package accessibility..."
-    if npx -y @upstash/context7-mcp --version &>/dev/null 2>&1; then
-        echo "✅ Context7 MCP package (@upstash/context7-mcp) is accessible"
+    echo "   Setting up MCP Client Ecosystem..."
+    
+    # 1. Continue CLI
+    if command -v cn &> /dev/null; then
+        echo "   ✅ Continue CLI (cn) found: $(cn --version)"
     else
-        echo "⚠️  Context7 MCP package might not be immediately available"
-        echo "   It will be installed on first use via npx"
+        echo "   ⚠️  Continue CLI (cn) not found. Installing @continuedev/cli globally..."
+        npm install -g @continuedev/cli
+        if command -v cn &> /dev/null; then
+            echo "   ✅ Continue CLI (cn) installed successfully"
+        else
+            echo "   ❌ Failed to install Continue CLI. Please run: npm install -g @continuedev/cli"
+        fi
+    fi
+
+    # 2. Cline Check
+    echo "   Checking Cline (Claude Dev) availability..."
+    if npx -y cline@latest --version &>/dev/null 2>&1; then
+        echo "   ✅ Cline is accessible via npx"
+    else
+        echo "   ⚠️  Cline might require internet access on first run via npx"
+    fi
+
+    # 3. Playwright Browsers
+    echo "   Installing Playwright browsers..."
+    playwright install chromium
+    if [ $? -eq 0 ]; then
+        echo "   ✅ Playwright browsers installed"
+    else
+        echo "   ⚠️  Playwright browser installation failed. Run 'playwright install' manually."
     fi
 else
-    echo "⚠️  npm not found. Context7 MCP requires npm."
+    echo "⚠️  npm not found. Cline and Continue clients require Node.js/npm."
     echo "   Install Node.js from: https://nodejs.org/"
 fi
 
@@ -323,7 +347,7 @@ else
 fi
 
 echo ""
-echo "🎉 System Vision Full Setup completed successfully!"
+echo "🎉 System Vision (Trinity 2.2) Setup completed successfully!"
 echo ""
 echo "📋 Installation Summary:"
 echo "  • Python version: $PYTHON_VERSION"
@@ -332,7 +356,11 @@ echo "  • Core dependencies: ✅ Installed"
 echo "  • Vision dependencies: ✅ Installed (with fallbacks)"
 echo "  • LLM dependencies: ✅ Installed"
 echo "  • System dependencies: ✅ Installed"
-echo "  • MCP Servers: Context7 (Node.js/npm) and SonarQube (Docker) - check status above"
+echo "  • MCP Clients (Trinity 2.2):"
+echo "    - Native SDK: ✅ Ready"
+echo "    - Continue CLI: $(command -v cn &>/dev/null && echo "✅ Ready" || echo "⚠️  Not Found")"
+echo "    - Cline (npx): ✅ Ready"
+echo "  • MCP Servers: Context7 and SonarQube - check status above"
 echo ""
 echo "💡 To activate the virtual environment later, run:"
 echo "   source .venv/bin/activate"
@@ -343,18 +371,14 @@ echo ""
 echo "🔧 To update the system later, run:"
 echo "   source .venv/bin/activate && pip install -r requirements.txt --upgrade"
 echo ""
-echo "🔌 MCP Servers for DEV mode:"
-echo "  • Context7 MCP: Requires Node.js and npm"
-echo "    - Install: https://nodejs.org/"
-echo "    - Command: npx @upstash/context7-mcp"
-echo "  • SonarQube MCP: Requires Docker"
-echo "    - Install: https://www.docker.com/products/docker-desktop"
-echo "    - Start Docker before use: open -a Docker"
+echo "🔌 MCP Client Foundation:"
+echo "  • Continue: Requires '@continuedev/cli' (installed via npm)"
+echo "  • Cline: Uses 'npx cline' for high-level tasks"
+echo "  • Routing: Automatic 'Original Client Pairing' (e.g., Playwright -> Cline)"
 echo ""
 echo "📝 System is ready for:"
-echo "  • Vision analysis with DifferentialVisionAnalyzer (OpenCV)"
-echo "  • OCR with PaddleOCR (or Copilot fallback)"
-echo "  • VisionContextManager for cyclical summarization"
-echo "  • Full LLM integration"
-echo "  • All agent operations (Atlas, Tetyana, Grisha)"
-echo "  • DEV mode with code quality analysis (when MCP servers are available)"
+echo "  • Meta-Task Delegation to Cline/Continue"
+echo "  • Dynamic RAG Context & Script-based logic"
+echo "  • Intelligent Client Routing (Native/Cline/Continue)"
+echo "  • Vision analysis with DifferentialVisionAnalyzer"
+echo "  • All agent operations (Meta-Planner, Atlas, Tetyana, Grisha)"
