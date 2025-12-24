@@ -648,7 +648,10 @@ class MCPToolRegistry:
         
         code = f'async (page) => {{ \n  await page.fill("{selector}", "{text}");'
         if args.get("press_enter"):
-            code += f'\n  await page.keyboard.press("Enter");'
+            # Wait for navigation if pressing enter
+            code += f'\n  await Promise.all([\n    page.waitForLoadState("networkidle", {{ timeout: 10000 }}).catch(() => {{}}),\n    page.keyboard.press("Enter")\n  ]);'
+        else:
+            code += f'\n  await page.waitForLoadState("domcontentloaded", {{ timeout: 5000 }}).catch(() => {{}});'
         code += '\n}'
         
         return {
@@ -671,7 +674,7 @@ class MCPToolRegistry:
     def _adapt_browser_open_url(self, args):
         url = args.get("url", "")
         return {
-            "code": f'async (page) => {{ await page.goto("{url}", {{ waitUntil: "domcontentloaded" }}); }}'
+            "code": f'async (page) => {{ \n  await page.goto("{url}", {{ waitUntil: "domcontentloaded", timeout: 60000 }}); \n  await page.waitForLoadState("networkidle", {{ timeout: 10000 }}).catch(() => {{}});\n}}'
         }
 
     def _adapt_browser_screenshot(self, args):
