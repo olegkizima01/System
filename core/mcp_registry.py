@@ -870,8 +870,17 @@ class MCPToolRegistry:
                 if res_dict.get("success"):
                     data = res_dict.get("data", "")
                     
+                    # Phase 17: Focus Optimization
+                    # Strip snapshots ONLY for action tools that don't need to return page state
+                    # We KEEP them for open/navigate so the agent sees the landing page immediately
+                    action_tools_to_strip = ["browser_click_element", "browser_type_text"]
+                    if tool_name in action_tools_to_strip and "### Page Snapshot" in data:
+                        data = data.split("### Page Snapshot")[0].strip()
+                        data += "\n\n(Snapshot hidden for focus. Use browser_snapshot if you need to analyze page elements.)"
+                    
                     # Truncation logic: protect LLM context while ensuring visibility
-                    limit = 100000 if tool_name in ["browser_snapshot", "browser_get_content"] else 30000
+                    # Increased limits per user request (100k for snapshots, 40k for actions)
+                    limit = 100000 if tool_name in ["browser_snapshot", "browser_get_content"] else 40000
                     
                     if len(data) > limit:
                         tip = " [Use browser_snapshot for full details]" if tool_name != "browser_snapshot" else ""
