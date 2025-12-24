@@ -14,6 +14,7 @@ from core.vision_context import VisionContextManager
 from core.vibe_assistant import VibeCLIAssistant
 from tui.logger import get_logger, trace
 from providers.copilot import CopilotLLM
+from core.state_logger import log_initial_state, log_state_transition
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
 # Mixins
@@ -190,13 +191,28 @@ class TrinityRuntime(
             "task_type": task_type,
             "is_dev": is_dev,
             "is_media": is_media,
+            "is_media": is_media,
             "requires_windsurf": False 
         }
+
+        # Log initial state
+        log_initial_state(task, state)
 
         try:
             for event in self.workflow.stream(state, config={"recursion_limit": recursion_limit}):
                 # Process post-completion hooks if needed
                 for node_name, node_state in event.items():
+                    # Log transition/execution
+                    step = node_state.get("step_count", 0)
+                    status = node_state.get("last_step_status", "unknown")
+                    # We log that node_name just finished
+                    log_state_transition(
+                        from_agent="trinity", # Graph step
+                        to_agent=node_name,
+                        step_count=step,
+                        last_status=status
+                    )
+
                     if node_name == "knowledge" or node_state.get("current_agent") == "end":
                         self._handle_post_task_completion(task, node_state)
                 yield event

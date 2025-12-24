@@ -439,12 +439,12 @@ def agent_send(user_text: str) -> Tuple[bool, str]:
     
     use_stream = bool(getattr(state, "ui_streaming", True))
     if use_stream:
-        return _agent_send_with_stream(user_text)
+        return agent_send_with_stream(user_text)
 
-    return _agent_send_no_stream(user_text)
+    return agent_send_no_stream(user_text)
 
 
-def _agent_send_with_stream(user_text: str) -> Tuple[bool, str]:
+def agent_send_with_stream(user_text: str) -> Tuple[bool, str]:
     from tui.render import log, log_reserve_line, log_replace_at
     from tui.agents import ensure_agent_ready, agent_session
     
@@ -479,7 +479,7 @@ def _agent_send_with_stream(user_text: str) -> Tuple[bool, str]:
         return False, str(e)
 
 
-def _agent_send_no_stream(user_text: str) -> Tuple[bool, str]:
+def agent_send_no_stream(user_text: str) -> Tuple[bool, str]:
     from tui.agents import ensure_agent_ready, agent_session
     
     ok, msg = ensure_agent_ready()
@@ -762,8 +762,8 @@ _is_complex_task = is_complex_task
 _is_greeting = is_greeting
 _reset_agent_llm = reset_agent_llm
 _agent_send = agent_send
-_agent_send_with_stream = _agent_send_with_stream
-_agent_send_no_stream = _agent_send_no_stream
+_agent_send_with_stream = agent_send_with_stream
+_agent_send_no_stream = agent_send_no_stream
 _run_graph_agent_task = run_graph_agent_task
 
 def _process_graph_events(runtime, user_text, gui_mode_val, exec_mode, use_stream, stream_line_by_agent):

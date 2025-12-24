@@ -42,7 +42,9 @@ if _repo_root not in sys.path:
 
 from i18n import TOP_LANGS, lang_name, normalize_lang, tr
 from tui.state import AppState, MenuLevel, state
-from tui.logger import setup_logging, get_logger, log_exception, log_command_execution, setup_root_file_logging
+# Use unified core logging
+from core.logging_config import setup_global_logging, get_logger, log_exception
+from core.mcp import get_mcp_client_manager
 
 from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.data_structures import Point
@@ -60,9 +62,10 @@ from tui.cli_defaults import DEFAULT_CLEANUP_CONFIG
 from tui.cli_localization import AVAILABLE_LOCALES, LocalizationConfig
 
 
-# Setup root logging immediately
+# Setup logging immediately
 try:
-    setup_root_file_logging(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)))
+    # We pass a lambda to get state to avoid circular imports in the handler if needed
+    setup_global_logging(verbose=False, tui_state_callback=lambda: state)
 except Exception:
     pass
 from tui.themes import THEME_NAMES, THEMES
@@ -81,202 +84,164 @@ from tui.cli_paths import (
 
 # New modular imports
 from tui.permissions import (
-    macos_open_privacy_pane as _macos_open_privacy_pane_new,
-    macos_screen_recording_preflight as _macos_screen_recording_preflight_new,
-    macos_screen_recording_request_prompt as _macos_screen_recording_request_prompt_new,
-    macos_accessibility_is_trusted as _macos_accessibility_is_trusted_new,
-    macos_accessibility_request_prompt as _macos_accessibility_request_prompt_new,
-    macos_automation_check_system_events as _macos_automation_check_system_events_new,
-    permissions_wizard as _permissions_wizard_new,
-    CommandPermissions as CommandPermissionsNew,
-    is_confirmed_run as _is_confirmed_run_new,
-    is_confirmed_shell as _is_confirmed_shell_new,
-    is_confirmed_applescript as _is_confirmed_applescript_new,
-    is_confirmed_gui as _is_confirmed_gui_new,
-    is_confirmed_shortcuts as _is_confirmed_shortcuts_new,
-    permissions_from_text as _permissions_from_text_new,
+    macos_open_privacy_pane as _macos_open_privacy_pane,
+    macos_screen_recording_preflight as _macos_screen_recording_preflight,
+    macos_screen_recording_request_prompt as _macos_screen_recording_request_prompt,
+    macos_accessibility_is_trusted as _macos_accessibility_is_trusted,
+    macos_accessibility_request_prompt as _macos_accessibility_request_prompt,
+    macos_automation_check_system_events as _macos_automation_check_system_events,
+    permissions_wizard as _permissions_wizard,
+    CommandPermissions,
+    is_confirmed_run as _is_confirmed_run,
+    is_confirmed_shell as _is_confirmed_shell,
+    is_confirmed_applescript as _is_confirmed_applescript,
+    is_confirmed_gui as _is_confirmed_gui,
+    is_confirmed_shortcuts as _is_confirmed_shortcuts,
+    permissions_from_text as _permissions_from_text,
 )
 
 from tui.render import (
-    get_render_log_snapshot as _get_render_log_snapshot_new,
-    get_render_agents_snapshot as _get_render_agents_snapshot_new,
-    log as _log_new,
-    log_agent_message as _log_agent_message_new,
-    log_reserve_line as _log_reserve_line_new,
-    log_replace_at as _log_replace_at_new,
-    trim_logs_if_needed as _trim_logs_if_needed_new,
-    get_logs as _get_logs_new,
-    get_agent_messages as _get_agent_messages_new,
-    get_agent_cursor_position as _get_agent_cursor_position_new,
-    get_log_cursor_position as _get_log_cursor_position_new,
-    get_header as _get_header_new,
-    get_context as _get_context_new,
-    get_status as _get_status_new,
+    get_render_log_snapshot as _get_render_log_snapshot,
+    get_render_agents_snapshot as _get_render_agents_snapshot,
+    log as _log,
+    log_agent_message as _log_agent_message,
+    log_reserve_line as _log_reserve_line,
+    log_replace_at as _log_replace_at,
+    trim_logs_if_needed as _trim_logs_if_needed,
+    get_logs as _get_logs,
+    get_agent_messages as _get_agent_messages,
+    get_agent_cursor_position as _get_agent_cursor_position,
+    get_log_cursor_position as _get_log_cursor_position,
+    get_header as _get_header,
+    get_context as _get_context,
+    get_status as _get_status,
     get_agent_messages_buffer,
     get_agent_messages_lock,
     get_logs_lock,
 )
 
 from tui.cleanup import (
-    load_cleanup_config as _load_cleanup_config_new,
-    save_cleanup_config as _save_cleanup_config_new,
-    list_editors as _list_editors_new,
-    resolve_editor_arg as _resolve_editor_arg_new,
-    find_module as _find_module_new,
-    set_module_enabled as _set_module_enabled_new,
-    script_env as _script_env_new,
-    run_script as _run_script_new,
-    run_cleanup as _run_cleanup_new,
-    perform_install as _perform_install_new,
-    scan_traces as _scan_traces_new,
-    get_editors_list as _get_editors_list_new,
+    load_cleanup_config as _load_cleanup_config,
+    save_cleanup_config as _save_cleanup_config,
+    list_editors as _list_editors,
+    resolve_editor_arg as _resolve_editor_arg,
+    find_module as _find_module,
+    set_module_enabled as _set_module_enabled,
+    script_env as _script_env,
+    run_script as _run_script,
+    run_cleanup,  # Imported without alias to allow wrapper adaptation
+    perform_install as _perform_install,
+    scan_traces as _scan_traces,
+    get_editors_list,  # Imported without alias to allow wrapper adaptation
     ModuleRef,
 )
 
 from tui.agents import (
-    AgentTool as AgentToolNew,
-    AgentSession as AgentSessionNew,
-    agent_session as agent_session_new,
-    agent_chat_mode as agent_chat_mode_new,
-    load_env as _load_env_new,
-    get_llm_signature as _get_llm_signature_new,
-    ensure_agent_ready as _ensure_agent_ready_new,
-    is_complex_task as _is_complex_task_new,
-    is_greeting as _is_greeting_new,
-    reset_agent_llm as _reset_agent_llm_new,
-    agent_send as _agent_send_new,
-    _agent_send_with_stream as _agent_send_with_stream_new,
-    _agent_send_no_stream as _agent_send_no_stream_new,
-    run_graph_agent_task as _run_graph_agent_task_new,
-    load_llm_settings as _load_llm_settings_new,
-    save_llm_settings as _save_llm_settings_new,
-    init_agent_tools as _init_agent_tools_new,
+    AgentTool as AgentTool,
+    AgentSession as AgentSession,
+    agent_session as agent_session,
+    agent_chat_mode as agent_chat_mode,
+    load_env as _load_env,
+    get_llm_signature as _get_llm_signature,
+    ensure_agent_ready as _ensure_agent_ready,
+    is_complex_task as _is_complex_task,
+    is_greeting as _is_greeting,
+    reset_agent_llm as _reset_agent_llm,
+    agent_send as _agent_send_imported, # Rename to avoid conflict if we keep logic
+    agent_send_with_stream, # Unaliased
+    agent_send_no_stream, # Unaliased
+    run_graph_agent_task as _run_graph_agent_task,
+    load_llm_settings as _load_llm_settings,
+    save_llm_settings as _save_llm_settings,
+    init_agent_tools as _init_agent_tools,
 )
 
 from tui.monitoring import (
-    load_monitor_settings as _load_monitor_settings_new,
-    save_monitor_settings as _save_monitor_settings_new,
-    load_monitor_targets as _load_monitor_targets_new,
-    save_monitor_targets as _save_monitor_targets_new,
-    monitor_get_sudo_password as _monitor_get_sudo_password_new,
-    monitor_db_read_since_id as _monitor_db_read_since_id_new,
-    monitor_db_get_max_id as _monitor_db_get_max_id_new,
-    format_monitor_summary as _format_monitor_summary_new,
-    monitor_resolve_watch_items as _monitor_resolve_watch_items_new,
-    MonitorSummaryService as MonitorSummaryServiceNew,
-    MonitorMenuItem as MonitorMenuItemNew,
-    monitor_summary_service as monitor_summary_service_new,
-    monitor_start_selected as _monitor_start_selected_new,
-    monitor_stop_selected as _monitor_stop_selected_new,
-    monitor_summary_start_if_needed as _monitor_summary_start_if_needed_new,
-    monitor_summary_stop_if_needed as _monitor_summary_stop_if_needed_new,
-    tool_monitor_status as _tool_monitor_status_new,
-    tool_monitor_set_source as _tool_monitor_set_source_new,
-    tool_monitor_set_use_sudo as _tool_monitor_set_use_sudo_new,
-    tool_monitor_start as _tool_monitor_start_new,
-    tool_monitor_stop as _tool_monitor_stop_new,
-    tool_monitor_targets as _tool_monitor_targets_new,
+    load_monitor_settings as _load_monitor_settings,
+    save_monitor_settings as _save_monitor_settings,
+    load_monitor_targets as _load_monitor_targets,
+    save_monitor_targets as _save_monitor_targets,
+    monitor_get_sudo_password as _monitor_get_sudo_password,
+    monitor_db_read_since_id as _monitor_db_read_since_id,
+    monitor_db_get_max_id as _monitor_db_get_max_id,
+    format_monitor_summary as _format_monitor_summary,
+    monitor_resolve_watch_items as _monitor_resolve_watch_items,
+    MonitorSummaryService as MonitorSummaryService,
+    MonitorMenuItem as MonitorMenuItem,
+    monitor_summary_service as monitor_summary_service,
+    monitor_start_selected as _monitor_start_selected,
+    monitor_stop_selected as _monitor_stop_selected,
+    monitor_summary_start_if_needed as _monitor_summary_start_if_needed,
+    monitor_summary_stop_if_needed as _monitor_summary_stop_if_needed,
+    tool_monitor_status as _tool_monitor_status,
+    tool_monitor_set_source as _tool_monitor_set_source,
+    tool_monitor_set_use_sudo as _tool_monitor_set_use_sudo,
+    tool_monitor_start as _tool_monitor_start,
+    tool_monitor_stop as _tool_monitor_stop,
+    tool_monitor_targets as _tool_monitor_targets,
 )
 
 from tui.recordings import (
-    recordings_base_dir as _recordings_base_dir_new,
-    recordings_last_path as _recordings_last_path_new,
-    recordings_save_last as _recordings_save_last_new,
-    recordings_load_last as _recordings_load_last_new,
-    recordings_list_session_dirs as _recordings_list_session_dirs_new,
-    recordings_read_meta as _recordings_read_meta_new,
-    recordings_update_meta as _recordings_update_meta_new,
-    recordings_ensure_meta_name as _recordings_ensure_meta_name_new,
-    recordings_resolve_last_dir as _recordings_resolve_last_dir_new,
-    extract_automation_title as _extract_automation_title_new,
-    extract_automation_prompt as _extract_automation_prompt_new,
-    get_recorder_service as _get_recorder_service_new,
-    custom_tasks_allowed as _custom_tasks_allowed_new,
-    custom_task_recorder_start as _custom_task_recorder_start_new,
-    custom_task_recorder_stop as _custom_task_recorder_stop_new,
-    custom_task_recorder_open_last as _custom_task_recorder_open_last_new,
-    analyze_recording_bg as _analyze_recording_bg_new,
-    start_recording_analysis as _start_recording_analysis_new,
+    recordings_base_dir as _recordings_base_dir,
+    recordings_last_path as _recordings_last_path,
+    recordings_save_last as _recordings_save_last,
+    recordings_load_last as _recordings_load_last,
+    recordings_list_session_dirs as _recordings_list_session_dirs,
+    recordings_read_meta as _recordings_read_meta,
+    recordings_update_meta as _recordings_update_meta,
+    recordings_ensure_meta_name as _recordings_ensure_meta_name,
+    recordings_resolve_last_dir as _recordings_resolve_last_dir,
+    extract_automation_title as _extract_automation_title,
+    extract_automation_prompt as _extract_automation_prompt,
+    get_recorder_service as _get_recorder_service,
+    custom_tasks_allowed as _custom_tasks_allowed,
+    custom_task_recorder_start as _custom_task_recorder_start,
+    custom_task_recorder_stop as _custom_task_recorder_stop,
+    custom_task_recorder_open_last as _custom_task_recorder_open_last,
+    analyze_recording_bg, # Unaliased
+    start_recording_analysis as _start_recording_analysis,
 )
 
 from tui.commands import (
-    clear_agent_pause_state as _clear_agent_pause_state_new,
-    set_agent_pause as _set_agent_pause_new,
-    resume_paused_agent as _resume_paused_agent_new,
-    handle_command as _handle_command_new,
-    tool_app_command as _tool_app_command_new,
-    handle_input as _handle_input_new,
-    get_input_prompt as _get_input_prompt_new,
-    get_prompt_width as _get_prompt_width_new,
+    clear_agent_pause_state as _clear_agent_pause_state,
+    set_agent_pause as _set_agent_pause,
+    resume_paused_agent as _resume_paused_agent,
+    handle_command as _handle_command,
+    tool_app_command as _tool_app_command,
+    handle_input as _handle_input,
+    get_input_prompt as _get_input_prompt,
+    get_prompt_width as _get_prompt_width,
     parse_command,
     is_command,
 )
 
 from tui.tools import (
-    tool_scan_traces as _tool_scan_traces_new,
-    tool_list_dir as _tool_list_dir_new,
-    tool_organize_desktop_wrapper as _tool_organize_desktop_wrapper_new,
-    tool_chrome_open_url as _tool_chrome_open_url_new,
-    tool_chrome_active_tab as _tool_chrome_active_tab_new,
-    tool_open_url as _tool_open_url_new,
-    tool_open_app as _tool_open_app_new,
-    tool_run_shell_wrapper as _tool_run_shell_wrapper_new,
-    tool_run_shortcut as _tool_run_shortcut_new,
-    tool_run_automator as _tool_run_automator_new,
-    tool_run_applescript as _tool_run_applescript_new,
-    tool_read_file as _tool_read_file_new,
-    tool_grep as _tool_grep_new,
-    tool_take_screenshot as _tool_take_screenshot_new,
-    tool_create_module as _tool_create_module_new,
-    tool_llm_status as _tool_llm_status_new,
-    tool_llm_set as _tool_llm_set_new,
-    tool_ui_theme_status as _tool_ui_theme_status_new,
-    tool_ui_theme_set as _tool_ui_theme_set_new,
-    tool_ui_streaming_status as _tool_ui_streaming_status_new,
-    tool_ui_streaming_set as _tool_ui_streaming_set_new,
+    tool_scan_traces as _tool_scan_traces,
+    tool_list_dir as _tool_list_dir,
+    tool_organize_desktop_wrapper as _tool_organize_desktop_wrapper,
+    tool_chrome_open_url as _tool_chrome_open_url,
+    tool_chrome_active_tab as _tool_chrome_active_tab,
+    tool_open_url as _tool_open_url,
+    tool_open_app as _tool_open_app,
+    tool_run_shell_wrapper as _tool_run_shell_wrapper,
+    tool_run_shortcut as _tool_run_shortcut,
+    tool_run_automator as _tool_run_automator,
+    tool_run_applescript as _tool_run_applescript,
+    tool_read_file as _tool_read_file,
+    tool_grep as _tool_grep,
+    tool_take_screenshot as _tool_take_screenshot,
+    tool_create_module as _tool_create_module,
+    tool_llm_status as _tool_llm_status,
+    tool_llm_set as _tool_llm_set,
+    tool_ui_theme_status as _tool_ui_theme_status,
+    tool_ui_theme_set as _tool_ui_theme_set,
+    tool_ui_streaming_status as _tool_ui_streaming_status,
+    tool_ui_streaming_set as _tool_ui_streaming_set,
 )
 
 
 
-def _macos_open_privacy_pane(pane: str) -> None:
-    _macos_open_privacy_pane_new(pane)
 
-
-def _macos_screen_recording_preflight() -> Optional[bool]:
-    return _macos_screen_recording_preflight_new()
-
-
-def _macos_screen_recording_request_prompt() -> Optional[bool]:
-    return _macos_screen_recording_request_prompt_new()
-
-
-def _macos_accessibility_is_trusted() -> Optional[bool]:
-    return _macos_accessibility_is_trusted_new()
-
-
-def _macos_accessibility_request_prompt() -> Optional[bool]:
-    return _macos_accessibility_request_prompt_new()
-
-
-def _macos_automation_check_system_events(*, prompt: bool) -> Optional[bool]:
-    return _macos_automation_check_system_events_new(prompt=prompt)
-
-
-def _permissions_wizard(
-    *,
-    require_accessibility: bool,
-    require_screen_recording: bool,
-    require_automation: bool,
-    prompt: bool,
-    open_settings: bool,
-) -> Dict[str, Any]:
-    return _permissions_wizard_new(
-        require_accessibility=require_accessibility,
-        require_screen_recording=require_screen_recording,
-        require_automation=require_automation,
-        prompt=prompt,
-        open_settings=open_settings,
-    )
 
 
 try:
@@ -306,10 +271,7 @@ except Exception:
     RecorderService = None  # type: ignore
 
 
-AgentTool = AgentToolNew
-AgentSession = AgentSessionNew
-agent_session = agent_session_new
-agent_chat_mode = agent_chat_mode_new
+
 
 _agent_messages_buffer = get_agent_messages_buffer()
 _agent_messages_lock = get_agent_messages_lock()
@@ -321,24 +283,7 @@ _render_log_cache: Dict[str, Any] = {"ts": 0.0, "logs": [], "cursor": Point(x=0,
 _render_log_cache_ttl_s: float = 0.2
 
 
-def _get_render_log_snapshot() -> Tuple[List[Tuple[str, str]], Point]:
-    return _get_render_log_snapshot_new()
 
-
-_render_agents_cache: Dict[str, Any] = {"ts": 0.0, "messages": [], "cursor": Point(x=0, y=0)}
-_render_agents_cache_ttl_s: float = 0.2
-
-
-def _get_render_agents_snapshot() -> Tuple[List[Tuple[str, str]], Point]:
-    return _get_render_agents_snapshot_new()
-
-
-def _trim_logs_if_needed() -> None:
-    _trim_logs_if_needed_new()
-
-
-def _is_complex_task(text: str) -> bool:
-    return _is_complex_task_new(text)
 
 
 def _is_greeting(text: str) -> bool:
@@ -363,109 +308,25 @@ def _is_greeting(text: str) -> bool:
     return t in greetings
 
 
-def _run_graph_agent_task(
-    user_text: str,
-    *,
-    allow_file_write: bool,
-    allow_shell: bool,
-    allow_applescript: bool,
-    allow_gui: bool,
-    allow_shortcuts: bool = False,
-    gui_mode: str = "auto",
-) -> None:
-    _run_graph_agent_task_new(
-        user_text,
-        allow_file_write=allow_file_write,
-        allow_shell=allow_shell,
-        allow_applescript=allow_applescript,
-        allow_gui=allow_gui,
-        allow_shortcuts=allow_shortcuts,
-        gui_mode=gui_mode,
-    )
 
 
 
 
-def log(text: str, category: str = "info") -> None:
-    _log_new(text, category)
-
-
-def log_agent_message(agent_type: AgentType, message: str) -> None:
-    _log_agent_message_new(agent_type, message)
-
-
-def _log_replace_last(text: str, category: str = "info") -> None:
-    _log_replace_at_new(index=-1, text=text, category=category)
-
-
-def _log_reserve_line(category: str = "info") -> int:
-    return _log_reserve_line_new(category)
-
-
-def _log_replace_at(index: int, text: str, category: str = "info") -> None:
-    _log_replace_at_new(index, text, category)
-
-
-def _load_cleanup_config() -> Dict[str, Any]:
-    return _load_cleanup_config_new()
-
-
-def _save_cleanup_config(cfg: Dict[str, Any]) -> None:
-    _save_cleanup_config_new(cfg)
 
 
 
-def get_logs() -> List[Tuple[str, str]]:
-    return _get_logs_new()
-
-
-def get_agent_messages() -> List[Tuple[str, str]]:
-    return _get_agent_messages_new()
-
-
-def get_agent_cursor_position() -> Point:
-    return _get_agent_cursor_position_new()
-
-
-def _list_editors(cfg: Dict[str, Any]) -> List[Tuple[str, str]]:
-    return _get_editors_list_new(cfg)
-
-
-def _resolve_editor_arg(cfg: Dict[str, Any], editor: Optional[str]) -> Tuple[Optional[str], Optional[str]]:
-    return _resolve_editor_arg_new(cfg, editor)
-
-
-def _find_module(cfg: Dict[str, Any], editor: str, module_id: str) -> Optional[Any]:
-    return _find_module_new(cfg, editor, module_id)
-
-
-def _set_module_enabled(cfg: Dict[str, Any], ref: Any, enabled: bool) -> bool:
-    return _set_module_enabled_new(cfg, ref, enabled)
-
-
-def _script_env() -> Dict[str, str]:
-    return _script_env_new()
-
-
-def _run_script(script_path: str) -> int:
-    return _run_script_new(script_path)
 
 
 def _run_cleanup(cfg: Dict[str, Any], editor: str, dry_run: bool = False, **kwargs) -> Tuple[bool, str]:
     """Wrapper for cleanup runner. Accepts optional keyword args (e.g., log_callback) and forwards them."""
     try:
-        return _run_cleanup_new(cfg, editor, dry_run, **kwargs)
+        return run_cleanup(cfg, editor, dry_run, **kwargs)
     except TypeError:
         # Fallback for older signature: call without kwargs
-        return _run_cleanup_new(cfg, editor, dry_run)
+        return run_cleanup(cfg, editor, dry_run)
 
 
-def _perform_install(cfg: Dict[str, Any], editor: str) -> Tuple[bool, str]:
-    return _perform_install_new(cfg, editor)
 
-
-def _load_env() -> None:
-    _load_env_new()
 
 
 
@@ -474,8 +335,7 @@ def _monitor_get_sudo_password() -> str:
     return str(os.getenv("SUDO_PASSWORD") or "").strip()
 
 
-def _load_monitor_settings() -> None:
-    _load_monitor_settings_new()
+
 
 
 def _maybe_log_monitor_ingest(message: str) -> None:
@@ -487,57 +347,7 @@ def _maybe_log_monitor_ingest(message: str) -> None:
         return
 
 
-def _monitor_db_read_since_id(db_path: str, last_id: int, limit: int = 5000) -> List[Dict[str, Any]]:
-    return _monitor_db_read_since_id_new(db_path, last_id, limit)
 
-
-def _monitor_db_get_max_id(db_path: str) -> int:
-    return _monitor_db_get_max_id_new(db_path)
-
-
-def _format_monitor_summary(
-    *,
-    title: str,
-    source: str,
-    targets: List[str],
-    ts_from: int,
-    ts_to: int,
-    total_events: int,
-    by_target: Dict[str, int],
-    by_type: Dict[str, int],
-    top_paths: Dict[str, List[Tuple[str, int]]],
-    include_processes: bool,
-    top_processes: List[Tuple[str, int]],
-) -> str:
-    return _format_monitor_summary_new(
-        title=title,
-        source=source,
-        targets=targets,
-        ts_from=ts_from,
-        ts_to=ts_to,
-        total_events=total_events,
-        by_target=by_target,
-        by_type=by_type,
-        top_paths=top_paths,
-        include_processes=include_processes,
-        top_processes=top_processes,
-    )
-
-
-def _save_monitor_settings() -> bool:
-    return _save_monitor_settings_new()
-
-
-def _load_monitor_targets() -> None:
-    _load_monitor_targets_new()
-
-
-def _save_monitor_targets() -> bool:
-    return _save_monitor_targets_new()
-
-
-def _monitor_resolve_watch_items(targets: Set[str]) -> List[Tuple[str, str]]:
-    return _monitor_resolve_watch_items_new(targets)
 
 
 
@@ -583,7 +393,7 @@ def _load_ui_settings() -> None:
         
         # Load MCP Client State
         try:
-            from mcp_integration.core.mcp_client_manager import get_mcp_client_manager
+            from core.mcp import get_mcp_client_manager
             mgr = get_mcp_client_manager()
             state.mcp_client_type = mgr.active_client.value
         except ImportError:
@@ -645,20 +455,7 @@ def _get_llm_signature() -> str:
     )
 
 
-def _reset_agent_llm() -> None:
-    return _reset_agent_llm_new()
 
-
-def _monitor_start_selected() -> Tuple[bool, str]:
-    return _monitor_start_selected_new()
-
-
-def _monitor_stop_selected() -> Tuple[bool, str]:
-    return _monitor_stop_selected_new()
-
-
-def _scan_traces(editor: str) -> Dict[str, List[str]]:
-    return _scan_traces_new(editor)
 
 
 def _get_editors_list() -> List[Tuple[str, str]]:
@@ -669,7 +466,7 @@ def _get_editors_list() -> List[Tuple[str, str]]:
         cfg = _load_cleanup_config()
     except Exception:
         cfg = {}
-    return _get_editors_list_new(cfg)
+    return get_editors_list(cfg)
 
 
 def _apply_default_monitor_targets() -> None:
@@ -734,41 +531,7 @@ def _ensure_agent_ready() -> Tuple[bool, str]:
     return True, "OK"
 
 
-def _is_confirmed_run(text: str) -> bool:
-    return "confirm_run" in text.lower()
 
-
-def _is_confirmed_shell(text: str) -> bool:
-    return "confirm_shell" in text.lower()
-
-
-def _is_confirmed_applescript(text: str) -> bool:
-    return "confirm_applescript" in text.lower()
-
-
-def _is_confirmed_gui(text: str) -> bool:
-    return "confirm_gui" in text.lower()
-
-
-def _is_confirmed_shortcuts(text: str) -> bool:
-    return "confirm_shortcuts" in text.lower()
-
-
-@dataclass
-class CommandPermissions:
-    allow_run: bool = False
-    allow_shell: bool = False
-    allow_applescript: bool = False
-    allow_gui: bool = False
-
-
-def _permissions_from_text(text: str) -> CommandPermissions:
-    return CommandPermissions(
-        allow_run=_is_confirmed_run(text),
-        allow_shell=_is_confirmed_shell(text),
-        allow_applescript=_is_confirmed_applescript(text),
-        allow_gui=_is_confirmed_gui(text),
-    )
 
 
 _agent_last_permissions = CommandPermissions()
@@ -802,69 +565,11 @@ def _safe_abspath(path: str) -> str:
     return candidates[0]
 
 
-def _tool_scan_traces(args: Dict[str, Any]) -> Dict[str, Any]:
-    return _tool_scan_traces_new(args)
-
-
-def _tool_list_dir(args: Dict[str, Any]) -> Dict[str, Any]:
-    return _tool_list_dir_new(args)
-
-
-def _tool_organize_desktop_wrapper(args: Dict[str, Any]) -> Dict[str, Any]:
-    return _tool_organize_desktop_wrapper_new(args)
-
-
-def _tool_chrome_open_url(args: Dict[str, Any]) -> Dict[str, Any]:
-    return _tool_chrome_open_url_new(args)
-
-
-def _tool_chrome_active_tab(args: Dict[str, Any]) -> Dict[str, Any]:
-    return _tool_chrome_active_tab_new(args)
-
-
-def _tool_open_url(args: Dict[str, Any]) -> Dict[str, Any]:
-    return _tool_open_url_new(args)
-
-
-def _tool_open_app(args: Dict[str, Any]) -> Dict[str, Any]:
-    return _tool_open_app_new(args)
-
-
-def _tool_run_shell_wrapper(args: Dict[str, Any]) -> Dict[str, Any]:
-    return _tool_run_shell_wrapper_new(args)
-
-
-def _tool_run_shortcut(args: Dict[str, Any], allow_shell: bool) -> Dict[str, Any]:
-    return _tool_run_shortcut_new(args, allow_shell)
-
-
-def _tool_run_automator(args: Dict[str, Any], allow_shell: bool) -> Dict[str, Any]:
-    return _tool_run_automator_new(args, allow_shell)
-
-
-def _tool_run_applescript(args: Dict[str, Any], allow_applescript: Optional[bool] = None) -> Dict[str, Any]:
-    return _tool_run_applescript_new(args, allow_applescript)
-
-
-def _tool_read_file(args: Dict[str, Any]) -> Dict[str, Any]:
-    return _tool_read_file_new(args)
-
-
-def _tool_grep(args: Dict[str, Any]) -> Dict[str, Any]:
-    return _tool_grep_new(args)
-
-
-def _tool_take_screenshot(args: Dict[str, Any]) -> Dict[str, Any]:
-    return _tool_take_screenshot_new(args)
-
-
-def _tool_create_module(args: Dict[str, Any]) -> Dict[str, Any]:
-    return _tool_create_module_new(args)
 
 
 
-def _init_agent_tools() -> None:
-    return _init_agent_tools_new()
+
+
 
 
 def _agent_send_with_stream(user_text: str) -> Tuple[bool, str]:
@@ -1002,18 +707,13 @@ def _agent_send_no_stream(user_text: str) -> Tuple[bool, str]:
         _trim_logs_if_needed()
 
 
-def _tool_ui_streaming_status() -> Dict[str, Any]:
-    return _tool_ui_streaming_status_new()
 
-
-def _tool_ui_streaming_set(args: Dict[str, Any]) -> Dict[str, Any]:
-    return _tool_ui_streaming_set_new(args)
 
 
 def _agent_send(user_text: str) -> Tuple[bool, str]:
     if bool(getattr(state, "ui_streaming", True)):
-        return _agent_send_with_stream_new(user_text)
-    return _agent_send_no_stream_new(user_text)
+        return agent_send_with_stream(user_text)
+    return agent_send_no_stream(user_text)
 
 
 
@@ -1189,44 +889,8 @@ recorder_service: Any = None
 recorder_last_session_dir: str = ""
 
 
-def _recordings_base_dir() -> str:
-    return _recordings_base_dir_new()
-
-
-def _recordings_last_path() -> str:
-    return _recordings_last_path_new()
-
-
-def _recordings_save_last(dir_path: str) -> None:
-    _recordings_save_last_new(dir_path)
-
-
-def _recordings_load_last() -> str:
-    return _recordings_load_last_new()
-
-
-def _recordings_list_session_dirs(limit: int = 10) -> List[str]:
-    return _recordings_list_session_dirs_new(limit)
-
-
-def _recordings_read_meta(dir_path: str) -> Dict[str, Any]:
-    return _recordings_read_meta_new(dir_path)
-
-
-def _recordings_update_meta(dir_path: str, updates: Dict[str, Any]) -> None:
-    _recordings_update_meta_new(dir_path, updates)
-
-
-def _extract_automation_title(text: str) -> str:
-    return _extract_automation_title_new(text)
-
-
-def _extract_automation_prompt(text: str) -> str:
-    return _extract_automation_prompt_new(text)
-
-
 def _analyze_recording_bg(rec_dir: str, name: str, user_context: str) -> None:
-    _analyze_recording_bg_new(
+    analyze_recording_bg(
         rec_dir=rec_dir, 
         name=name, 
         user_context=user_context,
@@ -1236,15 +900,7 @@ def _analyze_recording_bg(rec_dir: str, name: str, user_context: str) -> None:
 
 
 def _start_recording_analysis(*, rec_dir: str, name: str, user_context: str) -> None:
-    _start_recording_analysis_new(rec_dir=rec_dir, name=name, user_context=user_context)
-
-
-def _recordings_ensure_meta_name(dir_path: str) -> str:
-    return _recordings_ensure_meta_name_new(dir_path)
-
-
-def _recordings_resolve_last_dir() -> str:
-    return _recordings_resolve_last_dir_new()
+    _start_recording_analysis(rec_dir=rec_dir, name=name, user_context=user_context)
 
 
 def _open_in_finder(path: str) -> Tuple[bool, str]:
