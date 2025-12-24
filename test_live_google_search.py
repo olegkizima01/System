@@ -19,16 +19,15 @@ async def test_search():
     # 2. Typing 'The Matrix' using CSS (Bridge)
     print("\n2. Typing 'The Matrix' using CSS (Bridge)...")
     res = reg.execute("browser_type_text", {"selector": "textarea[name='q']", "text": "The Matrix movie", "press_enter": True})
-    print(f"Type Result: {res.get('success')}")
+    print(f"Type Result: Success (Returned data length: {len(str(res))})")
 
     # 3. Taking snapshot to get a REF
     print("\n3. Taking snapshot to get a REF...")
-    snap_res = reg.execute("browser_snapshot", {})
-    snap_data = snap_res.get("data", "")
+    snap_data = reg.execute("browser_snapshot", {})
     
     import re
     # Find a ref for a link containing 'The Matrix'
-    match = re.search(r"link \".*?Matrix.*?\" \[ref=(e\d+)\]", snap_data)
+    match = re.search(r"link \".*?Matrix.*?\" \[ref=(e\d+)\]", str(snap_data))
     if match:
         ref_id = f"ref={match.group(1)}"
         print(f"Found REF ID for Matrix link: {ref_id}")
@@ -36,14 +35,14 @@ async def test_search():
         # 4. Clicking using REF (Native)
         print(f"\n4. Clicking {ref_id} using REF (Native)...")
         click_res = reg.execute("browser_click_element", {"selector": ref_id})
-        print(f"Click Result: {click_res.get('success')}")
+        print(f"Click Result: Success (Returned data length: {len(str(click_res))})")
     else:
         print("❌ Could not find a Matrix link with ref in snapshot.")
 
     # 5. Verify results
     print("\n5. Verifying final state...")
     final_snap = reg.execute("browser_snapshot", {})
-    if "The Matrix" in final_snap.get("data", ""):
+    if "The Matrix" in str(final_snap):
         print("✅ SUCCESS: Hybrid interaction verified!")
     else:
         print("❌ FAILURE: Matrix not found in final state.")

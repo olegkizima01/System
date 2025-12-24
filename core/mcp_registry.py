@@ -641,8 +641,8 @@ class MCPToolRegistry:
         
         # HYBRID LOGIC: Native for refs, JS Bridge for CSS
         if selector.startswith("ref="):
-            # Native browser_click requires 'ref' argument
-            return {"ref": selector[4:]}
+            # Native browser_click requires BOTH 'ref' and 'element' (bug in some MCP server versions)
+            return {"ref": selector[4:], "element": ""}
         
         # Universal JS Bridge for CSS/XPath (more robust)
         code = f"""async (page) => {{
@@ -657,7 +657,7 @@ class MCPToolRegistry:
         
         # HYBRID LOGIC: Native for refs, JS Bridge for CSS
         if selector.startswith("ref="):
-            return {"ref": selector[4:], "text": text}
+            return {"ref": selector[4:], "text": text, "element": ""}
 
         # Universal JS Bridge for CSS/XPath (more robust)
         code = f"""async (page) => {{
