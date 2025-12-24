@@ -98,6 +98,9 @@ class TrinityRuntime(
         except Exception:
             pass
 
+        # Register custom tools (vision, window detection, etc.)
+        self._register_tools()
+
         # Build Graph
         self.workflow = self._build_graph()
         

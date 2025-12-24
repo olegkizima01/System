@@ -616,9 +616,9 @@ class MCPToolRegistry:
             "browser_type_text": self._adapt_browser_type,
             "browser_screenshot": self._adapt_browser_screenshot,
             "browser_press_key": self._adapt_browser_key,
+            "browser_get_content": lambda a: {"expression": "document.body.innerText"},
             "browser_hover": lambda a: {"selector": a.get("selector", "")},
             "browser_select": lambda a: {"selector": a.get("selector", ""), "value": a.get("value", "")},
-            "browser_get_content": lambda a: {"selector": a.get("selector", ""), "cleanHtml": True},
             "run_applescript": lambda a: {"script": a.get("script", "")}
         }
         
@@ -789,19 +789,19 @@ class MCPToolRegistry:
 
     def _try_mcp_routing(self, tool_name: str, args: Dict[str, Any], task_type: Optional[str] = None) -> Optional[str]:
         mcp_routing = {
-            "browser_open_url": ("playwright", "playwright_navigate"),
-            "browser_navigate": ("playwright", "playwright_navigate"),
-            "browser_click_element": ("playwright", "playwright_click"),
-            "browser_type_text": ("playwright", "playwright_fill"),
-            "browser_screenshot": ("playwright", "playwright_screenshot"),
-            "browser_snapshot": ("playwright", "playwright_get_visible_text"),
-            "browser_get_content": ("playwright", "playwright_get_visible_html"),
-            "browser_close": ("playwright", "playwright_close"),
-            "browser_press_key": ("playwright", "playwright_press_key"),
-            "browser_hover": ("playwright", "playwright_hover"),
-            "browser_select": ("playwright", "playwright_select"),
-            "browser_go_back": ("playwright", "playwright_go_back"),
-            "browser_go_forward": ("playwright", "playwright_go_forward"),
+            "browser_open_url": ("playwright", "browser_navigate"),
+            "browser_navigate": ("playwright", "browser_navigate"),
+            "browser_click_element": ("playwright", "browser_click"),
+            "browser_type_text": ("playwright", "browser_type"),
+            "browser_screenshot": ("playwright", "browser_take_screenshot"),
+            "browser_snapshot": ("playwright", "browser_snapshot"),
+            "browser_get_content": ("playwright", "browser_evaluate"),
+            "browser_close": ("playwright", "browser_close"),
+            "browser_press_key": ("playwright", "browser_press_key"),
+            "browser_hover": ("playwright", "browser_hover"),
+            "browser_select": ("playwright", "browser_select_option"),
+            "browser_go_back": ("playwright", "browser_navigate_back"),
+            "browser_go_forward": ("playwright", "browser_navigate_forward"),
             "run_applescript": ("applescript", "run_applescript"),
         }
         
