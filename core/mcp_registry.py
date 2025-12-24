@@ -104,6 +104,13 @@ class ExternalMCPProvider:
             hint = ""
             if sys.platform == "darwin":
                 hint = " (Check macOS Automation/Accessibility permissions if this times out unexpectedly)"
+                if self.name == "playwright" or "playwright" in self.command.lower():
+                    hint = (
+                        "\n\n🔐 For Playwright MCP server, grant these permissions in System Settings > Privacy & Security:\n"
+                        "   1. Screen Recording - for visual automation\n"
+                        "   2. Accessibility - for browser control\n"
+                        "   After granting permissions, restart the terminal and retry."
+                    )
             logger.error(f"Failed to connect MCP provider {self.name}: {e}{hint}")
             raise
 

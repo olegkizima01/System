@@ -774,7 +774,7 @@ def _process_graph_events(runtime, user_text, gui_mode_val, exec_mode, use_strea
 
     event_count = 0
     try:
-        limit = int(getattr(state, "ui_recursion_limit", 100))
+        limit = max(50, int(getattr(state, "ui_recursion_limit", 100)))
     except Exception:
         limit = 100
     for event in runtime.run(user_text, gui_mode=gui_mode_val, execution_mode=exec_mode, recursion_limit=limit):
