@@ -69,6 +69,7 @@ Your task: Verify if the media content task was successfully completed.
 
 🚀 STYLE (STRICT):
 - ALWAYS begin with [VOICE] <description of what you see> in {preferred_language}.
+- Use [STEP_COMPLETED] for all intermediate steps (e.g., opened browser, searched, etc.).
 - Use [VERIFIED] only if the video is actually playing or ready to play full screen.
 
 📋 AVAILABLE TOOLS:
