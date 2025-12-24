@@ -2,7 +2,7 @@ import os
 import threading
 import subprocess
 import time
-from typing import Optional, Callable, Dict, Any, List, Yield
+from typing import Optional, Callable, Dict, Any, List, Generator
 from datetime import datetime
 
 from core.trinity.state import TrinityState, TrinityPermissions
@@ -165,7 +165,7 @@ class TrinityRuntime(
             except Exception:
                 pass
 
-    def run(self, task: str, gui_mode: str = "auto", execution_mode: str = "native", recursion_limit: int = 200) -> Yield[Dict[str, Any], None, None]:
+    def run(self, task: str, gui_mode: str = "auto", execution_mode: str = "native", recursion_limit: int = 200) -> Generator[Dict[str, Any], None, None]:
         """Core execution loop using the LangGraph workflow."""
         state = {
             "messages": [HumanMessage(content=task)],
