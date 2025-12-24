@@ -91,6 +91,31 @@ class NativeMCPClient(BaseMCPClient):
         )
         return fut.result(timeout=60)
 
+    def execute_task(self, task: str) -> Dict[str, Any]:
+        """
+        Execute a high-level task via Native SDK by routing it 
+        to the most relevant server based on simple heuristics.
+        """
+        # Simple heuristic mapping for Native SDK
+        task_lower = task.lower()
+        target_server = "context7" # default
+        
+        if any(kw in task_lower for kw in ["file", "read", "write", "directory"]):
+            target_server = "filesystem"
+        elif any(kw in task_lower for kw in ["browser", "web", "url", "navigate"]):
+            target_server = "playwright"
+        elif any(kw in task_lower for kw in ["memory", "knowledge", "recall"]):
+            target_server = "memory"
+        
+        # In Native SDK, 'execute_task' is essentially 'execute_prompt' 
+        # on the target server if the server supports it, otherwise 
+        # it might need a more complex agent. 
+        # For now, we return failure or try a generic tool if available.
+        return {
+            "success": False, 
+            "error": f"Native SDK Client does not yet support high-level task execution. Suggest routing to 'continue' or 'cline'. (Targeted server: {target_server})"
+        }
+
     async def _async_execute_tool(self, server_name: str, tool_name: str, args: Dict[str, Any]) -> Dict[str, Any]:
         """Internal async implementation with persistent session support."""
         # 1. Ensure we have a lock for this server to prevent race conditions during init

@@ -816,22 +816,70 @@ class MCPToolRegistry:
     def execute(self, tool_name: str, args: Dict[str, Any], task_type: Optional[str] = None) -> str:
         """Executes a tool safely and returns a string result."""
         
-        # 0. Delegate to Active MCP Client Manager if it handles this tool
-        # We try to route known MCP tools through the manager first
+        # 1. PRIORITY: Delegate to MCP Client Manager if it handles this tool
+        # This handles both specific tools and "meta-tasks"
         mcp_res = self._try_mcp_routing(tool_name, args, task_type=task_type)
         if mcp_res is not None:
             return mcp_res
 
-        # 2. Direct External Tool Call (Bypassed if manager is active)
-        if not self._mcp_client_manager:
-            ext_res = self._try_external_direct_call(tool_name, args)
-            if ext_res is not None:
-                return ext_res
-
-        # 3. Local Tool Call
+        # 2. Local Tool Call (Fallback)
         return self._execute_local_tool(tool_name, args)
 
     def _try_mcp_routing(self, tool_name: str, args: Dict[str, Any], task_type: Optional[str] = None) -> Optional[str]:
+        """
+        Attempts to route the tool call to the appropriate MCP client.
+        Supports routing by server ownership and meta-task execution.
+        """
+        if not self._mcp_client_manager:
+            return None
+
+        # 1. Check if this is a meta-task (e.g., "meta.execute_task")
+        if tool_name == "meta.execute_task":
+            prompt = args.get("task") or args.get("prompt")
+            if prompt:
+                res = self._mcp_client_manager.execute_task(prompt, task_type=task_type)
+                return json.dumps(res, indent=2, ensure_ascii=False)
+
+        # 2. Determine which server this tool belongs to
+        # Format is usually 'server_name.tool_name'
+        parts = tool_name.split(".", 1)
+        server_name = parts[0] if len(parts) == 2 else None
+        
+        # If server_name is known, determine the owner client
+        if server_name:
+            client = self._mcp_client_manager.get_client(server_name=server_name, task_type=task_type)
+            if client:
+                # We skip manual adaptation for standard MCP tools to maintain "originality"
+                # unless specifically required by the protocol.
+                res_dict = self._mcp_client_manager.execute(tool_name, args, task_type=task_type)
+                
+                if res_dict.get("success"):
+                    # Process result
+                    data = res_dict.get("data", "")
+                    if isinstance(data, (dict, list)):
+                        return json.dumps(data, indent=2, ensure_ascii=False)
+                    return str(data)
+                else:
+                    logger.warning(f"MCP Tool execution failed via manager: {res_dict.get('error')}")
+                    # Don't return None here if it was supposed to be handled by MCP
+                    return f"Error: {res_dict.get('error')}"
+
+        return None
+
+    def execute_meta_plan(self, items: List[str], task_type: Optional[str] = None) -> List[Dict[str, Any]]:
+        """
+        Executes a series of high-level meta-plan items.
+        Each item is routed to the best-suited client.
+        """
+        results = []
+        for item in items:
+            logger.info(f"Executing Meta-Plan Item: {item}")
+            res = self._mcp_client_manager.execute_task(item, task_type=task_type)
+            results.append({
+                "item": item,
+                "result": res
+            })
+        return results
         mcp_routing = {
             # Navigation (Wait logic)
             "browser_open_url": ("playwright", "browser_run_code"),

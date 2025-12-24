@@ -6,7 +6,12 @@
       "type": "python_sdk",
       "enabled": true,
       "config": {},
-      "mcp_config_path": "/Users/dev/Documents/GitHub/System/mcp_integration/config/mcp_config.json"
+      "mcp_config_path": "/Users/dev/Documents/GitHub/System/mcp_integration/config/mcp_config.json",
+      "categories": [
+        "performance",
+        "system",
+        "filesystem"
+      ]
     },
     "open_mcp": {
       "name": "CopilotKit Open-MCP",
@@ -14,14 +19,34 @@
       "enabled": true,
       "config": {
         "agent_dir": "mcp_integration/agents/open_mcp"
-      }
+      },
+      "categories": [
+        "general",
+        "ai"
+      ]
     },
     "continue": {
       "name": "Continue CLI",
       "type": "npm_cli",
       "enabled": true,
       "command": "cn",
-      "fallback_command": "npx @continuedev/cli"
+      "fallback_command": "npx @continuedev/cli",
+      "categories": [
+        "dev",
+        "code_analysis",
+        "system"
+      ]
+    },
+    "cline": {
+      "name": "Cline",
+      "type": "npm_cli",
+      "enabled": true,
+      "command": "cline",
+      "categories": [
+        "dev",
+        "browser",
+        "system"
+      ]
     }
   },
   "mcpServers": {
@@ -34,7 +59,8 @@
       "description": "Context7 MCP Server for memory and context management",
       "timeout": 30000,
       "retryAttempts": 3,
-      "category": "ai"
+      "category": "ai",
+      "ownerClient": "native"
     },
     "playwright": {
       "command": "npx",
@@ -45,7 +71,8 @@
       "description": "Playwright MCP Server for browser automation",
       "timeout": 60000,
       "retryAttempts": 2,
-      "category": "browser"
+      "category": "browser",
+      "ownerClient": "cline"
     },
     "pyautogui": {
       "enabled": false,
@@ -130,7 +157,8 @@
       "category": "memory",
       "enabled": true,
       "timeout": 30000,
-      "retryAttempts": 2
+      "retryAttempts": 2,
+      "ownerClient": "native"
     }
   },
   "fallbackChain": [

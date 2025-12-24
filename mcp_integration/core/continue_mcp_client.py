@@ -188,6 +188,10 @@ class ContinueMCPClient(BaseMCPClient):
             logger.error(f"Tool execution error: {e}")
             return {"success": False, "error": str(e)}
 
+    def execute_task(self, task: str) -> Dict[str, Any]:
+        """Execute prompt via 'cn' CLI."""
+        return self.execute_prompt(task)
+
     def execute_prompt(self, prompt: str) -> Dict[str, Any]:
         """Execute prompt via 'cn' CLI."""
         if not self._connected:
