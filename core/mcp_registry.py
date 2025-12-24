@@ -618,9 +618,9 @@ class MCPToolRegistry:
             "browser_type_text": self._adapt_browser_type,
             "browser_screenshot": self._adapt_browser_screenshot,
             "browser_press_key": self._adapt_browser_key,
-            "browser_get_content": lambda a: {"function": "() => document.body.innerText"},
-            "browser_hover": lambda a: {"selector": a.get("selector", "")},
-            "browser_select": lambda a: {"selector": a.get("selector", ""), "value": a.get("value", "")},
+            "browser_get_links": lambda a: {"function": "() => Array.from(document.querySelectorAll('a[href]')).map(a => ({text: a.innerText.trim(), href: a.href})).filter(l => l.text && l.href && !l.href.startsWith('javascript:'))"},
+            "browser_hover": lambda a: {"selector": self._smart_selector(a.get("selector", ""))},
+            "browser_select": lambda a: {"selector": self._smart_selector(a.get("selector", "")), "value": a.get("value", "")},
             "run_applescript": lambda a: {"script": a.get("script", "")}
         }
         
@@ -825,6 +825,8 @@ class MCPToolRegistry:
             "browser_navigate": ("playwright", "browser_run_code"),
             "browser_click_element": ("playwright", "browser_run_code"),
             "browser_type_text": ("playwright", "browser_run_code"),
+            "browser_get_links": ("playwright", "browser_evaluate"),
+            "browser_press_key": ("playwright", "browser_press_key"),
             "browser_screenshot": ("playwright", "browser_take_screenshot"),
             "browser_snapshot": ("playwright", "browser_snapshot"),
             "browser_get_content": ("playwright", "browser_evaluate"),
