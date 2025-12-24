@@ -71,6 +71,8 @@ def create_persistent_client(
         # RUST_BACKTRACE=0 reduces the verbosity of those messages in stderr.
         import os
         os.environ.setdefault("RUST_BACKTRACE", "0")
+        os.environ["ANONYMIZED_TELEMETRY"] = "False"
+        os.environ["CHROMA_TELEMETRY_ENABLED"] = "False"
         import chromadb
 
         client = chromadb.PersistentClient(path=str(persist_dir))

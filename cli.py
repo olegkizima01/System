@@ -10,6 +10,10 @@ from __future__ import annotations
 import os
 import sys
 
+# Silence ChromaDB/PostHog telemetry globally
+os.environ["ANONYMIZED_TELEMETRY"] = "False"
+os.environ["CHROMA_TELEMETRY_ENABLED"] = "False"
+
 # Ensure project root is in path
 _repo_root = os.path.abspath(os.path.dirname(__file__))
 if _repo_root not in sys.path:
