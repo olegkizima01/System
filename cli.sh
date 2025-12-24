@@ -4,8 +4,15 @@
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SCRIPT_DIR"
 
-# Prefer local .venv if present; otherwise use global/pyenv Python.
-if [ -f "$SCRIPT_DIR/.venv/bin/activate" ]; then
+# Check pyenv shell version first for global environment
+PYENV_VER=$(pyenv version-name 2>/dev/null || echo "")
+EXPECTED_VER="3.11.13"
+
+if [ "$PYENV_VER" = "$EXPECTED_VER" ]; then
+  # Using global pyenv environment
+  PYTHON_EXE="$(pyenv which python3.11 2>/dev/null || pyenv which python)"
+  echo "🌐 Using pyenv global: $PYENV_VER"
+elif [ -f "$SCRIPT_DIR/.venv/bin/activate" ]; then
   source "$SCRIPT_DIR/.venv/bin/activate"
   PYTHON_EXE="$SCRIPT_DIR/.venv/bin/python"
 else

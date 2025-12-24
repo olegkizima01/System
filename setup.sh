@@ -73,8 +73,19 @@ if ! check_python_version; then
     exit 1
 fi
 
-# Remove existing virtual environment if it exists
-if [ -d ".venv" ]; then
+# Parse arguments
+USE_GLOBAL=false
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        --global) USE_GLOBAL=true ;;
+    esac
+    shift
+done
+
+# Remove existing virtual environment if it exists, unless using global
+if [ "$USE_GLOBAL" = true ]; then
+    echo "🌐 Using global pyenv Python (no .venv creation)"
+elif [ -d ".venv" ]; then
     echo "🔧 Removing existing virtual environment..."
     rm -rf .venv
     if [ $? -ne 0 ]; then
@@ -83,17 +94,20 @@ if [ -d ".venv" ]; then
     fi
 fi
 
-# Create new virtual environment
-echo "🔧 Creating new virtual environment with Python $PYTHON_VERSION..."
-$PYTHON_CMD -m venv .venv
-if [ $? -ne 0 ]; then
-    echo "❌ Failed to create virtual environment"
-    exit 1
-fi
+# Create and activate virtual environment (unless global)
+if [ "$USE_GLOBAL" = false ]; then
+    # Create new virtual environment
+    echo "🔧 Creating new virtual environment with Python $PYTHON_VERSION..."
+    $PYTHON_CMD -m venv .venv
+    if [ $? -ne 0 ]; then
+        echo "❌ Failed to create virtual environment"
+        exit 1
+    fi
 
-# Activate virtual environment
-echo "🔧 Activating virtual environment..."
-source .venv/bin/activate
+    # Activate virtual environment
+    echo "🔧 Activating virtual environment..."
+    source .venv/bin/activate
+fi
 
 # Upgrade pip and setuptools
 echo "🔧 Upgrading pip and setuptools..."
