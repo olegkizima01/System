@@ -612,8 +612,8 @@ class MCPToolRegistry:
         
         # Adaptation handlers for specific tool categories
         handlers = {
-            "browser_open_url": self._adapt_browser_nav,
-            "browser_navigate": self._adapt_browser_nav,
+            "browser_open_url": self._adapt_browser_open_url,
+            "browser_navigate": self._adapt_browser_open_url,
             "browser_click_element": self._adapt_browser_click,
             "browser_type_text": self._adapt_browser_type,
             "browser_screenshot": self._adapt_browser_screenshot,
