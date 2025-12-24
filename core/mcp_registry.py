@@ -838,8 +838,8 @@ class MCPToolRegistry:
             "browser_navigate": ("playwright", "browser_run_code"),
             
             # Interaction (Hybrid Logic)
-            "browser_click_element": ("playwright", "NATIVE_OR_BRIDGE"), # Special handled in execute
-            "browser_type_text": ("playwright", "NATIVE_OR_BRIDGE"), # Special handled in execute
+            "browser_click_element": ("playwright", "NATIVE_OR_BRIDGE"), 
+            "browser_type_text": ("playwright", "NATIVE_OR_BRIDGE"), 
             "browser_hover": ("playwright", "browser_run_code"),
             "browser_select": ("playwright", "browser_run_code"),
             
@@ -863,48 +863,58 @@ class MCPToolRegistry:
         if tool_name in mcp_routing:
             provider_name, mcp_tool = mcp_routing[tool_name]
         elif "." in tool_name:
-            # Handle prefixed calls from LLM (e.g. playwright.playwright_navigate)
             parts = tool_name.split(".", 1)
             provider_name = parts[0]
             mcp_tool = parts[1]
         else:
             return None
             
-        # We construct the tool name as "server.tool" (e.g., "playwright.playwright_navigate")
+        # 1. SPECIAL HYBRID ROUTING for Click/Type
         full_tool_name = f"{provider_name}.{mcp_tool}"
-        
-        # 1. PRIORITY: Delegate to MCP Client Manager (Native SDK preferred)
+        if mcp_tool == "NATIVE_OR_BRIDGE":
+            selector = args.get("selector", "")
+            if selector.startswith("ref="):
+                real_tool = "browser_click" if "click" in tool_name else "browser_type"
+                mcp_tool = real_tool # Important for adapter lookup
+                full_tool_name = f"{provider_name}.{real_tool}"
+            else:
+                mcp_tool = "browser_run_code"
+                full_tool_name = f"{provider_name}.browser_run_code"
+
+        # 2. PRIORITY: Delegate to MCP Client Manager (Native SDK preferred)
         try:
             from mcp_integration.core.mcp_client_manager import MCPClientType
-            # If we are in Native or Auto mode, we should try the manager first as it uses the modern SDK
             if self._mcp_client_manager.active_client in [MCPClientType.NATIVE, MCPClientType.AUTO]:
-                    # Strip snapshots ONLY for action tools that don't need to return page state
-                    # We KEEP them for open/navigate so the agent sees the landing page immediately
+                # IMPORTANT: Adapt args BEFORE calling execute
+                mcp_args = self._adapt_args_for_mcp(tool_name, mcp_tool, args)
+                
+                # Execute via manager
+                res_dict = self._mcp_client_manager.execute(full_tool_name, mcp_args, task_type=task_type)
+                
+                if res_dict.get("success"):
+                    data = res_dict.get("data", "")
+                    
+                    # Strip snapshots for action tools
                     action_tools_to_strip = ["browser_click_element", "browser_type_text"]
                     if tool_name in action_tools_to_strip and "### Page Snapshot" in data:
                         data = data.split("### Page Snapshot")[0].strip()
                         data += "\n\n(Snapshot hidden for focus. Use browser_snapshot if you need to analyze page elements.)"
                     
-                    # Truncation logic: protect LLM context while ensuring visibility
-                    # Increased limits per user request (100k for snapshots, 40k for actions)
+                    # Truncation logic
                     limit = 100000 if tool_name in ["browser_snapshot", "browser_get_content"] else 40000
-                    
                     if len(data) > limit:
                         tip = " [Use browser_snapshot for full details]" if tool_name != "browser_snapshot" else ""
                         data = data[:limit] + f"\n... [TRUNCATED at {limit} chars for efficiency{tip}] ..."
                     
-                    # Special post-processing for press_enter
-                    if tool_name == "browser_type_text" and args.get("press_enter"):
-                        self._mcp_press_enter_fallback_manager(provider_name, mcp_args)
                     return data
                 else:
-                    # If it failed but it's a real server error (not "server not found"), return it
+                    # Return detailed error if it's a real server error
                     if "No MCP server found" not in res_dict.get("error", ""):
                         return json.dumps(res_dict, indent=2, ensure_ascii=False)
         except Exception as e:
             logger.debug(f"MCP Manager routing failed for {full_tool_name}: {e}")
 
-        # 2. SUB-PRIORITY: Try local tool fallback or other logic if manager didn't handle it
+        # 3. Fallback
         return None
             
         return None

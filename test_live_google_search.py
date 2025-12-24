@@ -16,26 +16,37 @@ async def test_search():
     res1 = reg.execute("browser_open_url", {"url": "https://www.google.com"})
     print(f"Result: {res1}")
     
-    await asyncio.sleep(2)
+    # 2. Typing 'The Matrix' using CSS (Bridge)
+    print("\n2. Typing 'The Matrix' using CSS (Bridge)...")
+    res = reg.execute("browser_type_text", {"selector": "textarea[name='q']", "text": "The Matrix movie", "press_enter": True})
+    print(f"Type Result: {res.get('success')}")
+
+    # 3. Taking snapshot to get a REF
+    print("\n3. Taking snapshot to get a REF...")
+    snap_res = reg.execute("browser_snapshot", {})
+    snap_data = snap_res.get("data", "")
     
-    print("\n2. Typing 'The Matrix'...")
-    # Use standard selector
-    res2 = reg.execute("browser_type_text", {
-        "selector": "textarea[name='q']",
-        "text": "The Matrix movie",
-        "press_enter": True
-    })
-    print(f"Result: {res2}")
-    
-    await asyncio.sleep(5)
-    
-    print("\n3. Taking snapshot...")
-    res3 = reg.execute("browser_snapshot", {})
-    # print(f"Snapshot data length: {len(str(res3))}")
-    if "The Matrix" in str(res3):
-        print("✅ SUCCESS: 'The Matrix' found in snapshot!")
+    import re
+    # Find a ref for a link containing 'The Matrix'
+    match = re.search(r"link \".*?Matrix.*?\" \[ref=(e\d+)\]", snap_data)
+    if match:
+        ref_id = f"ref={match.group(1)}"
+        print(f"Found REF ID for Matrix link: {ref_id}")
+        
+        # 4. Clicking using REF (Native)
+        print(f"\n4. Clicking {ref_id} using REF (Native)...")
+        click_res = reg.execute("browser_click_element", {"selector": ref_id})
+        print(f"Click Result: {click_res.get('success')}")
     else:
-        print("❌ FAILURE: 'The Matrix' NOT found in search results.")
+        print("❌ Could not find a Matrix link with ref in snapshot.")
+
+    # 5. Verify results
+    print("\n5. Verifying final state...")
+    final_snap = reg.execute("browser_snapshot", {})
+    if "The Matrix" in final_snap.get("data", ""):
+        print("✅ SUCCESS: Hybrid interaction verified!")
+    else:
+        print("❌ FAILURE: Matrix not found in final state.")
 
 if __name__ == "__main__":
     asyncio.run(test_search())
