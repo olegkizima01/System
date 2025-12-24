@@ -635,13 +635,33 @@ class MCPToolRegistry:
         return mcp_args
 
     def _adapt_browser_click(self, args):
-        return {"selector": self._smart_selector(args.get("selector", ""))}
+        selector = args.get("selector", "")
+        return {
+            "ref": self._smart_ref(selector),
+            "element": args.get("element_description") or f"Element matching {selector}"
+        }
 
     def _adapt_browser_type(self, args):
+        selector = args.get("selector", "")
         return {
-            "selector": self._smart_selector(args.get("selector", "")),
-            "value": args.get("text", "")
+            "ref": self._smart_ref(selector),
+            "text": args.get("text", ""),
+            "element": args.get("element_description") or f"Input field matching {selector}",
+            "submit": args.get("press_enter", False)
         }
+
+    def _smart_ref(self, selector: str) -> str:
+        """Ensure selector is in a format `@playwright/mcp` understands (ref)."""
+        if not selector:
+            return ""
+        # If it already looks like a playwright locator or ref, leave it
+        if any(selector.startswith(p) for p in ["css=", "xpath=", "id=", "text="]):
+            return selector
+        
+        # Default to CSS if it looks like a simple selector
+        if selector.startswith("/") or selector.startswith("("):
+            return f"xpath={selector}"
+        return f"css={selector}"
 
     def _adapt_browser_screenshot(self, args):
         path = args.get("path", "screenshot")
@@ -827,13 +847,16 @@ class MCPToolRegistry:
             from mcp_integration.core.mcp_client_manager import MCPClientType
             # If we are in Native or Auto mode, we should try the manager first as it uses the modern SDK
             if self._mcp_client_manager.active_client in [MCPClientType.NATIVE, MCPClientType.AUTO]:
+                # IMPORTANT: Adapt args BEFORE calling execute
+                mcp_args = self._adapt_args_for_mcp(tool_name, mcp_tool, args)
+                
                 # Try simple name first
-                res = self._mcp_client_manager.execute(mcp_tool, args, task_type=task_type)
+                res = self._mcp_client_manager.execute(mcp_tool, mcp_args, task_type=task_type)
                 if res.get("success"):
                     return res.get("data", "")
                 
                 # Try prefixed name (some servers might require it or manager expects it)
-                res = self._mcp_client_manager.execute(full_tool_name, args, task_type=task_type)
+                res = self._mcp_client_manager.execute(full_tool_name, mcp_args, task_type=task_type)
                 if res.get("success"):
                     return res.get("data", "")
         except Exception as e:
