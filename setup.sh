@@ -12,6 +12,9 @@ if [ ! -f "requirements.txt" ]; then
     exit 1
 fi
 
+# Ensure log directory exists early
+mkdir -p ~/.system_cli/logs
+
 # Function to check Python version
 check_python_version() {
     local required_version="3.11.13"
@@ -323,13 +326,21 @@ else
     echo "⚠️  Typer not installed (optional for CLI)"
 fi
 
+# Check mcp (Python SDK)
+if $PYTHON_CMD -c "import mcp; print('✅ MCP Python SDK installed')" 2>/dev/null; then
+    echo "✅ MCP Python SDK installed"
+else
+    echo "❌ MCP Python SDK not installed"
+    exit 1
+fi
+
 echo "--- MCP Server Dependencies (for DEV mode) ---"
 
-# Check MCP manager integration
-if $PYTHON_CMD -c "from mcp_integration.core.mcp_manager import MCPServerManager; print('✅ MCP Manager available')" 2>/dev/null; then
-    echo "✅ MCP Integration module available"
+# Check MCP manager integration (Core)
+if $PYTHON_CMD -c "from core.mcp.manager import MCPClientManager; print('✅ MCP Manager available')" 2>/dev/null; then
+    echo "✅ MCP Integration module available (core.mcp)"
 else
-    echo "⚠️  MCP Integration module not found"
+    echo "⚠️  MCP Integration module not found (core.mcp)"
 fi
 
 # Check Context7 MCP availability

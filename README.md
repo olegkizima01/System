@@ -65,7 +65,7 @@ graph TD
 ### Vision Pipeline
 
 - **DifferentialVisionAnalyzer**: Multi-monitor, OCR, diff visualization
-- **VisionContextManager**: Trend detection, active region tracking
+# core/mcp/manager.py - Unified manager for all MCP serversgion tracking
 - **Enhanced Analysis**: `capture_and_analyze()` з генерацією diff images
 
 ### Context7 Sliding Window

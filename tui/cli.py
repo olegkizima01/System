@@ -1812,7 +1812,7 @@ def _tool_ui_theme_set(args: Dict[str, Any]) -> Dict[str, Any]:
 def cli_main(argv: List[str]) -> None:
     # Setup logging
     verbose = "--verbose" in argv or "-v" in argv
-    logger = setup_logging(verbose=verbose, name="trinity.cli")
+    logger = setup_global_logging(verbose=verbose)
     logger.info(f"CLI started with arguments: {argv}")
     
     parser = argparse.ArgumentParser(prog="cli.py", description="System CLI")
@@ -2155,6 +2155,8 @@ def main() -> None:
     try:
         cli_main(sys.argv[1:])
     except Exception as e:
+        # Also print to stderr so user sees it if logging to file fails or is silent
+        print(f"FATAL ERROR in main(): {e}", file=sys.stderr)
         logger = get_logger("trinity.cli")
         log_exception(logger, e, "main()")
         sys.exit(1)
