@@ -147,8 +147,16 @@ class NativeMCPClient(BaseMCPClient):
                     if not s_config:
                         return {"success": False, "error": f"Server '{server_name}' not configured"}
 
+                    import shutil
+                    cmd = s_config["command"]
+                    if cmd != "npx" and not shutil.which(cmd):
+                        return {
+                            "success": False, 
+                            "error": f"MCP server command '{cmd}' not found in PATH. Please verify installation or use global install."
+                        }
+
                     params = StdioServerParameters(
-                        command=s_config["command"],
+                        command=cmd,
                         args=s_config.get("args", []),
                         env={**os.environ, **s_config.get("env", {})}
                     )

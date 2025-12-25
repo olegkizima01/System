@@ -82,6 +82,14 @@ class UnifiedBridgeClient(MCPServerClient):
         return self.execute_command("status")
 
 
+class Context7Client(UnifiedBridgeClient):
+    """Legacy alias for Context7 bridge"""
+    pass
+
+class SonarQubeClient(UnifiedBridgeClient):
+    """Legacy alias for SonarQube bridge"""
+    pass
+
 class MCPManager:
     """Modern MCP Manager that maintains backward compatibility with legacy code."""
     
