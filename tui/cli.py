@@ -1978,7 +1978,7 @@ def _get_resolved_editor(args: Any, cfg: Dict[str, Any], logger: Any) -> Tuple[O
 
 def _handle_list_editors(cfg: Dict[str, Any], logger: Any):
     logger.info("Listing editors")
-    for key, label in _list_editors(cfg): print(f"{key}: {label}")
+    for key, label in get_editors_list(cfg): print(f"{key}: {label}")
     logger.info("Editors listed successfully")
 
 def _handle_list_modules(args: Any, cfg: Dict[str, Any], resolved_editor: Optional[str], logger: Any):
