@@ -4,11 +4,11 @@ import subprocess
 import tempfile
 import logging
 import traceback
+import datetime
 from typing import Any, Dict, Optional, Tuple, Union, List
 from PIL import Image, ImageChops
 import mss
 import mss.tools
-from datetime import datetime
 
 # Module logger
 logger = logging.getLogger(__name__)
@@ -22,11 +22,7 @@ METRICS = {
 
 
 def get_frontmost_app() -> Dict[str, Any]:
-    """Get information about the currently active (frontmost) application on macOS.
-    
-    Returns:
-        dict with keys: app_name, window_title, bundle_id, or error
-    """
+    """Get information about the currently active (frontmost) application on macOS."""
     try:
         # Get frontmost app name
         script_app = '''
@@ -68,11 +64,7 @@ def get_frontmost_app() -> Dict[str, Any]:
 
 
 def get_all_windows() -> Dict[str, Any]:
-    """Get list of all visible windows on macOS.
-    
-    Returns:
-        dict with list of windows, each containing: app_name, window_title, position, size
-    """
+    """Get list of all visible windows on macOS."""
     try:
         script = '''
         set windowList to {}
@@ -126,7 +118,7 @@ class VisionDiffManager:
     _session_id: Optional[str] = None
 
     def __init__(self):
-        self._session_id = datetime.now().strftime("%Y%m%d_%H%M%S")
+        self._session_id = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 
     @classmethod
     def get_instance(cls):
@@ -215,7 +207,7 @@ class VisionDiffManager:
         }
 
 def take_screenshot(app_name: Optional[str] = None, window_title: Optional[str] = None, activate: bool = False, use_frontmost: bool = False) -> Dict[str, Any]:
-    """Takes a smart screenshot of an app or the full screen."""
+    """Takes a smart screenshot of an application or the full screen."""
     try:
         if use_frontmost and not app_name:
             app_name, window_title = _auto_detect_frontmost(window_title)
@@ -232,14 +224,12 @@ def take_screenshot(app_name: Optional[str] = None, window_title: Optional[str] 
         
         if img is None:
             fallback_res = _capture_with_fallback(app_name, window_title, mss_error, manager, focus_id)
-            # If fallback failed, count it in metrics
             if fallback_res.get("status") == "error":
                 METRICS["screenshot_total"] += 1
                 METRICS["screenshot_failure"] += 1
             return fallback_res
 
         res = manager.process_screenshot(img, focus_id)
-        # success metrics
         METRICS["screenshot_total"] += 1
         METRICS["screenshot_success"] += 1
         return _build_success_response("take_screenshot", res, focus_id)
@@ -247,11 +237,9 @@ def take_screenshot(app_name: Optional[str] = None, window_title: Optional[str] 
     except Exception as e:
         tb = traceback.format_exc()
         try:
-            # Ensure we log full traceback for observability
             logger.exception("take_screenshot failed")
         except Exception:
             pass
-        # failure metrics
         METRICS["screenshot_total"] += 1
         METRICS["screenshot_failure"] += 1
         return {
@@ -276,9 +264,12 @@ def _auto_detect_frontmost(window_title: Optional[str]) -> Tuple[Optional[str], 
     return None, window_title
 
 def _activate_app_safely(app_name: str):
-    script = f'tell application "{app_name}" to activate'
-    subprocess.run(["osascript", "-e", script], capture_output=True, timeout=2)
-    time.sleep(0.5)
+    try:
+        script = f'tell application "{app_name}" to activate'
+        subprocess.run(["osascript", "-e", script], capture_output=True, timeout=2)
+        time.sleep(0.5)
+    except Exception:
+        pass
 
 def _build_focus_id(app_name: Optional[str], window_title: Optional[str]) -> str:
     if not app_name:
@@ -287,9 +278,11 @@ def _build_focus_id(app_name: Optional[str], window_title: Optional[str]) -> str
     return fid + f"_{window_title}" if window_title else fid
 
 def _capture_with_mss(region: Optional[Dict[str, int]]) -> Tuple[Optional[Image.Image], Optional[str]]:
+    last_err = "Unknown error"
     try:
         with mss.mss() as sct:
             monitor = sct.monitors[0]
+            # Try a few times because sometimes the display is busy
             for _ in range(2):
                 try:
                     sct_img = sct.grab(region or monitor)
@@ -311,7 +304,8 @@ def _capture_with_fallback(app_name, window_title, mss_error, manager, focus_id)
         cmd = ["screencapture", "-x"]
         region = _get_app_geometry(app_name, window_title) if app_name else None
         if region:
-            cmd += ["-R", f"{region['left']},{region['top']},{region['width']},{region['height']}"]
+            if 'left' in region and 'top' in region and 'width' in region and 'height' in region:
+                cmd += ["-R", f"{region['left']},{region['top']},{region['width']},{region['height']}"]
         cmd.append(tmp_path)
         
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
@@ -362,16 +356,13 @@ def _build_success_response(tool: str, res: Dict[str, Any], focus_id: str) -> Di
 def _get_app_geometry(app_name: str, window_title: Optional[str] = None) -> Optional[Dict[str, int]]:
     # If window_title provided, filter by it. otherwise get window 1.
     if window_title:
-        # Get first window where name contains title
         script = f'tell application "System Events" to tell process "{app_name}" to get {{position, size}} of first window where name contains "{window_title}"'
     else:
-        # Default to first window
         script = f'tell application "System Events" to tell process "{app_name}" to get {{position, size}} of window 1'
         
     try:
         proc = subprocess.run(["osascript", "-e", script], capture_output=True, text=True, timeout=2)
         if proc.returncode == 0:
-            # Format: 100, 100, 800, 600
             parts = proc.stdout.strip().replace(" ", "").split(",")
             if len(parts) >= 4:
                 return {
@@ -385,6 +376,7 @@ def _get_app_geometry(app_name: str, window_title: Optional[str] = None) -> Opti
     return None
 
 def capture_screen_region(x: int, y: int, width: int, height: int) -> Dict[str, Any]:
+    """Capture a specific region of the screen."""
     try:
         region = {"left": int(x), "top": int(y), "width": int(width), "height": int(height)}
         with mss.mss() as sct:
@@ -401,6 +393,7 @@ def capture_screen_region(x: int, y: int, width: int, height: int) -> Dict[str, 
         return {"tool": "capture_screen_region", "status": "error", "error": str(e)}
 
 def take_burst_screenshot(app_name: Optional[str] = None, count: int = 3, interval: float = 0.3) -> Dict[str, Any]:
+    """Take multiple screenshots in rapid succession."""
     paths = []
     for _ in range(count):
         res = take_screenshot(app_name)

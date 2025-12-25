@@ -1,25 +1,22 @@
 #!/usr/bin/env python3
-
 """
-MCP Server Manager - Main integration class for Context7 and SonarQube MCP servers
+MCP Server Manager - Integration class for Context7, SonarQube and other MCP servers.
+This version bridges legacy calls to the modern Native SDK Client.
 """
 
 import json
-import subprocess
-import os
 import logging
-import tempfile
+import os
 from typing import Dict, Any, Optional, Union
 from abc import ABC, abstractmethod
 
+# Internal imports
+from mcp_integration.core.mcp_client_manager import get_mcp_client_manager, MCPClientType
+
 # Set up logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
 logger = logging.getLogger(__name__)
 
-# Simple metric for MCP fallbacks
+# Simple metric for MCP fallbacks (kept for compatibility)
 CONTEXT7_FALLBACK_COUNT = 0
 
 def get_mcp_metrics() -> dict:
@@ -27,390 +24,104 @@ def get_mcp_metrics() -> dict:
 
 
 class MCPServerClient(ABC):
-    """Abstract base class for MCP server clients"""
+    """Bridge interface for legacy MCP client calls"""
     
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, name: str, config: Dict[str, Any]):
+        self.name = name
         self.config = config
-        self.command = config.get('command', '')
-        self.args = config.get('args', [])
-        self.env = config.get('env', {})
-        self.timeout = config.get('timeout', 30000)
-        self.retry_attempts = config.get('retryAttempts', 3)
+        self.manager = get_mcp_client_manager()
         
     @abstractmethod
     def connect(self) -> bool:
-        """Establish connection to MCP server"""
         pass
     
     @abstractmethod
     def execute_command(self, command: str, **kwargs) -> Dict[str, Any]:
-        """Execute command on MCP server"""
         pass
     
     @abstractmethod
     def get_status(self) -> Dict[str, Any]:
-        """Get server status"""
         pass
-    
-    def _run_command(self, cmd: list) -> subprocess.CompletedProcess:
-        """Internal method to run shell commands"""
-        try:
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                timeout=self.timeout,
-                env={**os.environ, **self.env}
-            )
-            return result
-        except subprocess.TimeoutExpired:
-            logger.error(f"Command timed out: {' '.join(cmd)}")
-            raise
-        except Exception as e:
-            logger.error(f"Error running command: {e}")
-            raise
 
 
-class Context7Client(MCPServerClient):
-    """Context7 MCP Server Client"""
+class UnifiedBridgeClient(MCPServerClient):
+    """A client that bridges legacy execute_command calls to official MCP tool calls."""
     
-    def __init__(self, config: Dict[str, Any]):
-        super().__init__(config)
-        self.server_type = "context7"
-        
     def connect(self) -> bool:
-        """Connect to Context7 MCP server"""
-        try:
-            # Test connection by getting server info
-            test_cmd = [self.command] + self.args + ["--version"]
-            result = self._run_command(test_cmd)
-            
-            if result.returncode == 0:
-                logger.info(f"Successfully connected to Context7 MCP server")
-                return True
-            else:
-                logger.error(f"Failed to connect to Context7: {result.stderr}")
-                return False
-                
-        except Exception as e:
-            logger.error(f"Context7 connection error: {e}")
-            return False
-    
+        client = self.manager.get_client(MCPClientType.NATIVE)
+        if client:
+            return client.connect()
+        return False
+
     def execute_command(self, command: str, **kwargs) -> Dict[str, Any]:
-        """Execute command on Context7 MCP server"""
-        try:
-            # Prepare kwargs: if large 'data' is present, write it to a temp file
-            temp_data_file = None
-            if "data" in kwargs and isinstance(kwargs["data"], str):
-                data_str = kwargs.pop("data")
-                # Use a temp file when data is large or contains newlines/whitespace
-                if len(data_str) > 200 or "\n" in data_str or len(data_str.split()) > 20:
-                    fd, temp_path = tempfile.mkstemp(prefix="context7_data_", suffix=".json")
-                    os.close(fd)
-                    with open(temp_path, "w", encoding="utf-8") as fh:
-                        fh.write(data_str)
-                    kwargs["data-file"] = temp_path
-                    temp_data_file = temp_path
-                else:
-                    kwargs["data"] = data_str
-
-            # Build the full command
-            full_cmd = [self.command] + self.args + [command]
-
-            # Add any additional arguments from kwargs
-            for key, value in kwargs.items():
-                if isinstance(value, (str, int, float)):
-                    full_cmd.extend([f"--{key}", str(value)])
-                elif isinstance(value, bool):
-                    if value:
-                        full_cmd.append(f"--{key}")
-
-            # Execute and ensure temp file cleanup afterwards
-            try:
-                result = self._run_command(full_cmd)
-
-                if result.returncode == 0:
-                    try:
-                        # Try to parse JSON output
-                        return {
-                            "success": True,
-                            "data": json.loads(result.stdout),
-                            "raw_output": result.stdout
-                        }
-                    except json.JSONDecodeError:
-                        # Return raw output if not JSON
-                        return {
-                            "success": True,
-                            "data": result.stdout,
-                            "raw_output": result.stdout
-                        }
-                else:
-                    # Handle Context7 specific errors more gracefully
-                    error_msg = result.stderr if result.stderr else "Unknown error"
-
-                    # Check for common Context7 errors
-                    if "too many arguments" in error_msg:
-                        # record fallback metric
-                        global CONTEXT7_FALLBACK_COUNT
-                        CONTEXT7_FALLBACK_COUNT += 1
-                        logger.warning("Context7 argument error - trying simplified command")
-                        # Try with just the basic command (no kwargs)
-                        simple_cmd = [self.command] + self.args + [command]
-                        simple_result = self._run_command(simple_cmd)
-
-                        if simple_result.returncode == 0:
-                            try:
-                                return {
-                                    "success": True,
-                                    "data": json.loads(simple_result.stdout),
-                                    "raw_output": simple_result.stdout,
-                                    "fallback": "used_simple_command"
-                                }
-                            except json.JSONDecodeError:
-                                return {
-                                    "success": True,
-                                    "data": simple_result.stdout,
-                                    "raw_output": simple_result.stdout,
-                                }
-                        else:
-                            return {
-                                "success": False,
-                                "error": f"Context7 command failed: {error_msg}",
-                                "returncode": result.returncode,
-                                "fallback_attempted": True
-                            }
-                    else:
-                        return {
-                            "success": False,
-                            "error": f"Context7 error: {error_msg}",
-                            "returncode": result.returncode
-                        }
-            finally:
-                # Cleanup temp data file if we created one
-                if temp_data_file and os.path.exists(temp_data_file):
-                    try:
-                        os.unlink(temp_data_file)
-                    except Exception:
-                        logger.exception("Failed to cleanup temp data file")
-                
-        except Exception as e:
-            return {
-                "success": False,
-                "error": str(e),
-                "exception": type(e).__name__
-            }
-    
-    def get_status(self) -> Dict[str, Any]:
-        """Get Context7 server status"""
-        return self.execute_command("status")
-    
-    def store_context(self, context_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Store context data in Context7"""
-        return self.execute_command("store", data=json.dumps(context_data))
-    
-    def retrieve_context(self, query: str) -> Dict[str, Any]:
-        """Retrieve context data from Context7"""
-        return self.execute_command("retrieve", query=query)
-
-
-class SonarQubeClient(MCPServerClient):
-    """SonarQube MCP Server Client"""
-    
-    def __init__(self, config: Dict[str, Any]):
-        super().__init__(config)
-        self.server_type = "sonarqube"
-        
-    def connect(self) -> bool:
-        """Connect to SonarQube MCP server"""
-        try:
-            # Test connection by running a simple command
-            test_cmd = [self.command] + self.args + ["--test-connection"]
-            result = self._run_command(test_cmd)
-            
-            if result.returncode == 0:
-                logger.info(f"Successfully connected to SonarQube MCP server")
-                return True
-            else:
-                logger.error(f"Failed to connect to SonarQube: {result.stderr}")
-                return False
-                
-        except Exception as e:
-            logger.error(f"SonarQube connection error: {e}")
-            return False
-    
-    def execute_command(self, command: str, **kwargs) -> Dict[str, Any]:
-        """Execute command on SonarQube MCP server"""
-        try:
-            # Build the full command
-            full_cmd = [self.command] + self.args + [command]
-            
-            # Add any additional arguments from kwargs
-            for key, value in kwargs.items():
-                if isinstance(value, (str, int, float)):
-                    full_cmd.extend([f"--{key}", str(value)])
-                elif isinstance(value, bool):
-                    if value:
-                        full_cmd.append(f"--{key}")
-            
-            result = self._run_command(full_cmd)
-            
-            if result.returncode == 0:
-                try:
-                    # Try to parse JSON output
-                    return {
-                        "success": True,
-                        "data": json.loads(result.stdout),
-                        "raw_output": result.stdout
-                    }
-                except json.JSONDecodeError:
-                    # Return raw output if not JSON
-                    return {
-                        "success": True,
-                        "data": result.stdout,
-                        "raw_output": result.stdout
-                    }
-            else:
-                return {
-                    "success": False,
-                    "error": result.stderr,
-                    "returncode": result.returncode
-                }
-                
-        except Exception as e:
-            return {
-                "success": False,
-                "error": str(e),
-                "exception": type(e).__name__
-            }
-    
-    def get_status(self) -> Dict[str, Any]:
-        """Get SonarQube server status"""
-        return self.execute_command("status")
-    
-    def analyze_project(self, project_key: str, **kwargs) -> Dict[str, Any]:
-        """Analyze a project with SonarQube"""
-        return self.execute_command("analyze", project=project_key, **kwargs)
-    
-    def get_quality_gate(self, project_key: str) -> Dict[str, Any]:
-        """Get quality gate status for a project"""
-        return self.execute_command("quality-gate", project=project_key)
-    
-    def get_sonarqube_docs(self, topic: str = None) -> Dict[str, Any]:
         """
-        Get SonarQube API documentation using Context7
-        This method requires the 'context7-docs' or main 'context7' client
-        and uses the mcp_io_github_ups tools for documentation
+        Map legacy command names to modern tool names.
+        Example: execute_command("store", data="...") -> execute_tool("context7.store", {"data": "..."})
         """
-        try:
-            # This is a placeholder - actual implementation would use
-            # the mcp_io_github_ups_get-library-docs tool
-            # For now, return a structured response
-            return {
-                "success": True,
-                "message": "Use mcp_io_github_ups_resolve-library-id first, then mcp_io_github_ups_get-library-docs",
-                "library": "SonarSource/sonarqube",
-                "topic": topic or "general"
+        # Map legacy commands to server tools
+        # For context7
+        if self.name == "context7" or self.name == "context7-docs":
+            tool_map = {
+                "store": "context7.store",
+                "retrieve": "context7.retrieve",
+                "status": "context7.status",
+                "list": "context7.list_memories"
             }
-        except Exception as e:
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            tool_name = tool_map.get(command, f"context7.{command}")
+            res = self.manager.execute(tool_name, kwargs)
+            return res
+            
+        # For sonarqube
+        elif self.name == "sonarqube":
+             tool_name = f"sonarqube.{command}"
+             return self.manager.execute(tool_name, kwargs)
+
+        return {"success": False, "error": f"Unknown mapping for {self.name}.{command}"}
+
+    def get_status(self) -> Dict[str, Any]:
+        return self.execute_command("status")
 
 
 class MCPManager:
-    """Main MCP Server Manager"""
+    """Modern MCP Manager that maintains backward compatibility with legacy code."""
     
-    def __init__(self, config_path: str = "config/mcp_config.json"):
+    def __init__(self, config_path: str = "mcp_integration/config/mcp_config.json"):
         self.config_path = config_path
-        self.config = self._load_config()
+        self._client_mgr = get_mcp_client_manager()
         self.clients = {}
-        self._initialize_clients()
+        self._initialize_legacy_clients()
         
-    def _load_config(self) -> Dict[str, Any]:
-        """Load MCP configuration"""
-        try:
-            with open(self.config_path, 'r') as f:
-                config = json.load(f)
-            logger.info(f"Loaded MCP configuration from {self.config_path}")
-            return config
-        except Exception as e:
-            logger.error(f"Failed to load config: {e}")
-            raise
-    
-    def _initialize_clients(self):
-        """Initialize MCP server clients"""
-        servers_config = self.config.get('mcpServers', {})
+    def _initialize_legacy_clients(self):
+        """Create bridge clients for legacy callers."""
+        # We manually add bridges for the expected names
+        for name in ["context7", "context7-docs", "sonarqube", "copilot"]:
+             self.clients[name] = UnifiedBridgeClient(name, {})
         
-        for server_name, server_config in servers_config.items():
-            # Skip servers explicitly marked as disabled in configuration
-            if not server_config.get("enabled", True):
-                logger.info(f"Skipping disabled MCP server: {server_name}")
-                continue
-            if server_name == "context7" or server_name == "context7-docs":
-                self.clients[server_name] = Context7Client(server_config)
-            elif server_name == "sonarqube":
-                self.clients[server_name] = SonarQubeClient(server_config)
-            elif server_name == "copilot":
-                # Import and initialize Copilot MCP client
-                try:
-                    from .copilot_mcp_client import CopilotMCPClient
-                    self.clients[server_name] = CopilotMCPClient(server_config)
-                    logger.info("Initialized Copilot MCP client")
-                except Exception as e:
-                    logger.error(f"Failed to initialize Copilot MCP client: {e}")
-            else:
-                logger.warning(f"Unknown server type: {server_name}")
-        
-        logger.info(f"Initialized {len(self.clients)} MCP server clients")
+        logger.info(f"Initialized {len(self.clients)} MCP bridge clients")
     
     def get_client(self, server_name: str) -> Optional[MCPServerClient]:
-        """Get MCP client by name"""
         return self.clients.get(server_name)
     
     def connect_all(self) -> Dict[str, bool]:
-        """Connect to all MCP servers"""
         results = {}
         for name, client in self.clients.items():
             results[name] = client.connect()
         return results
     
     def get_all_status(self) -> Dict[str, Dict[str, Any]]:
-        """Get status from all MCP servers"""
         results = {}
         for name, client in self.clients.items():
             results[name] = client.get_status()
         return results
     
     def execute_on_server(self, server_name: str, command: str, **kwargs) -> Dict[str, Any]:
-        """Execute command on specific server"""
         client = self.get_client(server_name)
         if client:
             return client.execute_command(command, **kwargs)
         else:
-            return {
-                "success": False,
-                "error": f"Server {server_name} not found"
-            }
+            return {"success": False, "error": f"Server {server_name} not found"}
 
 
 if __name__ == "__main__":
-    # Example usage
     manager = MCPManager()
-    
-    # Connect to all servers
-    connections = manager.connect_all()
-    print("Connection results:", connections)
-    
-    # Get status from all servers
-    statuses = manager.get_all_status()
-    print("Server statuses:", statuses)
-    
-    # Example: Store context in Context7
-    if "context7" in manager.clients:
-        context_result = manager.execute_on_server(
-            "context7", 
-            "store",
-            data=json.dumps({"test": "context", "value": "hello world"})
-        )
-        print("Context7 store result:", context_result)
+    print("Bridge MCP Manager Initialized")

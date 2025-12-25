@@ -9,6 +9,7 @@ import json
 import logging
 import os
 import threading
+import sys
 from contextlib import AsyncExitStack
 from typing import Any, Dict, List, Optional
 
@@ -39,6 +40,7 @@ class NativeMCPClient(BaseMCPClient):
         self._thread = threading.Thread(target=self._run_loop, daemon=True)
         self._thread.start()
         self._lock = threading.Lock()
+        self._connected = False
         
     def _run_loop(self):
         asyncio.set_event_loop(self._loop)
@@ -89,42 +91,54 @@ class NativeMCPClient(BaseMCPClient):
             self._async_execute_tool(server_name, tool_name, args), 
             self._loop
         )
-        return fut.result(timeout=60)
+        try:
+            return fut.result(timeout=60)
+        except Exception as e:
+            return {"success": False, "error": f"Tool execution timeout or error: {str(e)}"}
 
     def execute_task(self, task: str) -> Dict[str, Any]:
         """
         Execute a high-level task via Native SDK by routing it 
-        to the most relevant server based on simple heuristics.
+        to the most relevant server tool.
         """
-        # Simple heuristic mapping for Native SDK
         task_lower = task.lower()
-        target_server = "context7" # default
         
-        if any(kw in task_lower for kw in ["file", "read", "write", "directory"]):
+        # Determine target server
+        target_server = "context7" 
+        if any(kw in task_lower for kw in ["file", "read", "write", "directory", "folder"]):
             target_server = "filesystem"
-        elif any(kw in task_lower for kw in ["browser", "web", "url", "navigate"]):
+        elif any(kw in task_lower for kw in ["browser", "web", "url", "navigate", "search", "google"]):
             target_server = "playwright"
-        elif any(kw in task_lower for kw in ["memory", "knowledge", "recall"]):
+        elif any(kw in task_lower for kw in ["memory", "knowledge", "recall", "learn"]):
             target_server = "memory"
         
-        # In Native SDK, 'execute_task' is essentially 'execute_prompt' 
-        # on the target server if the server supports it, otherwise 
-        # it might need a more complex agent. 
-        # For now, we return failure or try a generic tool if available.
+        # Instead of just erroring, we try to use a "meta" or "execute" tool if available
+        # Or we try to use the most common tool on that server if the task looks like one.
+        
+        # For Context7, we usually want 'retrieve' or 'store'
+        if target_server == "context7":
+             if "store" in task_lower:
+                 return self.execute_tool("context7.store", {"data": task})
+             else:
+                 return self.execute_tool("context7.retrieve", {"query": task})
+        
+        # For Playwright, it might be a search
+        if target_server == "playwright" and "search" in task_lower:
+             return self.execute_tool("playwright.browser_search_duckduckgo", {"query": task})
+
+        # Fallback to the previous informative error but now it's more helpful
         return {
             "success": False, 
-            "error": f"Native SDK Client: High-level delegation to '{target_server}' is not supported. Use 'continue' (dev) or 'cline' (browser) for task delegation via meta.execute_task."
+            "error": f"Native SDK Client: High-level delegation to '{target_server}' requires specific tool calls. Please use explicit tools like '{target_server}.browser_navigate' or use 'continue/cline' for autonomous delegation."
         }
 
     async def _async_execute_tool(self, server_name: str, tool_name: str, args: Dict[str, Any]) -> Dict[str, Any]:
         """Internal async implementation with persistent session support."""
-        # 1. Ensure we have a lock for this server to prevent race conditions during init
         if server_name not in self._session_locks:
             self._session_locks[server_name] = asyncio.Lock()
         
         async with self._session_locks[server_name]:
             try:
-                # 2. Get or create persistent session
                 session = self._sessions.get(server_name)
                 
                 if session is None:
@@ -149,14 +163,15 @@ class NativeMCPClient(BaseMCPClient):
                     self._sessions[server_name] = session
                     logger.info(f"✅ Persistent session for {server_name} ready.")
                 
-                # 3. Call tool
+                # Call tool
                 logger.debug(f"Calling MCP Tool (Persistent): {server_name}.{tool_name}")
                 result = await session.call_tool(tool_name, args)
                 
                 if result.isError:
+                    error_out = "".join([c.text for c in result.content if hasattr(c, 'text')])
                     return {
-                        "success": False, 
-                        "error": "".join([c.text for c in result.content if hasattr(c, 'text')])
+                         "success": False, 
+                         "error": error_out or "Unknown tool error"
                     }
                 
                 output_text = "\n".join([c.text for c in result.content if hasattr(c, 'text')])
@@ -168,7 +183,6 @@ class NativeMCPClient(BaseMCPClient):
 
             except Exception as e:
                 logger.error(f"Native MCP Error ({server_name}): {e}")
-                # Cleanup failed session to allow retry
                 await self._close_session(server_name)
                 return {"success": False, "error": str(e)}
 
@@ -176,7 +190,10 @@ class NativeMCPClient(BaseMCPClient):
         """Retrieve server parameters from the global mcp_config.json."""
         config_path = self.config.get("mcp_config_path")
         if not config_path or not os.path.exists(config_path):
-            return None
+             # Try default path
+             config_path = os.path.expanduser("~/.kinotavr/mcp_config.json")
+             if not os.path.exists(config_path):
+                  return None
         
         try:
             with open(config_path, 'r') as f:
@@ -188,7 +205,6 @@ class NativeMCPClient(BaseMCPClient):
 
     def list_tools(self) -> List[Dict[str, str]]:
         """Dynamic listing of all tools across all configured servers."""
-        # Use a short timeout for listing to avoid hangs
         fut = asyncio.run_coroutine_threadsafe(self._async_list_all_tools(), self._loop)
         try:
             return fut.result(timeout=15)
@@ -197,16 +213,17 @@ class NativeMCPClient(BaseMCPClient):
             return []
 
     async def _async_list_all_tools(self) -> List[Dict[str, str]]:
-        """Gather tools from all servers defined in config using gather for resilience."""
+        """Gather tools from all defined servers."""
         config_path = self.config.get("mcp_config_path")
         if not config_path or not os.path.exists(config_path):
-            return []
+             config_path = os.path.expanduser("~/.kinotavr/mcp_config.json")
+             if not os.path.exists(config_path):
+                  return []
 
         try:
             with open(config_path, 'r') as f:
                 servers_config = json.load(f).get("mcpServers", {})
             
-            # Prepare tasks
             tasks = []
             server_names = []
             for s_name, s_cfg in servers_config.items():
@@ -214,7 +231,6 @@ class NativeMCPClient(BaseMCPClient):
                 tasks.append(self._get_tools_from_server(s_name, s_cfg))
                 server_names.append(s_name)
             
-            # Execute tasks with return_exceptions=True
             results = await asyncio.gather(*tasks, return_exceptions=True)
             
             all_tools = []
@@ -229,7 +245,7 @@ class NativeMCPClient(BaseMCPClient):
             logger.error(f"Error in _async_list_all_tools: {e}")
             return []
 
-    async def _get_tools_from_server(self, name: str, cfg: Dict[str, Any]) -> List[Dict[str, str]]:
+    async def _get_tools_from_server(self, name: str, cfg: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Helper to get tools from a single server."""
         server_tools = []
         try:
@@ -248,7 +264,6 @@ class NativeMCPClient(BaseMCPClient):
                             "description": t.description
                         })
         except Exception as e:
-            # Re-raise to be caught by gather
             raise Exception(f"Server {name} failed: {e}")
         return server_tools
 
@@ -256,5 +271,6 @@ class NativeMCPClient(BaseMCPClient):
         return {
             "client": "native_sdk",
             "connected": self._connected,
-            "thread_alive": self._thread.is_alive()
+            "thread_alive": self._thread.is_alive(),
+            "active_sessions": list(self._sessions.keys())
         }

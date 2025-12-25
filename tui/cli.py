@@ -43,7 +43,7 @@ if _repo_root not in sys.path:
 from i18n import TOP_LANGS, lang_name, normalize_lang, tr
 from tui.state import AppState, MenuLevel, state
 # Use unified core logging
-from core.logging_config import setup_global_logging, get_logger, log_exception
+from core.logging_config import setup_global_logging, setup_logging, get_logger, log_exception
 from core.mcp import get_mcp_client_manager
 
 from prompt_toolkit.buffer import Buffer
