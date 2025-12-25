@@ -15,5 +15,7 @@
   "sonarlint.connectedMode.project": {
     "connectionId": "olegkizima01",
     "projectKey": "olegkizima01_System2"
-  }
+  },
+  "python-envs.defaultEnvManager": "ms-python.python:pyenv",
+  "python-envs.pythonProjects": []
 }

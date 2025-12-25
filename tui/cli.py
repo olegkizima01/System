@@ -601,6 +601,9 @@ def _agent_send_with_stream(user_text: str) -> Tuple[bool, str]:
             pass
 
     agent_session.messages.append(HumanMessage(content=str(user_text or "")))
+    
+    # Log user message to Agent Panel
+    _log_agent_message_imported(AgentType.USER, str(user_text or ""))
 
     llm = agent_session.llm
     
@@ -620,6 +623,10 @@ def _agent_send_with_stream(user_text: str) -> Tuple[bool, str]:
         def _on_delta(piece: str) -> None:
             nonlocal accumulated_content, stream_idx
             accumulated_content += piece
+            
+            # Update Agent Panel (Stream)
+            _log_agent_message_imported(AgentType.ASSISTANT, accumulated_content)
+
             # Guard against out-of-range index after log trimming
             if 0 <= stream_idx < len(state.logs):
                 _log_replace_at(stream_idx, accumulated_content, "action")
@@ -649,6 +656,9 @@ def _agent_send_with_stream(user_text: str) -> Tuple[bool, str]:
         final_message = resp if isinstance(resp, AIMessage) else AIMessage(content=str(getattr(resp, "content", "") or ""))
         if not accumulated_content:
             accumulated_content = str(getattr(final_message, "content", "") or "")
+            # Update Agent Panel (Final fallback)
+            _log_agent_message_imported(AgentType.ASSISTANT, accumulated_content)
+
             # Guard against out-of-range index after log trimming
             if 0 <= stream_idx < len(state.logs):
                 _log_replace_at(stream_idx, accumulated_content, "action")
@@ -694,6 +704,9 @@ def _agent_send_no_stream(user_text: str) -> Tuple[bool, str]:
             pass
 
     agent_session.messages.append(HumanMessage(content=str(user_text or "")))
+    
+    # Log user message to Agent Panel
+    _log_agent_message_imported(AgentType.USER, str(user_text or ""))
 
     llm = agent_session.llm
 
@@ -701,9 +714,14 @@ def _agent_send_no_stream(user_text: str) -> Tuple[bool, str]:
         resp = llm.invoke(agent_session.messages)
         final_message = resp if isinstance(resp, AIMessage) else AIMessage(content=str(getattr(resp, "content", "") or ""))
         agent_session.messages.append(final_message)
-        return True, str(getattr(final_message, "content", "") or "")
+        
+        content = str(getattr(final_message, "content", "") or "")
+        _log_agent_message_imported(AgentType.ASSISTANT, content)
+        
+        return True, content
     finally:
         state.agent_processing = False
+        _trim_logs_if_needed()
         _trim_logs_if_needed()
 
 
