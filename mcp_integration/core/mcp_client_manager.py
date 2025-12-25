@@ -137,12 +137,12 @@ class MCPClientManager:
         
         # Only NativeMCPClient is active - other clients archived
         try:
-            from .native_sdk_client import NativeMCPClient
+            from core.mcp.client import NativeMCPClient
             native_cfg = clients_config.get("native", {})
             # Ensure native_cfg knows where the main config is for server discovery
             native_cfg["mcp_config_path"] = self._config_path
             self._clients[MCPClientType.NATIVE] = NativeMCPClient(native_cfg)
-        except ImportError as e:
+        except (ImportError, ModuleNotFoundError) as e:
             logger.error(f"NativeMCPClient not available: {e}")
         except Exception as e:
             logger.error(f"Failed to initialize NativeMCPClient: {e}")

@@ -111,10 +111,13 @@ setup_mcp_servers() {
         else
             echo "   ✅ Continue CLI found."
         fi
+
+        echo "   Installing MCP Servers globally..."
+        npm install -g @upstash/context7-mcp @upstash/context7-docs-mcp @playwright/mcp @iflow-mcp/applescript-mcp @modelcontextprotocol/server-filesystem
         
         # Playwright
         echo "   Installing Playwright browsers..."
-        playwright install chromium
+        npx playwright install chromium
     else
         echo "⚠️  npm not found. Node.js based MCP servers will not be available."
     fi

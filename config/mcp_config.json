@@ -19,33 +19,24 @@
   },
   "mcpServers": {
     "context7": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@upstash/context7-mcp"
-      ],
+      "command": "context7-mcp",
+      "args": [],
       "description": "Context7 MCP Server for memory and context management",
       "timeout": 30000,
       "retryAttempts": 3,
       "category": "ai"
     },
     "context7-docs": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@upstash/context7-docs-mcp"
-      ],
-      "description": "Context7 Docs MCP Server for documentation management",
+      "command": "context7-mcp",
+      "args": [],
+      "description": "Context7 Docs MCP Server (integrated in context7-mcp)",
       "timeout": 30000,
       "retryAttempts": 3,
       "category": "ai"
     },
     "playwright": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@playwright/mcp"
-      ],
+      "command": "playwright-mcp",
+      "args": [],
       "description": "Playwright MCP Server for browser automation",
       "timeout": 60000,
       "retryAttempts": 2,
@@ -63,11 +54,8 @@
       "category": "gui"
     },
     "applescript": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@iflow-mcp/applescript-mcp"
-      ],
+      "command": "applescript-mcp",
+      "args": [],
       "description": "AppleScript MCP Server for macOS automation",
       "timeout": 30000,
       "retryAttempts": 2,
@@ -87,11 +75,8 @@
     },
     "filesystem": {
       "enabled": true,
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-filesystem"
-      ],
+      "command": "mcp-server-filesystem",
+      "args": [],
       "description": "Filesystem MCP Server for file operations",
       "timeout": 30000,
       "retryAttempts": 2,

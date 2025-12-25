@@ -97,23 +97,13 @@ class NativeMCPClient(BaseMCPClient):
 
     def execute_task(self, task: str) -> Dict[str, Any]:
         """
-        Execute a high-level task via Native SDK by routing it 
-        to the most relevant server based on simple heuristics.
+        High-level task routing is handled dynamically by agents using specific tools.
+        Direct task execution via this client is not supported.
         """
-        # Simple heuristic mapping for Native SDK
-        task_lower = task.lower()
-        target_server = "context7" # default
-        
-        if any(kw in task_lower for kw in ["file", "read", "write", "directory"]):
-            target_server = "filesystem"
-        elif any(kw in task_lower for kw in ["browser", "web", "url", "navigate"]):
-            target_server = "playwright"
-        elif any(kw in task_lower for kw in ["memory", "knowledge", "recall"]):
-            target_server = "memory"
-        
         return {
             "success": False, 
-            "error": f"High-level delegation to '{target_server}' is not supported by Native SDK direct execution. Use meta-planner."
+            "error": "Native SDK: Please use specific tools (e.g., 'playwright.browser_navigate') as defined in the registry. "
+                     "High-level task delegation should be handled by the meta-planner or specific agents."
         }
 
     async def _async_execute_tool(self, server_name: str, tool_name: str, args: Dict[str, Any]) -> Dict[str, Any]:
@@ -179,7 +169,19 @@ class NativeMCPClient(BaseMCPClient):
         """Retrieve server parameters from the global mcp_config.json."""
         config_path = self.config.get("mcp_config_path")
         if not config_path or not os.path.exists(config_path):
-            return None
+            # Try default paths
+            search_paths = [
+                os.path.join(os.getcwd(), "config", "mcp_config.json"),
+                os.path.join(os.getcwd(), "mcp_integration", "config", "mcp_config.json"),
+                os.path.expanduser("~/.kinotavr/mcp_config.json")
+            ]
+            for p in search_paths:
+                if os.path.exists(p):
+                    config_path = p
+                    break
+            
+            if not config_path or not os.path.exists(config_path):
+                return None
         
         try:
             with open(config_path, 'r') as f:

@@ -839,8 +839,6 @@ class MCPToolRegistry:
         if server_name:
             client = self._mcp_client_manager.get_client(server_name=server_name, task_type=task_type)
             if client:
-                # We skip manual adaptation for standard MCP tools to maintain "originality"
-                # unless specifically required by the protocol.
                 res_dict = self._mcp_client_manager.execute(tool_name, args, task_type=task_type)
                 
                 if res_dict.get("success"):
@@ -851,7 +849,6 @@ class MCPToolRegistry:
                     return str(data)
                 else:
                     logger.warning(f"MCP Tool execution failed via manager: {res_dict.get('error')}")
-                    # Don't return None here if it was supposed to be handled by MCP
                     return f"Error: {res_dict.get('error')}"
 
         return None
