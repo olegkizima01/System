@@ -104,32 +104,55 @@ class NativeMCPClient(BaseMCPClient):
         task_lower = task.lower()
         
         # Determine target server
-        target_server = "context7" 
-        if any(kw in task_lower for kw in ["file", "read", "write", "directory", "folder"]):
+        target_server = "playwright" # Playwright is a safer default for broad tasks
+        if any(kw in task_lower for kw in ["file", "read", "write", "directory", "folder", "filesystem"]):
             target_server = "filesystem"
-        elif any(kw in task_lower for kw in ["browser", "web", "url", "navigate", "search", "google"]):
+        elif any(kw in task_lower for kw in ["browser", "web", "url", "navigate", "search", "google", "look", "screenshot", "snapshot"]):
             target_server = "playwright"
-        elif any(kw in task_lower for kw in ["memory", "knowledge", "recall", "learn"]):
+        elif any(kw in task_lower for kw in ["memory", "knowledge", "recall", "learn", "remember"]):
             target_server = "memory"
         
-        # Instead of just erroring, we try to use a "meta" or "execute" tool if available
-        # Or we try to use the most common tool on that server if the task looks like one.
-        
-        # For Context7, we usually want 'retrieve' or 'store'
-        if target_server == "context7":
-             if "store" in task_lower:
-                 return self.execute_tool("context7.store", {"data": task})
-             else:
-                 return self.execute_tool("context7.retrieve", {"query": task})
-        
-        # For Playwright, it might be a search
-        if target_server == "playwright" and "search" in task_lower:
-             return self.execute_tool("playwright.browser_search_duckduckgo", {"query": task})
+        # 1. Playwright / Browser intents
+        if target_server == "playwright":
+            # Extract URL if present
+            import re
+            url_match = re.search(r'https?://\S+', task)
+            if url_match:
+                url = url_match.group(0)
+                return self.execute_tool("playwright.browser_navigate", {"url": url})
+            
+            if "search" in task_lower or "google" in task_lower:
+                # Extract query
+                query = task
+                for prefix in ["search for", "search", "google", "find"]:
+                    if task_lower.startswith(prefix):
+                        query = task[len(prefix):].strip()
+                        break
+                import urllib.parse
+                search_url = f"https://duckduckgo.com/?q={urllib.parse.quote_plus(query)}"
+                return self.execute_tool("playwright.browser_navigate", {"url": search_url})
+            
+            if any(kw in task_lower for kw in ["snapshot", "read", "look", "screenshot"]):
+                return self.execute_tool("playwright.browser_snapshot", {})
+            
+            if "close" in task_lower:
+                return self.execute_tool("playwright.browser_close", {})
 
-        # Fallback to the previous informative error but now it's more helpful
+        # 2. Filesystem intents
+        if target_server == "filesystem":
+            if any(kw in task_lower for kw in ["list", "ls", "directory", "folder"]):
+                 return self.execute_tool("filesystem.list_directory", {"path": "."})
+            
+        # 3. Memory intents
+        if target_server == "memory":
+             if any(kw in task_lower for kw in ["search", "find", "recall"]):
+                 return self.execute_tool("memory.search_nodes", {"query": task})
+             return self.execute_tool("memory.read_graph", {})
+
+        # Final Fallback: try to be helpful instead of just erroring
         return {
             "success": False, 
-            "error": f"Native SDK Client: High-level delegation to '{target_server}' requires specific tool calls. Please use explicit tools like '{target_server}.browser_navigate' or use 'continue/cline' for autonomous delegation."
+            "error": f"Native SDK Client: High-level execution for '{target_server}' is ambiguous. Task: '{task}'. Please use explicit tools like '{target_server}.browser_navigate' or use a more specific command."
         }
 
     async def _async_execute_tool(self, server_name: str, tool_name: str, args: Dict[str, Any]) -> Dict[str, Any]:
