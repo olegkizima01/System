@@ -9,7 +9,6 @@ import contextlib
 
 logger = logging.getLogger(__name__)
 
-
 from typing import Dict, Any, Callable, List, Optional, Union, Tuple
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
@@ -97,7 +96,6 @@ class ExternalMCPProvider:
             return await self._init_future
             
         try:
-            # Use run_coroutine_threadsafe to trigger _setup and wait for its completion
             waiter = asyncio.run_coroutine_threadsafe(_setup(), self._loop)
             waiter.result(timeout=30)
         except Exception as e:
@@ -114,28 +112,23 @@ class ExternalMCPProvider:
             logger.error(f"Failed to connect MCP provider {self.name}: {e}{hint}")
             raise
 
-
     async def _async_connect(self):
         """Persistent task that manages the connection lifecycle."""
         async with contextlib.AsyncExitStack() as stack:
             try:
-                # 1. Enter Contexts (all in this same Task)
                 read, write = await stack.enter_async_context(stdio_client(self._server_params))
                 self._session = await stack.enter_async_context(ClientSession(read, write))
                 await self._session.initialize()
                 
-                # 2. List tools
                 tools_list = await self._session.list_tools()
                 for tool in tools_list.tools:
                     self._tools[tool.name] = tool
                 
-                # 3. Mark as connected and signal success
                 self._connected = True
                 self._disconnect_event = asyncio.Event()
                 if self._init_future and not self._init_future.done():
                     self._init_future.set_result(True)
                 
-                # 4. Wait for stop signal
                 await self._disconnect_event.wait()
                 
             except Exception as e:
@@ -144,11 +137,10 @@ class ExternalMCPProvider:
                 if self._init_future and not self._init_future.done():
                     self._init_future.set_exception(e)
             finally:
-                # 5. Exit Contexts (still in this same Task)
                 self._connected = False
                 self._session = None
                 self._disconnect_event = None
-        
+
     def execute(self, tool_name: str, args: Dict[str, Any]) -> Any:
         if not self._connected:
             self.connect()
@@ -158,14 +150,12 @@ class ExternalMCPProvider:
     async def _async_execute(self, tool_name: str, args: Dict[str, Any]) -> Any:
         try:
             result = await self._session.call_tool(tool_name, args)
-            # Standardize output for Trinity (JSON string or dict)
             content = []
             result_content = getattr(result, "content", []) if result is not None else []
             for item in result_content if result_content else []:
                 if item is not None and hasattr(item, "text"):
                     content.append(item.text)
                 elif item is not None and hasattr(item, "data"):
-                    # Handle image/binary data if needed
                     content.append(f"[Binary Data: {len(item.data)} bytes]")
             
             return {
@@ -176,7 +166,7 @@ class ExternalMCPProvider:
             }
         except Exception as e:
             return {"tool": tool_name, "status": "error", "error": str(e)}
-    
+
     def disconnect(self):
         """Signal the connection task to exit."""
         if not self._connected or not self._disconnect_event:
@@ -185,20 +175,15 @@ class ExternalMCPProvider:
         def _trigger_stop():
             if self._disconnect_event:
                 self._disconnect_event.set()
-                
+        
         self._loop.call_soon_threadsafe(_trigger_stop)
         self._connected = False
-    
-    async def _async_disconnect(self):
-        # Deprecated, lifecycle handled in _async_connect finally block
-        pass
-    
+
     def __del__(self):
         """Cleanup when object is destroyed."""
         if self._connected:
             self.disconnect()
         
-        # Stop the event loop if it's running
         if self._loop and self._loop.is_running():
             self._loop.call_soon_threadsafe(self._loop.stop)
 
@@ -207,7 +192,7 @@ class MCPToolRegistry:
     The strictly defined Tool Registry for Project Atlas.
     Only tools registered here can be executed by the LLM.
     """
-    
+
     VISION_DISABLED_ERROR = "Vision tools disabled (TRINITY_DISABLE_VISION=1)"
     LAST_RESPONSE_FILE = ".last_response.txt"
     YT_SEARCH_SELECTOR = '[name="search_query"]'
@@ -216,7 +201,7 @@ class MCPToolRegistry:
         self._tools: Dict[str, Callable] = {}
         self._descriptions: Dict[str, str] = {}
         self._external_providers: Dict[str, ExternalMCPProvider] = {}
-        self._external_tools_map: Dict[str, str] = {} # tool_name -> provider_name
+        self._external_tools_map: Dict[str, str] = {}
         self._register_foundation_tools()
         self._register_filesystem_tools()
         self._register_dev_tools()
@@ -229,13 +214,8 @@ class MCPToolRegistry:
         self._register_plugin_tools()
         self._register_mcp_management_tools()
         
-        # Initialize Dual Client Manager
         from mcp_integration.core.mcp_client_manager import get_mcp_client_manager, MCPClientType
         self._mcp_client_manager = get_mcp_client_manager()
-        
-        # We no longer register external providers here to avoid double-init and session conflicts.
-        # MCPServerManager in mcp_integration handles this centrally.
-        # self._register_external_mcp()
 
     def set_mcp_client(self, client_type: str) -> bool:
         """Switch active MCP client (open_mcp/continue)."""
@@ -251,13 +231,10 @@ class MCPToolRegistry:
         return self._mcp_client_manager.active_client_name
 
     def _register_foundation_tools(self):
-        # Foundation Tools
         self.register_tool("run_shell", run_shell, "Execute shell command. Args: command (str), allow=True")
         self.register_tool("open_app", open_app, "Open MacOS Application. Args: name (str)")
         self.register_tool("run_applescript", run_applescript, "Run AppleScript. Args: script (str)")
         self.register_tool("run_shortcut", run_shortcut, "Run Shortcuts automation. Args: name (str), allow=True")
-
-        # Permissions / Privacy
         self.register_tool(
             "open_system_settings_privacy",
             open_system_settings_privacy,
@@ -267,10 +244,7 @@ class MCPToolRegistry:
         pm = create_permissions_manager()
         self.register_tool("check_permissions", lambda: {"tool": "check_permissions", "status": "success", "permissions": {k: vars(v) for k, v in pm.check_all().items()}}, "Check macOS permissions (accessibility/screen_recording/automation). Args: none")
         self.register_tool("permission_help", lambda lang="en": {"tool": "permission_help", "status": "success", "text": pm.get_permission_help_text(lang=str(lang or 'en').strip().lower())}, "Get permissions help text. Args: lang (en|uk)")
-
-        # Log confirmation of low-level tool availability (User Request)
         print("✅ [MCP] Low-level tools available: run_shell, run_applescript, open_app, run_shortcut")
-
 
         self.register_tool(
             "native_applescript",
@@ -449,21 +423,7 @@ class MCPToolRegistry:
     def _register_browser_tools(self):
         """
         Browser tools are now DYNAMICALLY DISCOVERED from Playwright MCP server.
-        
-        Instead of hardcoding browser_* tools here, they are:
-        1. Listed via NativeMCPClient.list_tools() → playwright.browser_*
-        2. Executed via MCPClientManager.execute("playwright.browser_*", args)
-        
-        To use browser tools, call:
-        - playwright.browser_navigate
-        - playwright.browser_click
-        - playwright.browser_type
-        - playwright.browser_snapshot
-        - etc.
-        
-        The MCP server defines the tool schema, no manual adaptation needed.
         """
-        # Removed 13 hardcoded browser_* tools that duplicated MCP server functionality
         pass
 
     def _register_recorder_tools(self):
@@ -513,11 +473,9 @@ class MCPToolRegistry:
             "Create a new Trinity plugin with scaffolding. Automatically triggers DEV mode with Doctor Vibe for development. Args: plugin_name (str), description (str, optional)"
         )
         
-        # Auto-discover and load existing plugins
         try:
             from plugins import load_all_plugins, discover_plugins
             
-            # Load all plugins
             load_results = load_all_plugins(self)
             loaded_count = sum(1 for success in load_results.values() if success)
             
@@ -559,7 +517,6 @@ class MCPToolRegistry:
         import os
         import json
         
-        # Path to MCP config
         config_path = os.path.join(
             os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
             "mcp_integration", "config", "mcp_config.json"
@@ -568,31 +525,28 @@ class MCPToolRegistry:
         if not os.path.exists(config_path):
             print(f"⚠️ [MCP] Config not found at {config_path}")
             return
-
+        
         try:
             with open(config_path, 'r', encoding='utf-8') as f:
                 config = json.load(f)
                 mcp_servers = config.get("mcpServers", {})
             
-            # Register servers from config
             for name, s_config in mcp_servers.items():
                 if name == "copilot" or name == "local_fallback":
-                    # Internal/client-side servers are handled by manager directly
                     continue
-
+                
                 if isinstance(s_config, dict) and s_config.get("enabled") is False:
                     continue
-                    
+                
                 cmd = s_config.get("command")
                 args = s_config.get("args", [])
                 env_map = s_config.get("env") if isinstance(s_config, dict) else None
                 
                 if cmd:
                     try:
-                        # Skip if already registered (e.g. by a plugin)
                         if name in self._external_providers:
                             continue
-
+                        
                         resolved_env = os.environ.copy()
                         missing = []
                         if isinstance(env_map, dict):
@@ -606,11 +560,11 @@ class MCPToolRegistry:
                                     resolved_env[str(k)] = str(val)
                                 elif v is not None:
                                     resolved_env[str(k)] = str(v)
-
+                        
                         if missing:
                             print(f"[MCP] Skipping external provider {name}: missing env {', '.join(missing)}")
                             continue
-
+                        
                         provider = ExternalMCPProvider(name, cmd, args, env=resolved_env)
                         self._external_providers[name] = provider
                         print(f"[MCP] Registered external provider: {name}")
@@ -621,8 +575,6 @@ class MCPToolRegistry:
 
     def _adapt_args_for_mcp(self, local_name: str, mcp_name: str, args: Dict[str, Any]) -> Dict[str, Any]:
         """Adapt local tool arguments to MCP server format."""
-        
-        # Adaptation handlers for specific tool categories
         handlers = {
             "browser_open_url": self._adapt_browser_open_url,
             "browser_navigate": self._adapt_browser_open_url,
@@ -639,7 +591,7 @@ class MCPToolRegistry:
         handler = handlers.get(local_name)
         if handler:
             return handler(args)
-            
+        
         return args
 
     def _adapt_browser_nav(self, args):
@@ -651,12 +603,9 @@ class MCPToolRegistry:
     def _adapt_browser_click(self, args):
         selector = self._smart_selector(args.get("selector", ""))
         
-        # HYBRID LOGIC: Native for refs, JS Bridge for CSS
         if selector.startswith("ref="):
-            # Native browser_click requires BOTH 'ref' and 'element' (bug in some MCP server versions)
             return {"ref": selector[4:], "element": ""}
         
-        # Universal JS Bridge for CSS/XPath (more robust)
         code = f"""async (page) => {{
             await page.waitForSelector("{selector}", {{ state: "visible", timeout: 10000 }});
             await page.click("{selector}");
@@ -665,13 +614,11 @@ class MCPToolRegistry:
 
     def _adapt_browser_type(self, args):
         selector = self._smart_selector(args.get("selector", ""))
-        text = args.get("text", "").replace('"', '\\"')
+        text = args.get("text", "").replace('"', '\"')
         
-        # HYBRID LOGIC: Native for refs, JS Bridge for CSS
         if selector.startswith("ref="):
             return {"ref": selector[4:], "text": text, "element": ""}
-
-        # Universal JS Bridge for CSS/XPath (more robust)
+        
         code = f"""async (page) => {{
             await page.waitForSelector("{selector}", {{ state: "visible", timeout: 10000 }});
             await page.fill("{selector}", "{text}");
@@ -683,11 +630,9 @@ class MCPToolRegistry:
         """Ensure selector is in a format `@playwright/mcp` understands (ref)."""
         if not selector:
             return ""
-        # If it already looks like a playwright locator or ref, leave it
         if any(selector.startswith(p) for p in ["css=", "xpath=", "id=", "text="]):
             return selector
         
-        # Default to CSS if it looks like a simple selector
         if selector.startswith("/") or selector.startswith("("):
             return f"xpath={selector}"
         return f"css={selector}"
@@ -695,7 +640,7 @@ class MCPToolRegistry:
     def _adapt_browser_open_url(self, args):
         url = args.get("url", "")
         return {
-            "code": f'async (page) => {{ \n  await page.goto("{url}", {{ waitUntil: "domcontentloaded", timeout: 60000 }}); \n  await page.waitForLoadState("networkidle", {{ timeout: 10000 }}).catch(() => {{}});\n}}'
+            "code": f'async (page) => {{\n  await page.goto("{url}", {{ waitUntil: "domcontentloaded", timeout: 60000 }});\n  await page.waitForLoadState("networkidle", {{ timeout: 10000 }}).catch(() => {{}});\n}}'
         }
 
     def _adapt_browser_screenshot(self, args):
@@ -717,16 +662,12 @@ class MCPToolRegistry:
     def _smart_selector(self, selector: str) -> str:
         """Auto-correct common selector mistakes for popular sites."""
         selector_fixes = {
-            # YouTube
             "input#search": self.YT_SEARCH_SELECTOR,
             "#search": self.YT_SEARCH_SELECTOR,
-            "input[name='q']": self.YT_SEARCH_SELECTOR,  # Google-style won't work on YT
-            
-            # Google (fix textarea vs input)
+            "input[name='q']": self.YT_SEARCH_SELECTOR,
             'input[name="q"]': 'textarea[name="q"], input[name="q"]',
         }
         
-        # Return fixed selector if we have a mapping
         return selector_fixes.get(selector, selector)
 
     def register_tool(self, name: str, func: Callable, description: str):
@@ -739,28 +680,23 @@ class MCPToolRegistry:
     def list_tools(self, task_type: Optional[str] = None) -> str:
         """Returns a formatted list of tools for the System Prompt."""
         lines = []
-        # Local tools
         for name, desc in self._descriptions.items():
             lines.append(f"- {name}: {desc}")
         
-        # External tools (static providers)
         for p_name, provider in self._external_providers.items():
             try:
                 provider.connect()
                 for t_name, tool in provider._tools.items():
-                    # Prefix external tools to avoid collisions (e.g. playwright.browser_snapshot)
                     prefixed_name = f"{p_name}.{t_name}"
                     self._external_tools_map[prefixed_name] = p_name
                     lines.append(f"- {prefixed_name}: {tool.description}")
             except Exception as e:
                 lines.append(f"- [Provider Offline] {p_name}: {e}")
-
-        # Active MCP Client Dynamic Tools
+        
         try:
             from mcp_integration.core.mcp_client_manager import MCPClientType
             mgr = self._mcp_client_manager
             
-            # Using get_client() without arguments resolves AUTO to NATIVE
             client = mgr.get_client()
             if client:
                 if not client.is_connected: client.connect()
@@ -773,18 +709,16 @@ class MCPToolRegistry:
                         lines.append(f"- {name}: {desc}")
         except Exception as e:
             print(f"[MCP] Failed to list tools from active client: {e}")
-            
+        
         return "\n".join(lines)
 
     def get_all_tool_definitions(self, task_type: Optional[str] = None) -> List[Dict[str, str]]:
         """Returns a list of tool definitions for LLM binding."""
         defs = []
         
-        # Local tools
         for name, desc in self._descriptions.items():
             defs.append({"name": name, "description": desc})
-            
-        # Active MCP Client Dynamic Tools
+        
         try:
             from mcp_integration.core.mcp_client_manager import MCPClientType
             mgr = self._mcp_client_manager
@@ -800,19 +734,15 @@ class MCPToolRegistry:
                     })
         except Exception as e:
             print(f"[MCP] Failed to get tool definitions from active client: {e}")
-                
+        
         return defs
 
     def execute(self, tool_name: str, args: Dict[str, Any], task_type: Optional[str] = None) -> str:
         """Executes a tool safely and returns a string result."""
-        
-        # 1. PRIORITY: Delegate to MCP Client Manager if it handles this tool
-        # This handles both specific tools and "meta-tasks"
         mcp_res = self._try_mcp_routing(tool_name, args, task_type=task_type)
         if mcp_res is not None:
             return mcp_res
-
-        # 2. Local Tool Call (Fallback)
+        
         return self._execute_local_tool(tool_name, args)
 
     def _try_mcp_routing(self, tool_name: str, args: Dict[str, Any], task_type: Optional[str] = None) -> Optional[str]:
@@ -822,27 +752,22 @@ class MCPToolRegistry:
         """
         if not self._mcp_client_manager:
             return None
-
-        # 1. Check if this is a meta-task (e.g., "meta.execute_task")
+        
         if tool_name == "meta.execute_task":
             prompt = args.get("task") or args.get("prompt")
             if prompt:
                 res = self._mcp_client_manager.execute_task(prompt, task_type=task_type)
                 return json.dumps(res, indent=2, ensure_ascii=False)
-
-        # 2. Determine which server this tool belongs to
-        # Format is usually 'server_name.tool_name'
+        
         parts = tool_name.split(".", 1)
         server_name = parts[0] if len(parts) == 2 else None
         
-        # If server_name is known, determine the owner client
         if server_name:
             client = self._mcp_client_manager.get_client(server_name=server_name, task_type=task_type)
             if client:
                 res_dict = self._mcp_client_manager.execute(tool_name, args, task_type=task_type)
                 
                 if res_dict.get("success"):
-                    # Process result
                     data = res_dict.get("data", "")
                     if isinstance(data, (dict, list)):
                         return json.dumps(data, indent=2, ensure_ascii=False)
@@ -850,7 +775,7 @@ class MCPToolRegistry:
                 else:
                     logger.warning(f"MCP Tool execution failed via manager: {res_dict.get('error')}")
                     return f"Error: {res_dict.get('error')}"
-
+        
         return None
 
     def execute_meta_plan(self, items: List[str], task_type: Optional[str] = None) -> List[Dict[str, Any]]:
@@ -872,7 +797,7 @@ class MCPToolRegistry:
         provider_name = self._external_tools_map.get(tool_name)
         if not (provider_name and provider_name in self._external_providers):
             return None
-            
+        
         provider = self._external_providers[provider_name]
         try:
             actual_name = tool_name.split(".", 1)[-1] if "." in tool_name else tool_name
@@ -885,7 +810,7 @@ class MCPToolRegistry:
         func = self._tools.get(tool_name)
         if not func:
             return f"Error: Tool '{tool_name}' not found."
-            
+        
         try:
             import inspect
             sig = inspect.signature(func)
@@ -898,14 +823,14 @@ class MCPToolRegistry:
     def _prepare_call_kwargs(self, sig: Any, args: Dict[str, Any]) -> Dict[str, Any]:
         if "allow" in sig.parameters and "allow" not in args:
             args["allow"] = True
-            
+        
         call_kwargs = {}
         if "args" in sig.parameters:
             call_kwargs["args"] = args
         elif "_args" in sig.parameters:
             call_kwargs["_args"] = args
-            
-        has_varkw = any(p.kind == 3 for p in sig.parameters.values()) # 3 = VAR_KEYWORD
+        
+        has_varkw = any(p.kind == 3 for p in sig.parameters.values())
         
         for k, v in args.items():
             if has_varkw:
@@ -915,41 +840,27 @@ class MCPToolRegistry:
                 call_kwargs[k] = v
         return call_kwargs
 
-    # ===== RAG-based Intelligent Tool Selection =====
-    
     def select_tool_for_task(self, task_description: str, n_candidates: int = 5) -> List[Dict[str, Any]]:
         """
         Use RAG to intelligently select the best tools for a given task.
-        
-        Args:
-            task_description: Natural language description of what to do
-            n_candidates: Number of tool candidates to return
-            
-        Returns:
-            List of tool candidates with scores
         """
         if RAG_AVAILABLE and tool_selector:
             return tool_selector.select_tool(task_description, n_candidates)
         
-        # Fallback: simple keyword matching
         return self._fallback_tool_selection(task_description, n_candidates)
-    
+
     def get_best_tool(self, task_description: str) -> Optional[Dict[str, Any]]:
         """Get the single best tool for a task."""
         candidates = self.select_tool_for_task(task_description, n_candidates=1)
         return candidates[0] if candidates else None
-    
+
     def classify_task(self, task_description: str) -> tuple:
         """
         Classify a task into a category (browser, system, gui, ai, etc.)
-        
-        Returns:
-            Tuple of (category, confidence)
         """
         if RAG_AVAILABLE and tool_selector:
             return tool_selector.classify_task(task_description)
         
-        # Fallback classification
         task_lower = task_description.lower()
         
         if any(kw in task_lower for kw in ["browser", "web", "url", "google", "search", "navigate"]):
@@ -964,14 +875,13 @@ class MCPToolRegistry:
             return ("system", 0.8)
         
         return ("general", 0.5)
-    
+
     def _fallback_tool_selection(self, task: str, n: int) -> List[Dict[str, Any]]:
         """Simple keyword-based tool selection as fallback."""
         task_lower = task.lower()
         scores = []
         
         for name, desc in self._descriptions.items():
-            # Simple scoring based on keyword overlap
             desc_lower = desc.lower()
             score = 0
             
@@ -989,10 +899,9 @@ class MCPToolRegistry:
                     "server": "local"
                 })
         
-        # Sort by score and return top n
         scores.sort(key=lambda x: x["score"], reverse=True)
         return scores[:n]
-    
+
     def get_rag_stats(self) -> Dict[str, Any]:
         """Get statistics about the RAG system."""
         if RAG_AVAILABLE and tool_selector:
@@ -1002,4 +911,3 @@ class MCPToolRegistry:
             "fallback_mode": True,
             "local_tools": len(self._tools)
         }
-

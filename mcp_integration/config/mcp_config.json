@@ -17,128 +17,23 @@
     }
   },
   "mcpServers": {
-    "context7": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@upstash/context7-mcp"
-      ],
-      "description": "Context7 MCP Server for memory and context management",
-      "timeout": 30000,
-      "retryAttempts": 3,
-      "category": "ai",
-      "ownerClient": "native"
-    },
     "playwright": {
-      "command": "npx",
+      "command": "playwright-mcp",
       "args": [
-        "-y",
-        "@playwright/mcp"
+        "--browser", "chromium",
+        "--allowed-origins", "*",
+        "--executable-path", "/Users/dev/Library/Caches/ms-playwright/chromium-1194/chrome-mac/Chromium.app/Contents/MacOS/Chromium",
+        "--user-data-dir", "/tmp/mcp_playwright_session",
+        "--no-sandbox",
+        "--disable-setuid-sandbox"
       ],
-      "description": "Playwright MCP Server for browser automation",
+      "description": "Playwright MCP Server with Chromium",
       "timeout": 60000,
-      "retryAttempts": 2,
+      "retryAttempts": 3,
       "category": "browser",
-      "ownerClient": "native"
-    },
-    "pyautogui": {
-      "enabled": false,
-      "command": "python3",
-      "args": [
-        "-m",
-        "mcp_pyautogui_server"
-      ],
-      "description": "PyAutoGUI MCP Server for GUI automation",
-      "timeout": 30000,
-      "retryAttempts": 2,
-      "category": "gui"
-    },
-    "applescript": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@iflow-mcp/applescript-mcp"
-      ],
-      "description": "AppleScript MCP Server for macOS automation",
-      "timeout": 30000,
-      "retryAttempts": 2,
-      "category": "system",
-      "ownerClient": "native"
-    },
-    "filesystem": {
-      "enabled": true,
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-filesystem"
-      ],
-      "description": "Filesystem MCP Server for file operations",
-      "timeout": 30000,
-      "retryAttempts": 2,
-      "category": "system",
-      "ownerClient": "native"
-    },
-    "sonarqube": {
-      "enabled": false,
-      "command": "docker",
-      "args": [
-        "run",
-        "-i",
-        "--rm",
-        "-e",
-        "SONARQUBE_TOKEN",
-        "-e",
-        "SONARQUBE_ORG",
-        "-e",
-        "SONARQUBE_URL",
-        "mcp/sonarqube"
-      ],
-      "env": {
-        "SONARQUBE_TOKEN": "${SONAR_API_KEY}",
-        "SONARQUBE_URL": "${SONAR_URL}",
-        "SONARQUBE_ORG": "${SONAR_ORG_KEY}"
-      },
-      "description": "SonarQube MCP Server for code quality analysis",
-      "timeout": 60000,
-      "retryAttempts": 2,
-      "category": "code_analysis"
-    },
-    "local_fallback": {
-      "enabled": false,
-      "command": "python3",
-      "args": [
-        "-m",
-        "mcp_integration.servers.local_server"
-      ],
-      "description": "Local fallback for all MCP operations",
-      "timeout": 10000,
-      "retryAttempts": 1,
-      "category": "fallback"
-    },
-    "memory": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-memory"
-      ],
-      "env": {},
-      "description": "Official Anthropic Memory Server for knowledge-graph based persistent memory.",
-      "category": "memory",
-      "enabled": true,
-      "timeout": 30000,
-      "retryAttempts": 2,
-      "ownerClient": "native"
+      "ownerClient": "native",
+      "useGlobalBinary": true,
+      "persistentSession": false
     }
-  },
-  "fallbackChain": [
-    "local_fallback"
-  ],
-  "defaultServer": "context7",
-  "defaultAIServer": "context7",
-  "logging": {
-    "level": "info",
-    "file": "mcp_integration.log",
-    "maxSize": "10MB",
-    "maxFiles": 5
   }
 }
