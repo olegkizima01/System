@@ -31,6 +31,31 @@ class MCPClientManager:
         """Execute MCP tool"""
         return self.get_client().execute(tool_name, args)
     
+    def execute_task(self, task: str, task_type: str = None) -> Dict[str, Any]:
+        """
+        Execute a high-level task by delegating to appropriate tools.
+        This is called via meta.execute_task tool.
+        
+        For browser-related tasks, delegates to browser_execute.
+        For other tasks, returns guidance for the agent to use specific tools.
+        """
+        task_lower = str(task or "").lower()
+        
+        # Browser-related keywords
+        browser_keywords = ["browser", "google", "search", "open url", "website", "navigate", "фільм", "онлайн", "пошук"]
+        is_browser_task = any(kw in task_lower for kw in browser_keywords)
+        
+        if is_browser_task:
+            return self.execute_browser_task(task)
+        
+        # For non-browser tasks, return guidance
+        return {
+            "status": "guidance",
+            "message": f"Task received: {task}. Use specific tools like run_shell, browser_open_url, etc. instead of meta.execute_task for execution.",
+            "task": task,
+            "task_type": task_type or "GENERAL"
+        }
+    
     def start_browser_server(self, browser_name: str = "chromium") -> subprocess.Popen:
         """Start Playwright MCP server with specific browser"""
         server_config = self.get_server_config("playwright")
