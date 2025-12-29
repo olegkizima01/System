@@ -36,7 +36,8 @@ class TetyanaMixin:
             vision_context=self.vision_context_manager.current_context,
         )
 
-        # 2. Invoke LLM
+        # 2. Invoke LLM with rate limiting delay
+        time.sleep(1.5)  # Delay to prevent API rate limiting
         tetyana_llm = self._init_tetyana_llm()
         
         # Ensure LLM knows how to use tools via custom JSON protocol in CopilotLLM

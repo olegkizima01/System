@@ -95,6 +95,10 @@ class GrishaMixin:
         else:
             model = os.getenv("GRISHA_MODEL") or os.getenv("COPILOT_MODEL") or DEFAULT_MODEL_FALLBACK
             llm = CopilotLLM(model_name=model)
+        
+        # Rate limiting: delay before LLM call to avoid API overload
+        time.sleep(1.5)
+        
         def on_delta(chunk): self._deduplicated_stream("grisha", chunk)
         resp = llm.invoke_with_stream(prompt.format_messages(), on_delta=on_delta)
         content = getattr(resp, "content", "") if resp else ""
