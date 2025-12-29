@@ -196,6 +196,20 @@ class MCPToolRegistry:
     VISION_DISABLED_ERROR = "Vision tools disabled (TRINITY_DISABLE_VISION=1)"
     LAST_RESPONSE_FILE = ".last_response.txt"
     YT_SEARCH_SELECTOR = '[name="search_query"]'
+    
+    # Browser tool → Playwright MCP routing table
+    BROWSER_TOOL_ROUTING = {
+        "browser_open_url": ("playwright", "browser_navigate"),
+        "browser_navigate": ("playwright", "browser_navigate"),
+        "browser_click_element": ("playwright", "browser_click"),
+        "browser_type_text": ("playwright", "browser_fill"),
+        "browser_screenshot": ("playwright", "browser_screenshot"),
+        "browser_press_key": ("playwright", "browser_press_key"),
+        "browser_get_links": ("playwright", "browser_evaluate"),
+        "browser_hover": ("playwright", "browser_hover"),
+        "browser_select": ("playwright", "browser_select_option"),
+        "browser_close": ("playwright", "browser_close"),
+    }
 
     def __init__(self):
         self._tools: Dict[str, Callable] = {}
@@ -747,10 +761,24 @@ class MCPToolRegistry:
 
     def execute(self, tool_name: str, args: Dict[str, Any], task_type: Optional[str] = None) -> str:
         """Executes a tool safely and returns a string result."""
+        # 1. Try MCP routing (for prefixed names like playwright.tool)
         mcp_res = self._try_mcp_routing(tool_name, args, task_type=task_type)
         if mcp_res is not None:
             return mcp_res
         
+        # 2. Route browser_* tools to Playwright provider
+        if tool_name in self.BROWSER_TOOL_ROUTING:
+            provider_name, mcp_tool = self.BROWSER_TOOL_ROUTING[tool_name]
+            if provider_name in self._external_providers:
+                adapted_args = self._adapt_args_for_mcp(tool_name, mcp_tool, args)
+                prefixed_name = f"{provider_name}.{mcp_tool}"
+                # Register in external tools map for future direct calls
+                self._external_tools_map[prefixed_name] = provider_name
+                result = self._try_external_direct_call(prefixed_name, adapted_args)
+                if result is not None:
+                    return result
+        
+        # 3. Fallback to local tool execution
         return self._execute_local_tool(tool_name, args)
 
     def _try_mcp_routing(self, tool_name: str, args: Dict[str, Any], task_type: Optional[str] = None) -> Optional[str]:
