@@ -132,7 +132,7 @@ class TrinityRuntime(
             if str(os.getenv("TRINITY_SONAR_BACKGROUND") or "").strip().lower() in {"1", "true", "yes", "on"}:
                 interval = int(os.getenv("TRINITY_SONAR_SCAN_INTERVAL", "300"))
                 from core.sonar_scanner import SonarBackgroundScanner
-                self.sonar_scanner = SonarBackgroundScanner(self, interval=interval)
+                self.sonar_scanner = SonarBackgroundScanner(self, interval_minutes=interval)
                 self.sonar_scanner.start()
             else:
                 self.sonar_scanner = None
