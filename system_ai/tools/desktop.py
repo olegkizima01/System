@@ -1,10 +1,12 @@
 """Desktop Tools Module
 
-Provides tools for inspecting windows, monitors, and managing clipboard state using Quartz and AppKit.
+Provides tools for inspecting windows, monitors, managing clipboard state, and setting wallpapers using Quartz and AppKit.
 """
 
 import Quartz
 import AppKit
+import subprocess
+import os
 from typing import Dict, Any, List, Optional
 
 def get_monitors_info() -> List[Dict[str, Any]]:
@@ -119,4 +121,156 @@ def set_clipboard(text: str) -> Dict[str, Any]:
             "tool": "set_clipboard",
             "status": "error",
             "error": str(e)
+        }
+
+
+def set_wallpaper(image_path: str, monitor_id: Optional[int] = None) -> Dict[str, Any]:
+    """Set wallpaper for a specific monitor or all monitors
+    
+    Args:
+        image_path: Path to the image file
+        monitor_id: Optional monitor ID (if None, sets for all monitors)
+        
+    Returns:
+        Dict with status and result
+    """
+    try:
+        # Check if file exists
+        if not os.path.exists(image_path):
+            return {
+                "tool": "set_wallpaper",
+                "status": "error",
+                "error": f"Image file not found: {image_path}"
+            }
+        
+        # For macOS, we use AppleScript to set wallpaper
+        # Note: AppleScript uses 1-based indexing for desktops, but we need to handle
+        # the case where monitor_id might not match AppleScript's desktop numbering
+        if monitor_id is None:
+            # Set for all monitors
+            script = f'''
+            tell application "System Events"
+                tell every desktop
+                    set picture to "{image_path}"
+                end tell
+            end tell
+            '''
+        else:
+            # For specific monitor, try the direct ID first, then fallback to desktop 1 if it fails
+            # AppleScript desktop numbering might not match Quartz display IDs
+            script = f'''
+            tell application "System Events"
+                try
+                    tell desktop {monitor_id}
+                        set picture to "{image_path}"
+                    end tell
+                on error
+                    -- Fallback to desktop 1 (main monitor) if specific desktop not found
+                    try
+                        tell desktop 1
+                            set picture to "{image_path}"
+                        end tell
+                    on error errMsg
+                        error "Failed to set wallpaper for monitor " & {monitor_id} & ": " & errMsg
+                    end try
+                end try
+            end tell
+            '''
+        
+        result = subprocess.run(
+            ["/usr/bin/osascript", "-e", script],
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+        
+        if result.returncode == 0:
+            return {
+                "tool": "set_wallpaper",
+                "status": "success",
+                "image_path": image_path,
+                "monitor_id": monitor_id,
+                "message": "Wallpaper set successfully"
+            }
+        else:
+            return {
+                "tool": "set_wallpaper",
+                "status": "error",
+                "error": result.stderr.strip() or "Unknown error setting wallpaper",
+                "returncode": result.returncode
+            }
+            
+    except Exception as e:
+        return {
+            "tool": "set_wallpaper",
+            "status": "error",
+            "error": str(e),
+            "image_path": image_path,
+            "monitor_id": monitor_id
+        }
+
+
+def get_current_wallpaper(monitor_id: Optional[int] = None) -> Dict[str, Any]:
+    """Get current wallpaper path for a specific monitor or main monitor
+    
+    Args:
+        monitor_id: Optional monitor ID (if None, gets main monitor wallpaper)
+        
+    Returns:
+        Dict with status and wallpaper path
+    """
+    try:
+        if monitor_id is None:
+            # Get main monitor wallpaper
+            script = '''
+            tell application "System Events"
+                get picture of desktop 1
+            end tell
+            '''
+        else:
+            # Get specific monitor wallpaper
+            script = f'''
+            tell application "System Events"
+                get picture of desktop {monitor_id}
+            end tell
+            '''
+        
+        result = subprocess.run(
+            ["/usr/bin/osascript", "-e", script],
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+        
+        if result.returncode == 0:
+            wallpaper_path = result.stdout.strip()
+            if wallpaper_path and wallpaper_path != "missing value":
+                return {
+                    "tool": "get_current_wallpaper",
+                    "status": "success",
+                    "wallpaper_path": wallpaper_path,
+                    "monitor_id": monitor_id
+                }
+            else:
+                return {
+                    "tool": "get_current_wallpaper",
+                    "status": "success",
+                    "wallpaper_path": None,
+                    "monitor_id": monitor_id,
+                    "message": "No wallpaper set or default wallpaper"
+                }
+        else:
+            return {
+                "tool": "get_current_wallpaper",
+                "status": "error",
+                "error": result.stderr.strip() or "Unknown error getting wallpaper",
+                "returncode": result.returncode
+            }
+            
+    except Exception as e:
+        return {
+            "tool": "get_current_wallpaper",
+            "status": "error",
+            "error": str(e),
+            "monitor_id": monitor_id
         }

@@ -18,14 +18,12 @@
   },
   "mcpServers": {
     "playwright": {
-      "command": "playwright-mcp",
+      "command": "mcp-server-playwright",
       "args": [
         "--browser", "chromium",
         "--allowed-origins", "*",
         "--executable-path", "/Users/dev/Library/Caches/ms-playwright/chromium-1194/chrome-mac/Chromium.app/Contents/MacOS/Chromium",
-        "--user-data-dir", "/tmp/mcp_playwright_session",
-        "--no-sandbox",
-        "--disable-setuid-sandbox"
+        "--user-data-dir", "/tmp/mcp_playwright_session"
       ],
       "description": "Playwright MCP Server with Chromium",
       "timeout": 60000,

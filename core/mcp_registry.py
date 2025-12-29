@@ -48,7 +48,7 @@ compare_images = None
 from core.memory import save_memory_tool, query_memory_tool
 from system_ai.tools.macos_native_automation import create_automation_executor
 from system_ai.tools.system import list_processes, kill_process, get_system_stats
-from system_ai.tools.desktop import get_monitors_info, get_open_windows, get_clipboard, set_clipboard
+from system_ai.tools.desktop import get_monitors_info, get_open_windows, get_clipboard, set_clipboard, set_wallpaper, get_current_wallpaper
 from system_ai.tools.browser import (
     browser_open_url,
     browser_click_element,
@@ -334,6 +334,7 @@ class MCPToolRegistry:
         return create_automation_executor(recorder_service=self._get_recorder_service())
 
     def _register_filesystem_tools(self):
+        # Allow full filesystem access for testing
         self.register_tool("read_file", read_file, "Read file content. Args: path (str)")
         self.register_tool("write_file", write_file, "Write file content. Args: path (str), content (str)")
         self.register_tool("copy_file", copy_file, "Copy file (binary-safe). Args: src (str), dst (str), overwrite (bool)")
@@ -406,6 +407,8 @@ class MCPToolRegistry:
         self.register_tool("get_open_windows", get_open_windows, "List open windows. Args: on_screen_only (bool)")
         self.register_tool("get_clipboard", get_clipboard, "Read clipboard content. Args: none")
         self.register_tool("set_clipboard", set_clipboard, "Write to clipboard. Args: text (str)")
+        self.register_tool("set_wallpaper", set_wallpaper, "Set wallpaper for specific monitor or all monitors. Args: image_path (str), monitor_id (optional int)")
+        self.register_tool("get_current_wallpaper", get_current_wallpaper, "Get current wallpaper path for specific monitor. Args: monitor_id (optional int)")
 
         from system_ai.tools.cleanup import (
             system_cleanup_stealth, system_cleanup_windsurf,
@@ -568,6 +571,15 @@ class MCPToolRegistry:
                         provider = ExternalMCPProvider(name, cmd, args, env=resolved_env)
                         self._external_providers[name] = provider
                         print(f"[MCP] Registered external provider: {name}")
+                        
+                        # Try to connect immediately to verify configuration
+                        try:
+                            provider.connect()
+                            print(f"[MCP] Successfully connected to {name} provider")
+                        except Exception as connect_error:
+                            print(f"[MCP] Warning: Failed to connect to {name} provider: {connect_error}")
+                            # Keep the provider registered but mark it as disconnected
+                            provider._connected = False
                     except Exception as e:
                         print(f"[MCP] Failed to initialize external provider {name}: {e}")
         except Exception as e:
@@ -800,10 +812,19 @@ class MCPToolRegistry:
         
         provider = self._external_providers[provider_name]
         try:
+            # Ensure provider is connected
+            if not provider._connected:
+                try:
+                    provider.connect()
+                except Exception as connect_error:
+                    return f"Error connecting to {provider_name} provider: {str(connect_error)}"
+            
             actual_name = tool_name.split(".", 1)[-1] if "." in tool_name else tool_name
             res = provider.execute(actual_name, args)
             return json.dumps(res, indent=2, ensure_ascii=False)
         except Exception as e:
+            # Mark provider as disconnected on error
+            provider._connected = False
             return f"Error executing external tool '{tool_name}': {str(e)}"
 
     def _execute_local_tool(self, tool_name: str, args: Dict[str, Any]) -> str:

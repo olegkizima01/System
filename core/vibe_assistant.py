@@ -152,6 +152,12 @@ class VibeCLIAssistant:
         print("   - Переконайтеся, що всі залежності встановлено")
         print("   - Використовуйте /continue після виправлення")
         
+        # Show auto-repair status
+        if self.auto_repair_enabled and self._self_healer:
+            print("   - Автоматичне виправлення: ✅ УВІМКНЕНО")
+        else:
+            print("   - Автоматичне виправлення: ❌ ВИМКНЕНО")
+        
         print("\n📝 Доступні команди:")
         print("   - /continue  - Продовжити виконання після виправлення")
         print("   - /cancel    - Скасувати поточне завдання")
@@ -388,6 +394,25 @@ class VibeCLIAssistant:
                 }
             else:
                 print(f"⚠️ {self.name}: Автоматичне виправлення не вдалося. Потрібне ручне втручання.")
+                
+                # Provide additional guidance based on error type
+                if issues:
+                    for issue_dict in issues[:2]:
+                        error_type = issue_dict.get("type", "unknown")
+                        file_path = issue_dict.get("file", "")
+                        message = issue_dict.get("message", "")
+                        
+                        print(f"\n💡 Підказки для виправлення {error_type}:")
+                        if error_type == "SyntaxError":
+                            print(f"   - Перевірте синтаксис в {file_path}")
+                            print(f"   - Зверніть увагу на розділові знаки та дужки")
+                        elif error_type == "ImportError":
+                            print(f"   - Перевірте, чи встановлено модуль: {message}")
+                            print(f"   - Спробуйте: pip install {message.replace('No module named ', '')}")
+                        elif error_type == "NameError":
+                            print(f"   - Змінна {message} не визначена")
+                            print(f"   - Перевірте правильність імені змінної")
+                
                 return {
                     "success": False,
                     "message": "Auto-repair failed - manual intervention required",

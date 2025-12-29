@@ -35,7 +35,7 @@
       "category": "ai"
     },
     "playwright": {
-      "command": "playwright-mcp",
+      "command": "mcp-server-playwright",
       "args": [],
       "description": "Playwright MCP Server for browser automation",
       "timeout": 60000,
@@ -76,7 +76,7 @@
     "filesystem": {
       "enabled": true,
       "command": "mcp-server-filesystem",
-      "args": [],
+      "args": ["/Users/dev/Documents/GitHub/System"],
       "description": "Filesystem MCP Server for file operations",
       "timeout": 30000,
       "retryAttempts": 2,
