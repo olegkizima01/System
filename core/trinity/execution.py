@@ -143,7 +143,9 @@ class TrinityExecutionMixin:
         """Check if user/messages requested intervention."""
         messages = state.get("messages", [])
         if not messages: return None
-        last_msg = messages[-1].content.lower()
+        last_content = messages[-1].content
+        last_msg_str = str(last_content) if not isinstance(last_content, str) else last_content
+        last_msg = last_msg_str.lower()
         if "pause" in last_msg or "doctor vibe" in last_msg:
              # This might trigger a pause in next step
              return "meta_planner"

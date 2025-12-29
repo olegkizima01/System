@@ -101,7 +101,8 @@ class GrishaMixin:
         tool_calls = getattr(resp, "tool_calls", []) if resp and hasattr(resp, 'tool_calls') else []
         
         # Override if Grisha fails without evidence, BUT NOT if there are captcha/error indicators
-        last_msg_lower = last_msg.lower()
+        last_msg_str = str(last_msg) if not isinstance(last_msg, str) else last_msg
+        last_msg_lower = last_msg_str.lower()
         captcha_indicators = ["captcha", "sorry/index", "recaptcha", "blocked", "status\": \"error", "status\": \"captcha", "status\": \"warning", "links\": []"]
         has_captcha_evidence = any(ind in last_msg_lower for ind in captcha_indicators)
         
@@ -128,7 +129,8 @@ class GrishaMixin:
         tetyana_tools = state.get("tetyana_used_tools") or []
         tetyana_ctx = state.get("tetyana_tool_context") or {}
         
-        browser_active = any(k in last_msg.lower() or k in str(state.get("original_task")).lower() for k in ["google", "browser", "сайт", "url"])
+        last_msg_str = str(last_msg) if not isinstance(last_msg, str) else last_msg
+        browser_active = any(k in last_msg_str.lower() or k in str(state.get("original_task")).lower() for k in ["google", "browser", "сайт", "url"])
         needs_visual = (set(tetyana_tools) & {"click", "type_text", "move_mouse"}) or browser_active or tetyana_ctx.get("browser_tool")
         
         if not (needs_visual or (state.get("gui_mode") in {"auto", "on"} and state.get("execution_mode") == "gui")):

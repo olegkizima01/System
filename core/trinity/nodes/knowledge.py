@@ -29,7 +29,9 @@ class KnowledgeMixin:
         if state.get("last_step_status") == "failed":
             return "failed"
         if context and context[-1] is not None:
-            last_content = getattr(context[-1], "content", "").lower()
+            content_val = getattr(context[-1], "content", "")
+            last_content_str = str(content_val) if not isinstance(content_val, str) else content_val
+            last_content = last_content_str.lower()
             if "failed" in last_content:
                 return "failed"
         return "success"

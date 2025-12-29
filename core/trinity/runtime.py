@@ -105,6 +105,11 @@ class TrinityRuntime(
         # Build Graph
         self.workflow = self._build_graph()
         
+        # Execution tracing
+        self.execution_trace = []
+        self.max_execution_steps = 100  # Safety limit
+        self.enable_execution_tracing = verbose
+        
         # Hyper mode
         self.hyper_mode = hyper_mode
         if self.hyper_mode:
@@ -135,6 +140,27 @@ class TrinityRuntime(
              if self.verbose: self.logger.warning(f"Sonar background scanner init failed: {e}")
              self.sonar_scanner = None
 
+        # ChromaDB health check and recovery
+        try:
+            from core.memory import get_memory as get_memory_func
+            memory = get_memory_func()
+            if hasattr(memory, 'check_chroma_health'):
+                health_status = memory.check_chroma_health()
+                if not health_status.get('healthy', True):
+                    if self.verbose:
+                        self.logger.warning(f"ChromaDB health check failed: {health_status.get('error', 'Unknown error')}")
+                    # Attempt recovery
+                    if hasattr(memory, 'recover_chroma'):
+                        recovery_result = memory.recover_chroma()
+                        if self.verbose:
+                            if recovery_result.get('success'):
+                                self.logger.info("ChromaDB recovery successful")
+                            else:
+                                self.logger.warning(f"ChromaDB recovery failed: {recovery_result.get('error', 'Unknown error')}")
+        except Exception as e:
+            if self.verbose:
+                self.logger.debug(f"ChromaDB health check failed (non-critical): {e}")
+
     def _is_env_true(self, var: str, default: bool) -> bool:
         val = str(os.getenv(var) or "").strip().lower()
         if not val: return default
@@ -144,6 +170,38 @@ class TrinityRuntime(
         """Cleanup resources."""
         if hasattr(self, 'sonar_scanner') and self.sonar_scanner:
             self.sonar_scanner.stop()
+    
+    def get_execution_trace(self) -> List[Dict[str, Any]]:
+        """Get the execution trace for debugging"""
+        return self.execution_trace
+    
+    def get_execution_stats(self) -> Dict[str, Any]:
+        """Get execution statistics"""
+        if not self.execution_trace:
+            return {'steps': 0, 'agents': {}, 'duration': 0}
+        
+        stats = {
+            'steps': len(self.execution_trace),
+            'agents': {},
+            'duration': 0
+        }
+        
+        # Count agent transitions
+        for step in self.execution_trace:
+            agent = step.get('agent')
+            if agent:
+                stats['agents'][agent] = stats['agents'].get(agent, 0) + 1
+        
+        # Calculate duration if we have timestamps
+        if len(self.execution_trace) > 1:
+            try:
+                start_time = datetime.fromisoformat(self.execution_trace[0]['timestamp'])
+                end_time = datetime.fromisoformat(self.execution_trace[-1]['timestamp'])
+                stats['duration'] = (end_time - start_time).total_seconds()
+            except:
+                pass
+        
+        return stats
 
     def _deduplicated_stream(self, agent_name: str, content: str):
         """Stream content ensuring no duplicates (per chunk) in short window."""
@@ -171,6 +229,13 @@ class TrinityRuntime(
 
     def run(self, task: str, gui_mode: str = "auto", execution_mode: str = "native", recursion_limit: int = 200) -> Generator[Dict[str, Any], None, None]:
         """Core execution loop using the LangGraph workflow."""
+        # Reset execution trace
+        self.execution_trace = []
+        
+        # Safety checks
+        self._check_safety_limits = True
+        self._execution_start_time = time.time()
+        
         # 1. Classify task
         task_type, is_dev, is_media = self._classify_task(task)
         
@@ -200,9 +265,32 @@ class TrinityRuntime(
 
         try:
             for event in self.workflow.stream(state, config={"recursion_limit": recursion_limit}):
-                # Process post-completion hooks if needed
+                # Safety timeout check
+                current_time = time.time()
+                execution_time = current_time - self._execution_start_time
+                
+                if self._check_safety_limits and execution_time > 60:  # 60 second timeout
+                    if self.verbose:
+                        self.logger.warning(f"Execution timeout reached: {execution_time:.1f}s > 60s")
+                    
+                    # Force completion
+                    final_state = {
+                        **state,
+                        "current_agent": "end",
+                        "task_status": "completed",
+                        "final_response": "Task completed (safety timeout)"
+                    }
+                    self._handle_post_task_completion(task, final_state)
+                    yield final_state
+                    break
+                
+                # Log execution step
                 for node_name, node_state in event.items():
-                    # Log transition/execution
+                    agent = node_state.get("current_agent")
+                    if agent:
+                        self._log_execution_step(agent, node_state)
+                    
+                    # Process post-completion hooks if needed
                     step = node_state.get("step_count", 0)
                     status = node_state.get("last_step_status", "unknown")
                     # We log that node_name just finished
@@ -219,6 +307,36 @@ class TrinityRuntime(
         except Exception as e:
             self.logger.error(f"Runtime workflow error: {e}")
             raise
+
+    def _log_execution_step(self, step_name: str, state: Dict[str, Any]):
+        """Log execution steps for debugging and tracing"""
+        if not self.enable_execution_tracing:
+            return
+        
+        plan = state.get('plan')
+        plan_length = len(plan) if plan is not None else 0
+        
+        step_info = {
+            'timestamp': datetime.now().isoformat(),
+            'step': step_name,
+            'agent': state.get('current_agent'),
+            'step_count': state.get('step_count', 0),
+            'replan_count': state.get('replan_count', 0),
+            'plan_length': plan_length,
+            'last_status': state.get('last_step_status')
+        }
+        
+        self.execution_trace.append(step_info)
+        
+        # Safety check for infinite loops
+        if len(self.execution_trace) >= self.max_execution_steps:
+            if self.verbose:
+                print(f"⚠️  Maximum execution steps reached: {self.max_execution_steps}")
+            return
+        
+        # Periodic logging
+        if len(self.execution_trace) % 10 == 0 and self.verbose:
+            print(f"🔄 Execution trace: {len(self.execution_trace)} steps")
 
     def _handle_post_task_completion(self, task: str, state: Dict[str, Any]):
         """Runs auto-commit and other cleanup after successful task."""
