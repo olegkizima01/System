@@ -198,7 +198,7 @@ class TrinityRuntime(
                 start_time = datetime.fromisoformat(self.execution_trace[0]['timestamp'])
                 end_time = datetime.fromisoformat(self.execution_trace[-1]['timestamp'])
                 stats['duration'] = (end_time - start_time).total_seconds()
-            except:
+            except Exception:
                 pass
         
         return stats
@@ -255,7 +255,6 @@ class TrinityRuntime(
             "plan": [],
             "task_type": task_type,
             "is_dev": is_dev,
-            "is_media": is_media,
             "is_media": is_media,
             "requires_windsurf": False 
         }

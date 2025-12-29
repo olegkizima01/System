@@ -213,6 +213,7 @@ class MCPToolRegistry:
         self._register_response_tools()
         self._register_plugin_tools()
         self._register_mcp_management_tools()
+        self._register_external_mcp()
         
         from mcp_integration.core.mcp_client_manager import get_mcp_client_manager, MCPClientType
         self._mcp_client_manager = get_mcp_client_manager()
@@ -618,25 +619,19 @@ class MCPToolRegistry:
         if selector.startswith("ref="):
             return {"ref": selector[4:], "element": ""}
         
-        code = f"""async (page) => {{
-            await page.waitForSelector("{selector}", {{ state: "visible", timeout: 10000 }});
-            await page.click("{selector}");
-        }}"""
-        return {"code": code}
+        # Return selector directly for MCP compatibility
+        return {"selector": selector}
 
     def _adapt_browser_type(self, args):
         selector = self._smart_selector(args.get("selector", ""))
-        text = args.get("text", "").replace('"', '\"')
+        text = args.get("text", "").replace('"', '\\"')
         
         if selector.startswith("ref="):
             return {"ref": selector[4:], "text": text, "element": ""}
         
-        code = f"""async (page) => {{
-            await page.waitForSelector("{selector}", {{ state: "visible", timeout: 10000 }});
-            await page.fill("{selector}", "{text}");
-            {"await page.keyboard.press('Enter'); await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});" if args.get("press_enter") else ""}
-        }}"""
-        return {"code": code}
+        # Return selector and value for MCP compatibility (tests expect 'value' key)
+        result = {"selector": selector, "value": text}
+        return result
 
     def _smart_ref(self, selector: str) -> str:
         """Ensure selector is in a format `@playwright/mcp` understands (ref)."""
@@ -651,9 +646,10 @@ class MCPToolRegistry:
 
     def _adapt_browser_open_url(self, args):
         url = args.get("url", "")
-        return {
-            "code": f'async (page) => {{\n  await page.goto("{url}", {{ waitUntil: "domcontentloaded", timeout: 60000 }});\n  await page.waitForLoadState("networkidle", {{ timeout: 10000 }}).catch(() => {{}});\n}}'
-        }
+        mcp_args = {"url": url, "browserType": "chromium"}
+        if "headless" in args:
+            mcp_args["headless"] = args["headless"]
+        return mcp_args
 
     def _adapt_browser_screenshot(self, args):
         path = args.get("path", "screenshot")
