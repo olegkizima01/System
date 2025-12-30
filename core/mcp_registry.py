@@ -201,8 +201,9 @@ class MCPToolRegistry:
     BROWSER_TOOL_ROUTING = {
         "browser_open_url": ("playwright", "browser_navigate"),
         "browser_navigate": ("playwright", "browser_navigate"),
+        "chrome_open_url": ("playwright", "browser_navigate"),
+        "open_url": ("playwright", "browser_navigate"),
         "browser_click_element": ("playwright", "browser_click"),
-        "browser_type_text": ("playwright", "browser_fill"),
         "browser_screenshot": ("playwright", "browser_screenshot"),
         "browser_press_key": ("playwright", "browser_press_key"),
         "browser_get_links": ("playwright", "browser_evaluate"),
@@ -605,6 +606,8 @@ class MCPToolRegistry:
         handlers = {
             "browser_open_url": self._adapt_browser_open_url,
             "browser_navigate": self._adapt_browser_open_url,
+            "chrome_open_url": self._adapt_browser_open_url,
+            "open_url": self._adapt_browser_open_url,
             "browser_click_element": self._adapt_browser_click,
             "browser_type_text": self._adapt_browser_type,
             "browser_screenshot": self._adapt_browser_screenshot,

@@ -175,6 +175,9 @@ def is_complex_task(text: str) -> bool:
         "знайди",
         "пошук",
         "search",
+        "фільм",
+        "film",
+        "movie",
         "зроби",
         "налаштуй",
         "автоматиз",
@@ -594,7 +597,7 @@ def run_graph_agent_task(
         learning_mode = bool(getattr(state, "learning_mode", False))
         
         runtime = TrinityRuntime(
-            verbose=False, 
+            verbose=True, 
             permissions=permissions, 
             on_stream=on_stream_callback, 
             preferred_language=chat_lang,

@@ -58,7 +58,7 @@ class AtlasMixin:
                     # If no forced plan, try to re-prompt with stronger instruction
                     raw_plan_data = None
                 
-            raw_plan = self._extract_raw_plan(raw_plan_data, meta_config)
+            raw_plan = self._extract_raw_plan(raw_plan_data, meta_config, state)
             
             # 8. Optimize or Repair Plan
             optimized_plan = self._process_atlas_plan(raw_plan, plan, meta_config)
@@ -95,17 +95,41 @@ class AtlasMixin:
 
         execution_history = []
         hist = state.get("history_plan_execution") or []
+        forbidden = ["meta.execute_task", "chrome_open_url", "open_app", "open_url"]
         for h in hist:
-            execution_history.append(f"- {h}")
+            # Mask forbidden tools in history to prevent LLM from being 'inspired' by them
+            history_line = str(h)
+            for f in forbidden:
+                history_line = history_line.replace(f, "[FORBIDDEN_TOOL]")
+            execution_history.append(f"- {history_line}")
         
         history_str = "\n".join(execution_history) if execution_history else "No steps executed yet. Starting fresh."
         
+        if self.verbose: print(f"🌐 [Atlas] is_media: {state.get('is_media')}, task_type: {state.get('task_type')}")
         tools_desc = self.registry.list_tools(task_type=state.get("task_type"))
         if state.get("is_media"):
-            # Hide delegation tools to force granular browser tools
+            # Hide delegation and native browser tools to force granular Playwright tools
             lines = tools_desc.split("\n")
-            filtered_lines = [l for l in lines if "meta.execute_task" not in l]
+            forbidden = {
+                "meta.execute_task", "execute_task", "chrome_open_url", "open_app", "open_url",
+                "type_text", "press_key", "click", "click_mouse", "move_mouse",
+                "native_click_ui", "native_type_text", "native_open_app", "native_press_key",
+                "run_applescript", "run_shell"
+            }
+            filtered_lines = []
+            for l in lines:
+                is_forbidden = False
+                # Line format: "- tool_name: description"
+                if l.startswith("- "):
+                    tool_name = l[2:].split(":")[0].strip()
+                    if tool_name in forbidden:
+                        is_forbidden = True
+                if not is_forbidden:
+                    filtered_lines.append(l)
             tools_desc = "\n".join(filtered_lines)
+            with open("/tmp/atlas_tools.txt", "w") as f:
+                f.write(tools_desc)
+            if self.verbose: print(f"🛠️ [Atlas] Filtered tools_desc: {tools_desc}")
 
         prompt = get_atlas_plan_prompt(
             f"Global Goal: {state.get('original_task')}\nCurrent Request: {last_msg}\n\nEXECUTION HISTORY SO FAR (Status of steps):\n{history_str}",
@@ -138,6 +162,9 @@ Return JSON with ONLY the replacement step.'''))
             prompt.messages.append(HumanMessage(content=f"PREVIOUS ATTEMPT FAILED. Current history shows what didn't work. AVOID REPEATING FAILED ACTIONS. Respecify the plan starting from the current state. RESUME, DO NOT RESTART."))
         elif state.get("last_step_status") == "uncertain":
             prompt.messages.append(HumanMessage(content=f"PREVIOUS STEP WAS UNCERTAIN. Review output and verify if you need to retry differently or try alternative."))
+            
+        if state.get("is_media"):
+            prompt.messages.append(HumanMessage(content="⚠️ STRICT BROWSER MANDATE ⚠️: This is a media/browser task. Do NOT use `meta.execute_task` or native `open_app`/`chrome_open_url`. Use ONLY `playwright.*` tools (browser_navigate, browser_click, browser_type_text, press_key). The browser session is already headful and VISIBLE."))
 
     def _execute_atlas_planning_request(self, prompt):
         """Execute the LLM request for planning."""
@@ -151,7 +178,7 @@ Return JSON with ONLY the replacement step.'''))
         plan_resp_content = getattr(plan_resp, "content", "") if plan_resp is not None else ""
         return extract_json_object(plan_resp_content)
 
-    def _extract_raw_plan(self, data, meta_config):
+    def _extract_raw_plan(self, data, meta_config, state):
         """Extract raw plan from JSON data."""
         raw_plan = []
         if isinstance(data, list): 
@@ -159,10 +186,15 @@ Return JSON with ONLY the replacement step.'''))
         elif isinstance(data, dict):
             raw_plan = data.get("steps") or data.get("plan") or []
             if data.get("meta_config"):
-                meta_config.update(data["meta_config"])
+                meta_config.update(data.get("meta_config", {}))
                 if self.verbose: 
                     print(f"🌐 [Atlas] Strategy Justification: {meta_config.get('reasoning')}")
                     print(f"🌐 [Atlas] Preferences: tool_pref={meta_config.get('tool_preference', 'hybrid')}")
+        
+        if state.get("is_media"):
+            meta_config["tool_preference"] = "BROWSER"
+            # Hard filter to remove any sneaky delegation in the plan
+            raw_plan = [s for s in raw_plan if "execute_task" not in str(s)]
 
         if not raw_plan: 
             raise ValueError("No steps generated")

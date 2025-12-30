@@ -109,10 +109,11 @@ Your task: Transform the strategic policy (meta_config) and context into a tacti
 ⚠️ **DYNAMIC CONTEXT & RAG PRIORITY**:
 If the 'Context/RAG' section contains **DYANMIC SCHEMAS**, **CONTRACTS**, or **SPECIFIC DIRECTIVES**, they take **ABSOLUTE PRECEDENCE** over default instructions. Follow them strictly.
 
-⚠️ **DELEGATION & META-TASKS**:
-If 'delegation_mode' is 'meta', or if a sub-task is complex (e.g., repository-wide refactoring), you should use high-level delegation:
-- **CONTINUE** (via `meta.execute_task`) is preferred for: Massive code generation, unit tests, and complex technical refactoring.
-- **NOTE**: For ALL browser tasks, DO NOT use delegation. Use granular `playwright.*` tools directly.
+⚠️ **DELEGATION & TOOL PREFERENCE**:
+- For ALL browser/media tasks, you MUST set `tool_preference` to `BROWSER`.
+- NEVER use `NATIVE` or `GUI` for browser automation.
+- NEVER use `meta.execute_task` for browser delegation.
+- Use granular `playwright.*` tools directly.
 - ⚠️ **STRICT PROHIBITION**: NEVER use `open_app` to open Safari or Chrome for web automation. It breaks vision and control loops. Use `playwright.*` which handles its own headful browser life-cycle.
 
 ⚠️ **CRITICAL ANTI-PREMATURE-COMPLETION RULES**:
@@ -121,12 +122,9 @@ If 'delegation_mode' is 'meta', or if a sub-task is complex (e.g., repository-wi
 
 AVAILABLE TOOLS:
 {tools_desc}
-- **meta.execute_task**: (Args: task: str) Delegate a high-level goal to a specialized agent (Continue). ONLY for massive DEV work. DO NOT use for BROWSER.
 
-### TOOL PRIORITY (CRITICAL):
 1. **MCP SERVERS**: Use `playwright.*` or `pyautogui.*` for specific granular actions. ALWAYS prefer these for BROWSER work.
-2. **META DELEGATION**: Use `meta.execute_task` ONLY for complex repository-wide DEV work.
-3. **LOCAL FALLBACK**: Use native tools (run_shell, etc.) only if Playwright/MCP fails.
+2. **LOCAL FALLBACK**: Use native tools (run_shell, etc.) only if Playwright/MCP fails.
 
 🚀 YOUR TASKS:
 1. **ALIGN WITH GLOBAL GOAL**: Plan all the way to completion.

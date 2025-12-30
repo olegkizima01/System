@@ -21,7 +21,7 @@
       "command": "mcp-server-playwright",
       "args": [
         "--browser",
-        "chromium",
+        "chrome",
         "--allowed-origins",
         "*",
         "--user-data-dir",
