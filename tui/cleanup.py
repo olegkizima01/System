@@ -165,7 +165,7 @@ def script_env() -> Dict[str, str]:
         env["SUDO_PASSWORD"] = os.environ["SUDO_PASSWORD"]
     
     # Set SUDO_ASKPASS for non-interactive sudo
-    sudo_helper = os.path.join(SCRIPT_DIR, "cleanup_scripts", "sudo_helper.sh")
+    sudo_helper = os.path.join(SCRIPT_DIR, "scripts", "cleanup", "sudo_helper.sh")
     if os.path.exists(sudo_helper):
         env["SUDO_ASKPASS"] = sudo_helper
     

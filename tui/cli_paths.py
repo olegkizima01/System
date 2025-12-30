@@ -5,7 +5,7 @@ import os
 
 SCRIPT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
 
-CLEANUP_CONFIG_PATH = os.path.join(SCRIPT_DIR, "cleanup_modules.json")
+CLEANUP_CONFIG_PATH = os.path.join(SCRIPT_DIR, "config", "cleanup_modules.json")
 LOCALIZATION_CONFIG_PATH = os.path.expanduser("~/.localization_cli.json")
 
 SYSTEM_CLI_DIR = os.path.expanduser("~/.system_cli")

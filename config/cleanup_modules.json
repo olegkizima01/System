@@ -1,0 +1,583 @@
+{
+  "editors": {
+    "windsurf": {
+      "label": "Windsurf",
+      "install": {
+        "type": "dmg",
+        "pattern": "Windsurf*.dmg",
+        "hint": "DMG буде відкрито через open, далі встановлення руками через Finder"
+      },
+      "modules": [
+        {
+          "id": "deep_windsurf",
+          "name": "Deep Windsurf Cleanup",
+          "script": "./scripts/cleanup/deep_windsurf_cleanup.sh",
+          "enabled": false,
+          "description": "Глибоке очищення Windsurf (кеші, дані, профілі)"
+        },
+        {
+          "id": "advanced_windsurf",
+          "name": "Advanced Windsurf Identifier Cleanup",
+          "script": "./scripts/cleanup/advanced_windsurf_cleanup.sh",
+          "enabled": false,
+          "description": "Розширене очищення ідентифікаторів / трекінгу Windsurf"
+        },
+        {
+          "id": "windsurf_identifier_cleanup",
+          "name": "Windsurf Identifier Quick Cleanup",
+          "script": "./scripts/cleanup/windsurf_identifier_cleanup.sh",
+          "enabled": false,
+          "description": "Швидке точкове очищення ідентифікаторів"
+        },
+        {
+          "id": "deep_vscode_for_windsurf",
+          "name": "Deep VS Code Cleanup (Side Effects)",
+          "script": "./scripts/cleanup/deep_vscode_cleanup.sh",
+          "enabled": true,
+          "description": "Очищення VS Code, якщо він використовувався разом із Windsurf"
+        },
+        {
+          "id": "stealth_cleanup",
+          "name": "Stealth System Traces Cleanup",
+          "script": "./scripts/cleanup/stealth_cleanup.sh",
+          "enabled": true,
+          "description": "Агресивне видалення системних слідів (ризиковий модуль)"
+        },
+        {
+          "id": "hardware_spoof",
+          "name": "Hardware Fingerprint Spoofing",
+          "script": "./scripts/cleanup/hardware_spoof.sh",
+          "enabled": true,
+          "description": "Маніпуляції з hardware fingerprint (потребує sudo)"
+        },
+        {
+          "id": "check_identifier_cleanup",
+          "name": "Identifier Cleanup Verification",
+          "script": "./scripts/cleanup/check_identifier_cleanup.sh",
+          "enabled": true,
+          "description": "Фінальна перевірка якості очистки"
+        },
+        {
+          "id": "windsurf_cache_local_cleanup",
+          "name": "Windsurf Cache and Local Storage Cleanup",
+          "script": "./scripts/cleanup/windsurf_cache_local_cleanup.sh",
+          "enabled": true,
+          "description": "Очищення кешів, локального сховища та індексів Windsurf"
+        },
+        {
+          "id": "browser_fingerprint_cleanup",
+          "name": "Browser Fingerprint Cleanup",
+          "script": "./scripts/cleanup/browser_fingerprint_cleanup.sh",
+          "enabled": true,
+          "description": "Очищує IndexedDB, Service Workers, Canvas, WebGL, аудіо,Font fingerprints",
+          "order": 10
+        },
+        {
+          "id": "evercookie_killer",
+          "name": "EverCookie Killer",
+          "script": "./scripts/cleanup/evercookie_killer.sh",
+          "enabled": true,
+          "description": "Видаляє персистентні дані: ETag, HTTP Cache, DNS Cache, Beacon API логи",
+          "order": 20
+        },
+        {
+          "id": "locale_spoof",
+          "name": "Locale & Timezone Spoofing",
+          "script": "./scripts/cleanup/locale_spoof.sh",
+          "enabled": true,
+          "description": "Спуфує системну локаль, timezone, мову браузера (вектор fingerprint)",
+          "order": 30
+        },
+        {
+          "id": "deep_hardware_spoof",
+          "name": "Deep Hardware Fingerprint Spoof",
+          "script": "./scripts/cleanup/deep_hardware_spoof.sh",
+          "enabled": true,
+          "description": "20+ векторів: UUID, HWID, XPC, SMBIOS, IOKit, Device ID (Гл 4)",
+          "order": 40
+        },
+        {
+          "id": "network_isolation",
+          "name": "Network Isolation & DNS Privacy",
+          "script": "./scripts/cleanup/network_isolation.sh",
+          "enabled": true,
+          "description": "Видаляє мережеві логи, DNS Cache, ARP, Route, ISP дані, спуфує MAC (Гл 5)",
+          "order": 50
+        },
+        {
+          "id": "mikrotik_wifi_spoof",
+          "name": "🔚 ОСТАННІЙ: MikroTik WiFi & MAC Spoofing",
+          "script": "./scripts/cleanup/mikrotik_wifi_spoof.sh",
+          "enabled": true,
+          "description": "ОСТАННІЙ МОДУЛЬ: Випадково змінює WiFi SSID, IP-адресу та MAC-адресу (перевизначає все попереднє)",
+          "order": 999,
+          "requires_password": true
+        },
+        {
+          "id": "m1_max_spoof",
+          "name": "M1 Max Fingerprint Spoof",
+          "script": "./scripts/cleanup/m1_max_spoof.sh",
+          "enabled": true,
+          "description": "Спуфує M1 Max як M2/M3, криє Apple Silicon маркери, рандомізує GPU/RAM",
+          "order": 25,
+          "requires_password": true
+        },
+        {
+          "id": "sonoma_detection_bypass",
+          "name": "Sonoma Detection Bypass",
+          "script": "./scripts/cleanup/sonoma_detection_bypass.sh",
+          "enabled": true,
+          "description": "Блокує macOS 14 специфічні детектори: Privacy Report, TPCD, Safari 17, WebKit",
+          "order": 35,
+          "requires_password": true
+        },
+        {
+          "id": "hostname_spoof",
+          "name": "Hostname Spoofing",
+          "script": "./scripts/cleanup/hostname_spoof.sh",
+          "enabled": true,
+          "description": "Генерує та встановлює випадкове ім'я хоста (HostName, LocalHostName, ComputerName)",
+          "order": 60,
+          "requires_password": true
+        },
+        {
+          "id": "editor_cleanup",
+          "name": "Universal Editor Cleanup",
+          "script": "./scripts/cleanup/editor_cleanup.sh",
+          "enabled": false,
+          "description": "Уніфікований cleanup для всіх редакторів (VS Code, Windsurf, Cursor, Antigravity)",
+          "order": 5
+        }
+      ]
+    },
+    "vscode": {
+      "label": "VS Code / VS Code OSS",
+      "install": {
+        "type": "zip",
+        "pattern": "*VSCode*.zip",
+        "hint": "ZIP буде відкрито через open або розпакування у поточну директорію"
+      },
+      "modules": [
+        {
+          "id": "deep_vscode",
+          "name": "Deep VS Code Cleanup",
+          "script": "./scripts/cleanup/deep_vscode_cleanup.sh",
+          "enabled": true,
+          "description": "Глибоке очищення VS Code (кеші, профілі, налаштування)"
+        },
+        {
+          "id": "vscode_identifier_cleanup",
+          "name": "VS Code Identifier Cleanup",
+          "script": "./scripts/cleanup/vscode_identifier_cleanup.sh",
+          "enabled": false,
+          "description": "Очищення ідентифікаторів / прив'язок VS Code"
+        },
+        {
+          "id": "vscode_stealth_cleanup",
+          "name": "VS Code Stealth Cleanup",
+          "script": "./scripts/cleanup/vscode_stealth_cleanup.sh",
+          "enabled": false,
+          "description": "Stealth-очищення, коли потрібен мінімальний слід"
+        },
+        {
+          "id": "check_vscode_backup",
+          "name": "VS Code Backup Status",
+          "script": "./scripts/cleanup/check_vscode_backup.sh",
+          "enabled": false,
+          "description": "Перевірка бекапів VS Code"
+        },
+        {
+          "id": "browser_fingerprint_cleanup",
+          "name": "Browser Fingerprint Cleanup",
+          "script": "./scripts/cleanup/browser_fingerprint_cleanup.sh",
+          "enabled": true,
+          "description": "Очищує IndexedDB, Service Workers, Canvas, WebGL, аудіо,Font fingerprints",
+          "order": 10
+        },
+        {
+          "id": "evercookie_killer",
+          "name": "EverCookie Killer",
+          "script": "./scripts/cleanup/evercookie_killer.sh",
+          "enabled": true,
+          "description": "Видаляє персистентні дані: ETag, HTTP Cache, DNS Cache, Beacon API логи",
+          "order": 20
+        },
+        {
+          "id": "locale_spoof",
+          "name": "Locale & Timezone Spoofing",
+          "script": "./scripts/cleanup/locale_spoof.sh",
+          "enabled": true,
+          "description": "Спуфує системну локаль, timezone, мову браузера (вектор fingerprint)",
+          "order": 30
+        },
+        {
+          "id": "deep_hardware_spoof",
+          "name": "Deep Hardware Fingerprint Spoof",
+          "script": "./scripts/cleanup/deep_hardware_spoof.sh",
+          "enabled": true,
+          "description": "20+ векторів: UUID, HWID, XPC, SMBIOS, IOKit, Device ID (Гл 4)",
+          "order": 40
+        },
+        {
+          "id": "network_isolation",
+          "name": "Network Isolation & DNS Privacy",
+          "script": "./scripts/cleanup/network_isolation.sh",
+          "enabled": true,
+          "description": "Видаляє мережеві логи, DNS Cache, ARP, Route, ISP дані, спуфує MAC (Гл 5)",
+          "order": 50
+        },
+        {
+          "id": "mikrotik_wifi_spoof",
+          "name": "🔚 ОСТАННІЙ: MikroTik WiFi & MAC Spoofing",
+          "script": "./scripts/cleanup/mikrotik_wifi_spoof.sh",
+          "enabled": true,
+          "description": "ОСТАННІЙ МОДУЛЬ: Випадково змінює WiFi SSID, IP-адресу та MAC-адресу (перевизначає все попереднє)",
+          "order": 999,
+          "requires_password": true
+        },
+        {
+          "id": "m1_max_spoof",
+          "name": "M1 Max Fingerprint Spoof",
+          "script": "./scripts/cleanup/m1_max_spoof.sh",
+          "enabled": true,
+          "description": "Спуфує M1 Max як M2/M3, криє Apple Silicon маркери, рандомізує GPU/RAM",
+          "order": 25,
+          "requires_password": true
+        },
+        {
+          "id": "sonoma_detection_bypass",
+          "name": "Sonoma Detection Bypass",
+          "script": "./scripts/cleanup/sonoma_detection_bypass.sh",
+          "enabled": true,
+          "description": "Блокує macOS 14 специфічні детектори: Privacy Report, TPCD, Safari 17, WebKit",
+          "order": 35,
+          "requires_password": true
+        },
+        {
+          "id": "hostname_spoof",
+          "name": "Hostname Spoofing",
+          "script": "./scripts/cleanup/hostname_spoof.sh",
+          "enabled": true,
+          "description": "Генерує та встановлює випадкове ім'я хоста (HostName, LocalHostName, ComputerName)",
+          "order": 60,
+          "requires_password": true
+        },
+        {
+          "id": "editor_cleanup",
+          "name": "Universal Editor Cleanup",
+          "script": "./scripts/cleanup/editor_cleanup.sh",
+          "enabled": false,
+          "description": "Уніфікований cleanup для всіх редакторів (VS Code, Windsurf, Cursor, Antigravity)",
+          "order": 5
+        }
+      ]
+    },
+    "antigravity": {
+      "label": "Antigravity Editor",
+      "install": {
+        "type": "dmg",
+        "url": "https://edgedl.me.gvt1.com/edgedl/release2/j0qc3/antigravity/stable/1.11.17-6639170008514560/darwin-arm/Antigravity.dmg",
+        "hint": "DMG буде відкрито через open, далі встановлення руками через Finder"
+      },
+      "modules": [
+        {
+          "id": "antigravity_basic",
+          "name": "Antigravity Basic Cleanup",
+          "script": "./scripts/cleanup/antigravity_cleanup.sh",
+          "enabled": true,
+          "description": "Базове очищення Antigravity Editor (Вимкнено: дублює Advanced)"
+        },
+        {
+          "id": "antigravity_advanced",
+          "name": "Antigravity Advanced Cleanup",
+          "script": "./scripts/cleanup/advanced_antigravity_cleanup.sh",
+          "enabled": true,
+          "description": "Розширене очищення ідентифікаторів Antigravity"
+        },
+        {
+          "id": "antigravity_fresh_install",
+          "name": "Antigravity Fresh Install Reset",
+          "script": "./scripts/cleanup/antigravity_fresh_install.sh",
+          "enabled": true,
+          "description": "Скидає локальний стан Antigravity (onboarding/користувач/сховище)"
+        },
+        {
+          "id": "antigravity_deep_vscode",
+          "name": "Deep VS Code Cleanup (Side Effects)",
+          "script": "./scripts/cleanup/deep_vscode_cleanup.sh",
+          "enabled": true,
+          "description": "VS Code cleanup якщо Antigravity працював поверх VS Code"
+        },
+        {
+          "id": "browser_fingerprint_cleanup",
+          "name": "Browser Fingerprint Cleanup",
+          "script": "./scripts/cleanup/browser_fingerprint_cleanup.sh",
+          "enabled": true,
+          "description": "Очищує IndexedDB, Service Workers, Canvas, WebGL, аудіо,Font fingerprints",
+          "order": 10
+        },
+        {
+          "id": "evercookie_killer",
+          "name": "EverCookie Killer",
+          "script": "./scripts/cleanup/evercookie_killer.sh",
+          "enabled": true,
+          "description": "Видаляє персистентні дані: ETag, HTTP Cache, DNS Cache, Beacon API логи",
+          "order": 20
+        },
+        {
+          "id": "locale_spoof",
+          "name": "Locale & Timezone Spoofing",
+          "script": "./scripts/cleanup/locale_spoof.sh",
+          "enabled": true,
+          "description": "Спуфує системну локаль, timezone, мову браузера (вектор fingerprint)",
+          "order": 30
+        },
+        {
+          "id": "deep_hardware_spoof",
+          "name": "Deep Hardware Fingerprint Spoof",
+          "script": "./scripts/cleanup/deep_hardware_spoof.sh",
+          "enabled": true,
+          "description": "20+ векторів: UUID, HWID, XPC, SMBIOS, IOKit, Device ID (Гл 4)",
+          "order": 40
+        },
+        {
+          "id": "network_isolation",
+          "name": "Network Isolation & DNS Privacy",
+          "script": "./scripts/cleanup/network_isolation.sh",
+          "enabled": true,
+          "description": "Видаляє мережеві логи, DNS Cache, ARP, Route, ISP дані, спуфує MAC (Гл 5)",
+          "order": 50
+        },
+        {
+          "id": "mikrotik_wifi_spoof",
+          "name": "🔚 ОСТАННІЙ: MikroTik WiFi & MAC Spoofing",
+          "script": "./scripts/cleanup/mikrotik_wifi_spoof.sh",
+          "enabled": true,
+          "description": "ОСТАННІЙ МОДУЛЬ: Випадково змінює WiFi SSID, IP-адресу та MAC-адресу (перевизначає все попереднє)",
+          "order": 999,
+          "requires_password": true
+        },
+        {
+          "id": "m1_max_spoof",
+          "name": "M1 Max Fingerprint Spoof",
+          "script": "./scripts/cleanup/m1_max_spoof.sh",
+          "enabled": true,
+          "description": "Спуфує M1 Max як M2/M3, криє Apple Silicon маркери, рандомізує GPU/RAM",
+          "order": 25,
+          "requires_password": true
+        },
+        {
+          "id": "sonoma_detection_bypass",
+          "name": "Sonoma Detection Bypass",
+          "script": "./scripts/cleanup/sonoma_detection_bypass.sh",
+          "enabled": true,
+          "description": "Блокує macOS 14 специфічні детектори: Privacy Report, TPCD, Safari 17, WebKit",
+          "order": 35,
+          "requires_password": true
+        },
+        {
+          "id": "hostname_spoof",
+          "name": "Hostname Spoofing",
+          "script": "./scripts/cleanup/hostname_spoof.sh",
+          "enabled": true,
+          "description": "Генерує та встановлює випадкове ім'я хоста (HostName, LocalHostName, ComputerName)",
+          "order": 60,
+          "requires_password": true
+        },
+        {
+          "id": "editor_cleanup",
+          "name": "Universal Editor Cleanup",
+          "script": "./scripts/cleanup/editor_cleanup.sh",
+          "enabled": true,
+          "description": "Уніфікований cleanup для всіх редакторів (VS Code, Windsurf, Cursor, Antigravity)",
+          "order": 5
+        }
+      ]
+    },
+    "cursor": {
+      "label": "Cursor IDE",
+      "install": {
+        "type": "url",
+        "url": "https://www.cursor.com/download",
+        "hint": "Відкриється офіційна сторінка завантаження Cursor"
+      },
+      "modules": [
+        {
+          "id": "cursor_cleanup",
+          "name": "Cursor IDE Cleanup",
+          "script": "./scripts/cleanup/cursor_cleanup.sh",
+          "enabled": true,
+          "description": "Глибоке очищення Cursor IDE (кеші, профілі, ідентифікатори)"
+        },
+        {
+          "id": "browser_fingerprint_cleanup",
+          "name": "Browser Fingerprint Cleanup",
+          "script": "./scripts/cleanup/browser_fingerprint_cleanup.sh",
+          "enabled": true,
+          "description": "Очищує IndexedDB, Service Workers, Canvas, WebGL, аудіо,Font fingerprints",
+          "order": 10
+        },
+        {
+          "id": "evercookie_killer",
+          "name": "EverCookie Killer",
+          "script": "./scripts/cleanup/evercookie_killer.sh",
+          "enabled": true,
+          "description": "Видаляє персистентні дані: ETag, HTTP Cache, DNS Cache, Beacon API логи",
+          "order": 20
+        },
+        {
+          "id": "locale_spoof",
+          "name": "Locale & Timezone Spoofing",
+          "script": "./scripts/cleanup/locale_spoof.sh",
+          "enabled": true,
+          "description": "Спуфує системну локаль, timezone, мову браузера (вектор fingerprint)",
+          "order": 30
+        },
+        {
+          "id": "deep_hardware_spoof",
+          "name": "Deep Hardware Fingerprint Spoof",
+          "script": "./scripts/cleanup/deep_hardware_spoof.sh",
+          "enabled": true,
+          "description": "20+ векторів: UUID, HWID, XPC, SMBIOS, IOKit, Device ID (Гл 4)",
+          "order": 40
+        },
+        {
+          "id": "network_isolation",
+          "name": "Network Isolation & DNS Privacy",
+          "script": "./scripts/cleanup/network_isolation.sh",
+          "enabled": true,
+          "description": "Видаляє мережеві логи, DNS Cache, ARP, Route, ISP дані, спуфує MAC (Гл 5)",
+          "order": 50
+        },
+        {
+          "id": "mikrotik_wifi_spoof",
+          "name": "🔚 ОСТАННІЙ: MikroTik WiFi & MAC Spoofing",
+          "script": "./scripts/cleanup/mikrotik_wifi_spoof.sh",
+          "enabled": true,
+          "description": "ОСТАННІЙ МОДУЛЬ: Випадково змінює WiFi SSID, IP-адресу та MAC-адресу (перевизначає все попереднє)",
+          "order": 999,
+          "requires_password": true
+        },
+        {
+          "id": "m1_max_spoof",
+          "name": "M1 Max Fingerprint Spoof",
+          "script": "./scripts/cleanup/m1_max_spoof.sh",
+          "enabled": true,
+          "description": "Спуфує M1 Max як M2/M3, криє Apple Silicon маркери, рандомізує GPU/RAM",
+          "order": 25,
+          "requires_password": true
+        },
+        {
+          "id": "sonoma_detection_bypass",
+          "name": "Sonoma Detection Bypass",
+          "script": "./scripts/cleanup/sonoma_detection_bypass.sh",
+          "enabled": true,
+          "description": "Блокує macOS 14 специфічні детектори: Privacy Report, TPCD, Safari 17, WebKit",
+          "order": 35,
+          "requires_password": true
+        },
+        {
+          "id": "hostname_spoof",
+          "name": "Hostname Spoofing",
+          "script": "./scripts/cleanup/hostname_spoof.sh",
+          "enabled": true,
+          "description": "Генерує та встановлює випадкове ім'я хоста (HostName, LocalHostName, ComputerName)",
+          "order": 60,
+          "requires_password": true
+        },
+        {
+          "id": "editor_cleanup",
+          "name": "Universal Editor Cleanup",
+          "script": "./scripts/cleanup/editor_cleanup.sh",
+          "enabled": true,
+          "description": "Уніфікований cleanup для всіх редакторів (VS Code, Windsurf, Cursor, Antigravity)",
+          "order": 5
+        }
+      ]
+    },
+    "continue": {
+      "label": "Continue CLI",
+      "install": {
+        "type": "url",
+        "url": "https://www.continue.dev/docs/quickstart",
+        "hint": "Refer to official docs/extension install."
+      },
+      "modules": [
+        {
+          "id": "continue_cleanup",
+          "name": "Continue Config Cleanup",
+          "script": "echo 'Not implemented'",
+          "enabled": false,
+          "description": "Cleanup ~/.continue folder"
+        },
+        {
+          "id": "browser_fingerprint_cleanup",
+          "name": "Browser Fingerprint Cleanup",
+          "script": "./scripts/cleanup/browser_fingerprint_cleanup.sh",
+          "enabled": true,
+          "description": "Очищує IndexedDB, Service Workers, Canvas, WebGL, аудіо,Font fingerprints",
+          "order": 10
+        },
+        {
+          "id": "evercookie_killer",
+          "name": "EverCookie Killer",
+          "script": "./scripts/cleanup/evercookie_killer.sh",
+          "enabled": true,
+          "description": "Видаляє персистентні дані: ETag, HTTP Cache, DNS Cache, Beacon API логи",
+          "order": 20
+        },
+        {
+          "id": "locale_spoof",
+          "name": "Locale & Timezone Spoofing",
+          "script": "./scripts/cleanup/locale_spoof.sh",
+          "enabled": true,
+          "description": "Спуфує системну локаль, timezone, мову браузера (вектор fingerprint)",
+          "order": 30
+        },
+        {
+          "id": "deep_hardware_spoof",
+          "name": "Deep Hardware Fingerprint Spoof",
+          "script": "./scripts/cleanup/deep_hardware_spoof.sh",
+          "enabled": true,
+          "description": "20+ векторів: UUID, HWID, XPC, SMBIOS, IOKit, Device ID (Гл 4)",
+          "order": 40
+        },
+        {
+          "id": "network_isolation",
+          "name": "Network Isolation & DNS Privacy",
+          "script": "./scripts/cleanup/network_isolation.sh",
+          "enabled": true,
+          "description": "Видаляє мережеві логи, DNS Cache, ARP, Route, ISP дані, спуфує MAC (Гл 5)",
+          "order": 50
+        },
+        {
+          "id": "mikrotik_wifi_spoof",
+          "name": "🔚 ОСТАННІЙ: MikroTik WiFi & MAC Spoofing",
+          "script": "./scripts/cleanup/mikrotik_wifi_spoof.sh",
+          "enabled": true,
+          "description": "ОСТАННІЙ МОДУЛЬ: Випадково змінює WiFi SSID, IP-адресу та MAC-адресу (перевизначає все попереднє)",
+          "order": 999,
+          "requires_password": true
+        },
+        {
+          "id": "m1_max_spoof",
+          "name": "M1 Max Fingerprint Spoof",
+          "script": "./scripts/cleanup/m1_max_spoof.sh",
+          "enabled": true,
+          "description": "Спуфує M1 Max як M2/M3, криє Apple Silicon маркери, рандомізує GPU/RAM",
+          "order": 25,
+          "requires_password": true
+        },
+        {
+          "id": "sonoma_detection_bypass",
+          "name": "Sonoma Detection Bypass",
+          "script": "./scripts/cleanup/sonoma_detection_bypass.sh",
+          "enabled": true,
+          "description": "Блокує macOS 14 специфічні детектори: Privacy Report, TPCD, Safari 17, WebKit",
+          "order": 35,
+          "requires_password": true
+        }
+      ]
+    }
+  }
+}
