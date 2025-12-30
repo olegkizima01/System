@@ -1,5 +1,6 @@
 import os
 import time
+from datetime import datetime
 from typing import Dict, Any, List, Optional
 from langchain_core.messages import AIMessage, BaseMessage
 from langgraph.graph import StateGraph, END
@@ -88,7 +89,7 @@ class TrinityExecutionMixin:
         pause_info = {
             "reason": pause_reason,
             "message": message,
-            "timestamp": datetime.now().isoformat() if hasattr(self, 'datetime') else str(time.time()),
+            "timestamp": datetime.now().isoformat(),
             "status": "awaiting_human_input"
         }
         

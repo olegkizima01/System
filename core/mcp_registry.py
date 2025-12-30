@@ -237,8 +237,8 @@ class MCPToolRegistry:
         """Switch active MCP client (open_mcp/continue)."""
         try:
             from mcp_integration.core.mcp_client_manager import MCPClientType
-            ct = MCPClientType(client_type)
-            return self._mcp_client_manager.switch_client(ct)
+            # MCPClientType is a static class, not an enum, so we use the string directly
+            return self._mcp_client_manager.switch_client(client_type)
         except (ValueError, ImportError):
             return False
 

@@ -19,7 +19,7 @@ def test_mcp_auto_resolution():
     
     # 2. Test Auto Mode
     mgr.switch_client(MCPClientType.AUTO, save=False)
-    print(f"Auto mode: Active = {mgr.active_client}")
+    print(f"Auto mode: Active = {mgr.active_client_name}")
     
     # 2a. DEV task
     resolved_dev = mgr.resolve_client_type("DEV")

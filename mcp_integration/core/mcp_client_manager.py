@@ -133,5 +133,6 @@ def get_mcp_client_manager():
 class MCPClientType:
     NATIVE = "native"
     OPEN = "open"
+    OPEN_MCP = "open"  # Alias for OPEN for backwards compatibility
     CONTINUE = "continue"
     AUTO = "auto"

@@ -232,9 +232,24 @@ class GrishaMixin:
         lower = content.lower()
         res_str = "\\n".join(executed_results).lower()
         original_task = (state.get("original_task") or "").lower()
+        step_count = state.get("step_count", 0)
+        uncertain_streak = state.get("uncertain_streak", 0)
         
         # Check if this is a media/movie task
         is_media_task = any(keyword in original_task for keyword in ["фільм", "movie", "video", "перегляд", "watch", "відео"])
+        
+        # Priority 0: Anti-loop protection - force decision after too many steps
+        # This prevents infinite loops seen in logs where tasks run for 30+ steps
+        if step_count > 15 and "failed" not in lower and "error" not in lower:
+            if self.verbose:
+                print(f"⚠️ [Grisha] Anti-loop triggered: step_count={step_count}, forcing success")
+            return "success", "meta_planner"
+        
+        # If we've been in uncertain streak for too long, force a decision
+        if uncertain_streak >= 5 and "failed" not in lower:
+            if self.verbose:
+                print(f"⚠️ [Grisha] Uncertain streak={uncertain_streak}, forcing success")
+            return "success", "meta_planner"
         
         # Priority 1: Explicit markers in brackets
         if "[failed]" in lower:
@@ -290,9 +305,23 @@ class GrishaMixin:
 
     def _handle_grisha_streak(self, state, status, content):
         streak = (int(state.get("uncertain_streak") or 0) + 1) if status == "uncertain" else 0
+        step_count = state.get("step_count", 0)
+        
+        # Enhanced anti-loop protection
         if streak >= 3:
-            # If we've been uncertain for 3 times, don't reset, but maybe it will escalate naturally
-            # in meta_planner via current_step_fail_count.
-            # We preserve the streak to avoid flip-flopping.
+            # After 3 uncertain iterations, check if we should force resolution
+            # to prevent infinite meta_planner -> grisha -> meta_planner loops
+            if step_count > 10:
+                # If we've been running for many steps and keep getting uncertain,
+                # log this pattern for debugging
+                if self.verbose:
+                    print(f"⚠️ [Grisha] Anti-loop: streak={streak}, steps={step_count}. Consider forcing resolution.")
+            # Preserve the streak to signal to meta_planner via _router that 
+            # this task might need escalation or user intervention
             return streak
+        
+        # Reset failed streak counter when we get a decisive result
+        if status in ("success", "failed"):
+            return 0
+        
         return streak

@@ -27,8 +27,8 @@ def test_mcp_switching():
     
     # 3. Switch to the other client
     from mcp_integration.core.mcp_client_manager import MCPClientType
-    current_type = registry._mcp_client_manager.active_client
-    new_type = "continue" if current_type.value == "open_mcp" else "open_mcp"
+    current_type = registry._mcp_client_manager.active_client_name
+    new_type = "continue" if current_type == "open" or current_type == "open_mcp" else "open"
     
     print(f"\n🔄 Switching to {new_type}...")
     success = registry.set_mcp_client(new_type)
