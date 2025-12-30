@@ -27,9 +27,9 @@ class BrowserManager:
         with open(log_file, "a") as f:
             f.write(f"{time.ctime()}: get_page called with headless={headless} (last={self._last_headless})\n")
 
-        # If headless mode is not specified, use the last one or default to True
+        # If headless mode is not specified, use the last one or default to False (visible)
         if headless is None:
-            headless = self._last_headless if self._last_headless is not None else True
+            headless = self._last_headless if self._last_headless is not None else False
 
         # If already running but in different headless mode, restart
         if self.pw and self.browser and self._last_headless is not None and self._last_headless != headless:

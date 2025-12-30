@@ -24,8 +24,6 @@
         "chromium",
         "--allowed-origins",
         "*",
-        "--executable-path",
-        "/Users/dev/Library/Caches/ms-playwright/chromium-1194/chrome-mac/Chromium.app/Contents/MacOS/Chromium",
         "--user-data-dir",
         "/tmp/mcp_playwright_session"
       ],

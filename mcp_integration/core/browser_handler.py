@@ -95,12 +95,10 @@ class BrowserHandler:
         browser_name = self.normalize_browser_name(browser_name)
         
         # Build command
-        command = ["playwright-mcp", "--browser", browser_name, "--allowed-origins", "*"]
+        command = ["mcp-server-playwright", "--browser", browser_name, "--allowed-origins", "*"]
         
-        # Add executable path if available
-        browser_path = self.get_browser_path(browser_name)
-        if browser_path:
-            command.extend(["--executable-path", browser_path])
+        # We let mcp-server-playwright handle its own headless mode (headed by default)
+        # and its own executable path detection.
         
         command.extend([
             "--user-data-dir", "/tmp/mcp_playwright_session",
