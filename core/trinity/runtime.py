@@ -25,8 +25,8 @@ from core.trinity.nodes.grisha import GrishaMixin
 from core.trinity.nodes.knowledge import KnowledgeMixin
 from core.trinity.execution import TrinityExecutionMixin
 from core.trinity.tools import TrinityToolsMixin
-from core.trinity.integration_self_healing import TrinitySelfHealingMixin
-from core.trinity.integration_git import IntegrationGitMixin
+from core.trinity.integration.integration_self_healing import TrinitySelfHealingMixin
+from core.trinity.integration.integration_git import IntegrationGitMixin
 
 # Development/General identifiers
 DEV_KEYWORDS = {"code", "debug", "fix", "implement", "refactor", "test", "create file", "edit", "modify", "function", "class", "module", "script"}
@@ -226,6 +226,12 @@ class TrinityRuntime(
                 self.on_stream("doctor_vibe", msg)
             except Exception:
                 pass
+
+    def get_vibe_assistant_status(self) -> Optional[Dict[str, Any]]:
+        """Get the current Vibe Assistant status."""
+        if hasattr(self, 'vibe_assistant'):
+            return self.vibe_assistant.get_current_pause_status()
+        return None
 
     def run(self, task: str, gui_mode: str = "auto", execution_mode: str = "native", recursion_limit: int = 200) -> Generator[Dict[str, Any], None, None]:
         """Core execution loop using the LangGraph workflow."""

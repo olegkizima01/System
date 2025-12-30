@@ -40,12 +40,13 @@ echo -e "${GREEN}✓ System dependencies checked${NC}"
 echo -e "${BLUE}--- Installing Global MCP Servers ---${NC}"
 
 # Playwright
-if ! npm list -g @modelcontextprotocol/server-playwright &> /dev/null; then
-    echo -e "Installing Playwright Server..."
-    npm install -g @modelcontextprotocol/server-playwright
-else
-    echo -e "${GREEN}✓ Playwright Server installed${NC}"
-fi
+# if ! npm list -g @modelcontextprotocol/server-playwright &> /dev/null; then
+#     echo -e "Installing Playwright Server..."
+#     npm install -g @modelcontextprotocol/server-playwright
+# else
+#     echo -e "${GREEN}✓ Playwright Server installed${NC}"
+# fi
+echo -e "${YELLOW}Skipping Playwright Server install (package not found)${NC}"
 
 # Filesystem
 if ! npm list -g @modelcontextprotocol/server-filesystem &> /dev/null; then
