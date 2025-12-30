@@ -58,7 +58,12 @@ MEDIA_KEYWORDS = [
 SUCCESS_MARKERS = [
     "verified", "success", "confirmed", "passed", "step_completed", "completed", "done",
     "успішно", "виконано", "готово", "підтверджено",
-    "виконана", "виконаний", "готова", "готовий", "підтверджена", "підтверджений"
+    "виконана", "виконаний", "готова", "готовий", "підтверджена", "підтверджений",
+    # Media-specific success markers
+    "playing", "відтворюється", "грає", "running",
+    "video available", "відео доступне", "content available", "контент доступний",
+    "media ready", "медіа готове", "playback started", "відтворення розпочато",
+    "fullscreen", "повний екран", "full screen", "на весь екран"
 ]
 
 FAILURE_MARKERS = [

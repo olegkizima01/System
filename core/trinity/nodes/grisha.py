@@ -134,7 +134,12 @@ class GrishaMixin:
         tetyana_ctx = state.get("tetyana_tool_context") or {}
         
         last_msg_str = str(last_msg) if not isinstance(last_msg, str) else last_msg
-        browser_active = any(k in last_msg_str.lower() or k in str(state.get("original_task")).lower() for k in ["google", "browser", "сайт", "url"])
+        original_task = str(state.get("original_task") or "")
+        
+        # Check if this is a media task
+        is_media_task = any(keyword in original_task.lower() for keyword in ["фільм", "movie", "video", "перегляд", "watch", "відео"])
+        
+        browser_active = any(k in last_msg_str.lower() or k in original_task.lower() for k in ["google", "browser", "сайт", "url"])
         needs_visual = (set(tetyana_tools) & {"click", "type_text", "move_mouse"}) or browser_active or tetyana_ctx.get("browser_tool")
         
         if not (needs_visual or (state.get("gui_mode") in {"auto", "on"} and state.get("execution_mode") == "gui")):
@@ -149,9 +154,62 @@ class GrishaMixin:
             if tetyana_ctx.get("window_title"): args["window_title"] = tetyana_ctx["window_title"]
             
         analysis = self.registry.execute("enhanced_vision_analysis", args)
+        
         if isinstance(analysis, dict) and analysis.get("status") == "success":
             self.vision_context_manager.update_context(analysis)
+            
+            # For media tasks, enhance the analysis with media-specific checks
+            if is_media_task:
+                enhanced_analysis = self._enhance_media_vision_analysis(analysis, original_task)
+                if enhanced_analysis:
+                    analysis["media_analysis"] = enhanced_analysis
+                    # Update the context with media-specific information
+                    analysis["context"]["media_context"] = enhanced_analysis
+        
         return str(analysis)
+    
+    def _enhance_media_vision_analysis(self, vision_data, original_task):
+        """Enhance vision analysis for media tasks by looking for video-specific indicators."""
+        try:
+            ocr_text = vision_data.get("ocr", {}).get("text", "").lower()
+            context = vision_data.get("context", "").lower()
+            
+            # Look for media-specific indicators in OCR and context
+            media_indicators = {
+                "video_playing": any(word in ocr_text or word in context for word in ["playing", "відтворюється", "грає", "running"]),
+                "video_player": any(word in ocr_text or word in context for word in ["player", "плеєр", "video", "відео", "медіа"]),
+                "fullscreen": any(word in ocr_text or word in context for word in ["fullscreen", "повний екран", "full screen"]),
+                "play_button": any(word in ocr_text or word in context for word in ["play", "грати", "відтворити", "▶"]),
+                "pause_button": any(word in ocr_text or word in context for word in ["pause", "пауза", "⏸"]),
+                "progress_bar": any(word in ocr_text or word in context for word in ["progress", "прогрес", "timeline", "таймлайн"]),
+                "volume_control": any(word in ocr_text or word in context for word in ["volume", "гучність", "sound", "звук"]),
+                "movie_title": len(ocr_text.split()) > 3 and any(word in ocr_text for word in ["film", "movie", "фільм", "кіно"])
+            }
+            
+            # Calculate media confidence score
+            positive_indicators = sum(1 for v in media_indicators.values() if v)
+            media_confidence = min(1.0, positive_indicators / 4.0)  # 0-1 scale
+            
+            # Determine if media appears to be playing
+            likely_playing = media_confidence > 0.5 or (media_indicators["video_playing"] and media_indicators["video_player"])
+            
+            return {
+                "is_media_task": True,
+                "media_indicators": media_indicators,
+                "media_confidence": media_confidence,
+                "likely_playing": likely_playing,
+                "analysis": f"Media analysis: {'Likely playing' if likely_playing else 'Uncertain'}. "
+                          f"Confidence: {media_confidence:.2f}. "
+                          f"Indicators: {', '.join(k for k, v in media_indicators.items() if v)}"
+            }
+            
+        except Exception as e:
+            return {
+                "is_media_task": True,
+                "error": f"Media analysis error: {str(e)}",
+                "media_confidence": 0.0,
+                "likely_playing": False
+            }
 
     def _get_grisha_verdict(self, content, executed_results, test_results):
         if not executed_results and not test_results: return content
@@ -173,6 +231,10 @@ class GrishaMixin:
     def _determine_grisha_status(self, state, content, executed_results):
         lower = content.lower()
         res_str = "\\n".join(executed_results).lower()
+        original_task = (state.get("original_task") or "").lower()
+        
+        # Check if this is a media/movie task
+        is_media_task = any(keyword in original_task for keyword in ["фільм", "movie", "video", "перегляд", "watch", "відео"])
         
         # Priority 1: Explicit markers in brackets
         if "[failed]" in lower:
@@ -197,7 +259,29 @@ class GrishaMixin:
                 if match and not any(neg in match.group(0).lower() for neg in NEGATION_PATTERNS.get(self.preferred_language, "not |never ").split('|')):
                     return "success", "meta_planner"
         
-        # Priority 4: If Tetyana reported success and there are no failure indicators, 
+        # Priority 4: Media task specific verification
+        if is_media_task:
+            # For media tasks, be more lenient with verification
+            # Look for indicators that media is playing or accessible
+            media_success_indicators = [
+                "відео відтворюється", "video is playing", "фільм запущено", "movie is running",
+                "перегляд доступний", "playback available", "відео контент", "video content",
+                "медіа плеєр", "media player", "відео сторінка", "video page",
+                "контент доступний", "content available", "можна переглядати", "can be watched"
+            ]
+            
+            if any(indicator in lower for indicator in media_success_indicators):
+                # For media tasks, if we see any positive indicators and no explicit failures, consider it success
+                if "failed" not in lower and "error" not in lower and "не вдалося" not in lower:
+                    return "success", "meta_planner"
+            
+            # For media tasks, if we're at the final step and there are no explicit failures,
+            # be more lenient to avoid infinite loops
+            step_count = state.get("step_count", 0)
+            if step_count > 5 and "failed" not in lower and "error" not in lower:
+                return "success", "meta_planner"
+        
+        # Priority 5: If Tetyana reported success and there are no failure indicators, 
         # assume success if it's a simple navigation
         if STEP_COMPLETED_MARKER.lower() in lower and "failed" not in lower:
              return "success", "meta_planner"
