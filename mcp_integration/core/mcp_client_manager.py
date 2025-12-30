@@ -16,6 +16,17 @@ class MCPClientManager:
         server_config = self.config.servers.get(server_name)
         if server_config:
             return server_config.model_dump()
+
+    def switch_client(self, client_type: str, save: bool = True):
+        self.active_client_name = client_type
+        if save:
+            print(f"Client switched to {client_type} and saved.")
+    def resolve_client_type(self, context: str):
+        if self.active_client_name == MCPClientType.AUTO:
+            if context == "DEV":
+                return MCPClientType.CONTINUE
+            return MCPClientType.OPEN
+        return self.active_client_name
         return None
     
     def get_client(self, server_name: str = None, task_type: str = None):

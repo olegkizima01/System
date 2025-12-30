@@ -15,7 +15,7 @@ def test_mcp_auto_resolution():
     # 1. Test Manual Mode
     mgr.switch_client(MCPClientType.OPEN_MCP, save=False)
     print(f"Manual mode (OPEN_MCP): Resolved = {mgr.resolve_client_type('DEV')}")
-    assert mgr.resolve_client_type("DEV") == MCPClientType.OPEN_MCP
+    assert mgr.resolve_client_type("DEV") == MCPClientType.OPEN
     
     # 2. Test Auto Mode
     mgr.switch_client(MCPClientType.AUTO, save=False)
@@ -34,7 +34,7 @@ def test_mcp_auto_resolution():
     # 2c. No context
     resolved_none = mgr.resolve_client_type(None)
     print(f"  No context -> Resolved: {resolved_none}")
-    assert resolved_none == MCPClientType.OPEN_MCP
+    assert resolved_none == MCPClientType.OPEN
 
     print("\n✅ MCP Auto-Resolution Verification Successful!")
 

@@ -152,8 +152,8 @@ def setup_global_logging(
     # 1. Main File Handler (Rotating)
     file_handler = logging.handlers.RotatingFileHandler(
         CLI_LOG_FILE,
-        maxBytes=10 * 1024 * 1024,  # 10 MB
-        backupCount=5,
+        maxBytes=5 * 1024 * 1024,  # 5 MB (reduced from 10MB)
+        backupCount=3,  # Reduced from 5 to 3
         encoding="utf-8"
     )
     file_handler.setLevel(logging.DEBUG)
@@ -163,8 +163,8 @@ def setup_global_logging(
     # 2. Error File Handler
     error_handler = logging.handlers.RotatingFileHandler(
         ERROR_LOG_FILE,
-        maxBytes=5 * 1024 * 1024,
-        backupCount=3,
+        maxBytes=2 * 1024 * 1024,  # 2 MB (reduced from 5MB)
+        backupCount=2,  # Reduced from 3 to 2
         encoding="utf-8"
     )
     error_handler.setLevel(logging.ERROR)
@@ -174,8 +174,8 @@ def setup_global_logging(
     # 3. Analysis/JSON Handler
     json_handler = logging.handlers.RotatingFileHandler(
         ANALYSIS_LOG_FILE,
-        maxBytes=50 * 1024 * 1024,
-        backupCount=5,
+        maxBytes=10 * 1024 * 1024,  # 10 MB (reduced from 50MB)
+        backupCount=3,  # Reduced from 5 to 3
         encoding="utf-8"
     )
     json_handler.setLevel(logging.DEBUG)
@@ -227,7 +227,7 @@ def _setup_legacy_root_logging(root_dir: str, root_logger: logging.Logger):
     try:
         left_h = logging.handlers.RotatingFileHandler(
             logs_dir / "left_screen.log",
-            maxBytes=10*1024*1024, backupCount=3, encoding="utf-8"
+            maxBytes=5*1024*1024, backupCount=2, encoding="utf-8"  # Reduced from 10MB to 5MB, backupCount from 3 to 2
         )
         left_h.setFormatter(logging.Formatter(LOG_FORMAT_SIMPLE, datefmt=DATE_FORMAT))
         left_logger.addHandler(left_h)
@@ -244,7 +244,7 @@ def _setup_legacy_root_logging(root_dir: str, root_logger: logging.Logger):
     try:
         right_h = logging.handlers.RotatingFileHandler(
             logs_dir / "right_screen.log",
-            maxBytes=10*1024*1024, backupCount=3, encoding="utf-8"
+            maxBytes=5*1024*1024, backupCount=2, encoding="utf-8"  # Reduced from 10MB to 5MB, backupCount from 3 to 2
         )
         right_h.setFormatter(logging.Formatter("%(asctime)s | %(message)s", datefmt=DATE_FORMAT))
         right_logger.addHandler(right_h)
