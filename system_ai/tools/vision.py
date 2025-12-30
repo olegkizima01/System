@@ -736,7 +736,7 @@ class EnhancedVisionTools:
         image_path: str = None, 
         reference_path: str = None,
         generate_diff_image: bool = False,
-        multi_monitor: bool = True,
+        multi_monitor: bool = False,
         app_name: str = None,
         window_title: str = None
     ) -> dict:
@@ -746,7 +746,7 @@ class EnhancedVisionTools:
             image_path: Path to image to analyze (if None, captures screen)
             reference_path: Optional reference image for comparison
             generate_diff_image: Generate visualization of changes
-            multi_monitor: Use multi-monitor capture (default True)
+            multi_monitor: Use multi-monitor capture (default False)
             app_name: Optional app name to capture specific window (e.g., "Safari", "Chrome")
             window_title: Optional window title substring to filter specific window
         """
@@ -760,10 +760,20 @@ class EnhancedVisionTools:
                 from system_ai.tools.screenshot import take_screenshot
                 snap = take_screenshot(app_name=app_name, window_title=window_title, activate=False)
             elif multi_monitor:
+                # Only use multi-monitor if explicitly requested AND no specific app is targeted.
+                # However, if multi_monitor is True by default (legacy), we should check if we can
+                # be smarter. For now, let's change the default of multi_monitor to False in the signature,
+                # BUT since I can't change the signature easily without breaking callers, I will
+                # modify the logic here.
+                
+                # If we are in a "focused" mode (implied by lack of explicit "all screens" request),
+                # we might prefer the frontmost app.
+                # But for safety, let's keep explicit multi_monitor request as priority.
                 snap = analyzer.capture_all_monitors()
             else:
+                # Default fallback: Frontmost app instead of full screen blindly
                 from system_ai.tools.screenshot import take_screenshot
-                snap = take_screenshot()
+                snap = take_screenshot(use_frontmost=True)
             
             if snap.get("status") != "success":
                 return snap

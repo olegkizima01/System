@@ -233,9 +233,9 @@ Return JSON with ONLY the replacement step.'''))
                 if self.verbose: print(f"⚠️ [Atlas] Media task: search done but playback not confirmed")
                 return False
                 
-            # Check step count - media tasks typically need 4+ steps
+            # Check step count - media tasks typically need 4+ steps, but we relax this to avoid getting stuck
             step_count = state.get("step_count", 0)
-            if step_count < 3:
+            if step_count < 2:
                 if self.verbose: print(f"⚠️ [Atlas] Media task: only {step_count} steps completed, likely incomplete")
                 return False
         
@@ -249,7 +249,8 @@ Return JSON with ONLY the replacement step.'''))
         # Default: check if plan was fully executed AND enough steps were done
         plan = state.get("plan", [])
         step_count = state.get("step_count", 0)
-        return len(plan) == 0 and step_count > 3
+        # Relaxed from > 3 to >= 1 to allow short tasks to complete
+        return len(plan) == 0 and step_count >= 1
 
     def _force_continuation_plan(self, state: TrinityState, context: list) -> list:
         """Generate continuation plan when LLM incorrectly claims completion."""
