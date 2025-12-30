@@ -49,7 +49,8 @@ GENERAL_KEYWORDS = [
 
 MEDIA_KEYWORDS = [
     "фільм", "movie", "video", "youtube", "netflix", "дивитись", 
-    "watch", "серіал", "serial", "film", "музика", "music", "play"
+    "watch", "серіал", "serial", "film", "музика", "music", "play",
+    "clip", "кліп", "view", "переглянь"
 ]
 
 # -----------------------------------------------------------------------------

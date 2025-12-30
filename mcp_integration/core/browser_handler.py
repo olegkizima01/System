@@ -24,22 +24,29 @@ class BrowserHandler:
         "webkit": "webkit"
     }
     
-    BROWSER_PATHS = {
-        "chromium": "/Users/dev/Library/Caches/ms-playwright/chromium-1194/chrome-mac/Chromium.app/Contents/MacOS/Chromium",
-        "chrome": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-        "firefox": "/Applications/Firefox.app/Contents/MacOS/firefox",
-        "webkit": "/Applications/Safari.app/Contents/MacOS/Safari"
+    # Common macOS browser paths
+    COMMON_PATHS = {
+        "chrome": ["/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"],
+        "firefox": ["/Applications/Firefox.app/Contents/MacOS/firefox"],
+        "webkit": ["/Applications/Safari.app/Contents/MacOS/Safari"],
+        "chromium": []  # Chromium mostly managed by playwright
     }
-    
+
     def __init__(self):
         self.config = self._load_config()
     
     def _load_config(self) -> Dict[str, Any]:
         """Load configuration from MCP config"""
         try:
-            config_path = "/Users/dev/Documents/GitHub/System/mcp_integration/config/mcp_config.json"
-            with open(config_path) as f:
-                return json.load(f)
+            config_path = os.path.expanduser("~/.agent/mcp_config.json")
+            # Fallback to repo path if generic not found
+            if not os.path.exists(config_path):
+                 config_path = "/Users/dev/Documents/GitHub/System/mcp_integration/config/mcp_config.json"
+            
+            if os.path.exists(config_path):
+                with open(config_path) as f:
+                    return json.load(f)
+            return {"mcpServers": {}}
         except Exception as e:
             return {"mcpServers": {}}
     
@@ -52,17 +59,35 @@ class BrowserHandler:
         return "chromium"  # default
     
     def get_browser_path(self, browser_name: str) -> Optional[str]:
-        """Get path to browser executable"""
+        """Get path to browser executable using dynamic detection"""
         browser_name = self.normalize_browser_name(browser_name)
-        path = self.BROWSER_PATHS.get(browser_name)
-        return path if path and os.path.exists(path) else None
+        
+        # 1. Check environment variable override
+        env_var = f"BROWSER_PATH_{browser_name.upper()}"
+        if os.environ.get(env_var):
+            return os.environ[env_var]
+
+        # 2. Check common paths
+        for path in self.COMMON_PATHS.get(browser_name, []):
+            if os.path.exists(path):
+                return path
+        
+        # 3. Try shutil.which for command line tools
+        import shutil
+        if shutil.which(browser_name):
+            return shutil.which(browser_name)
+
+        return None
     
     def get_available_browsers(self) -> List[str]:
         """Get list of available browsers"""
         available = []
-        for browser, path in self.BROWSER_PATHS.items():
-            if os.path.exists(path):
+        for browser in self.COMMON_PATHS.keys():
+            if self.get_browser_path(browser):
                 available.append(browser)
+        # Chromium is usually available via playwright internal
+        if "chromium" not in available:
+             available.append("chromium")
         return available
     
     def start_playwright_server(self, browser_name: str = "chromium") -> subprocess.Popen:

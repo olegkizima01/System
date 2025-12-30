@@ -46,8 +46,8 @@ class TrinityRuntime(
     """Main Trinity runtime engine, composed of modular mixins."""
 
     # Constants
-    MAX_STEPS = 50
-    MAX_REPLANS = 10
+    MAX_STEPS = 200  # Increased for complex tasks
+    MAX_REPLANS = 20 # Increased for persistence
     PROJECT_STRUCTURE_FILE = "project_structure_final.txt"
     LAST_RESPONSE_FILE = ".last_response.txt"
     TRINITY_REPORT_HEADER = "## Trinity Report"
@@ -107,7 +107,7 @@ class TrinityRuntime(
         
         # Execution tracing
         self.execution_trace = []
-        self.max_execution_steps = 100  # Safety limit
+        self.max_execution_steps = 250  # Safety limit increased
         self.enable_execution_tracing = verbose
         
         # Hyper mode
@@ -274,7 +274,7 @@ class TrinityRuntime(
                 current_time = time.time()
                 execution_time = current_time - self._execution_start_time
                 
-                if self._check_safety_limits and execution_time > 60:  # 60 second timeout
+                if self._check_safety_limits and execution_time > 3600:  # 3600 second timeout (1 hour)
                     if self.verbose:
                         self.logger.warning(f"Execution timeout reached: {execution_time:.1f}s > 60s")
                     
