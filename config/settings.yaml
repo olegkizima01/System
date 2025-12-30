@@ -1,0 +1,39 @@
+settings:
+  app_name: "Atlas"
+  version: "2.5.0"
+  env: "development" # development, production
+
+logging:
+  level: "INFO" # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  format: "json" # json, text
+  file_path: "logs/trinity_state.log"
+  console_output: true
+
+mcp:
+  mode: "dynamic" # dynamic, static
+  global_binary_fallback: true
+  servers:
+    context7:
+      enabled: true
+      command: "uvx"
+      args: ["context7"]
+    playwright:
+      enabled: true
+      command: "npx"
+      args: ["-y", "@modelcontextprotocol/server-playwright"]
+    filesystem:
+      enabled: true
+      command: "npx"
+      args: ["-y", "@modelcontextprotocol/server-filesystem", "/Users/dev/Documents/GitHub/System"]
+
+agents:
+  default_timeout: 300
+  max_retries: 3
+  vision:
+    enabled: true
+    multi_monitor: true
+    diff_analysis: true
+
+paths:
+  artifacts_dir: ".agent/artifacts"
+  memory_dir: ".agent/memory"

@@ -93,8 +93,7 @@ class SonarQubeClient(UnifiedBridgeClient):
 class MCPManager:
     """Modern MCP Manager that maintains backward compatibility with legacy code."""
     
-    def __init__(self, config_path: str = "mcp_integration/config/mcp_config.json"):
-        self.config_path = config_path
+    def __init__(self):
         self._client_mgr = get_mcp_client_manager()
         self.clients = {}
         self._initialize_legacy_clients()

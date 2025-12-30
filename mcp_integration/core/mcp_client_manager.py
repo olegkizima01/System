@@ -1,30 +1,26 @@
 import subprocess
 import json
 import os
+import shutil
 from typing import Dict, Any, Optional
 
+from core.config import settings
+
 class MCPClientManager:
-    def __init__(self, config_path: str = None):
-        self.config_path = config_path or "/Users/dev/Documents/GitHub/System/mcp_integration/config/mcp_config.json"
-        self.config = self._load_config()
-        self.active_client = self.config.get("activeClient", "native")
+    def __init__(self):
+        self.config = settings.mcp
         self.active_client_name = "Native SDK Client"
     
-    def _load_config(self) -> Dict[str, Any]:
-        """Load MCP configuration from JSON file"""
-        try:
-            with open(self.config_path) as f:
-                return json.load(f)
-        except Exception as e:
-            raise RuntimeError(f"Failed to load MCP config: {e}")
-    
     def get_server_config(self, server_name: str) -> Optional[Dict[str, Any]]:
-        """Get configuration for a specific MCP server"""
-        servers = self.config.get("mcpServers", {})
-        return servers.get(server_name)
+        """Get configuration for a specific MCP server from settings"""
+        server_config = self.config.servers.get(server_name)
+        if server_config:
+            return server_config.model_dump()
+        return None
     
     def get_client(self, server_name: str = None, task_type: str = None):
         """Get MCP client for specific server or default"""
+        # TODO: Implement actual Native Client retrieval here
         return MockMCPClient()
     
     def execute(self, tool_name: str, args: Dict[str, Any], task_type: str = None):
@@ -35,9 +31,6 @@ class MCPClientManager:
         """
         Execute a high-level task by delegating to appropriate tools.
         This is called via meta.execute_task tool.
-        
-        For browser-related tasks, delegates to browser_execute.
-        For other tasks, returns guidance for the agent to use specific tools.
         """
         task_lower = str(task or "").lower()
         
@@ -48,7 +41,6 @@ class MCPClientManager:
         if is_browser_task:
             return self.execute_browser_task(task)
         
-        # For non-browser tasks, return guidance
         return {
             "status": "guidance",
             "message": f"Task received: {task}. Use specific tools like run_shell, browser_open_url, etc. instead of meta.execute_task for execution.",
@@ -57,13 +49,19 @@ class MCPClientManager:
         }
     
     def start_browser_server(self, browser_name: str = "chromium") -> subprocess.Popen:
-        """Start Playwright MCP server with specific browser"""
+        """Start Playwright MCP server"""
         server_config = self.get_server_config("playwright")
-        if not server_config:
-            raise RuntimeError("Playwright server not configured")
+        if not server_config or not server_config.get("enabled"):
+            raise RuntimeError("Playwright server not configured or disabled")
         
-        command = [server_config["command"]]
-        command.extend(server_config.get("args", []))
+        # Construct command from settings
+        cmd_base = server_config["command"]
+        args = server_config.get("args", [])
+        
+        # If Using npx, ensure we look it up or trust shell if global
+        # If command is absolute path, use it. If 'npx', let shell find it.
+        
+        command = [cmd_base] + args
         
         print(f"🚀 Starting Playwright server...")
         print(f"Command: {' '.join(command)}")
@@ -103,11 +101,9 @@ class MockMCPClient:
         self.is_connected = True
     
     def connect(self):
-        """Mock connect"""
         return True
     
     def list_tools(self):
-        """List available tools"""
         return [
             {"name": "playwright.browser_navigate", "description": "Navigate to URL in browser"},
             {"name": "playwright.browser_click", "description": "Click element in browser"},
@@ -117,7 +113,6 @@ class MockMCPClient:
         ]
     
     def execute(self, tool_name: str, args: Dict[str, Any]):
-        """Execute tool"""
         return {"success": True, "data": f"Executed {tool_name}"}
 
 # Global instance

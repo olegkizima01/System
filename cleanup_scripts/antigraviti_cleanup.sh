@@ -6,6 +6,10 @@ setopt NULL_GLOB
 PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:${PATH:-}"
 export PATH
 
+# Додаємо шлях до hdiutil
+PATH="/usr/bin:$PATH"
+export PATH
+
 # ═══════════════════════════════════════════════════════════════
 #  🛰  ANTIGRAVITY CLEANUP - Очищення ідентифікаторів Antigravity
 #  Використовує спільні функції з common_functions.sh
@@ -164,6 +168,98 @@ defaults delete com.google.antigravity 2>/dev/null
 defaults delete com.google.Antigravity 2>/dev/null
 print_success "System defaults очищено"
 
+# 11. Очищення дискового простору Antigravity (новий крок)
+print_step 11 11 "Очищення дискового простору Antigravity..."
+
+# Перевіряємо, чи є змонтований Antigravity
+if /sbin/mount | /usr/bin/grep -q "/Volumes/Antigravity"; then
+    print_info "Antigravity вже змонтовано, відмонтовуємо..."
+    hdiutil detach /Volumes/Antigravity -force 2>/dev/null || true
+    sleep 2
+fi
+
+# Шлях до образу Antigravity
+ANTIGRAVITY_DMG="/Users/dev/Desktop/Antigravity.dmg"
+
+if [ -f "$ANTIGRAVITY_DMG" ] && [ ! -f "/Users/dev/Desktop/Antigravity_backup_*.dmg" ]; then
+    print_info "Знайдено Antigravity.dmg, виконуємо очищення..."
+    
+    # Конвертуємо в записуваний формат
+    print_info "Конвертація в записуваний формат..."
+    /usr/bin/hdiutil convert "$ANTIGRAVITY_DMG" -format UDRW -o "/Users/dev/Desktop/Antigravity_rw"
+    
+    # Перевіряємо, чи файл був створений (hdiutil додає .dmg автоматично)
+    if [ -f "/Users/dev/Desktop/Antigravity_rw.dmg" ]; then
+        ANTIGRAVITY_RW_DMG="/Users/dev/Desktop/Antigravity_rw.dmg"
+    elif [ -f "/Users/dev/Desktop/Antigravity_rw" ]; then
+        ANTIGRAVITY_RW_DMG="/Users/dev/Desktop/Antigravity_rw"
+    else
+        print_warning "Не вдалося створити записуваний образ"
+        ANTIGRAVITY_RW_DMG=""
+    fi
+    
+    if [ -n "$ANTIGRAVITY_RW_DMG" ]; then
+        # Монтуємо записуваний образ
+        print_info "Монтування записуваного образу..."
+        /usr/bin/hdiutil attach "$ANTIGRAVITY_RW_DMG" -mountpoint /Volumes/Antigravity_rw
+    
+        # Очищаємо великі папки
+        if [ -d "/Volumes/Antigravity_rw/Antigravity.app/Contents/Resources/app/extensions" ]; then
+            print_info "Видалення extensions..."
+            rm -rf /Volumes/Antigravity_rw/Antigravity.app/Contents/Resources/app/extensions
+        fi
+        
+        if [ -d "/Volumes/Antigravity_rw/Antigravity.app/Contents/Resources/app/node_modules" ]; then
+            print_info "Видалення node_modules..."
+            rm -rf /Volumes/Antigravity_rw/Antigravity.app/Contents/Resources/app/node_modules
+        fi
+        
+        # Відмонтовуємо
+        print_info "Відмонтовування записуваного образу..."
+        /usr/bin/hdiutil detach /Volumes/Antigravity_rw -force || true
+        
+        # Створюємо фінальний образ тільки для читання
+        print_info "Створення фінального образу..."
+        /usr/bin/hdiutil convert "$ANTIGRAVITY_RW_DMG" -format UDRO -o "/Users/dev/Desktop/Antigravity_clean"
+        
+        # Перевіряємо, чи файл був створений
+        if [ -f "/Users/dev/Desktop/Antigravity_clean.dmg" ]; then
+            ANTIGRAVITY_CLEAN_DMG="/Users/dev/Desktop/Antigravity_clean.dmg"
+        elif [ -f "/Users/dev/Desktop/Antigravity_clean" ]; then
+            ANTIGRAVITY_CLEAN_DMG="/Users/dev/Desktop/Antigravity_clean"
+        else
+            ANTIGRAVITY_CLEAN_DMG=""
+            print_warning "Не вдалося створити фінальний образ"
+        fi
+    
+        # Замінюємо оригінальний образ
+        print_info "Заміна оригінального образу..."
+        if [ -n "$ANTIGRAVITY_CLEAN_DMG" ]; then
+            /bin/mv "$ANTIGRAVITY_DMG" "/Users/dev/Desktop/Antigravity_backup_$(/bin/date +%Y%m%d).dmg"
+            /bin/mv "$ANTIGRAVITY_CLEAN_DMG" "$ANTIGRAVITY_DMG"
+            
+            # Монтуємо очищений образ
+            print_info "Монтування очищеного образу..."
+            /usr/bin/hdiutil attach "$ANTIGRAVITY_DMG" -mountpoint /Volumes/Antigravity
+            
+            # Перевіряємо вільне місце
+            AVAILABLE_SPACE=$(/bin/df -h /Volumes/Antigravity 2>/dev/null | /usr/bin/awk 'NR==2 {print $4}')
+            if [ -n "$AVAILABLE_SPACE" ]; then
+                print_success "Очищення завершено! Вільне місце: $AVAILABLE_SPACE"
+            else
+                print_success "Очищення завершено!"
+            fi
+        else
+            print_warning "Не вдалося створити очищений образ"
+        fi
+        
+        # Видаляємо тимчасові файли
+        /bin/rm -f "$ANTIGRAVITY_RW_DMG"
+    fi
+else
+    print_info "Antigravity.dmg не знайдено, пропускаємо очищення диска"
+fi
+
 # ─────────────────────────────────────────────────────────────────
 # ФІНАЛЬНЕ ОЧИЩЕННЯ
 # ─────────────────────────────────────────────────────────────────
@@ -205,4 +301,5 @@ echo "${CYAN}══════════════════════�
 echo ""
 print_success "Очищення Antigravity завершено!"
 print_info "Тепер можна запускати Antigravity як новий користувач"
+print_info "Дисковий простір оптимізовано для кращої роботи"
 echo ""
