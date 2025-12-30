@@ -334,9 +334,9 @@ class TetyanaMixin:
         try:
             res_dict = json.loads(res_str)
             if isinstance(res_dict, dict):
-                status = str(res_dict.get("status", "")).lower()
+                status = str(res_dict.get("status", res_dict.get("state", ""))).lower()
                 # Check for error, captcha, or warning statuses
-                if status in {"error", "captcha"}:
+                if status in {"error", "failed", "captcha", "failure"}:
                     return True
                 # Warning with empty links is a failure (blocked page)
                 if status == "warning" and not res_dict.get("links"):

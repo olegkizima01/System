@@ -17,6 +17,7 @@ class AgentType(Enum):
     VIBE = "vibe"            # ⚕️ Doctor Vibe (magenta)
     USER = "user"            # 👤 User (white/default)
     SYSTEM = "system"        # ⚙️ System (gray)
+    ASSISTANT = "assistant"  # 🤖 Assistant (default)
 
 
 @dataclass
@@ -120,6 +121,7 @@ class MessageFormatter:
         AgentType.VIBE: "class:agent.vibe",
         AgentType.USER: "class:agent.user",
         AgentType.SYSTEM: "class:agent.system",
+        AgentType.ASSISTANT: "class:agent.system",
     }
     
     AGENT_NAMES = {
@@ -129,6 +131,7 @@ class MessageFormatter:
         AgentType.VIBE: "VIBE",
         AgentType.USER: "USER",
         AgentType.SYSTEM: "SYSTEM",
+        AgentType.ASSISTANT: "ASSISTANT",
     }
     
     AGENT_EMOJIS = {
@@ -138,6 +141,7 @@ class MessageFormatter:
         AgentType.VIBE: "⚕️",
         AgentType.USER: "👤",
         AgentType.SYSTEM: "⚙️",
+        AgentType.ASSISTANT: "🤖",
     }
     
     # Patterns for highlighting @mentions

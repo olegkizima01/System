@@ -39,11 +39,15 @@ class MCPClientManager:
         is_browser_task = any(kw in task_lower for kw in browser_keywords)
         
         if is_browser_task:
-            return self.execute_browser_task(task)
+            return {
+                "status": "error",
+                "message": f"Delegation to 'meta.execute_task' for browser operations is not supported by this MCP client. Please use granular tools like 'playwright.browser_navigate', 'playwright.browser_click', etc., or 'browser_open_url' directly.",
+                "task": task
+            }
         
         return {
             "status": "guidance",
-            "message": f"Task received: {task}. Use specific tools like run_shell, browser_open_url, etc. instead of meta.execute_task for execution.",
+            "message": f"Task received: {task}. Use specific tools like run_shell, browser_open_url, etc. instead of meta.execute_task for high-level execution.",
             "task": task,
             "task_type": task_type or "GENERAL"
         }
@@ -78,22 +82,12 @@ class MCPClientManager:
             raise RuntimeError(f"Failed to start Playwright: {e}")
     
     def execute_browser_task(self, task: str, browser_name: str = "chromium") -> Dict[str, Any]:
-        """Execute browser task with specific browser"""
-        try:
-            proc = self.start_browser_server(browser_name)
-            return {
-                "status": "success",
-                "browser": browser_name,
-                "task": task,
-                "message": f"Browser {browser_name} started for task: {task}"
-            }
-        except Exception as e:
-            return {
-                "status": "error",
-                "error": str(e),
-                "browser": browser_name,
-                "task": task
-            }
+        """Deprecated: Use granular playwright tools instead."""
+        return {
+            "status": "error",
+            "message": "Delegated task execution is not supported. Use granular tools.",
+            "task": task
+        }
 
 class MockMCPClient:
     """Mock MCP client for testing"""

@@ -21,6 +21,7 @@ Your team:
    - Can do EVERYTHING: from opening a browser to rewriting core logic.
    - For DEV tasks: Uses `read_file`, `write_file`, `copy_file`, `run_shell`
    - For GENERAL tasks: Uses OS operations (browser, GUI, AppleScript)
+   - ⚠️ **BROWSER MANDATE**: Use `playwright.*` tools for ALL web interaction. NEVER manually use `open_app("Safari")` or `open_app("Chrome")` for web tasks.
    - ⚠️ IMPORTANT: Analysis steps should have empty tools: `"tools": []`
 2. Grisha (Verification/Security): 
    - Checks safety and results (QA).
@@ -35,6 +36,13 @@ Responsibilities:
 - Coordinate and manage context. Use safe-defaults for paths.
 - Ask user only if ambiguous or dangerous.
 - Fail early if blocked and explain why in [VOICE].
+
+🚨 **EXTREMELY IMPORTANT - BROWSER POLICY**:
+Trinity uses a specialized headful Playwright-based browser for all web tasks.
+1. NEVER use `open_app("Safari")` or `open_app("Chrome")`.
+2. NEVER use `meta.execute_task` for browser navigation or search.
+3. ALWAYS use `playwright.*` tools (e.g., `playwright.browser_navigate`) or the high-level `browser_open_url`.
+Failure to follow this will cause vision loops and task failure.
 """
 
 def get_atlas_prompt(task_description: str, preferred_language: str = "en", vision_context: str = ""):
@@ -102,10 +110,10 @@ Your task: Transform the strategic policy (meta_config) and context into a tacti
 If the 'Context/RAG' section contains **DYANMIC SCHEMAS**, **CONTRACTS**, or **SPECIFIC DIRECTIVES**, they take **ABSOLUTE PRECEDENCE** over default instructions. Follow them strictly.
 
 ⚠️ **DELEGATION & META-TASKS**:
-If 'delegation_mode' is 'meta', or if a sub-task is complex (e.g., browsing a site with multi-step navigation), you should use high-level delegation:
-- Use `meta.execute_task` to delegate an entire sub-goal to a specialized MCP client.
-- **CLINE** (via meta.execute_task) is preferred for: Complex browser workflows, research, and deep code analysis.
-- **CONTINUE** (via meta.execute_task) is preferred for: Code generation, unit tests, and repository-wide refactoring.
+If 'delegation_mode' is 'meta', or if a sub-task is complex (e.g., repository-wide refactoring), you should use high-level delegation:
+- **CONTINUE** (via `meta.execute_task`) is preferred for: Massive code generation, unit tests, and complex technical refactoring.
+- **NOTE**: For ALL browser tasks, DO NOT use delegation. Use granular `playwright.*` tools directly.
+- ⚠️ **STRICT PROHIBITION**: NEVER use `open_app` to open Safari or Chrome for web automation. It breaks vision and control loops. Use `playwright.*` which handles its own headful browser life-cycle.
 
 ⚠️ **CRITICAL ANTI-PREMATURE-COMPLETION RULES**:
 1. NEVER return {{"status": "completed"}} unless ALL phases of the Global Goal are done.
@@ -113,16 +121,16 @@ If 'delegation_mode' is 'meta', or if a sub-task is complex (e.g., browsing a si
 
 AVAILABLE TOOLS:
 {tools_desc}
-- **meta.execute_task**: (Args: task: str) Delegate a high-level goal to the best-suited MCP client (Cline/Continue). Recommended for complex BROWSER or DEV work.
+- **meta.execute_task**: (Args: task: str) Delegate a high-level goal to a specialized agent (Continue). ONLY for massive DEV work. DO NOT use for BROWSER.
 
 ### TOOL PRIORITY (CRITICAL):
-1. **META DELEGATION**: Use `meta.execute_task` for complex "Meta-Tasks" to leverage original client intelligence.
-2. **MCP SERVERS**: Use `playwright.*` or `pyautogui.*` for specific granular actions.
-3. **LOCAL FALLBACK**: Use native tools (run_shell, etc.) only if delegation/MCP fails.
+1. **MCP SERVERS**: Use `playwright.*` or `pyautogui.*` for specific granular actions. ALWAYS prefer these for BROWSER work.
+2. **META DELEGATION**: Use `meta.execute_task` ONLY for complex repository-wide DEV work.
+3. **LOCAL FALLBACK**: Use native tools (run_shell, etc.) only if Playwright/MCP fails.
 
 🚀 YOUR TASKS:
 1. **ALIGN WITH GLOBAL GOAL**: Plan all the way to completion.
-2. **DELEGATE**: If a task is "Search for X and do Y", plan a `meta.execute_task` step.
+2. **PLAN IN DETAIL**: For browser tasks, break down into navigate, type, click, and verify steps.
 3. **RAG ADAPTATION**: Strictly follow dynamic schemas/contracts provided in context.
 4. Localization: Report in {preferred_language} with [VOICE].
 

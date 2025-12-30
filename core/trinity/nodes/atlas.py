@@ -100,15 +100,25 @@ class AtlasMixin:
         
         history_str = "\n".join(execution_history) if execution_history else "No steps executed yet. Starting fresh."
         
+        tools_desc = self.registry.list_tools(task_type=state.get("task_type"))
+        if state.get("is_media"):
+            # Hide delegation tools to force granular browser tools
+            lines = tools_desc.split("\n")
+            filtered_lines = [l for l in lines if "meta.execute_task" not in l]
+            tools_desc = "\n".join(filtered_lines)
+
         prompt = get_atlas_plan_prompt(
             f"Global Goal: {state.get('original_task')}\nCurrent Request: {last_msg}\n\nEXECUTION HISTORY SO FAR (Status of steps):\n{history_str}",
-            tools_desc=self.registry.list_tools(task_type=state.get("task_type")),
+            tools_desc=tools_desc,
             context=final_context + ("\n\n[MEDIA_MODE] This is a media-related task. Use the Two-Phase Media Strategy." if state.get("is_media") else ""),
             preferred_language=self.preferred_language,
             forbidden_actions="\n".join(state.get("forbidden_actions") or []),
             vision_context=self.vision_context_manager.current_context
         )
         
+        if state.get("is_media"):
+            meta_config["tool_preference"] = "BROWSER"
+            
         self._inject_prompt_modifiers(prompt, state, meta_config)
         return prompt
 

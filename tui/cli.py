@@ -722,7 +722,6 @@ def _agent_send_no_stream(user_text: str) -> Tuple[bool, str]:
     finally:
         state.agent_processing = False
         _trim_logs_if_needed()
-        _trim_logs_if_needed()
 
 
 

@@ -19,8 +19,8 @@ mcp:
       args: ["context7"]
     playwright:
       enabled: true
-      command: "npx"
-      args: ["-y", "@modelcontextprotocol/server-playwright"]
+      command: "mcp-server-playwright"
+      args: ["--browser", "chromium", "--allowed-origins", "*"]
     filesystem:
       enabled: true
       command: "npx"
