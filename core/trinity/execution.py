@@ -6,6 +6,7 @@ from langchain_core.messages import AIMessage, BaseMessage
 from langgraph.graph import StateGraph, END
 from core.trinity.state import TrinityState
 from core.constants import VOICE_MARKER, UNKNOWN_STEP
+from core.trinity.nodes.vibe import vibe_analyst_node
 from tui.logger import trace
 
 class TrinityExecutionMixin:
@@ -21,6 +22,7 @@ class TrinityExecutionMixin:
         workflow.add_node("tetyana", self._tetyana_node)
         workflow.add_node("grisha", self._grisha_node)
         workflow.add_node("knowledge", self._knowledge_node)
+        workflow.add_node("vibe", vibe_analyst_node)
 
         # Set Entry Point
         workflow.set_entry_point("meta_planner")
@@ -28,6 +30,10 @@ class TrinityExecutionMixin:
         # Add Edges
         workflow.add_edge("atlas", "tetyana")
         workflow.add_edge("tetyana", "grisha")
+        # Route knowledge -> vibe -> END
+        workflow.add_edge("knowledge", "vibe")
+        workflow.add_edge("vibe", END)
+
         workflow.add_conditional_edges(
             "meta_planner",
             self._meta_router,

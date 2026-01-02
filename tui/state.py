@@ -36,6 +36,7 @@ class MenuLevel(Enum):
     LEARNING_MODE = "learning_mode"
     MEMORY_MANAGER = "memory_manager"
     MCP_CLIENT_SETTINGS = "mcp_client_settings"
+    ETERNAL_ENGINE = "eternal_engine"
 
 
 @dataclass

@@ -1882,7 +1882,7 @@ def cli_main(argv: List[str]) -> None:
     p_vibe_help = sub.add_parser("vibe-help", help="Show Vibe CLI Assistant help")
     
     p_eternal_engine = sub.add_parser("eternal-engine", help="Start eternal engine mode with Doctor Vibe")
-    p_eternal_engine.add_argument("--task", required=True, help="Task to execute in eternal engine mode")
+    p_eternal_engine.add_argument("--task", default="Auto-generate", help="Initial task (optional)")
     p_eternal_engine.add_argument("--hyper", action="store_true", help="Enable hyper mode (unlimited permissions)")
 
     # Screenshots management
@@ -2065,8 +2065,10 @@ def _handle_vibe_command(logger: Any, action: str):
 
 def _handle_eternal_engine(args: Any, logger: Any):
     logger.info(f"Starting eternal engine mode with task: {args.task}")
-    from tui.commands import start_eternal_engine_mode
-    start_eternal_engine_mode(args.task, args.hyper)
+    import asyncio
+    from core.eternal import EternalEngine
+    engine = EternalEngine()
+    asyncio.run(engine.run_forever())
 
 def _handle_screenshots_command(args: Any):
     if args.action == "list":

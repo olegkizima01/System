@@ -12,6 +12,7 @@ MAIN_MENU_ITEMS: List[Tuple[str, MenuLevel]] = [
     ("menu.item.install", MenuLevel.INSTALL_EDITORS),
     ("menu.item.monitoring", MenuLevel.MONITORING),
     ("menu.item.settings", MenuLevel.SETTINGS),
+    ("menu.item.eternal_engine", MenuLevel.ETERNAL_ENGINE),
 ]
 
 

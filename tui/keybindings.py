@@ -438,8 +438,23 @@ def _get_menu_enter_dispatch(ctx, state, MenuLevel, _llm_sub_hint):
         MenuLevel.MONITOR_TARGETS: lambda: _handle_monitor_targets_enter(ctx),
         MenuLevel.MONITOR_CONTROL: lambda: _handle_monitor_control_enter_ctx(ctx),
         MenuLevel.MCP_CLIENT_SETTINGS: lambda: _handle_mcp_client_enter_ctx(ctx),
+        MenuLevel.ETERNAL_ENGINE: lambda: _handle_eternal_engine_enter(ctx),
         **{ml: _llm_sub_hint for ml in [MenuLevel.LLM_ATLAS, MenuLevel.LLM_TETYANA, MenuLevel.LLM_GRISHA, MenuLevel.LLM_VISION, MenuLevel.LLM_DEFAULTS]}
     }
+
+def _handle_eternal_engine_enter(ctx):
+    import asyncio
+    from core.eternal import EternalEngine
+    ctx["log"]("Starting Eternal Engine...", "action")
+    # We run blocking here for simplicity, or we could spawn a thread but asyncio.run is blocking.
+    # TUI might freeze unless we run in thread. Let's spawn a thread that runs the loop.
+    import threading
+    def _run():
+        engine = EternalEngine()
+        asyncio.run(engine.run_forever())
+    
+    t = threading.Thread(target=_run, daemon=True)
+    t.start()
 
 def _handle_mcp_client_enter_ctx(ctx):
     """Handle enter key in MCP client menu."""
