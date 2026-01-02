@@ -202,6 +202,7 @@ class MCPToolRegistry:
         "browser_open_url": ("playwright", "browser_navigate"),
         "browser_navigate": ("playwright", "browser_navigate"),
         "chrome_open_url": ("playwright", "browser_navigate"),
+        # FORCE ROUTE: generic open_url should use Playwright to avoid unmanaged Safari windows
         "open_url": ("playwright", "browser_navigate"),
         "browser_click_element": ("playwright", "browser_click"),
         "browser_screenshot": ("playwright", "browser_screenshot"),
@@ -248,7 +249,7 @@ class MCPToolRegistry:
 
     def _register_foundation_tools(self):
         self.register_tool("run_shell", run_shell, "Execute shell command. Args: command (str), allow=True")
-        self.register_tool("open_app", open_app, "Open MacOS Application. Args: name (str)")
+        self.register_tool("open_app", open_app, "Open MacOS Application (READ ONLY/NO CONTROL). For Web automation use browser_* tools. Args: name (str)")
         self.register_tool("run_applescript", run_applescript, "Run AppleScript. Args: script (str)")
         self.register_tool("run_shortcut", run_shortcut, "Run Shortcuts automation. Args: name (str), allow=True")
         self.register_tool(
@@ -724,6 +725,11 @@ class MCPToolRegistry:
             
             client = mgr.get_client()
             if client:
+                # BREAK RECURSION: If client is NativeMCPClient (which wraps this Registry), 
+                # do not ask it for tools, as we are the source of those tools.
+                if type(client).__name__ == "NativeMCPClient":
+                     raise ImportError("Skip Native Client")
+
                 if not client.is_connected: client.connect()
                 client_tools = client.list_tools()
                 if client_tools:
@@ -733,7 +739,8 @@ class MCPToolRegistry:
                         desc = tool.get("description", "No description")
                         lines.append(f"- {name}: {desc}")
         except Exception as e:
-            print(f"[MCP] Failed to list tools from active client: {e}")
+            # Silent partial failure ok for list_tools
+            pass
         
         return "\n".join(lines)
 
@@ -743,6 +750,22 @@ class MCPToolRegistry:
         
         for name, desc in self._descriptions.items():
             defs.append({"name": name, "description": desc})
+            
+        for p_name, provider in self._external_providers.items():
+            try:
+                if not provider._connected:
+                     # Attempt connect if not connected (lazy load)
+                     provider.connect()
+                     
+                for t_name, tool in provider._tools.items():
+                    prefixed_name = f"{p_name}.{t_name}"
+                    defs.append({
+                        "name": prefixed_name, 
+                        "description": tool.description or ""
+                    })
+            except Exception as e:
+                # Log but continue
+                pass
         
         try:
             from mcp_integration.core.mcp_client_manager import MCPClientType
@@ -750,6 +773,10 @@ class MCPToolRegistry:
             
             client = mgr.get_client()
             if client:
+                # BREAK RECURSION
+                if type(client).__name__ == "NativeMCPClient":
+                     raise ImportError("Skip Native Client")
+
                 if not client.is_connected: client.connect()
                 client_tools = client.list_tools()
                 for tool in client_tools:
@@ -758,7 +785,7 @@ class MCPToolRegistry:
                         "description": tool.get("description")
                     })
         except Exception as e:
-            print(f"[MCP] Failed to get tool definitions from active client: {e}")
+            pass
         
         return defs
 
@@ -773,9 +800,12 @@ class MCPToolRegistry:
         if tool_name in self.BROWSER_TOOL_ROUTING:
             provider_name, mcp_tool = self.BROWSER_TOOL_ROUTING[tool_name]
             if provider_name in self._external_providers:
+                # SPECIAL HANDLING: browser_open_url needs cookie smashing
+                if tool_name == "browser_open_url":
+                    return self._execute_smart_browser_open(provider_name, mcp_tool, args)
+
                 adapted_args = self._adapt_args_for_mcp(tool_name, mcp_tool, args)
                 prefixed_name = f"{provider_name}.{mcp_tool}"
-                # Register in external tools map for future direct calls
                 self._external_tools_map[prefixed_name] = provider_name
                 result = self._try_external_direct_call(prefixed_name, adapted_args)
                 if result is not None:
@@ -783,6 +813,70 @@ class MCPToolRegistry:
         
         # 3. Fallback to local tool execution
         return self._execute_local_tool(tool_name, args)
+
+    def _execute_smart_browser_open(self, provider_name: str, mcp_tool: str, args: Dict[str, Any]) -> str:
+        """
+        Enhanced browser navigation that automatically handles cookie consents.
+        EXECUTION FLOW:
+        1. Navigate to URL
+        2. Wait for load
+        3. Inject 'Cookie Smash' JS to click Accept/Agree buttons
+        4. Return result
+        """
+        # 1. Adapt args and Navigate
+        adapted_args = self._adapt_args_for_mcp("browser_open_url", mcp_tool, args)
+        prefixed_name = f"{provider_name}.{mcp_tool}"
+        self._external_tools_map[prefixed_name] = provider_name
+        
+        # Execute Navigation
+        nav_result_json = self._try_external_direct_call(prefixed_name, adapted_args)
+        
+        try:
+            # Parse result to check for success before proceeding
+            res = json.loads(nav_result_json)
+            if res.get("status") == "error":
+                return nav_result_json
+        except:
+            pass
+
+        # 2. Cookie Smash (Attempt to find and click Accept/Agree)
+        smash_js = """
+        () => {
+            const keywords = ['accept all', 'accept cookies', 'i agree', 'allow all', 'погодитись', 'прийняти'];
+            const buttons = Array.from(document.querySelectorAll('button, a[role="button"], div[role="button"]'));
+            
+            // Find a button that matches keywords
+            const smash = buttons.find(b => {
+                const text = b.innerText.toLowerCase().trim();
+                return keywords.some(k => text === k || text.includes(k));
+            });
+            
+            if (smash) {
+                smash.click();
+                return "Cookie Smashed: " + smash.innerText;
+            }
+            return "No cookie blocker found";
+        }
+        """
+        try:
+            # We call browser_evaluate (which maps to playwright.evaluate)
+            eval_tool = f"{provider_name}.browser_evaluate"
+            self._external_tools_map[eval_tool] = provider_name
+            # Wait a bit for popup to appear
+            time.sleep(2.0) 
+            smash_res = self._try_external_direct_call(eval_tool, {"function": smash_js})
+            
+            # Log smash result if needed or append to output? 
+            # ideally we just return the nav result, but maybe annotated.
+            if smash_res and "Cookie Smashed" in smash_res:
+                 # If we smashed, we might want to wait a bit and refresh the content/url status
+                 time.sleep(1.0)
+                 return nav_result_json.replace("}", ', "cookie_status": "smashed"}')
+                 
+        except Exception as e:
+            logger.error(f"Cookie smash failed: {e}")
+
+        return nav_result_json
 
     def _try_mcp_routing(self, tool_name: str, args: Dict[str, Any], task_type: Optional[str] = None) -> Optional[str]:
         """

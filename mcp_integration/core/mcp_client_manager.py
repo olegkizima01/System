@@ -31,8 +31,9 @@ class MCPClientManager:
     
     def get_client(self, server_name: str = None, task_type: str = None):
         """Get MCP client for specific server or default"""
-        # TODO: Implement actual Native Client retrieval here
-        return MockMCPClient()
+        if not hasattr(self, "_native_client_cache"):
+            self._native_client_cache = NativeMCPClient()
+        return self._native_client_cache
     
     def execute(self, tool_name: str, args: Dict[str, Any], task_type: str = None):
         """Execute MCP tool"""
@@ -100,25 +101,32 @@ class MCPClientManager:
             "task": task
         }
 
-class MockMCPClient:
-    """Mock MCP client for testing"""
+class NativeMCPClient:
+    """
+    Real Native SDK Client wrapping MCPToolRegistry.
+    Acts as a bridge when 'native' client is selected.
+    """
     def __init__(self):
+        # Prevent circular imports
+        from core.mcp_registry import MCPToolRegistry
+        # We instantiate a registry for EXECUTION purposes.
+        # This might duplicate the 'main' registry but is necessary 
+        # since we don't have a clean way to pass the parent registry here yet.
+        # Since Registry is lightweight-ish (just dicts), this is okay for now.
+        # Ideally, Registry should be a singleton too.
+        self.registry = MCPToolRegistry()
         self.is_connected = True
-    
+        
     def connect(self):
+        self.is_connected = True
         return True
-    
+        
     def list_tools(self):
-        return [
-            {"name": "playwright.browser_navigate", "description": "Navigate to URL in browser"},
-            {"name": "playwright.browser_click", "description": "Click element in browser"},
-            {"name": "playwright.browser_type", "description": "Type text in browser"},
-            {"name": "playwright.browser_screenshot", "description": "Take screenshot in browser"},
-            {"name": "playwright.browser_close", "description": "Close browser"}
-        ]
-    
+        # Convert registry definitions to list format mock expected
+        return self.registry.get_all_tool_definitions()
+        
     def execute(self, tool_name: str, args: Dict[str, Any]):
-        return {"success": True, "data": f"Executed {tool_name}"}
+        return self.registry.execute(tool_name, args)
 
 # Global instance
 _global_manager = None
@@ -129,6 +137,7 @@ def get_mcp_client_manager():
     if _global_manager is None:
         _global_manager = MCPClientManager()
     return _global_manager
+
 
 class MCPClientType:
     NATIVE = "native"

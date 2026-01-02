@@ -714,6 +714,11 @@ def _tail_log_file(tail_active: threading.Event, log_file_path: Any, last_positi
                 continue
             
             current_size = log_file_path.stat().st_size
+            
+            # Detect truncation/rotation
+            if current_size < last_position[0]:
+                last_position[0] = 0
+            
             if current_size > last_position[0]:
                 with open(log_file_path, 'r', encoding='utf-8', errors='ignore') as f:
                     f.seek(last_position[0])
