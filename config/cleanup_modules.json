@@ -100,7 +100,7 @@
           "id": "network_isolation",
           "name": "Network Isolation & DNS Privacy",
           "script": "./scripts/cleanup/network_isolation.sh",
-          "enabled": false,
+          "enabled": true,
           "description": "Видаляє мережеві логи, DNS Cache, ARP, Route, ISP дані, спуфує MAC (Гл 5)",
           "order": 50
         },

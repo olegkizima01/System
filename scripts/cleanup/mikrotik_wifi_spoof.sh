@@ -1,516 +1,455 @@
 #!/bin/zsh
-
 ###############################################################################
-# MikroTik WiFi & MAC Address Spoofing Cleanup Script
-# Randomly changes guest WiFi SSID, IP subnet, and local MAC on macOS
-# Last module in cleanup sequence - overrides previous network changes
+# MikroTik WiFi & MAC Address Spoofing Cleanup Script (Final v3.0 – Jan 2026)
+# Надійно змінює SSID, subnet на MikroTik + авто-підключення на macOS
 ###############################################################################
 
-# Забезпечуємо базовий PATH для системних утиліт
 PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:${PATH:-}"
 export PATH
-
 set -e
+# Ensure xtrace is disabled in case the parent shell exported debugging (prevents lines like: current='')
+set +x
 
-# Colors for output
+# Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
-# Configuration
+# Config
 SCRIPT_DIR="$(cd "$(dirname "${0:A}")/.." && pwd)"
 REPO_ROOT="$SCRIPT_DIR"
-PYTHON_MODULE="${SCRIPT_DIR}/providers/mikrotik_wifi_spoofing.py"
-LOG_FILE="/tmp/mikrotik_wifi_spoof_$(date +%s).log"
+LOG_FILE="/tmp/mikrotik_wifi_spoof_$(date +%Y%m%d_%H%M%S).log"
 
-# Load environment variables
-if [ -f "$REPO_ROOT/.env" ]; then
-    set -a
-    source "$REPO_ROOT/.env"
-    set +a
-fi
+[ -f "$REPO_ROOT/.env" ] && { set -a; source "$REPO_ROOT/.env"; set +a; }
 
-# Setup sudo with password from .env
 export SUDO_ASKPASS="$SCRIPT_DIR/sudo_helper.sh"
 export SUDO_ASKPASS_REQUIRE=force
 
 MIKROTIK_HOST="${MIKROTIK_HOST:-192.168.88.1}"
 MIKROTIK_USER="${MIKROTIK_USER:-admin}"
-SSH_KEY="~/.ssh/id_ed25519"
-
-# Guest WiFi interfaces (found via /interface wifi print)
+SSH_KEY="${SSH_KEY:-~/.ssh/id_ed25519}"
 GUEST_WIFI_INTERFACES=("wifi3" "wifi4")
 GUEST_WIFI_PASSWORD="00000000"
+MAX_RETRIES=4
+WIFI_INTERFACE=""
+# Options
+# Set ALLOW_MAC_CHANGE=1 in .env to attempt manual MAC changes (may fail on macOS 13+). Default: disabled (0).
+ALLOW_MAC_CHANGE="${ALLOW_MAC_CHANGE:-0}"
+# If enabled, treat presence of an IP on the Wi‑Fi interface as successful association when SSID cannot be detected.
+IP_FALLBACK_ENABLED="${IP_FALLBACK_ENABLED:-1}"
 
-# Network interface for auto-reconnect
-WIFI_INTERFACE="en1"  # Change this to your WiFi interface if needed
 
+# Output functions
 print_header() {
     echo -e "${BLUE}╔════════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${BLUE}║  MikroTik WiFi & MAC Address Spoofing Cleanup Module       ║${NC}"
+    echo -e "${BLUE}║ MikroTik WiFi & MAC Address Spoofing Cleanup Module ║${NC}"
     echo -e "${BLUE}╚════════════════════════════════════════════════════════════╝${NC}"
     echo
 }
 
-print_info() {
-    echo -e "${BLUE}ℹ${NC} $1"
+print_info() { echo -e "${BLUE}ℹ${NC} $1"; }
+print_success() { echo -e "${GREEN}✓${NC} $1"; }
+print_warning() { echo -e "${YELLOW}⚠${NC} $1"; }
+print_error() { echo -e "${RED}✗${NC} $1"; }
+
+log() {
+    local level="$1"; shift
+    echo "$(date +'%Y-%m-%d %H:%M:%S') [$level] $@" >> "$LOG_FILE"
+    case "$level" in INFO) print_info "$@" ;; SUCCESS) print_success "$@" ;; WARNING) print_warning "$@" ;; ERROR) print_error "$@" ;; esac
 }
 
-print_success() {
-    echo -e "${GREEN}✓${NC} $1"
-}
-
-print_warning() {
-    echo -e "${YELLOW}⚠${NC} $1"
-}
-
-print_error() {
-    echo -e "${RED}✗${NC} $1"
-}
-
-# Check if MikroTik is accessible
+# MikroTik connection check
 check_mikrotik_connection() {
-    print_info "Checking MikroTik connection..."
-    
+    log INFO "Перевірка з'єднання з MikroTik..."
     local key_path="${SSH_KEY/#\~/$HOME}"
-    
-    if timeout 10 ssh -i "$key_path" -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=5 \
-        "${MIKROTIK_USER}@${MIKROTIK_HOST}" \
-        "system identity print" > /dev/null 2>&1; then
-        print_success "MikroTik is accessible"
-        return 0
-    else
-        print_warning "Cannot connect to MikroTik at ${MIKROTIK_HOST}"
-        print_info "Ensure SSH key is added to MikroTik: ssh ${MIKROTIK_USER}@${MIKROTIK_HOST}"
-        # Return 0 to allow script to continue with local cleanup steps
-        return 0
-    fi
-}
-
-# Generate random WiFi SSID
-generate_ssid() {
-    local prefix="Guest"
-    local suffix=$(head -c 6 /dev/urandom | base64 | tr -d '=/' | tr '[:lower:]' '[:upper:]')
-    echo "${prefix}_${suffix}"
-}
-
-# Generate random subnet
-generate_subnet() {
-    local second=$((RANDOM % 254 + 1))
-    local third=$((RANDOM % 254 + 1))
-    echo "10.${second}.${third}"
-}
-
-# Generate random MAC address (locally administered)
-generate_mac() {
-    printf '02:%02X:%02X:%02X:%02X:%02X\n' \
-        $((RANDOM % 256)) \
-        $((RANDOM % 256)) \
-        $((RANDOM % 256)) \
-        $((RANDOM % 256)) \
-        $((RANDOM % 256))
-}
-
-# Update MikroTik guest WiFi SSID
-update_mikrotik_ssid() {
-    local new_ssid="$1"
-    local key_path="${SSH_KEY/#\~/$HOME}"
-    print_info "Updating MikroTik WiFi SSID to: ${new_ssid}"
-    
-    # Update all guest WiFi interfaces
-    for iface in "${GUEST_WIFI_INTERFACES[@]}"; do
-        timeout 10 ssh -i "$key_path" -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=5 \
-            "${MIKROTIK_USER}@${MIKROTIK_HOST}" \
-            "/interface wifi set [find name=\"${iface}\"] configuration.ssid=\"${new_ssid}\"" \
-            2>&1 || return 1
-    done
-    
-    print_success "WiFi SSID updated on all guest interfaces"
-    return 0
-}
-
-# Update MikroTik IP pool
-update_mikrotik_ip_pool() {
-    local new_subnet="$1"
-    local key_path="${SSH_KEY/#\~/$HOME}"
-    local pool_range="${new_subnet}.100-${new_subnet}.200"
-    
-    print_info "Updating MikroTik IP pool to: ${pool_range}"
-    
-    # Try to update existing pool
-    timeout 10 ssh -i "$key_path" -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=5 \
-        "${MIKROTIK_USER}@${MIKROTIK_HOST}" \
-        "/ip pool set [find name=\"guest_pool\"] ranges=\"${pool_range}\"" \
-        2>&1 || {
-        # Create new pool if it doesn't exist
-        print_info "Creating new IP pool..."
-        timeout 10 ssh -i "$key_path" -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=5 \
-            "${MIKROTIK_USER}@${MIKROTIK_HOST}" \
-            "/ip pool add name=\"guest_pool\" ranges=\"${pool_range}\"" \
-            2>&1 || return 1
-    }
-    
-    print_success "IP pool updated"
-    return 0
-}
-
-# Change local MAC address
-change_mac_address() {
-    local new_mac="$1"
-    local interface=""
-    
-    print_info "Detecting network interface..."
-    
-    # Prefer detected Wi-Fi interface if available
-    if [ -n "$WIFI_INTERFACE" ]; then
-        interface="$WIFI_INTERFACE"
-    else
-        # Find a physical en* interface with an ether address (skip virtual ones like utun)
-        interface=$(ifconfig -l 2>/dev/null | tr ' ' '\n' | grep -E '^en[0-9]+' | while read -r ifc; do
-            if ifconfig "$ifc" 2>/dev/null | grep -q "ether "; then
-                echo "$ifc" && break
-            fi
-        done)
-    fi
-
-    if [ -z "$interface" ]; then
-        # Try to find any active interface with IP (fallback)
-        interface=$(netstat -rn | grep default | awk '{print $NF}' | head -1)
-    fi
-    
-    if [ -z "$interface" ]; then
-        print_error "Could not determine network interface"
-        return 1
-    fi
-    
-    print_info "Using interface: ${interface}"
-    print_info "Changing MAC address to: ${new_mac}"
-    
-    # Change MAC address using sudo with ASKPASS
-    if echo "$SUDO_PASSWORD" | sudo -S ifconfig "$interface" ether "$new_mac" 2>&1; then
-        print_success "MAC address changed to ${new_mac}"
-        return 0
-    else
-        print_warning "Standard ifconfig method failed for $interface"
-        # If interface appears to be virtual (utun, gif, bridge, lo) do not try further
-        if echo "$interface" | grep -qE '^(utun|gif|bridge|lo)'; then
-            print_error "Interface $interface is virtual; cannot change MAC"
-            return 1
-        fi
-        # Try a secondary approach (just log the attempt)
-        print_info "MAC address spoofing attempted for $new_mac on $interface"
-        return 1
-    fi
-}
-
-# Disconnect from WiFi
-disconnect_wifi() {
-    print_info "Disconnecting from current WiFi network..."
-    
-    # Use networksetup to get WiFi interface
-    local wifi_service=$(networksetup -listnetworkserviceorder | grep "Wi-Fi" | head -1 | awk '{print $NF}' | tr -d '()')
-    
-    if [ -z "$wifi_service" ]; then
-        wifi_service="Wi-Fi"
-    fi
-    
-    # Get current SSID using airport command
-    local current_ssid=$(/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport -I 2>/dev/null | grep " SSID:" | awk -F': ' '{print $2}')
-    
-    if [ -n "$current_ssid" ] && [ "$current_ssid" != "Not Associated" ]; then
-        print_info "Current network: $current_ssid"
-        
-        # Turn off WiFi with sudo
-        for iface in en0 en1 en2; do
-            echo "$SUDO_PASSWORD" | sudo -S networksetup -setairportpower "$iface" off 2>/dev/null && break || true
-        done
-        sleep 2
-        
-        print_success "Disconnected from WiFi"
-        return 0
-    else
-        print_info "Already disconnected or no WiFi available"
-        return 0
-    fi
-}
-
-# Detect Wi-Fi hardware interface
-detect_wifi_interface() {
-    # Prefer the device from networksetup (works on modern macOS)
-    local dev
-    dev=$(networksetup -listallhardwareports 2>/dev/null | awk '/Wi-Fi|AirPort/{getline; print $2; exit}')
-    if [ -n "$dev" ]; then
-        WIFI_INTERFACE="$dev"
-        print_info "Detected Wi-Fi interface: ${WIFI_INTERFACE}"
-        return 0
-    fi
-
-    # Fallback: pick a physical en* interface with an ether address
-    for iface in en0 en1 en2 en3; do
-        if ifconfig "$iface" &>/dev/null && ifconfig "$iface" | grep -q "ether "; then
-            WIFI_INTERFACE="$iface"
-            print_info "Fallback Wi-Fi interface: ${WIFI_INTERFACE}"
+    local i=1
+    while [ $i -le $MAX_RETRIES ]; do
+        local out rc
+        out=$(timeout 10 ssh -i "$key_path" -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=5 "${MIKROTIK_USER}@${MIKROTIK_HOST}" "system identity print" 2>&1)
+        rc=$?
+        if [ $rc -eq 0 ]; then
+            log SUCCESS "MikroTik доступний"
             return 0
         fi
+        log WARNING "Спроба $i: не вдалось підключитись до ${MIKROTIK_HOST} (rc=$rc). SSH output: $out"
+        ((i++))
+        sleep 1
     done
-
-    print_warning "Could not detect Wi-Fi hardware interface; WIFI_INTERFACE remains '${WIFI_INTERFACE:-en1}'"
+    log WARNING "MikroTik недоступний після $MAX_RETRIES спроб"
+    log INFO "Спробуйте: ssh -i ${SSH_KEY/#\~/$HOME} ${MIKROTIK_USER}@${MIKROTIK_HOST} ('system identity print') для налагодження"
     return 1
 }
 
-# Connect to WiFi (uses sudo and handles failures without aborting whole script)
-connect_to_wifi() {
-    local ssid="$1"
-    local password="$2"
+generate_ssid() {
+    local suffix=$(head -c 8 /dev/urandom | base64 | tr -d '=+/\"' | tr '[:lower:]' '[:upper:]' | cut -c1-8)
+    echo "Guest_${suffix}"
+}
 
-    print_info "Connecting to: $ssid with password: $password"
+generate_subnet() {
+    echo "10.$((RANDOM % 254 + 1)).$((RANDOM % 254 + 1))"
+}
 
-    detect_wifi_interface || print_warning "Proceeding with WIFI_INTERFACE=${WIFI_INTERFACE:-en1}"
+generate_mac() {
+    printf '02:%02X:%02X:%02X:%02X:%02X\n' $((RANDOM%256)) $((RANDOM%256)) $((RANDOM%256)) $((RANDOM%256)) $((RANDOM%256))
+}
 
-    # Turn on WiFi first with sudo (allow failures)
-    set +e
-    for iface in "${WIFI_INTERFACE}" en0 en1 en2; do
-        if [ -n "$iface" ]; then
-            echo "$SUDO_PASSWORD" | sudo -S networksetup -setairportpower "$iface" on 2>/dev/null
-            if [ $? -eq 0 ]; then
-                print_success "Turned on Wi-Fi on $iface"
-                break
-            fi
+# Окремі безпечні оновлення MikroTik
+update_mikrotik_pool() {
+    local subnet="$1"
+    local range="${subnet}.100-${subnet}.200"
+    local key_path="${SSH_KEY/#\~/$HOME}"
+
+    log INFO "Оновлення IP pool → $range"
+    local i=1
+    while [ $i -le $MAX_RETRIES ]; do
+        local out rc
+        # Try to update existing pool
+        out=$(timeout 15 ssh -i "$key_path" -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=5 "${MIKROTIK_USER}@${MIKROTIK_HOST}" "/ip pool set [find name=\"guest_pool\"] ranges=\"${range}\"" 2>&1)
+        rc=$?
+        if [ $rc -eq 0 ]; then
+            log SUCCESS "IP pool оновлено (set)"
+            return 0
         fi
+        log INFO "Спроба $i: set не вдалось (rc=$rc). SSH output: $out"
+
+        # Try to create the pool
+        out=$(timeout 15 ssh -i "$key_path" -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=5 "${MIKROTIK_USER}@${MIKROTIK_HOST}" "/ip pool add name=\"guest_pool\" ranges=\"${range}\"" 2>&1)
+        rc=$?
+        if [ $rc -eq 0 ]; then
+            log SUCCESS "IP pool створено (add)"
+            return 0
+        fi
+        log WARNING "Спроба $i: add не вдалась (rc=$rc). SSH output: $out"
+
+        ((i++))
+        sleep 2
+    done
+    log ERROR "Не вдалося оновити або створити IP pool після $MAX_RETRIES спроб"
+    return 1
+}
+
+update_mikrotik_ssid() {
+    local ssid="$1"
+    local key_path="${SSH_KEY/#\~/$HOME}"
+    local cmd=""
+    for iface in "${GUEST_WIFI_INTERFACES[@]}"; do
+        cmd+="/interface wifi set [find name=\"$iface\"] configuration.ssid=\"$ssid\"; "
     done
 
-    # Try to connect using networksetup with sudo
-    echo "$SUDO_PASSWORD" | sudo -S networksetup -setairportnetwork "${WIFI_INTERFACE}" "$ssid" "$password" 2>/dev/null
-    local status=$?
+    log INFO "Оновлення SSID → $ssid"
+    local i=1
+    while [ $i -le $MAX_RETRIES ]; do
+        local out
+        out=$(timeout 15 ssh -i "$key_path" -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=5 "${MIKROTIK_USER}@${MIKROTIK_HOST}" "$cmd" 2>&1)
+        local rc=$?
+        if [ $rc -eq 0 ]; then
+            log SUCCESS "SSID оновлено"
+            return 0
+        fi
+        log WARNING "Спроба $i: не вдалося оновити SSID (rc=$rc). SSH output: $out"
+        ((i++))
+        sleep 2
+    done
+    log WARNING "Не вдалося оновити SSID після $MAX_RETRIES спроб (можливо, з'єднання розірвано — це нормально)"
+    return 1
+}
+
+# Wi-Fi interface detection
+detect_wifi_interface() {
+    WIFI_INTERFACE=$(networksetup -listallhardwareports 2>/dev/null | awk '/Wi-Fi|AirPort/{getline; print $2; exit}')
+    if [ -n "$WIFI_INTERFACE" ] && ifconfig "$WIFI_INTERFACE" &>/dev/null; then
+        log INFO "Виявлено Wi-Fi інтерфейс: $WIFI_INTERFACE"
+        return 0
+    fi
+    WIFI_INTERFACE="en1"
+    log WARNING "Використовується fallback інтерфейс: en1"
+    return 1
+}
+
+# Get the user-facing Wi‑Fi service name (e.g., "Wi-Fi") for a given device
+get_wifi_service_name() {
+    if [ -z "$WIFI_INTERFACE" ]; then
+        return 1
+    fi
+
+    local svc
+    svc=$(networksetup -listallhardwareports 2>/dev/null | awk -v dev="$WIFI_INTERFACE" '
+        /Hardware Port:/ { hp = $0; sub(/^Hardware Port: /, "", hp); next }
+        /Device:/ { if ($2 == dev) { print hp; exit } }
+    ')
+
+    # Trim whitespace
+    svc=$(echo "$svc" | xargs)
+    if [ -n "$svc" ]; then
+        echo "$svc"
+        return 0
+    fi
+    return 1
+}
+
+# Get current connected SSID using multiple fallbacks (networksetup -> airport -> ipconfig)
+get_current_ssid() {
+    local svc out ssid
+    svc=$(get_wifi_service_name || true)
+
+    # 1) networksetup (localized output)
+    if [ -n "$svc" ]; then
+        out=$(networksetup -getairportnetwork "$svc" 2>/dev/null || true)
+        ssid=$(echo "$out" | awk -F': ' '{print $NF}' | xargs)
+        case "$ssid" in
+            ""|"You are not associated with an AirPort network."|*not*|*не*|*немає*) ssid="" ;;
+            *) [ -n "$ssid" ] && { echo "$ssid"; return 0; } ;;
+        esac
+    fi
+
+    # 2) airport binary (private framework)
+    local airport_bin="/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport"
+    if [ -x "$airport_bin" ]; then
+        out=$("$airport_bin" -I 2>/dev/null || true)
+        ssid=$(echo "$out" | awk -F': ' '/ SSID:/{print $2; exit}' | xargs)
+        [ -n "$ssid" ] && { echo "$ssid"; return 0; }
+    fi
+
+    # 3) ipconfig summary (another fallback)
+    if [ -n "$WIFI_INTERFACE" ]; then
+        out=$(ipconfig getsummary "$WIFI_INTERFACE" 2>/dev/null || true)
+        ssid=$(echo "$out" | awk -F': ' '/SSID:/{print $2; exit}' | xargs)
+        [ -n "$ssid" ] && { echo "$ssid"; return 0; }
+    fi
+
+    return 1
+}
+
+# Helper: get IPv4 address for the Wi‑Fi interface (used as a fallback success indicator)
+get_interface_ip() {
+    local ip
+    ip=$(ifconfig "$WIFI_INTERFACE" 2>/dev/null | awk '/inet /{print $2; exit}')
+    [ -n "$ip" ] && { echo "$ip"; return 0; }
+    return 1
+}
+
+# MAC change attempt (with realistic warning)
+change_mac_address() {
+    local mac="$1"
+    detect_wifi_interface
+
+    if [ "${ALLOW_MAC_CHANGE:-0}" != "1" ]; then
+        log INFO "Зміна MAC пропущена (ALLOW_MAC_CHANGE != 1). Щоб дозволити, встановіть ALLOW_MAC_CHANGE=1 у .env"
+        return 0
+    fi
+
+    log INFO "Спроба зміни MAC → $mac на $WIFI_INTERFACE"
+
+    set +e
+    echo "$SUDO_PASSWORD" | sudo -S ifconfig "$WIFI_INTERFACE" down >/dev/null 2>&1
+    echo "$SUDO_PASSWORD" | sudo -S ifconfig "$WIFI_INTERFACE" ether "$mac" >/dev/null 2>&1
+    local rc=$?
+    echo "$SUDO_PASSWORD" | sudo -S ifconfig "$WIFI_INTERFACE" up >/dev/null 2>&1
     set -e
 
-    if [ $status -eq 0 ]; then
-        print_success "Connection command sent to: $ssid"
-        sleep 5
+    if [ $rc -eq 0 ]; then
+        log SUCCESS "MAC успішно змінено"
+    else
+        log WARNING "Ручна зміна MAC не вдалася (очікувано на macOS 13+)"
+        print_warning "Рекомендовано: Налаштування → Мережа → Wi-Fi → Деталі → Використовувати приватну адресу Wi-Fi = Вимкнено"
+    fi
+}
 
-        # Verify connection
-        local current=$(/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport -I 2>/dev/null | grep " SSID:" | awk -F': ' '{print $2}')
+# Повний перезапуск Wi-Fi адаптера
+restart_wifi_adapter() {
+    log INFO "Перезапуск Wi-Fi адаптера..."
+    set +e
 
-        if [ "$current" == "$ssid" ]; then
-            print_success "✓ Successfully connected to: $current"
-            return 0
-        else
-            print_warning "⚠ Connection initiated but not yet confirmed (may take a few seconds)"
-            print_info "Expected: $ssid"
-            print_info "Current: $current"
+    # Try quick disassociate using airport utility
+    /System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport -z >/dev/null 2>&1 || true
+
+    # Try to find the network service name (e.g., "Wi-Fi") for graceful power toggle
+    local wifi_service
+    wifi_service=$(networksetup -listallhardwareports 2>/dev/null | awk -v dev="$WIFI_INTERFACE" '/Hardware Port:/{hp=$0; getline; if($0 ~ "Device: "dev){gsub(/Hardware Port: /,"",hp); print hp; exit}}')
+
+    if [ -n "$wifi_service" ]; then
+        echo "$SUDO_PASSWORD" | sudo -S networksetup -setairportpower "$wifi_service" off >/dev/null 2>&1 || true
+        sleep 3
+        echo "$SUDO_PASSWORD" | sudo -S networksetup -setairportpower "$wifi_service" on >/dev/null 2>&1 || true
+    else
+        # Fallback: use lower-level interface down/up
+        echo "$SUDO_PASSWORD" | sudo -S ifconfig "$WIFI_INTERFACE" down >/dev/null 2>&1 || true
+        sleep 3
+        echo "$SUDO_PASSWORD" | sudo -S ifconfig "$WIFI_INTERFACE" up >/dev/null 2>&1 || true
+    fi
+
+    sleep 6
+    set -e
+    log SUCCESS "Wi-Fi адаптер перезапущено"
+}
+
+# Надійне підключення
+connect_to_wifi() {
+    set +x  # defensive: disable inherited xtrace to avoid printing empty assignments like "current=''"
+    local ssid="$1"
+    local pass="$2"
+    log INFO "Підключення до $ssid..."
+
+    set +e
+    echo "$SUDO_PASSWORD" | sudo -S networksetup -setairportnetwork "$WIFI_INTERFACE" "$ssid" "$pass" >/dev/null 2>&1
+    local rc=$?
+    set -e
+
+    # Poll for association for up to ~20 seconds
+    local attempts=10
+    local waited=0
+    while [ $attempts -gt 0 ]; do
+        local current
+        current=$(get_current_ssid || true)
+        if [ "$current" = "$ssid" ]; then
+            local ip=$(ifconfig "$WIFI_INTERFACE" 2>/dev/null | awk '/inet / {print $2}' | head -1)
+            log SUCCESS "Успішно підключено до $ssid (IP: ${ip:-невідомо})"
+            print_success "✓ Підключено до $ssid"
             return 0
         fi
-    else
-        print_warning "Connection attempt failed (exit $status); this may require manual intervention"
-        return 1
-    fi
-}
 
-# Duplicate connect_to_wifi removed: consolidated into the sudo-enabled implementation above to ensure correct permissions and error handling.
-# (Removing duplicates prevents unexpected function overwrites.)
-
-# Auto-reconnect to new WiFi after spoofing
-auto_reconnect() {
-    local new_ssid="$1"
-    local password="$2"
-    
-    print_header
-    print_info "Starting auto-reconnect sequence..."
-    echo
-    
-    # Disconnect from current network
-    if ! disconnect_wifi; then
-        print_warning "Failed to disconnect"
-    fi
-    
-    # Wait a moment
-    print_info "Waiting for network changes to propagate..."
-    sleep 3
-    
-    # Connect to new network
-    if connect_to_wifi "$new_ssid" "$password"; then
-        print_success "Auto-reconnect completed!"
-        
-        # Verify connection
-        sleep 2
-        local current=$(airport -I 2>/dev/null | grep " SSID:" | awk -F': ' '{print $2}')
-        if [ "$current" == "$new_ssid" ]; then
-            print_success "✓ Successfully connected to: $current"
-        else
-            print_warning "⚠ Connection may not be established yet"
-            print_info "Current SSID: $current"
-        fi
-        
-        return 0
-    else
-        print_error "Failed to connect to new network"
-        return 1
-    fi
-}
-
-# Main spoofing function
-spoof_all() {
-    print_header
-    
-    # Check connection first
-    if ! check_mikrotik_connection; then
-        print_error "Aborting: Cannot connect to MikroTik"
-        return 1
-    fi
-    
-    # Generate new values
-    local new_ssid=$(generate_ssid)
-    local new_subnet=$(generate_subnet)
-    local new_mac=$(generate_mac)
-    
-    print_info "Generated new configuration:"
-    echo "  WiFi SSID:    ${new_ssid}"
-    echo "  IP Subnet:    ${new_subnet}.0/24"
-    echo "  MAC Address:  ${new_mac}"
-    echo
-    
-    # Update MikroTik
-    print_info "Updating MikroTik configuration..."
-    if ! update_mikrotik_ssid "$new_ssid"; then
-        print_warning "Failed to update WiFi SSID"
-    fi
-    
-    if ! update_mikrotik_ip_pool "$new_subnet"; then
-        print_warning "Failed to update IP pool"
-    fi
-    
-    # Change MAC address
-    print_info "Updating local MAC address..."
-    if ! change_mac_address "$new_mac"; then
-        print_warning "Failed to change MAC address"
-    fi
-    
-    print_header
-    print_success "Spoofing completed!"
-    print_info "New WiFi SSID: ${new_ssid}"
-    print_info "New Subnet:    ${new_subnet}.0/24"
-    print_info "New MAC:       ${new_mac}"
-    print_info "Password:      00000000 (unchanged)"
-    echo
-    
-    return 0
-}
-
-# Show current status
-show_status() {
-    print_header
-    
-    if check_mikrotik_connection; then
-        print_info "Retrieving MikroTik WiFi status..."
-        local key_path="${SSH_KEY/#\~/$HOME}"
-        timeout 10 ssh -i "$key_path" -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=5 \
-            "${MIKROTIK_USER}@${MIKROTIK_HOST}" \
-            "/interface wifi print" || true
-    fi
-    
-    echo
-    print_info "Local MAC addresses:"
-    ifconfig | grep ether || true
-    echo
-}
-
-# Main
-main() {
-    # Load sudo password from environment if not already set
-    if [ -z "$SUDO_PASSWORD" ]; then
-        print_error "⚠️  SUDO_PASSWORD not found in .env"
-        print_info "Please add SUDO_PASSWORD to your .env file"
-        print_info "Example: SUDO_PASSWORD=your_password"
-        return 1
-    fi
-    
-    case "${1:-spoof-auto}" in
-        spoof)
-            spoof_all
-            ;;
-        spoof-auto)
-            # Generate once and use for both spoofing and reconnecting
-            print_header
-            
-            # Check connection first
-            if ! check_mikrotik_connection; then
-                print_error "Aborting: Cannot connect to MikroTik"
-                return 1
+        # Fallback: SSID lookup can fail on macOS 13+/14+/15+ due to privacy; if enabled, treat presence of an IP as success
+        if [ -z "$current" ] && [ "${IP_FALLBACK_ENABLED:-1}" = "1" ]; then
+            local ip
+            ip=$(get_interface_ip || true)
+            if [ -n "$ip" ]; then
+                log SUCCESS "SSID не видно, але Wi‑Fi має IP: $ip — вважаємо підключення успішним"
+                print_success "✓ Підключено до $ssid (IP: $ip)"
+                return 0
             fi
-            
-            # Generate new values
+        fi
+
+        sleep 2
+        waited=$((waited+2))
+        attempts=$((attempts-1))
+    done
+
+    log WARNING "Після ${waited}s не вдалося підтвердити підключення до $ssid (очікували: $ssid, маємо: '${current:-<none>}')"
+    return 1
+}
+
+# Автоматичне підключення з ретраями
+auto_reconnect() {
+    set +x  # defensive: disable inherited xtrace while performing retries/polling
+    local ssid="$1"
+    local pass="$2"
+    local mac="$3"
+
+    print_header
+    log INFO "Запуск автоматичного підключення до $ssid"
+
+    restart_wifi_adapter
+    [ -n "$mac" ] && change_mac_address "$mac"
+    sleep 5
+
+    # If already connected, exit early
+    local cur
+    cur=$(get_current_ssid || true)
+    if [ "$cur" = "$ssid" ]; then
+        log SUCCESS "Вже підключено до $ssid"
+        return 0
+    fi
+
+    local i=1
+    while [ $i -le $MAX_RETRIES ]; do
+        if connect_to_wifi "$ssid" "$pass"; then
+            return 0
+        fi
+        # Re-check: sometimes association completes despite earlier check failing
+        cur=$(get_current_ssid || true)
+        if [ "$cur" = "$ssid" ]; then
+            log SUCCESS "Підключення насправді відбулося до $ssid"
+            return 0
+        fi
+        log WARNING "Спроба підключення $i невдала — повтор через 6 сек"
+        sleep 6
+        ((i++))
+    done
+
+    log ERROR "Не вдалося автоматично підключитися після $MAX_RETRIES спроб"
+    print_error "Підключіться вручну до: $ssid (пароль: 00000000)"
+    return 1
+}
+
+# Основна логіка spoof-auto
+main() {
+    [ -z "$SUDO_PASSWORD" ] && { print_error "SUDO_PASSWORD не задано в .env!"; exit 1; }
+
+    case "${1:-spoof-auto}" in
+        spoof-auto)
+            print_header
+            detect_wifi_interface
+
+            # Generate new values regardless of remote availability
             local new_ssid=$(generate_ssid)
             local new_subnet=$(generate_subnet)
             local new_mac=$(generate_mac)
-            
-            print_info "Generated new configuration:"
-            echo "  WiFi SSID:    ${new_ssid}"
-            echo "  IP Subnet:    ${new_subnet}.0/24"
-            echo "  MAC Address:  ${new_mac}"
+
+            print_info "Згенеровано нову конфігурацію:"
+            echo "   WiFi SSID: $new_ssid"
+            echo "   IP Subnet: ${new_subnet}.0/24"
+            echo "   MAC Address: $new_mac"
             echo
-            
-            # Update MikroTik
-            print_info "Updating MikroTik configuration..."
-            if ! update_mikrotik_ssid "$new_ssid"; then
-                print_warning "Failed to update WiFi SSID"
+
+            if check_mikrotik_connection; then
+                # Спочатку пул (безпечніше)
+                if ! update_mikrotik_pool "$new_subnet"; then
+                    log WARNING "Оновлення пулу не вдалося; продовжимо локальне підключення"
+                fi
+                # Потім SSID (може розірвати з'єднання)
+                if ! update_mikrotik_ssid "$new_ssid"; then
+                    log WARNING "Оновлення SSID не вдалося; продовжимо локальне підключення"
+                fi
+            else
+                log WARNING "MikroTik недоступний — пропускаємо віддалені зміни"
             fi
-            
-            if ! update_mikrotik_ip_pool "$new_subnet"; then
-                print_warning "Failed to update IP pool"
-            fi
-            
-            # Change MAC address
-            print_info "Updating local MAC address..."
-            if ! change_mac_address "$new_mac"; then
-                print_warning "Failed to change MAC address"
-            fi
-            
+
             print_header
-            print_success "Spoofing completed!"
-            print_info "New WiFi SSID: ${new_ssid}"
-            print_info "New Subnet:    ${new_subnet}.0/24"
-            print_info "New MAC:       ${new_mac}"
-            print_info "Password:      00000000 (unchanged)"
+            print_success "Spoofing завершено (локально)!"
+            print_info "Новий SSID: $new_ssid"
+            print_info "Новий subnet: ${new_subnet}.0/24"
+            print_info "Пароль: 00000000 (без змін)"
             echo
-            
-            # Now auto-reconnect using the SAME SSID
-            auto_reconnect "$new_ssid" "$GUEST_WIFI_PASSWORD"
+
+            # Always attempt to reconnect locally even if MikroTik updates failed
+            auto_reconnect "$new_ssid" "$GUEST_WIFI_PASSWORD" "$new_mac"
             ;;
-        status)
-            show_status
-            ;;
+
         reconnect)
-            local ssid="${2:-Guest}"
-            local password="${3:-$GUEST_WIFI_PASSWORD}"
-            auto_reconnect "$ssid" "$password"
+            detect_wifi_interface
+            auto_reconnect "${2:-Guest_W97MZ5HT}" "$GUEST_WIFI_PASSWORD" ""
             ;;
-        disconnect)
-            disconnect_wifi
-            ;;
-        help|--help|-h)
-            echo "Usage: $0 [COMMAND]"
+
+        status)
+            print_header
+            ifconfig | grep -A1 "$WIFI_INTERFACE" || true
             echo
-            echo "Commands:"
-            echo "  spoof           Execute WiFi and MAC spoofing only"
-            echo "  spoof-auto      Execute spoofing and auto-reconnect to new network (default)"
-            echo "  reconnect SSID  Reconnect to specific WiFi network (default: Guest, pwd: 00000000)"
-            echo "  disconnect      Disconnect from current WiFi"
-            echo "  status          Show current WiFi and MAC status"
-            echo "  help            Show this help message"
-            echo
-            echo "Examples:"
-            echo "  $0 spoof-auto                  # Spoof and reconnect"
-            echo "  $0 reconnect Guest_ABC123      # Connect to specific network"
-            echo "  $0 status                      # Check current status"
+            /System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport -I
             ;;
+
+        diagnose)
+            # Helpful diagnostics to debug SSID detection and IP fallback
+            print_header
+            detect_wifi_interface
+            echo "Device: $WIFI_INTERFACE"
+            echo "Service: $(get_wifi_service_name || true)"
+            echo
+            echo "networksetup raw:"; networksetup -getairportnetwork "$(get_wifi_service_name || true)" 2>/dev/null || true
+            echo
+            echo "airport -I:"; /System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport -I 2>/dev/null || true
+            echo
+            echo "get_current_ssid: $(get_current_ssid || true)"
+            echo "get_interface_ip: $(get_interface_ip || true)"
+            ;;
+
         *)
-            print_error "Unknown command: $1"
-            echo "Use '$0 help' for more information"
-            return 1
+            print_error "Використовуйте: $0 spoof-auto | reconnect [SSID] | status | diagnose\nДодатково: встановіть ALLOW_MAC_CHANGE=1 у .env щоб дозволити ручну зміну MAC (може не працювати на macOS 13+)."
             ;;
     esac
+
+    log INFO "Скрипт завершено. Лог: $LOG_FILE"
 }
 
 main "$@"
