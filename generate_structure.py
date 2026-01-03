@@ -216,8 +216,36 @@ def main(project_root: str = ".", output_file: str = "project_structure_final.tx
         f.write(f"- **Project Root**: `{root}`\n")
         f.write(f"- **Files Included**: {file_count}\n")
         f.write(f"- **Files Skipped**: {skipped}\n")
-        f.write(f"- **Max File Size**: {MAX_FILE_SIZE / (1024*1024):.1f} MB\n")
         f.write(f"- **Generated**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
+        f.write("---\n\n")
+
+        f.write("## System Algorithm & Entry Points (Codemap)\n\n")
+        f.write("### Entry Flow\n")
+        f.write("1. **`cli.sh`**: Environment setup, Python version check, sudo permissions.\n")
+        f.write("2. **`cli.py`**: Minimal wrapper, arg parsing, logging setup.\n")
+        f.write("3. **`tui/cli.py`**: Main TUI application, command dispatching.\n")
+        f.write("   - **Scanning**: `tui/scanning.py` (Apps/Browsers)\n")
+        f.write("   - **Monitoring**: `tui/monitoring.py` & `monitoring_service.py` (Trace/DB)\n")
+        f.write("   - **Agents**: `tui/agents.py` (LLM Session)\n\n")
+
+        f.write("### Error Relevance Note\n")
+        f.write("> **Note**: Errors listed below in 'Program Execution Logs' should be cross-referenced with 'Git Diff'.\n")
+        f.write("> If code has changed recently (see Git Log/Diff), older errors may be obsolete.\n\n")
+
+        f.write("---\n\n")
+
+        f.write("## Key Scripts & Hooks\n\n")
+        f.write("### Commit Hooks\n")
+        f.write("- **`templates/bootstrap/post-commit`**: Automatically regenerates this structure file on commit.\n\n")
+        
+        f.write("### Utility Scripts (`scripts/`)\n")
+        scripts_dir = root / "scripts"
+        if scripts_dir.exists():
+            for s in sorted(scripts_dir.rglob("*.sh")):
+                f.write(f"- `{s.relative_to(root)}`\n")
+            for s in sorted(scripts_dir.rglob("*.py")):
+                 f.write(f"- `{s.relative_to(root)}`\n")
+        f.write("\n")
 
         f.write("---\n\n")
 

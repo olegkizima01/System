@@ -3,12 +3,12 @@ description: Authoritative guide for Project Atlas architecture, Cognitive 2.0 m
 ---
 
 # Project Atlas Workflow Guide
-**Pure Native Architecture | Trinity 2.5 | Грудень 2025**
+**Pure Native Architecture | Trinity 2.5 | Січень 2026**
 
 Єдине джерело правди про фундаментальні принципи роботи системи Atlas (Trinity Runtime).
 
 > [!NOTE]
-> **Грудень 2025**: Trinity Runtime реорганізовано в модульний пакет `core/trinity/`. 
+> **Січень 2026**: Trinity Runtime реорганізовано в модульний пакет `core/trinity/`. `tui/cli.py` розділено на модулі (`scanning`, `monitoring`, `agents`).
 > Див. [Quick Start](./QUICKSTART.md) для швидкого старту.
 
 ---
@@ -264,9 +264,16 @@ mypy core/ --config-file=setup.cfg
 
 ---
 
-## 10. Project Structure & Logs
+## 10. Project Structure & Codemap
 
-📋 **Auto-generated**: `project_structure_final.txt` — оновлюється на кожен commit
+📋 **Codemap**: [`project_structure_final.txt`](../../project_structure_final.txt) — Автоматично генерований "pointer to algorithm"
+
+- Оновлюється при кожному commit (git hook `templates/bootstrap/post-commit`)
+- Містить: 
+  - **System Algorithm**: Детальний опис точок входу (`cli.sh` -> `cli.py` -> `tui/*`)
+  - **Error Relevance**: Логи виконання з контекстом змін
+  - **Git History**: Diff та останні коміти для розуміння контексту
+- **163+ папки, 256+ файлів**
 
 ### Key Directories
 
