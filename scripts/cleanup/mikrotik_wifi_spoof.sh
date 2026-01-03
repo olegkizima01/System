@@ -163,16 +163,20 @@ change_mac_address() {
     
     print_info "Detecting network interface..."
     
-    # Find primary network interface (skip virtual ones)
-    for iface in en0 en1 en2 en3 en4 en5 en6; do
-        if ifconfig "$iface" &>/dev/null && ifconfig "$iface" | grep -q "inet "; then
-            interface="$iface"
-            break
-        fi
-    done
-    
+    # Prefer detected Wi-Fi interface if available
+    if [ -n "$WIFI_INTERFACE" ]; then
+        interface="$WIFI_INTERFACE"
+    else
+        # Find a physical en* interface with an ether address (skip virtual ones like utun)
+        interface=$(ifconfig -l 2>/dev/null | tr ' ' '\n' | grep -E '^en[0-9]+' | while read -r ifc; do
+            if ifconfig "$ifc" 2>/dev/null | grep -q "ether "; then
+                echo "$ifc" && break
+            fi
+        done)
+    fi
+
     if [ -z "$interface" ]; then
-        # Try to find any active interface with IP
+        # Try to find any active interface with IP (fallback)
         interface=$(netstat -rn | grep default | awk '{print $NF}' | head -1)
     fi
     
@@ -189,11 +193,15 @@ change_mac_address() {
         print_success "MAC address changed to ${new_mac}"
         return 0
     else
-        # Try with more aggressive approach if the above fails
-        print_warning "Standard ifconfig method failed, trying alternative..."
-        # Just log the intended MAC - actual spoofing may need different approach
+        print_warning "Standard ifconfig method failed for $interface"
+        # If interface appears to be virtual (utun, gif, bridge, lo) do not try further
+        if echo "$interface" | grep -qE '^(utun|gif|bridge|lo)'; then
+            print_error "Interface $interface is virtual; cannot change MAC"
+            return 1
+        fi
+        # Try a secondary approach (just log the attempt)
         print_info "MAC address spoofing attempted for $new_mac on $interface"
-        return 0
+        return 1
     fi
 }
 
@@ -228,37 +236,63 @@ disconnect_wifi() {
     fi
 }
 
-# Connect to WiFi
+# Detect Wi-Fi hardware interface
+detect_wifi_interface() {
+    # Prefer the device from networksetup (works on modern macOS)
+    local dev
+    dev=$(networksetup -listallhardwareports 2>/dev/null | awk '/Wi-Fi|AirPort/{getline; print $2; exit}')
+    if [ -n "$dev" ]; then
+        WIFI_INTERFACE="$dev"
+        print_info "Detected Wi-Fi interface: ${WIFI_INTERFACE}"
+        return 0
+    fi
+
+    # Fallback: pick a physical en* interface with an ether address
+    for iface in en0 en1 en2 en3; do
+        if ifconfig "$iface" &>/dev/null && ifconfig "$iface" | grep -q "ether "; then
+            WIFI_INTERFACE="$iface"
+            print_info "Fallback Wi-Fi interface: ${WIFI_INTERFACE}"
+            return 0
+        fi
+    done
+
+    print_warning "Could not detect Wi-Fi hardware interface; WIFI_INTERFACE remains '${WIFI_INTERFACE:-en1}'"
+    return 1
+}
+
+# Connect to WiFi (uses sudo and handles failures without aborting whole script)
 connect_to_wifi() {
     local ssid="$1"
     local password="$2"
-    
+
     print_info "Connecting to: $ssid with password: $password"
-    
-    # Turn on WiFi first with sudo
-    for iface in en0 en1 en2; do
-        echo "$SUDO_PASSWORD" | sudo -S networksetup -setairportpower "$iface" on 2>/dev/null && break || true
+
+    detect_wifi_interface || print_warning "Proceeding with WIFI_INTERFACE=${WIFI_INTERFACE:-en1}"
+
+    # Turn on WiFi first with sudo (allow failures)
+    set +e
+    for iface in "${WIFI_INTERFACE}" en0 en1 en2; do
+        if [ -n "$iface" ]; then
+            echo "$SUDO_PASSWORD" | sudo -S networksetup -setairportpower "$iface" on 2>/dev/null
+            if [ $? -eq 0 ]; then
+                print_success "Turned on Wi-Fi on $iface"
+                break
+            fi
+        fi
     done
-    
-    sleep 3
-    
-    # Use networksetup to join the network with sudo
-    local wifi_service=$(networksetup -listnetworkserviceorder | grep "Wi-Fi" | head -1 | awk '{print $NF}' | tr -d '()')
-    
-    if [ -z "$wifi_service" ]; then
-        wifi_service="Wi-Fi"
-    fi
-    
-    print_info "WiFi Service: $wifi_service"
-    
+
     # Try to connect using networksetup with sudo
-    if echo "$SUDO_PASSWORD" | sudo -S networksetup -setairportnetwork "$WIFI_INTERFACE" "$ssid" "$password" 2>&1; then
+    echo "$SUDO_PASSWORD" | sudo -S networksetup -setairportnetwork "${WIFI_INTERFACE}" "$ssid" "$password" 2>/dev/null
+    local status=$?
+    set -e
+
+    if [ $status -eq 0 ]; then
         print_success "Connection command sent to: $ssid"
         sleep 5
-        
+
         # Verify connection
         local current=$(/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport -I 2>/dev/null | grep " SSID:" | awk -F': ' '{print $2}')
-        
+
         if [ "$current" == "$ssid" ]; then
             print_success "✓ Successfully connected to: $current"
             return 0
@@ -269,58 +303,13 @@ connect_to_wifi() {
             return 0
         fi
     else
-        print_warning "Connection attempt completed (may require additional time)"
-        sleep 3
-        return 0
+        print_warning "Connection attempt failed (exit $status); this may require manual intervention"
+        return 1
     fi
 }
 
-# Connect to WiFi
-connect_to_wifi() {
-    local ssid="$1"
-    local password="$2"
-    
-    print_info "Connecting to: $ssid with password: $password"
-    
-    # Turn on WiFi first
-    for iface in en0 en1 en2; do
-        networksetup -setairportpower "$iface" on 2>/dev/null && break
-    done
-    
-    sleep 3
-    
-    # Use networksetup to join the network
-    local wifi_service=$(networksetup -listnetworkserviceorder | grep "Wi-Fi" | head -1 | awk '{print $NF}' | tr -d '()')
-    
-    if [ -z "$wifi_service" ]; then
-        wifi_service="Wi-Fi"
-    fi
-    
-    print_info "WiFi Service: $wifi_service"
-    
-    # Try to connect using networksetup
-    if networksetup -setairportnetwork "$WIFI_INTERFACE" "$ssid" "$password" 2>&1; then
-        print_success "Connection command sent to: $ssid"
-        sleep 5
-        
-        # Verify connection
-        local current=$(/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport -I 2>/dev/null | grep " SSID:" | awk -F': ' '{print $2}')
-        
-        if [ "$current" == "$ssid" ]; then
-            print_success "✓ Successfully connected to: $current"
-            return 0
-        else
-            print_warning "⚠ Connection initiated but not yet confirmed (may take a few seconds)"
-            print_info "Expected: $ssid"
-            print_info "Current: $current"
-            return 0
-        fi
-    else
-        print_warning "Connection attempt completed (may require additional time)"
-        sleep 3
-        return 0
-    fi
-}
+# Duplicate connect_to_wifi removed: consolidated into the sudo-enabled implementation above to ensure correct permissions and error handling.
+# (Removing duplicates prevents unexpected function overwrites.)
 
 # Auto-reconnect to new WiFi after spoofing
 auto_reconnect() {
