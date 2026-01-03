@@ -32,14 +32,7 @@ print_success "Windsurf зупинено"
 
 # 2. Очищення Machine ID
 print_step 2 6 "Оновлення Machine ID..."
-MACHINEID_PATH="$WINDSURF_BASE/machineid"
-if [ -f "$MACHINEID_PATH" ]; then
-    NEW_MACHINE_ID=$(generate_machine_id)
-    echo "$NEW_MACHINE_ID" > "$MACHINEID_PATH"
-    print_success "Machine ID оновлено: $NEW_MACHINE_ID"
-else
-    print_info "Machine ID файл не знайдено"
-fi
+cleanup_editor_machine_id "windsurf"
 
 # 3. Очищення Storage файлів
 print_step 3 6 "Оновлення Storage файлів..."
@@ -73,23 +66,7 @@ done
 
 # 4. Видалення кешів та баз даних
 print_step 4 6 "Видалення кешів та баз даних..."
-CACHE_PATHS=(
-    "$WINDSURF_BASE/User/globalStorage/state.vscdb"
-    "$WINDSURF_BASE/User/globalStorage/state.vscdb.backup"
-    "$WINDSURF_BASE/Local Storage"
-    "$WINDSURF_BASE/Session Storage"
-    "$WINDSURF_BASE/IndexedDB"
-    "$WINDSURF_BASE/databases"
-    "$WINDSURF_BASE/GPUCache"
-    "$WINDSURF_BASE/CachedData"
-    "$WINDSURF_BASE/Code Cache"
-    "$WINDSURF_BASE/User/workspaceStorage"
-    "$WINDSURF_BASE/logs"
-)
-
-for path in "${CACHE_PATHS[@]}"; do
-    safe_remove "$path"
-done
+cleanup_editor_caches "windsurf"
 print_success "Кеші та бази даних видалено"
 
 # 5. Очищення Keychain
@@ -128,8 +105,8 @@ WEB_DATA_PATHS=(
     "$WINDSURF_BASE/WebStorage"
 )
 
-for path in "${WEB_DATA_PATHS[@]}"; do
-    safe_remove "$path"
+for target_path in "${WEB_DATA_PATHS[@]}"; do
+    safe_remove "$target_path"
 done
 print_success "Cookies та веб-дані видалено"
 

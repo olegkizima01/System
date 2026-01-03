@@ -5,10 +5,21 @@
 #  Перевіряє чи були правильно очищені всі ідентифікатори
 # ═══════════════════════════════════════════════════════════════
 
+echo ""
 echo "════════════════════════════════════════════════════════════"
 echo "🔍 ПЕРЕВІРКА ЯКОСТІ CLEANUP ІДЕНТИФІКАТОРІВ"
 echo "════════════════════════════════════════════════════════════"
 echo ""
+
+# Перевірка та створення Machine-ID файлів
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+if [ -f "$SCRIPT_DIR/independent_cleanup_utils.sh" ]; then
+    echo "🔧 Перевірка Machine-ID файлів..."
+    "$SCRIPT_DIR/independent_cleanup_utils.sh" check
+    echo ""
+else
+    echo "⚠️  Independent cleanup utilities не знайдено"
+fi
 
 # Кольори
 GREEN='\033[0;32m'
@@ -48,9 +59,14 @@ info() {
 echo -e "${BLUE}[1/4] WINDSURF ІДЕНТИФІКАТОРИ${NC}"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-# 1. Machine-ID
-if [ -f ~/Library/Application\ Support/Windsurf/machineid ]; then
-    MACHINE_ID=$(cat ~/Library/Application\ Support/Windsurf/machineid)
+# WINDSURF: Створення Machine ID якщо потрібно
+WINDSURF_BASE="$HOME/Library/Application Support/Windsurf"
+if [ ! -d "$WINDSURF_BASE" ]; then
+    mkdir -p "$WINDSURF_BASE"
+fi
+
+if [ -f "$WINDSURF_BASE/machineid" ]; then
+    MACHINE_ID=$(cat "$WINDSURF_BASE/machineid")
     if [ ${#MACHINE_ID} -ge 32 ]; then
         pass "Machine-ID існує та має достатню довжину (${#MACHINE_ID} символів)"
     else
@@ -130,9 +146,14 @@ echo ""
 echo -e "${BLUE}[2/4] VS CODE ІДЕНТИФІКАТОРИ${NC}"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-# 1. Machine-ID
-if [ -f ~/Library/Application\ Support/Code/machineid ]; then
-    MACHINE_ID=$(cat ~/Library/Application\ Support/Code/machineid)
+# VS CODE: Створення Machine ID якщо потрібно
+VSCODE_BASE="$HOME/Library/Application Support/Code"
+if [ ! -d "$VSCODE_BASE" ]; then
+    mkdir -p "$VSCODE_BASE"
+fi
+
+if [ -f "$VSCODE_BASE/machineid" ]; then
+    MACHINE_ID=$(cat "$VSCODE_BASE/machineid")
     if [ ${#MACHINE_ID} -ge 32 ]; then
         pass "Machine-ID існує та має достатню довжину (${#MACHINE_ID} символів)"
     else
@@ -157,12 +178,12 @@ else
     warn "Знайдено $BROWSER_VSCODE файлів в Browser IndexedDB (vscode.dev)"
 fi
 
-# 4. GitHub.com IndexedDB
+# 4. GitHub.com IndexedDB (не критично для VS Code)
 BROWSER_GITHUB=$(find ~/Library/Application\ Support/Google/Chrome -path "*/IndexedDB/*github*" 2>/dev/null | wc -l)
 if [ "$BROWSER_GITHUB" -eq 0 ]; then
     pass "Browser IndexedDB github.com очищена (Chrome)"
 else
-    warn "Знайдено $BROWSER_GITHUB файлів в Browser IndexedDB (github.com)"
+    info "Знайдено $BROWSER_GITHUB файлів в Browser IndexedDB (github.com) - це нормально"
 fi
 
 # ═══════════════════════════════════════════════════════════════

@@ -203,20 +203,35 @@ generate_hostname() {
 # ДОПОМІЖНІ ФУНКЦІЇ
 # ─────────────────────────────────────────────────────────────────
 safe_remove() {
-    local path="$1"
-    if [ -e "$path" ]; then
-        rm -rf "$path" 2>/dev/null
-        print_success "Видалено: $(basename "$path")"
-        return 0
+    local target_path="$1"
+    if [ -e "$target_path" ]; then
+        # Try to remove
+        rm -rf "$target_path" 2>/dev/null
+        
+        # Verify it was removed
+        if [ ! -e "$target_path" ]; then
+            print_success "Видалено: $(basename "$target_path")"
+            return 0
+        else
+            # Try with sudo if first attempt failed
+            sudo rm -rf "$target_path" 2>/dev/null
+            if [ ! -e "$target_path" ]; then
+                print_success "Видалено (через sudo): $(basename "$target_path")"
+                return 0
+            else
+                print_error "НЕ вдалося видалити: $target_path"
+                return 1
+            fi
+        fi
     fi
-    return 1
+    return 0
 }
 
 safe_remove_glob() {
     local pattern="$1"
     local matched=0
-    for path in $~pattern; do
-        [ -e "$path" ] && safe_remove "$path" && matched=1
+    for target_path in $~pattern; do
+        [ -e "$target_path" ] && safe_remove "$target_path" && matched=1
     done
     return $matched
 }
@@ -262,7 +277,7 @@ if [ -n "$ZSH_VERSION" ] || [ "${BASH_VERSINFO[0]:-0}" -ge 4 ]; then
     EDITOR_PATHS[antigravity]="$HOME/Library/Application Support/Antigravity"
 
     typeset -A EDITOR_PROCESS_NAMES
-    EDITOR_PROCESS_NAMES[vscode]="Code"
+    EDITOR_PROCESS_NAMES[vscode]="Visual Studio Code"
     EDITOR_PROCESS_NAMES[windsurf]="Windsurf"
     EDITOR_PROCESS_NAMES[cursor]="Cursor"
     EDITOR_PROCESS_NAMES[antigravity]="Antigravity"
@@ -297,12 +312,31 @@ fi
 stop_editor() {
     local editor="$1"
     local process_name="${EDITOR_PROCESS_NAMES[$editor]}"
+    local bundle_id="${EDITOR_BUNDLE_IDS[$editor]}"
     
     if [ -n "$process_name" ]; then
+        print_info "Зупинка $process_name..."
+        
+        # 1. Graceful stop attempt
         pkill -f "$process_name" 2>/dev/null
+        [ -n "$bundle_id" ] && osascript -e "quit app id \"$bundle_id\"" 2>/dev/null
         sleep 2
-        print_success "Зупинено $process_name"
+        
+        # 2. Forced stop if still running
+        if pgrep -f "$process_name" >/dev/null; then
+            print_warning "$process_name все ще запущено, примусове завершення..."
+            pkill -9 -f "$process_name" 2>/dev/null
+            sleep 1
+        fi
+        
+        if ! pgrep -f "$process_name" >/dev/null; then
+            print_success "Зупинено $process_name"
+        else
+            print_error "Не вдалося зупинити $process_name!"
+            return 1
+        fi
     fi
+    return 0
 }
 
 cleanup_editor_machine_id() {
@@ -310,11 +344,21 @@ cleanup_editor_machine_id() {
     local base_path="${EDITOR_PATHS[$editor]}"
     local machineid_path="$base_path/machineid"
     
-    if [ -f "$machineid_path" ]; then
-        local new_id=$(generate_machine_id)
-        echo "$new_id" > "$machineid_path"
-        print_success "Machine ID оновлено: $new_id"
+    # Створюємо директорію якщо не існує
+    if [ ! -d "$base_path" ]; then
+        mkdir -p "$base_path" 2>/dev/null || {
+            print_error "Не вдалося створити директорію: $base_path"
+            return 1
+        }
     fi
+    
+    # Створюємо або оновлюємо Machine ID
+    local new_id=$(generate_machine_id_32)
+    echo "$new_id" > "$machineid_path" 2>/dev/null || {
+        print_error "Не вдалося створити machineid файл: $machineid_path"
+        return 1
+    }
+    print_success "Machine ID створено (або оновлено) для $editor: $new_id"
 }
 
 cleanup_editor_storage() {
@@ -354,17 +398,20 @@ cleanup_editor_caches() {
     local editor="$1"
     local base_path="${EDITOR_PATHS[$editor]}"
     
-    local cache_paths=(
-        "$base_path/User/globalStorage/state.vscdb"
-        "$base_path/User/globalStorage/state.vscdb.backup"
+    # Видалення кешів (через glob)
+    print_info "Очищення кешів $editor..."
+    
+    local cache_dirs=(
+        "$base_path/Cache"
+        "$base_path/CachedData"
+        "$base_path/CachedExtensionVSIXs"
+        "$base_path/Code Cache"
+        "$base_path/GPUCache"
+        "$base_path/User/workspaceStorage"
         "$base_path/Local Storage"
         "$base_path/Session Storage"
         "$base_path/IndexedDB"
         "$base_path/databases"
-        "$base_path/GPUCache"
-        "$base_path/CachedData"
-        "$base_path/Code Cache"
-        "$base_path/User/workspaceStorage"
         "$base_path/logs"
         "$base_path/Cookies"
         "$base_path/Cookies-journal"
@@ -373,12 +420,13 @@ cleanup_editor_caches() {
         "$base_path/Trust Tokens"
         "$base_path/SharedStorage"
         "$base_path/WebStorage"
+        "$base_path/User/globalStorage/state.vscdb"
+        "$base_path/User/globalStorage/state.vscdb.backup"
     )
     
-    for path in "${cache_paths[@]}"; do
-        safe_remove "$path"
+    for target_path in "${cache_dirs[@]}"; do
+        safe_remove "$target_path"
     done
-
     # Clean hidden paths if defined
     local hidden_path="${EDITOR_HIDDEN_PATHS[$editor]}"
     if [ -n "$hidden_path" ]; then

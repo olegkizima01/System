@@ -65,18 +65,7 @@ print_success "Системні списки очищено"
 
 # 5. Повне видалення кешів та баз даних
 print_step 5 $TOTAL_STEPS "Повне видалення кешів..."
-WINDSURF_PATH="${EDITOR_PATHS[windsurf]}"
-safe_remove "$WINDSURF_PATH/User/globalStorage/state.vscdb"
-safe_remove "$WINDSURF_PATH/User/globalStorage/state.vscdb.backup"
-safe_remove "$WINDSURF_PATH/Local Storage"
-safe_remove "$WINDSURF_PATH/Session Storage"
-safe_remove "$WINDSURF_PATH/IndexedDB"
-safe_remove "$WINDSURF_PATH/databases"
-safe_remove "$WINDSURF_PATH/GPUCache"
-safe_remove "$WINDSURF_PATH/CachedData"
-safe_remove "$WINDSURF_PATH/Code Cache"
-safe_remove "$WINDSURF_PATH/User/workspaceStorage"
-safe_remove "$WINDSURF_PATH/logs"
+cleanup_editor_caches "windsurf"
 print_success "Кеші повністю видалено"
 
 # 6. Розширене очищення Keychain

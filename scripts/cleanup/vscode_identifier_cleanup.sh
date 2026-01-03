@@ -25,21 +25,12 @@ VSCODE_BASE="$HOME/Library/Application Support/Code"
 
 # 1. Зупинка VS Code
 print_step 1 6 "Зупинка VS Code..."
-pkill -f "Visual Studio Code" 2>/dev/null
-pkill -f "Code" 2>/dev/null
-sleep 2
+stop_editor "vscode"
 print_success "VS Code зупинено"
 
 # 2. Очищення Machine ID
 print_step 2 6 "Оновлення Machine ID..."
-MACHINEID_PATH="$VSCODE_BASE/machineid"
-if [ -f "$MACHINEID_PATH" ]; then
-    NEW_MACHINE_ID=$(generate_machine_id)
-    echo "$NEW_MACHINE_ID" > "$MACHINEID_PATH"
-    print_success "Machine ID оновлено: $NEW_MACHINE_ID"
-else
-    print_info "Machine ID файл не знайдено"
-fi
+cleanup_editor_machine_id "vscode"
 
 # 3. Очищення Storage файлів
 print_step 3 6 "Оновлення Storage файлів..."
@@ -73,23 +64,7 @@ done
 
 # 4. Видалення кешів та баз даних
 print_step 4 6 "Видалення кешів та баз даних..."
-CACHE_PATHS=(
-    "$VSCODE_BASE/User/globalStorage/state.vscdb"
-    "$VSCODE_BASE/User/globalStorage/state.vscdb.backup"
-    "$VSCODE_BASE/Local Storage"
-    "$VSCODE_BASE/Session Storage"
-    "$VSCODE_BASE/IndexedDB"
-    "$VSCODE_BASE/databases"
-    "$VSCODE_BASE/GPUCache"
-    "$VSCODE_BASE/CachedData"
-    "$VSCODE_BASE/Code Cache"
-    "$VSCODE_BASE/User/workspaceStorage"
-    "$VSCODE_BASE/logs"
-)
-
-for path in "${CACHE_PATHS[@]}"; do
-    safe_remove "$path"
-done
+cleanup_editor_caches "vscode"
 print_success "Кеші та бази даних видалено"
 
 # 5. Очищення Keychain
@@ -126,8 +101,8 @@ WEB_DATA_PATHS=(
     "$VSCODE_BASE/WebStorage"
 )
 
-for path in "${WEB_DATA_PATHS[@]}"; do
-    safe_remove "$path"
+for target_path in "${WEB_DATA_PATHS[@]}"; do
+    safe_remove "$target_path"
 done
 print_success "Cookies та веб-дані видалено"
 
