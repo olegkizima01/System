@@ -3,48 +3,48 @@ description: Authoritative guide for Project Atlas architecture, Cognitive 2.0 m
 ---
 
 # Project Atlas Workflow Guide
-**Pure Native Architecture | Trinity 2.5 | Січень 2026**
+**Pure Native Architecture | Trinity 2.5 | January 2026**
 
-Єдине джерело правди про фундаментальні принципи роботи системи Atlas (Trinity Runtime).
+The single source of truth for the fundamental principles of the Atlas system (Trinity Runtime).
 
 > [!NOTE]
-> **Січень 2026**: Trinity Runtime реорганізовано в модульний пакет `core/trinity/`. `tui/cli.py` розділено на модулі (`scanning`, `monitoring`, `agents`).
-> Див. [Quick Start](./QUICKSTART.md) для швидкого старту.
+> **January 2026**: Trinity Runtime reorganized into modular package `core/trinity/`. `tui/cli.py` split into modules (`scanning`, `monitoring`, `agents`).
+> See [Quick Start](./QUICKSTART.md) for quick start.
 
 ---
 
 ## 1. Core Principles
 
-Atlas — **автономний мультиагентний оператор macOS**, що керується наступними принципами:
+Atlas — **autonomous multi-agent macOS operator**, guided by these principles:
 
-1. **Autonomous Navigation** — Здатність самостійно приймати рішення в умовах невизначеності. Цикл "Сприйняття → Планування → Дія → Верифікація".
+1. **Autonomous Navigation** — Independent decisions in uncertainty. Cycle: Perception → Planning → Action → Verification.
 
-2. **Meta-Planning 2.0** — Агент керує власною стратегією: обирає рівень верифікації, режим відновлення та тип плану. Pydantic валідація конфігурації.
+2. **Meta-Planning 2.0** — Agent manages strategy: verification level, recovery mode, plan type. Pydantic config validation.
 
-3. **Vision-First** — Використання скріншотів та Computer Vision як Ground Truth. Підтримка multi-monitor та диференційного аналізу.
+3. **Vision-First** — Screenshots & Computer Vision as Ground Truth. Multi-monitor & differential analysis support.
 
-4. **Privacy & Stealth** — Система очищення слідів та підміна ідентифікаторів (`spoofing`).
+4. **Privacy & Stealth** — Trace cleanup & identifier spoofing.
 
-5. **Continuous Learning 2.0** — Система витягує досвід (успішний та негативний) та зберігає його у Knowledge Base з оцінкою впевненості.
+5. **Continuous Learning 2.0** — Extracts success/failure experience, stores in Knowledge Base with confidence scores.
 
-6. **State Logging & Resilience** — Деталізовані логи переходів агентів (`logs/trinity_state_*.log`) та автоматичне відновлення LLM запитів (Retries/Timeouts).
+6. **State Logging & Resilience** — Detailed agent logs (`logs/trinity_state_*.log`) & LLM request recovery (Retries/Timeouts).
 
 ---
 
 ## 2. Trinity Runtime Architecture (LangGraph)
 
-Центральна нервова система Atlas базується на циклічному графі. Будь-яка успішна місія проходить через вузол навчання.
+Cyclic graph-based core. Every successful mission includes learning.
 
 ```mermaid
 graph TD
-    START((START)) --> MP[meta_planner<br/>Голова/Стратег]
-    MP -->|план готовий| A[atlas<br/>Архітектор Плану]
+    START((START)) --> MP[meta_planner<br/>Head/Strategist]
+    MP -->|plan ready| A[atlas<br/>Plan Architect]
     A --> MP
-    MP -->|затверджено| T[tetyana<br/>Виконавець]
-    MP -->|затверджено| G[grisha<br/>Верифікатор]
+    MP -->|approved| T[tetyana<br/>Executor]
+    MP -->|approved| G[grisha<br/>Verifier]
     T --> G
     G --> MP
-    MP -->|завершено| K[knowledge<br/>Екстрактор Досвіду]
+    MP -->|completed| K[knowledge<br/>Experience Extractor]
     K --> END((END))
     
     subgraph Context Management
@@ -59,14 +59,14 @@ graph TD
 
 ### Trinity Agents & Layers
 
-| Agent | Role | Description |
-|:---|:---|:---|
-| **Meta-Planner** | Orchestrator | Головний оркестратор. Active Retrieval та фільтрація спогадів |
-| **Context7** | Context Manager | Token budget, sliding window з пріоритезацією недавніх кроків |
-| **Atlas** | Architect | Тактичний план на основі нормалізованого контексту |
-| **Tetyana** | Executor | Виконавець (Native/GUI/Playwright) |
-| **Grisha** | Verifier | Верифікатор з `enhanced_vision_analysis`. Вимагає доказів (evidence) від Тетяни для підтвердження. |
-| **Knowledge** | Learner | Етап рефлексії. Зберігає досвід (`success`/`failed`) та оновлює Knowledge Base. |
+| Agent       | Role          | Description                                      |
+|:------------|:--------------|:-------------------------------------------------|
+| **Meta-Planner** | Orchestrator | Main orchestrator. Active Retrieval & memory filtering |
+| **Context7**     | Context Manager | Token budget, sliding window prioritizing recent steps |
+| **Atlas**        | Architect    | Tactical plan from normalized context            |
+| **Tetyana**      | Executor     | Executes (Native/GUI/Playwright)                 |
+| **Grisha**       | Verifier     | Verifies with `enhanced_vision_analysis`. Requires evidence from Tetyana |
+| **Knowledge**    | Learner      | Reflection: stores experience & updates KB       |
 
 ---
 
@@ -74,93 +74,52 @@ graph TD
 
 ### 3.1 Trinity Runtime Package (`core/trinity/`)
 
-Модульна структура Trinity Runtime:
-
 ```
 core/trinity/
-├── __init__.py          # Re-exports: TrinityRuntime, TrinityState, TrinityPermissions
-├── state.py             # TrinityState TypedDict, TrinityPermissions dataclass
-├── nodes/
-│   ├── __init__.py
-│   ├── base.py          # NodeResult, утиліти для nodes
-│   ├── meta_planner.py  # Meta-Planner node (Orchestrator)
-│   ├── atlas.py         # Atlas node (Architect)
-│   ├── tetyana.py       # Tetyana node (Executor)
-│   └── grisha.py        # Grisha node (Verifier)
+├── __init__.py
+├── state.py
+├── nodes/ (base.py, meta_planner.py, atlas.py, tetyana.py, grisha.py)
 ├── planning/
-│   └── __init__.py
 └── integration/
-    └── __init__.py
 ```
 
+Recommended imports:
 ```python
-# Новий імпорт (рекомендовано)
 from core.trinity import TrinityRuntime, TrinityPermissions
 from core.trinity.state import create_initial_state
-
-# Legacy імпорт (підтримується)
-from core.trinity import TrinityRuntime  # Працює через re-exports
 ```
 
-### 3.2 Hierarchical Memory System (`core/memory.py`)
+### 3.2 Hierarchical Memory (`core/memory.py`)
 
-Трирівнева система пам'яті:
+| Layer            | Duration          | Purpose                          |
+|:-----------------|:------------------|:---------------------------------|
+| Working         | Current session   | Temporary data, active context   |
+| Episodic        | Multiple sessions | Specific events                  |
+| Semantic        | Permanent         | Consolidated knowledge           |
 
-| Layer | Duration | Purpose |
-|:---|:---|:---|
-| **Working Memory** | Поточна сесія | Тимчасові дані, активний контекст |
-| **Episodic Memory** | Декілька сесій | Конкретні події, взаємодії |
-| **Semantic Memory** | Постійно | Консолідовані знання, патерни |
+### 3.3 Context7 (`core/context7.py`)
+Dynamic token budget, priority weighting for recent/critical info, usage metrics.
 
-```python
-memory = HierarchicalMemory()
-memory.add_to_working("current_task", {...})
-memory.consolidate_to_semantic()  # Promote knowledge
-```
-
-### 3.3 Context7 Sliding Window (`core/context7.py`)
-
-Оптимізований менеджер контексту:
-- **Token Budget**: Динамічне керування бюджетом токенів
-- **Priority Weighting**: Пріоритезація недавніх кроків та критичної інформації
-- **ContextMetrics**: Відстеження використання токенів
-
-### 3.4 Agent Message Protocol (`core/agent_protocol.py`) - Subsystem
-Модуль для структурованої чергової комунікації. Наразі доступний як бібліотека для складних розширень, але не є обов'язковим для базового циклу Trinity.
-
-### 3.5 Parallel Tool Executor (`core/parallel_executor.py`) - Subsystem
-Двигун для паралельного виконання незалежних кроків. Використовується для RAG-запитів та пакетних операцій.
+### 3.4 Parallel Tool Executor (`core/parallel_executor.py`)
+Parallel execution for RAG and batch operations.
 
 ### 3.5 MCP Prompt Engine (`mcp_integration/prompt_engine.py`)
-Динамічний рушій контексту, що працює на базі ChromaDB:
-- **Large-Scale Ingestion**: Підтримка рекурсивної індексації репозиторіїв (Fabric, LangGPT).
-- **Active Retrieval**: Пошук "найкращих практик" та "експертних промптів" перед виконанням.
-- **Automatic Injection**: Прозоре додавання інструкцій до контексту агента (Tetyana/Atlas).
+ChromaDB-based: recursive ingestion, active retrieval of best practices, auto-injection into agent context.
 
 ---
 
-## 4. Vision Pipeline (Enhanced)
+## 4. Vision Pipeline
 
 ### 4.1 DifferentialVisionAnalyzer (`system_ai/tools/vision.py`)
-
-| Function | Description |
-|:---|:---|
-| `capture_all_monitors()` | Multi-monitor screenshot через Quartz/mss |
-| `analyze_frame()` | Диференційний аналіз + OCR |
-| `_generate_diff_image()` | Візуалізація змінених регіонів |
+- Multi-monitor capture
+- Differential analysis + OCR
+- Diff image generation
 
 ### 4.2 VisionContextManager (`core/vision_context.py`)
-
-- **Trend Detection**: Відстеження тренду змін (increasing/decreasing/stable)
-- **Active Region Tracking**: Hot zones з частими змінами
-- **Frame History**: До 10 кадрів з метаданими
-- **Step Verification**: `get_diff_summary_for_step()` для верифікації дій
+Trend detection, hot zone tracking, frame history (up to 10), step verification diffs.
 
 ```python
-result = EnhancedVisionTools.capture_and_analyze(
-    multi_monitor=True,
-    generate_diff_image=True
-)
+result = EnhancedVisionTools.capture_and_analyze(multi_monitor=True, generate_diff_image=True)
 context_manager.update_context(result)
 ```
 
@@ -168,187 +127,87 @@ context_manager.update_context(result)
 
 ## 5. Meta-Planning 2.0
 
-| Parameter | Values | Description |
-|:---|:---|:---|
-| **Strategy** | `linear`, `rag_heavy`, `aggressive` | Тип побудови плану |
-| **Active Retrieval** | `retrieval_query` | Оптимізований запит Meta-Planner |
-| **Anti-patterns** | `status: failed` | Уникнення провалених стратегій |
-| **Fail Escalation** | `fail_count >= 4` | Автоматичне перепланування при повторних невдачах верифікації |
-| **Confidence Score** | `0.1...1.0` | Оцінка надійності на основі правок |
-| **Source Tracking** | `trinity_runtime`, `user` | Походження знання |
+| Parameter         | Values                          | Description                              |
+|:------------------|:--------------------------------|:-----------------------------------------|
+| Strategy         | linear, rag_heavy, aggressive  | Plan type                                |
+| Active Retrieval | retrieval_query                | Optimized query                          |
+| Anti-patterns    | status: failed                 | Avoid failed strategies                  |
+| Fail Escalation  | fail_count >= 4                | Auto-replan on repeated failures         |
+| Confidence Score | 0.1...1.0                      | Reliability from edits                   |
+| Source Tracking  | trinity_runtime, user          | Knowledge origin                         |
 
 ---
 
-## 6. MCP Foundation (Інструменти)
+## 6. MCP Tools
 
-### Internal Tools
-- **Automation (Unified)**: Shell, AppleScript, Shortcuts, Mouse/Keyboard
-- **System Cleanup**: Очищення слідів, логів, спуфінг (Stealth Mode)
-- **Recorder Control**: Програмне керування записом сесій
-- **Desktop/Vision**: `enhanced_vision_analysis`, `compare_images`
+**Internal:** Unified automation (Shell/AppleScript/Shortcuts/Mouse), cleanup/spoofing, recorder control, vision tools.
 
-### External MCP Servers
-- **Playwright MCP**: Повний контроль браузера (headless/headful)
-- **PyAutoGUI MCP**: Альтернативна емуляція вводу
-- **AppleScript MCP**: Low-level UI automation for macOS
-- **Anthropic MCP**: Complex text/code generation delegator
-- **Context7 MCP**: Доступ до документації бібліотек
-- **SonarQube MCP**: Quality gate та аналіз коду
+**External Servers:** Playwright (browser), PyAutoGUI, AppleScript, Anthropic (generation), Context7 (docs), SonarQube (analysis).
 
-### Intelligent MCP Architecture
-Система використовує єдиний, оптимізований стандарт взаємодії з інструментами:
-- **Native SDK Client**: Основний і єдиний клієнт для високопродуктивної прямої взаємодії з MCP серверами через офіційний Python SDK.
-- **Dynamic Discovery**: Відмова від хардкоду інструментів. Всі можливості серверів (`playwright`, `context7`, `memory`) виявляються динамічно при кожному запуску.
-- **Unified Routing**: Всі виклики автоматично маршрутизуються через Native-клієнт, що усуває затримки та конфлікти версій, характерні для CLI-обгорток.
-- **Meta-Task Execution**: Підтримка складних підзавдань через `meta.execute_task`, що дозволяє агенту оперувати високорівневими командами.
+**Architecture:** Native SDK client only, dynamic discovery, unified routing, meta-task execution for high-level commands.
 
 ---
 
-## 7. TUI & Themes
+## 7. TUI & Themes (16 total)
 
-**16 тем у 4 категоріях:**
+Categories: Classic (monaco, dracula, nord, gruvbox), Modern (catppuccin, tokyo-night, one-dark, rose-pine), Vibrant (cyberpunk, aurora, midnight-blue, solarized-dark, vibrant, cyberpunk-neon), Special (hacker-vibe).
 
-| Category | Themes |
-|:---|:---|
-| **Classic** | monaco, dracula, nord, gruvbox |
-| **Modern** | catppuccin, tokyo-night, one-dark, rose-pine |
-| **Vibrant** | cyberpunk, aurora, midnight-blue, solarized-dark, vibrant, cyberpunk-neon |
-| **Special** | hacker-vibe (dimmed) |
-
-**Навігація**: `Ctrl+T` швидка зміна теми, `Settings → Appearance` вибір з превʼю
+Switch: Ctrl+T or Settings → Appearance (with preview).
 
 ---
 
-## 8. Trinity Improvements v1.0 (Грудень 2025)
+## 8. Improvements (Dec 2025)
 
-### 8.1 Pydantic State Validation
-```python
-from core.trinity_models import TrinityStateModel, MetaConfig
-
-state = TrinityStateModel(
-    current_agent="meta_planner",
-    task_type="GENERAL",
-    meta_config=MetaConfig(strategy="hybrid")
-)
-state.validate_state()  # ✅ Повна валідація схеми
-```
-
-### 8.2 MyPy Type Checking
-```bash
-mypy core/trinity/ --config-file=setup.cfg
-```
-
-### 8.3 State Initialization Logging
-- Деталізовані логи переходів агентів
-- Місце: `logs/trinity_state_*.log`
-
-### 8.4 Unit Testing
-- 16 тестів для Pydantic моделей (100% coverage)
-- Запуск: `pytest tests/test_trinity_models.py -v`
+- Pydantic validation with full schema checks
+- MyPy type checking
+- Detailed state logs
+- 100% coverage unit tests (16 for models)
 
 ---
 
 ## 9. Quick Start
 
 ```bash
-# Вимоги: pyenv shell 3.11.13
-./setup.sh                  # Встановлення залежностей
-./cli.sh                    # Запуск TUI
-/trinity <завдання>         # Запуск Trinity
-/autopilot <завдання>       # Режим повної автономії
+./setup.sh        # Dependencies
+./cli.sh          # TUI
+/trinity <task>   # Run
+/autopilot <task> # Autonomy
 
-# Перевірка якості коду
+# Quality
 pytest tests/test_trinity_models.py -v
-mypy core/ --config-file=setup.cfg
+mypy core/
 ```
 
 ---
 
-## 10. Project Structure & Codemap
+## 10. Structure & Logs
 
-📋 **Codemap**: [`project_structure_final.txt`](../../project_structure_final.txt) — Автоматично генерований "pointer to algorithm"
+Codemap auto-generated, 163+ folders/256+ files.
 
-- Оновлюється при кожному commit (git hook `templates/bootstrap/post-commit`)
-- Містить: 
-  - **System Algorithm**: Детальний опис точок входу (`cli.sh` -> `cli.py` -> `tui/*`)
-  - **Error Relevance**: Логи виконання з контекстом змін
-  - **Git History**: Diff та останні коміти для розуміння контексту
-- **163+ папки, 256+ файлів**
+Key dirs: core/trinity, core/agents, mcp_integration, system_ai/tools, tui, tests, archive.
 
-### Key Directories
+Logs: trinity_state_*.log, .last_response.txt, task_logs, Windsurf logs.
 
-| Directory | Purpose |
-|:---|:---|
-| `core/trinity/` | Модульний Trinity Runtime пакет |
-| `core/agents/` | Промпти агентів (Atlas, Tetyana, Grisha) |
-| `mcp_integration/` | MCP servers та RAG integration |
-| `system_ai/tools/` | Vision, automation tools |
-| `tui/` | Textual UI компоненти |
-| `tests/` | Unit та integration тести |
-| `archive/` | Архівовані файли та документація |
-
-### Log Locations
-
-| Location | Content |
-|:---|:---|
-| `logs/trinity_state_*.log` | Детальні логи Trinity |
-| `.last_response.txt` | Остання відповідь агента |
-| `task_logs/` | Лог-файли завдань |
-| `~/Library/.../Windsurf/logs/` | Логи Windsurf |
-
-```bash
-./regenerate_structure.sh           # Ручне оновлення
-cat .last_response.txt              # Остання відповідь
-tail -f logs/trinity_state_*.log    # Логи Trinity
-```
+Commands: ./regenerate_structure.sh, cat .last_response.txt, tail -f logs/trinity_state_*.log
 
 ---
 
-## 11. Editor Integration
+## 11. Editor Integration & Logging
 
-### Windsurf, Copilot, VS Code
-- **Windsurf**: `~/Library/Application Support/Windsurf/logs/`
-- **VS Code**: `~/Library/Application Support/Code/logs/`
-
-### State Logger
-```python
-from core.state_logger import StateInitLogger
-StateInitLogger().log_initial_state("Завдання", state_dict)
-# Логи: logs/trinity_state_YYYYMMDD.log
-```
+Windsurf/VS Code log paths provided. State logger for initial states.
 
 ---
 
-## 12. Advanced Capabilities
+## 12. Advanced Features
 
-### Self-Healing
-1. **Detection**: Grisha аналізує результат кожного кроку
-2. **Correction**: Replanning Loop при помилках
-3. **Strategy Shift**: Перехід Native → GUI при необхідності
-4. **Limits**: `MAX_REPLANS` для уникнення нескінченних циклів
+**Self-Healing:** Detection → Correction → Strategy shift → Loop limits.
 
-### Dev Mode
-- **Direct Code Editing**: Через `multi_replace_file_content`
-- **Shell Execution**: `git`, `npm`, `python` та інші
-- **Unsafe Tools**: AppleScript, Mouse Control (з підтвердженням)
+**Dev Mode:** Code editing, shell exec, unsafe tools (confirmed).
 
-### Інтерактивність
-- **User → Agent**: Команди/уточнення через TUI
-- **Agent → User**: Тег `[VOICE]` для повідомлень
-- **Feedback Loop**: Прийом даних під час пауз
+**Interactivity:** TUI input, [VOICE] output, pause feedback.
 
 ---
 
 ## 13. Documentation
 
-| Document | Purpose |
-|:---|:---|
-| **`docs/atlas.md`** | Цей документ - головний workflow guide |
-| **`docs/QUICKSTART.md`** | Швидкий старт з прикладами |
-| **`docs/vision.md`** | Vision Pipeline документація |
-| **`docs/sonar.md`** | SonarQube MCP Server reference |
-| **`archive/docs/`** | Архівована документація |
-
----
-
-*Останнє оновлення: 24 грудня 2025 р. - Trinity 2.5 (Pure Native Architecture)*
+Main: docs/atlas.md and project_structure_final.txt
