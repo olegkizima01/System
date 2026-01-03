@@ -5,7 +5,7 @@
 
 RESPONSE="${1:-}"
 RESPONSE_FILE=".last_response.txt"
-OUTPUT_FILE="project_structure_final.txt"
+OUTPUT_FILE="CODEMAP.md"
 
 # Save last response if provided
 if [ -n "$RESPONSE" ]; then

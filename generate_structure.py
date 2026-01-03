@@ -52,7 +52,14 @@ class IgnoreParser:
         return matched
 
 # Додаткові жорсткі виключення (навіть якщо не в .gitignore)
-HARD_IGNORED_DIRS = {'node_modules', '__pycache__', '.git', '.venv', 'venv', 'dist', 'build', 'logs', 'cache', 'unused', '.cache', '.atlas_memory', '.pytest_cache', '.env'}
+HARD_IGNORED_DIRS = {
+    'node_modules', '__pycache__', '.git', '.venv', 'venv', 'dist', 'build', 
+    'logs', 'cache', 'unused', '.cache', '.atlas_memory', '.pytest_cache', '.env',
+    # Додано для зменшення розміру CODEMAP
+    'archive', 'templates', 'plugins', 'data', '.scannerwork', 'task_screenshots',
+    'task_logs', '.learning_memory', '.atlas_memory_backup_1766599938', 'tmp',
+    'configs', 'configs_vscode', 'projects', 'test_mcp_integration'
+}
 BINARY_EXTENSIONS = {'.log', '.db', '.sqlite', '.pyc', '.bin', '.pt', '.pth', '.h5', '.onnx', '.jpg', '.png', '.gif', '.mp4', '.zip', '.tar.gz', '.pdf', '.exe', '.DS_Store'}
 
 MAX_FILE_SIZE = 2 * 1024 * 1024  # 2 МБ — достатньо для будь-якого коду
@@ -177,7 +184,7 @@ def get_program_logs(max_lines: int = 100) -> str:
     except Exception as e:
         return f"[Error reading program logs: {e}]"
 
-def main(project_root: str = ".", output_file: str = "project_structure_final.txt", last_response: str = None):
+def main(project_root: str = ".", output_file: str = "CODEMAP.md", last_response: str = None):
     root = Path(project_root).resolve()
 
     parser = IgnoreParser(root)
@@ -219,8 +226,39 @@ def main(project_root: str = ".", output_file: str = "project_structure_final.tx
         f.write(f"- **Generated**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
         f.write("---\n\n")
 
-        f.write("## System Algorithm & Entry Points (Codemap)\n\n")
-        f.write("### Entry Flow\n")
+        f.write("## Trinity Runtime Architecture (Codemap)\n\n")
+        
+        # Mermaid diagram
+        f.write("```mermaid\n")
+        f.write("graph TD\n")
+        f.write("    START((START)) --> MP[meta_planner<br/>Orchestrator]\n")
+        f.write("    MP -->|plan request| A[atlas<br/>Plan Architect]\n")
+        f.write("    A --> MP\n")
+        f.write("    MP -->|execute| T[tetyana<br/>Executor]\n")
+        f.write("    T --> G[grisha<br/>Verifier]\n")
+        f.write("    G --> MP\n")
+        f.write("    MP -->|completed| K[knowledge<br/>Learner]\n")
+        f.write("    K --> END((END))\n")
+        f.write("```\n\n")
+
+        f.write("### Core Components\n\n")
+        f.write("| Component | Path | Purpose |\n")
+        f.write("|:----------|:-----|:--------|\n")
+        f.write("| **Trinity Runtime** | `core/trinity/` | LangGraph-based cyclic agent graph |\n")
+        f.write("| **State Management** | `core/trinity/state.py` | `TrinityState`, `TrinityPermissions`, `create_initial_state` |\n")
+        f.write("| **Agent Nodes** | `core/trinity/nodes/` | `meta_planner`, `atlas`, `tetyana`, `grisha`, `knowledge`, `vibe` |\n")
+        f.write("| **Hierarchical Memory** | `core/memory.py` | Working → Episodic → Semantic layers |\n")
+        f.write("| **Context Manager** | `core/context7.py` | Token budget, sliding window, priority weighting |\n")
+        f.write("| **Vision Pipeline** | `system_ai/tools/vision.py` | `DifferentialVisionAnalyzer`, multi-monitor, OCR |\n")
+        f.write("| **Vision Context** | `core/vision_context.py` | Trend detection, frame history, hot zones |\n")
+        f.write("| **Parallel Executor** | `core/parallel_executor.py` | Dependency-aware parallel step execution |\n")
+        f.write("| **MCP Prompt Engine** | `mcp_integration/prompt_engine.py` | ChromaDB RAG for dynamic prompts |\n")
+        f.write("| **Self-Healing** | `core/self_healing.py` | Error detection, auto-correction strategies |\n\n")
+
+        f.write("---\n\n")
+
+        f.write("## Entry Points & Flow\n\n")
+        f.write("### Application Entry\n")
         f.write("1. **`cli.sh`**: Environment setup, Python version check, sudo permissions.\n")
         f.write("2. **`cli.py`**: Minimal wrapper, arg parsing, logging setup.\n")
         f.write("3. **`tui/cli.py`**: Main TUI application, command dispatching.\n")
@@ -317,4 +355,4 @@ if __name__ == "__main__":
     if last_response == "[No last response available]":
         last_response = None
 
-    main(project_root=".", output_file="project_structure_final.txt", last_response=last_response)
+    main(project_root=".", output_file="CODEMAP.md", last_response=last_response)

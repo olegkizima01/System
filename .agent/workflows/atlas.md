@@ -9,7 +9,8 @@ The single source of truth for the fundamental principles of the Atlas system (T
 
 > [!NOTE]
 > **January 2026**: Trinity Runtime reorganized into modular package `core/trinity/`. `tui/cli.py` split into modules (`scanning`, `monitoring`, `agents`).
-> See [Quick Start](./QUICKSTART.md) for quick start.
+> See [Quick Start](../docs/QUICKSTART.md) for quick start.
+> **Codemap**: Auto-generated architecture reference in [CODEMAP.md](../CODEMAP.md).
 
 ---
 
@@ -78,15 +79,14 @@ graph TD
 core/trinity/
 ├── __init__.py
 ├── state.py
-├── nodes/ (base.py, meta_planner.py, atlas.py, tetyana.py, grisha.py)
+├── nodes/ (base.py, meta_planner.py, atlas.py, tetyana.py, grisha.py, knowledge.py, vibe.py)
 ├── planning/
 └── integration/
 ```
 
 Recommended imports:
 ```python
-from core.trinity import TrinityRuntime, TrinityPermissions
-from core.trinity.state import create_initial_state
+from core.trinity import TrinityRuntime, TrinityPermissions, create_initial_state
 ```
 
 ### 3.2 Hierarchical Memory (`core/memory.py`)
@@ -182,7 +182,7 @@ mypy core/
 
 ## 10. Structure & Logs
 
-Codemap auto-generated, 163+ folders/256+ files.
+Codemap auto-generated as `CODEMAP.md` on each commit.
 
 Key dirs: core/trinity, core/agents, mcp_integration, system_ai/tools, tui, tests, archive.
 

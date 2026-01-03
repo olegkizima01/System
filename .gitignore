@@ -101,3 +101,6 @@ data/
 
 # Архів
 archive/
+
+# Old codemap output (replaced by CODEMAP.md)
+project_structure_final.txt
