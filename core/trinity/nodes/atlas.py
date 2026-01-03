@@ -1,6 +1,8 @@
 import os
 import subprocess
 import time
+import hashlib
+from difflib import SequenceMatcher
 from typing import List, Dict, Any, Optional
 from langchain_core.messages import AIMessage, SystemMessage, HumanMessage
 from core.trinity.state import TrinityState
@@ -80,6 +82,22 @@ class AtlasMixin:
     def _check_atlas_loop(self, state, replan_count, last_msg):
         """Check if we're stuck in a replan loop and break it if necessary."""
         last_status = state.get("last_step_status", "success")
+        
+        # CRITICAL FIX: Check for repeated plans (fingerprinting)
+        current_plan_hash = self._get_plan_fingerprint(state.get("plan", []))
+        plan_history = state.get("plan_fingerprints", [])
+        
+        if current_plan_hash in plan_history:
+            if self.verbose:
+                print(f"🔁 [Atlas] DUPLICATE PLAN DETECTED! Same plan tried {plan_history.count(current_plan_hash) + 1} times.")
+            # Force completely different approach
+            state["forbidden_actions"] = state.get("forbidden_actions", []) + ["REPEATED_PLAN_DETECTED"]
+            # Clear the failed plan from history to force new thinking
+            state["plan"] = []
+        else:
+            plan_history.append(current_plan_hash)
+            state["plan_fingerprints"] = plan_history[-5:]  # Keep last 5
+        
         if replan_count >= 3 and last_status != "success":
             if self.verbose: print(f"⚠️ [Atlas] Replan loop detected (#{replan_count}). Forcing simple execution.")
             fallback = [{"id": 1, "type": "execute", "description": last_msg, "agent": "tetyana", "tools": ["browser_open_url"]}]
@@ -226,21 +244,41 @@ Return JSON with ONLY the replacement step.'''))
             # Repair mode: Prepend new step
             repair_step = raw_plan[0] if raw_plan else None
             if repair_step:
-                optimized_plan = [repair_step] + list(existing_plan)
-                if self.verbose: print(f"🔧 [Atlas] REPAIR: Prepended new step to {len(existing_plan)} remaining steps")
+                # CRITICAL FIX: Check if repair step is same as failed step
+                failed_desc = meta_config.get("failed_step", "")
+                repair_desc = repair_step.get("description", "")
+                
+                # If repair is too similar to what failed, use full replan instead
+                if failed_desc and repair_desc:
+                    similarity = self._calculate_step_similarity(failed_desc, repair_desc)
+                    if similarity > 0.7:  # >70% similar = same approach
+                        if self.verbose:
+                            print(f"⚠️ [Atlas] Repair step too similar to failed step ({similarity:.0%}). Using full replan.")
+                        meta_config["repair_mode"] = False
+                        # Fall through to full replan below
+                    else:
+                        optimized_plan = [repair_step] + list(existing_plan)
+                        if self.verbose: print(f"🔧 [Atlas] REPAIR: Prepended new step to {len(existing_plan)} remaining steps")
+                        meta_config["repair_mode"] = False
+                        return optimized_plan
+                else:
+                    optimized_plan = [repair_step] + list(existing_plan)
+                    if self.verbose: print(f"🔧 [Atlas] REPAIR: Prepended new step to {len(existing_plan)} remaining steps")
+                    meta_config["repair_mode"] = False
+                    return optimized_plan
             else:
                 optimized_plan = list(existing_plan)
-            meta_config["repair_mode"] = False
-            return optimized_plan
-        else:
-            # Full replan: optimize new plan
-            grisha_model = os.getenv("GRISHA_MODEL") or os.getenv("COPILOT_MODEL") or "gpt-4.1"
-            try:
-                grisha_llm = CopilotLLM(model_name=grisha_model)
-            except Exception:
-                grisha_llm = getattr(self, "llm", None)
-            local_verifier = AdaptiveVerifier(grisha_llm)
-            return local_verifier.optimize_plan(raw_plan, meta_config=meta_config)
+                meta_config["repair_mode"] = False
+                return optimized_plan
+        
+        # Full replan: optimize new plan
+        grisha_model = os.getenv("GRISHA_MODEL") or os.getenv("COPILOT_MODEL") or "gpt-4.1"
+        try:
+            grisha_llm = CopilotLLM(model_name=grisha_model)
+        except Exception:
+            grisha_llm = getattr(self, "llm", None)
+        local_verifier = AdaptiveVerifier(grisha_llm)
+        return local_verifier.optimize_plan(raw_plan, meta_config=meta_config)
 
     def _handle_atlas_planning_error(self, e, state, last_msg, context, replan_count):
         """Handle errors during Atlas planning phase."""
@@ -496,3 +534,23 @@ Return JSON with ONLY the replacement step.'''))
             if getattr(self, "verbose", False):
                 print(f"⚠️ [Trinity] Error regenerating structure: {e}")
             return False
+
+    def _get_plan_fingerprint(self, plan: List[Dict]) -> str:
+        """Generate a fingerprint hash for a plan to detect duplicates."""
+        if not plan:
+            return ""
+        # Create a string representation focusing on descriptions and tools
+        fingerprint_parts = []
+        for step in plan:
+            desc = step.get("description", "")
+            tools = "|".join(sorted(step.get("tools", [])))
+            fingerprint_parts.append(f"{desc}::{tools}")
+        fingerprint_str = "||".join(fingerprint_parts)
+        return hashlib.md5(fingerprint_str.encode()).hexdigest()[:12]
+
+    def _calculate_step_similarity(self, step1: str, step2: str) -> float:
+        """Calculate similarity between two step descriptions (0.0 - 1.0)."""
+        if not step1 or not step2:
+            return 0.0
+        # Use SequenceMatcher for fuzzy string comparison
+        return SequenceMatcher(None, step1.lower(), step2.lower()).ratio()

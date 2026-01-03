@@ -110,14 +110,24 @@ class MetaPlannerMixin:
         elif status == "failed":
             fail_count += 1
             hist.append(f"FAILED: {desc} (Try #{fail_count})")
+            # CRITICAL FIX: Add to forbidden after 2 fails, not 4!
+            if fail_count >= 2:
+                forbidden = state.get("forbidden_actions") or []
+                # Extract tools from the failed step to forbid them
+                if plan and plan[0].get('tools'):
+                    for tool in plan[0]['tools']:
+                        forbidden.append(f"AVOID: {tool} for '{desc}'")
+                forbidden.append(f"FAILED APPROACH: {desc}")
+                state["forbidden_actions"] = list(set(forbidden))  # Deduplicate
         elif status == "uncertain":
             fail_count += 1
             hist.append(f"UNCERTAIN: {desc} (Check #{fail_count})")
-            if fail_count >= 4:
+            # CRITICAL FIX: Treat repeated uncertainty as failure
+            if fail_count >= 2:
                 status = "failed"
                 forbidden = state.get("forbidden_actions") or []
-                forbidden.append(f"FAILED ACTION: {desc}")
-                state["forbidden_actions"] = forbidden
+                forbidden.append(f"UNCERTAIN APPROACH: {desc}")
+                state["forbidden_actions"] = list(set(forbidden))
                 
         state["history_plan_execution"] = hist
         # Persist the updated status and fail count into state so subsequent

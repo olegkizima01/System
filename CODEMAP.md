@@ -4,8 +4,8 @@
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 312
-- **Files Skipped**: 36303
-- **Generated**: 2026-01-03 22:05:38
+- **Files Skipped**: 36307
+- **Generated**: 2026-01-03 22:11:23
 
 ---
 
@@ -243,18 +243,20 @@ graph TD
 ## Git Diff (Recent Changes)
 
 ```
- CODEMAP.md | 105424 +---------------------------------------------------------
- 1 file changed, 2 insertions(+), 105422 deletions(-)
+ CODEMAP.md                         | 105408 +---------------------------------
+ core/trinity/nodes/atlas.py        |     84 +-
+ core/trinity/nodes/meta_planner.py |     16 +-
+ 3 files changed, 86 insertions(+), 105422 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
+0892a1d3 Коміт версії
+1e423759 Trinity task completed: Знайди інформацію про Python на Wikipedia
 5b524b57 Trinity task completed: Створи файл test_hello.txt з текстом 'Hello World'
 4e984beb Update: Cleanup: Removed legacy project_structure_final.txt, verified CODEMAP.md
 47428bf4 Update: Codemap Improvements: Added Trinity Runtime Architecture, replaced proje
-e886f271 docs: localize and simplify Atlas workflow documentation and add `clean_antigravity.sh` script.
-9e75bc3c Docs: Update Codemap Structure, README, and Atlas Workflow
 ```
 
 ---
@@ -11474,12 +11476,14 @@ __all__ = [
 ]
 ```
 
-### `core/trinity/nodes/atlas.py` (26.5 KB)
+### `core/trinity/nodes/atlas.py` (29.5 KB)
 
 ```python
 import os
 import subprocess
 import time
+import hashlib
+from difflib import SequenceMatcher
 from typing import List, Dict, Any, Optional
 from langchain_core.messages import AIMessage, SystemMessage, HumanMessage
 from core.trinity.state import TrinityState
@@ -11559,6 +11563,22 @@ class AtlasMixin:
     def _check_atlas_loop(self, state, replan_count, last_msg):
         """Check if we're stuck in a replan loop and break it if necessary."""
         last_status = state.get("last_step_status", "success")
+        
+        # CRITICAL FIX: Check for repeated plans (fingerprinting)
+        current_plan_hash = self._get_plan_fingerprint(state.get("plan", []))
+        plan_history = state.get("plan_fingerprints", [])
+        
+        if current_plan_hash in plan_history:
+            if self.verbose:
+                print(f"🔁 [Atlas] DUPLICATE PLAN DETECTED! Same plan tried {plan_history.count(current_plan_hash) + 1} times.")
+            # Force completely different approach
+            state["forbidden_actions"] = state.get("forbidden_actions", []) + ["REPEATED_PLAN_DETECTED"]
+            # Clear the failed plan from history to force new thinking
+            state["plan"] = []
+        else:
+            plan_history.append(current_plan_hash)
+            state["plan_fingerprints"] = plan_history[-5:]  # Keep last 5
+        
         if replan_count >= 3 and last_status != "success":
             if self.verbose: print(f"⚠️ [Atlas] Replan loop detected (#{replan_count}). Forcing simple execution.")
             fallback = [{"id": 1, "type": "execute", "description": last_msg, "agent": "tetyana", "tools": ["browser_open_url"]}]
@@ -11705,21 +11725,41 @@ Return JSON with ONLY the replacement step.'''))
             # Repair mode: Prepend new step
             repair_step = raw_plan[0] if raw_plan else None
             if repair_step:
-                optimized_plan = [repair_step] + list(existing_plan)
-                if self.verbose: print(f"🔧 [Atlas] REPAIR: Prepended new step to {len(existing_plan)} remaining steps")
+                # CRITICAL FIX: Check if repair step is same as failed step
+                failed_desc = meta_config.get("failed_step", "")
+                repair_desc = repair_step.get("description", "")
+                
+                # If repair is too similar to what failed, use full replan instead
+                if failed_desc and repair_desc:
+                    similarity = self._calculate_step_similarity(failed_desc, repair_desc)
+                    if similarity > 0.7:  # >70% similar = same approach
+                        if self.verbose:
+                            print(f"⚠️ [Atlas] Repair step too similar to failed step ({similarity:.0%}). Using full replan.")
+                        meta_config["repair_mode"] = False
+                        # Fall through to full replan below
+                    else:
+                        optimized_plan = [repair_step] + list(existing_plan)
+                        if self.verbose: print(f"🔧 [Atlas] REPAIR: Prepended new step to {len(existing_plan)} remaining steps")
+                        meta_config["repair_mode"] = False
+                        return optimized_plan
+                else:
+                    optimized_plan = [repair_step] + list(existing_plan)
+                    if self.verbose: print(f"🔧 [Atlas] REPAIR: Prepended new step to {len(existing_plan)} remaining steps")
+                    meta_config["repair_mode"] = False
+                    return optimized_plan
             else:
                 optimized_plan = list(existing_plan)
-            meta_config["repair_mode"] = False
-            return optimized_plan
-        else:
-            # Full replan: optimize new plan
-            grisha_model = os.getenv("GRISHA_MODEL") or os.getenv("COPILOT_MODEL") or "gpt-4.1"
-            try:
-                grisha_llm = CopilotLLM(model_name=grisha_model)
-            except Exception:
-                grisha_llm = getattr(self, "llm", None)
-            local_verifier = AdaptiveVerifier(grisha_llm)
-            return local_verifier.optimize_plan(raw_plan, meta_config=meta_config)
+                meta_config["repair_mode"] = False
+                return optimized_plan
+        
+        # Full replan: optimize new plan
+        grisha_model = os.getenv("GRISHA_MODEL") or os.getenv("COPILOT_MODEL") or "gpt-4.1"
+        try:
+            grisha_llm = CopilotLLM(model_name=grisha_model)
+        except Exception:
+            grisha_llm = getattr(self, "llm", None)
+        local_verifier = AdaptiveVerifier(grisha_llm)
+        return local_verifier.optimize_plan(raw_plan, meta_config=meta_config)
 
     def _handle_atlas_planning_error(self, e, state, last_msg, context, replan_count):
         """Handle errors during Atlas planning phase."""
@@ -11975,6 +12015,26 @@ Return JSON with ONLY the replacement step.'''))
             if getattr(self, "verbose", False):
                 print(f"⚠️ [Trinity] Error regenerating structure: {e}")
             return False
+
+    def _get_plan_fingerprint(self, plan: List[Dict]) -> str:
+        """Generate a fingerprint hash for a plan to detect duplicates."""
+        if not plan:
+            return ""
+        # Create a string representation focusing on descriptions and tools
+        fingerprint_parts = []
+        for step in plan:
+            desc = step.get("description", "")
+            tools = "|".join(sorted(step.get("tools", [])))
+            fingerprint_parts.append(f"{desc}::{tools}")
+        fingerprint_str = "||".join(fingerprint_parts)
+        return hashlib.md5(fingerprint_str.encode()).hexdigest()[:12]
+
+    def _calculate_step_similarity(self, step1: str, step2: str) -> float:
+        """Calculate similarity between two step descriptions (0.0 - 1.0)."""
+        if not step1 or not step2:
+            return 0.0
+        # Use SequenceMatcher for fuzzy string comparison
+        return SequenceMatcher(None, step1.lower(), step2.lower()).ratio()
 ```
 
 ### `core/trinity/nodes/base.py` (3.8 KB)
@@ -12528,7 +12588,7 @@ class KnowledgeMixin:
                 print(f"⚠️ [Learning] Error: {e}")
 ```
 
-### `core/trinity/nodes/meta_planner.py` (13.7 KB)
+### `core/trinity/nodes/meta_planner.py` (14.3 KB)
 
 ```python
 from typing import List, Dict, Any, Optional
@@ -12643,14 +12703,24 @@ class MetaPlannerMixin:
         elif status == "failed":
             fail_count += 1
             hist.append(f"FAILED: {desc} (Try #{fail_count})")
+            # CRITICAL FIX: Add to forbidden after 2 fails, not 4!
+            if fail_count >= 2:
+                forbidden = state.get("forbidden_actions") or []
+                # Extract tools from the failed step to forbid them
+                if plan and plan[0].get('tools'):
+                    for tool in plan[0]['tools']:
+                        forbidden.append(f"AVOID: {tool} for '{desc}'")
+                forbidden.append(f"FAILED APPROACH: {desc}")
+                state["forbidden_actions"] = list(set(forbidden))  # Deduplicate
         elif status == "uncertain":
             fail_count += 1
             hist.append(f"UNCERTAIN: {desc} (Check #{fail_count})")
-            if fail_count >= 4:
+            # CRITICAL FIX: Treat repeated uncertainty as failure
+            if fail_count >= 2:
                 status = "failed"
                 forbidden = state.get("forbidden_actions") or []
-                forbidden.append(f"FAILED ACTION: {desc}")
-                state["forbidden_actions"] = forbidden
+                forbidden.append(f"UNCERTAIN APPROACH: {desc}")
+                state["forbidden_actions"] = list(set(forbidden))
                 
         state["history_plan_execution"] = hist
         # Persist the updated status and fail count into state so subsequent
@@ -105633,4 +105703,4 @@ def _render_mcp_client_menu(ctx: dict) -> List[Tuple[str, str]]:
 ## Summary
 
 - **Total Files**: 312
-- **Skipped**: 36303
+- **Skipped**: 36307
