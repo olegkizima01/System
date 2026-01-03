@@ -1,4 +1,3 @@
-from .services import monitor_service  # or appropriate import/location
 # -*- coding: utf-8 -*-
 """
 Єдиний і основний інтерфейс керування системою.
@@ -526,13 +525,6 @@ fs_usage_service = _ProcTraceService("fs_usage", ["fs_usage", "-w", "-f", "files
 opensnoop_service = _ProcTraceService("opensnoop", ["opensnoop"])
 recorder_service: Any = None
 recorder_last_session_dir: str = ""
-    analyze_recording_bg(
-        rec_dir=rec_dir, 
-        name=name, 
-        user_context=user_context
-    )
-recorder_service: Any = None
-recorder_last_session_dir: str = ""
 
 
 def _analyze_recording_bg(rec_dir: str, name: str, user_context: str) -> None:
@@ -545,11 +537,8 @@ def _analyze_recording_bg(rec_dir: str, name: str, user_context: str) -> None:
     )
 
 
-def _start_recording_analysis(*, rec_dir: str, name: str, user_context: str) -> None:
-    _start_recording_analysis(rec_dir=rec_dir, name=name, user_context=user_context)
-
-
 def _open_in_finder(path: str) -> Tuple[bool, str]:
+    # This remains in cli.py as it is a UI utility
     # This remains in cli.py as it is a UI utility
     p = str(path or "").strip()
     if not p:
@@ -1083,18 +1072,16 @@ def run_tui() -> None:
         set_module_enabled=_set_module_enabled,
         AVAILABLE_LOCALES=AVAILABLE_LOCALES,
         localization=localization,
-monitor_service = None  # TODO: Replace with actual initialization or import as needed
-        find_module=_find_module,
-        set_module_enabled=_set_module_enabled,
-        AVAILABLE_LOCALES=AVAILABLE_LOCALES,
-from .monitor import MonitorService  # Adjust import path as needed
-monitor_service = MonitorService()  # Or appropriate initialization
+        get_monitor_menu_items=_get_monitor_menu_items,
+        normalize_menu_index=_normalize_menu_index,
         monitor_stop_selected=_monitor_stop_selected,
         monitor_start_selected=_monitor_start_selected,
-        monitor_service=monitor_service,
+        monitor_resolve_watch_items=_monitor_resolve_watch_items,
+        monitor_service=None,
         fs_usage_service=fs_usage_service,
         opensnoop_service=opensnoop_service,
         force_ui_update=force_ui_update,
+    )
 
     show_menu, get_menu_content = build_menu(
         state=state,
