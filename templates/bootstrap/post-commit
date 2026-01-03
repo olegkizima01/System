@@ -18,12 +18,12 @@ if [ -f ".last_response.txt" ] && [ -s ".last_response.txt" ]; then
     echo "🔄 Regenerating project structure..."
     ./regenerate_structure.sh "$(cat .last_response.txt)" > /dev/null 2>&1
     
-    # Stage the updated project_structure_final.txt
-    git add -f project_structure_final.txt 2>/dev/null
+    # Stage the updated CODEMAP.md
+    git add -f CODEMAP.md 2>/dev/null
     
     # Check if there are changes to commit
     if ! git diff-index --quiet --cached HEAD --; then
-        echo "✓ Updated project_structure_final.txt"
+        echo "✓ Updated CODEMAP.md"
         # Amend the previous commit to include the updated structure
         git commit --amend --no-edit 2>/dev/null || true
     fi
