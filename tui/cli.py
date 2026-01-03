@@ -65,7 +65,7 @@ from tui.cli_localization import AVAILABLE_LOCALES, LocalizationConfig
 # Setup logging immediately
 try:
     # We pass a lambda to get state to avoid circular imports in the handler if needed
-    setup_global_logging(verbose=False, tui_state_callback=lambda: state)
+    setup_global_logging(verbose=False, tui_state_callback=lambda: state, root_dir=_repo_root)
 except Exception:
     pass
 

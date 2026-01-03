@@ -318,6 +318,16 @@ def log(text: str, category: str = "info") -> None:
     except Exception:
         pass
 
+    # Direct log to TUI state for immediate update (bypassing logging handler for speed and reliability)
+    try:
+        with _logs_lock:
+            state.logs.append((STYLE_MAP.get(category, "class:log.info"), f"{text}\n"))
+            if len(state.logs) > 2000:
+                if not getattr(state, "agent_processing", False):
+                    state.logs = state.logs[-1500:]
+    except Exception:
+        pass
+
 
 # Track last logged content per agent to avoid duplicate streaming logs
 _agent_last_logged: Dict[str, str] = {}

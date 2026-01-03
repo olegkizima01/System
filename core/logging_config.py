@@ -74,7 +74,8 @@ class SafeTuiHandler(logging.Handler):
     def emit(self, record: logging.LogRecord) -> None:
         try:
             # Skip if it is an agent message (handled separately usually)
-            if record.name.endswith(".right") or record.name == "trinity.right":
+            # ALSO SKIP 'trinity.left' because it is now handled directly by tui/render.py log()
+            if record.name.endswith(".right") or record.name == "trinity.right" or record.name == "trinity.left":
                 return
 
             if not self.state_callback:
