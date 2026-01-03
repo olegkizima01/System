@@ -4,8 +4,8 @@
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 313
-- **Files Skipped**: 36325
-- **Generated**: 2026-01-03 22:23:36
+- **Files Skipped**: 36342
+- **Generated**: 2026-01-03 22:56:07
 
 ---
 
@@ -130,131 +130,136 @@ graph TD
 ## Program Execution Logs (Last 100 lines)
 
 ```
-2026-01-03 21:55:09 | DEBUG    | trinity.state_init | log_initial_state:94 | meta_config.strategy: None
-2026-01-03 21:55:09 | DEBUG    | trinity.state_init | log_initial_state:95 | meta_config.verification_rigor: None
-2026-01-03 21:55:09 | DEBUG    | trinity.state_init | log_initial_state:96 | meta_config.recovery_mode: None
-2026-01-03 21:55:15 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> meta_planner (step 0, status: success)
-2026-01-03 21:55:15 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
-2026-01-03 21:55:29 | DEBUG    | system_cli.verifier | optimize_plan:93 | [Verifier] Plan optimized (Rigor: LOW): 4 → 6 steps
-2026-01-03 21:55:29 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> atlas (step 1, status: success)
-2026-01-03 21:55:33 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> tetyana (step 1, status: failed)
-2026-01-03 21:55:44 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> grisha (step 0, status: success)
-2026-01-03 21:55:44 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> meta_planner (step 2, status: success)
-2026-01-03 21:55:44 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> atlas (step 3, status: success)
-2026-01-03 21:55:48 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> tetyana (step 3, status: failed)
-2026-01-03 21:56:00 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> grisha (step 0, status: success)
-2026-01-03 21:56:03 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> meta_planner (step 4, status: success)
-2026-01-03 21:56:03 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> atlas (step 5, status: success)
-2026-01-03 21:56:14 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> tetyana (step 5, status: success)
-2026-01-03 21:56:40 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> grisha (step 0, status: success)
-2026-01-03 21:56:40 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> meta_planner (step 6, status: success)
-2026-01-03 21:56:40 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> atlas (step 7, status: success)
-2026-01-03 21:56:44 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> tetyana (step 7, status: success)
-2026-01-03 21:56:56 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> grisha (step 0, status: success)
-2026-01-03 21:56:56 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> meta_planner (step 8, status: success)
-2026-01-03 21:56:56 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> atlas (step 9, status: success)
-2026-01-03 21:57:00 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> tetyana (step 9, status: success)
-2026-01-03 21:57:19 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> grisha (step 0, status: success)
-2026-01-03 21:57:21 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> meta_planner (step 10, status: success)
-2026-01-03 21:57:21 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> atlas (step 11, status: success)
-2026-01-03 21:57:37 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> tetyana (step 11, status: success)
-2026-01-03 21:57:52 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> grisha (step 0, status: success)
-2026-01-03 21:58:00 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> meta_planner (step 0, status: success)
-2026-01-03 21:58:15 | DEBUG    | system_cli.verifier | optimize_plan:93 | [Verifier] Plan optimized (Rigor: MEDIUM): 6 → 10 steps
-2026-01-03 21:58:15 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> atlas (step 12, status: success)
-2026-01-03 21:58:26 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> tetyana (step 12, status: success)
-2026-01-03 21:58:42 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> grisha (step 0, status: success)
-2026-01-03 21:58:45 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> meta_planner (step 13, status: success)
-2026-01-03 21:58:45 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> atlas (step 14, status: success)
-2026-01-03 21:58:49 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> tetyana (step 14, status: success)
-2026-01-03 21:58:53 | ERROR    | trinity.core | run:364 | Runtime workflow error: maximum recursion depth exceeded
-2026-01-03 22:01:44 | INFO     | root | _handle_tui_command:1514 | TUI mode exited successfully
-2026-01-03 22:12:26 | INFO     | root | cli_main:1445 | CLI started with arguments: []
-2026-01-03 22:12:26 | DEBUG    | root | cli_main:1450 | Parsed command: None
-2026-01-03 22:12:26 | INFO     | root | _handle_tui_command:1511 | Starting TUI mode
-2026-01-03 22:12:26 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
-2026-01-03 22:12:26 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
-2026-01-03 22:13:08 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
-2026-01-03 22:13:09 | INFO     | trinity.core | _enrich_context_with_sonar:121 | 🔎 Sonar enrichment added to context (project=System)
-2026-01-03 22:13:11 | INFO     | trinity.state_init | log_initial_state:79 | ================================================================================
-2026-01-03 22:13:11 | INFO     | trinity.state_init | log_initial_state:80 | TRINITY STATE INITIALIZATION
-2026-01-03 22:13:11 | INFO     | trinity.state_init | log_initial_state:81 | Task: відкрий кліп архангела в ютубі на все вікно і провірь щоб кліп був запущений на все вікно...
-2026-01-03 22:13:11 | INFO     | trinity.state_init | log_initial_state:82 | Timestamp: 2026-01-03T22:13:11.235460
-2026-01-03 22:13:11 | INFO     | trinity.state_init | log_initial_state:83 | --------------------------------------------------------------------------------
-2026-01-03 22:13:11 | DEBUG    | trinity.state_init | log_initial_state:86 | initial_agent: meta_planner
-2026-01-03 22:13:11 | DEBUG    | trinity.state_init | log_initial_state:87 | task_type: GENERAL
-2026-01-03 22:13:11 | DEBUG    | trinity.state_init | log_initial_state:88 | is_dev: False
-2026-01-03 22:13:11 | DEBUG    | trinity.state_init | log_initial_state:89 | execution_mode: native
-2026-01-03 22:13:11 | DEBUG    | trinity.state_init | log_initial_state:90 | gui_mode: auto
-2026-01-03 22:13:11 | DEBUG    | trinity.state_init | log_initial_state:94 | meta_config.strategy: None
-2026-01-03 22:13:11 | DEBUG    | trinity.state_init | log_initial_state:95 | meta_config.verification_rigor: None
-2026-01-03 22:13:11 | DEBUG    | trinity.state_init | log_initial_state:96 | meta_config.recovery_mode: None
-2026-01-03 22:13:16 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> meta_planner (step 0, status: success)
-2026-01-03 22:13:16 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
-2026-01-03 22:13:29 | DEBUG    | system_cli.verifier | optimize_plan:93 | [Verifier] Plan optimized (Rigor: MEDIUM): 5 → 8 steps
-2026-01-03 22:13:29 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> atlas (step 1, status: success)
-2026-01-03 22:13:40 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> tetyana (step 1, status: success)
-2026-01-03 22:13:45 | ERROR    | trinity.core | run:364 | Runtime workflow error: maximum recursion depth exceeded
-2026-01-03 22:17:31 | INFO     | root | _handle_tui_command:1514 | TUI mode exited successfully
-2026-01-03 22:17:37 | INFO     | root | cli_main:1445 | CLI started with arguments: []
-2026-01-03 22:17:37 | DEBUG    | root | cli_main:1450 | Parsed command: None
-2026-01-03 22:17:37 | INFO     | root | _handle_tui_command:1511 | Starting TUI mode
-2026-01-03 22:17:37 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
-2026-01-03 22:17:37 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
-2026-01-03 22:18:06 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
-2026-01-03 22:18:07 | INFO     | trinity.core | _enrich_context_with_sonar:121 | 🔎 Sonar enrichment added to context (project=System)
-2026-01-03 22:18:09 | INFO     | trinity.state_init | log_initial_state:79 | ================================================================================
-2026-01-03 22:18:09 | INFO     | trinity.state_init | log_initial_state:80 | TRINITY STATE INITIALIZATION
-2026-01-03 22:18:09 | INFO     | trinity.state_init | log_initial_state:81 | Task: відкрий кліп архангел в браузері на все вікно і перевірь щоб кліп був розгорнутий як і бразузер...
-2026-01-03 22:18:09 | INFO     | trinity.state_init | log_initial_state:82 | Timestamp: 2026-01-03T22:18:09.243521
-2026-01-03 22:18:09 | INFO     | trinity.state_init | log_initial_state:83 | --------------------------------------------------------------------------------
-2026-01-03 22:18:09 | DEBUG    | trinity.state_init | log_initial_state:86 | initial_agent: meta_planner
-2026-01-03 22:18:09 | DEBUG    | trinity.state_init | log_initial_state:87 | task_type: GENERAL
-2026-01-03 22:18:09 | DEBUG    | trinity.state_init | log_initial_state:88 | is_dev: False
-2026-01-03 22:18:09 | DEBUG    | trinity.state_init | log_initial_state:89 | execution_mode: native
-2026-01-03 22:18:09 | DEBUG    | trinity.state_init | log_initial_state:90 | gui_mode: auto
-2026-01-03 22:18:09 | DEBUG    | trinity.state_init | log_initial_state:94 | meta_config.strategy: None
-2026-01-03 22:18:09 | DEBUG    | trinity.state_init | log_initial_state:95 | meta_config.verification_rigor: None
-2026-01-03 22:18:09 | DEBUG    | trinity.state_init | log_initial_state:96 | meta_config.recovery_mode: None
-2026-01-03 22:18:13 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> meta_planner (step 0, status: success)
-2026-01-03 22:18:13 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
-2026-01-03 22:18:28 | DEBUG    | system_cli.verifier | optimize_plan:93 | [Verifier] Plan optimized (Rigor: MEDIUM): 5 → 8 steps
-2026-01-03 22:18:28 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> atlas (step 1, status: success)
-2026-01-03 22:18:33 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> tetyana (step 1, status: success)
-2026-01-03 22:18:45 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> grisha (step 0, status: success)
-2026-01-03 22:18:45 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> meta_planner (step 2, status: success)
-2026-01-03 22:18:45 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> atlas (step 3, status: success)
-2026-01-03 22:18:52 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> tetyana (step 3, status: failed)
-2026-01-03 22:19:05 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> grisha (step 0, status: success)
-2026-01-03 22:19:09 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> meta_planner (step 4, status: success)
-2026-01-03 22:19:09 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> atlas (step 5, status: success)
-2026-01-03 22:19:15 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> tetyana (step 5, status: failed)
-2026-01-03 22:19:18 | ERROR    | trinity.core | run:364 | Runtime workflow error: maximum recursion depth exceeded
+2026-01-03 22:24:39 | INFO     | trinity.state_init | log_initial_state:80 | TRINITY STATE INITIALIZATION
+2026-01-03 22:24:39 | INFO     | trinity.state_init | log_initial_state:81 | Task: Найди через гугл фільм сучасний якийсь про штучний інтелект для перегляду його онлайн. Після того вк...
+2026-01-03 22:24:39 | INFO     | trinity.state_init | log_initial_state:82 | Timestamp: 2026-01-03T22:24:39.578312
+2026-01-03 22:24:39 | INFO     | trinity.state_init | log_initial_state:83 | --------------------------------------------------------------------------------
+2026-01-03 22:24:39 | DEBUG    | trinity.state_init | log_initial_state:86 | initial_agent: meta_planner
+2026-01-03 22:24:39 | DEBUG    | trinity.state_init | log_initial_state:87 | task_type: GENERAL
+2026-01-03 22:24:39 | DEBUG    | trinity.state_init | log_initial_state:88 | is_dev: False
+2026-01-03 22:24:39 | DEBUG    | trinity.state_init | log_initial_state:89 | execution_mode: native
+2026-01-03 22:24:39 | DEBUG    | trinity.state_init | log_initial_state:90 | gui_mode: auto
+2026-01-03 22:24:39 | DEBUG    | trinity.state_init | log_initial_state:94 | meta_config.strategy: None
+2026-01-03 22:24:39 | DEBUG    | trinity.state_init | log_initial_state:95 | meta_config.verification_rigor: None
+2026-01-03 22:24:39 | DEBUG    | trinity.state_init | log_initial_state:96 | meta_config.recovery_mode: None
+2026-01-03 22:24:43 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> meta_planner (step 0, status: success)
+2026-01-03 22:24:43 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
+2026-01-03 22:24:59 | DEBUG    | system_cli.verifier | optimize_plan:93 | [Verifier] Plan optimized (Rigor: MEDIUM): 7 → 12 steps
+2026-01-03 22:24:59 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> atlas (step 1, status: success)
+2026-01-03 22:25:09 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> tetyana (step 1, status: success)
+2026-01-03 22:25:14 | ERROR    | trinity.core | run:369 | Runtime workflow error: maximum recursion depth exceeded
+2026-01-03 22:28:11 | INFO     | root | _handle_tui_command:1514 | TUI mode exited successfully
+2026-01-03 22:28:15 | INFO     | root | cli_main:1445 | CLI started with arguments: []
+2026-01-03 22:28:15 | DEBUG    | root | cli_main:1450 | Parsed command: None
+2026-01-03 22:28:15 | INFO     | root | _handle_tui_command:1511 | Starting TUI mode
+2026-01-03 22:28:15 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
+2026-01-03 22:28:15 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
+2026-01-03 22:29:02 | INFO     | root | _handle_tui_command:1514 | TUI mode exited successfully
+2026-01-03 22:29:06 | INFO     | root | cli_main:1445 | CLI started with arguments: []
+2026-01-03 22:29:06 | DEBUG    | root | cli_main:1450 | Parsed command: None
+2026-01-03 22:29:06 | INFO     | root | _handle_tui_command:1511 | Starting TUI mode
+2026-01-03 22:29:06 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
+2026-01-03 22:29:06 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
+2026-01-03 22:29:30 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
+2026-01-03 22:29:31 | INFO     | trinity.core | _enrich_context_with_sonar:121 | 🔎 Sonar enrichment added to context (project=System)
+2026-01-03 22:29:33 | INFO     | trinity.state_init | log_initial_state:79 | ================================================================================
+2026-01-03 22:29:33 | INFO     | trinity.state_init | log_initial_state:80 | TRINITY STATE INITIALIZATION
+2026-01-03 22:29:33 | INFO     | trinity.state_init | log_initial_state:81 | Task: Найди через гугл фільм сучасний якийсь про штучний інтелект для перегляду його онлайн. Після того вк...
+2026-01-03 22:29:33 | INFO     | trinity.state_init | log_initial_state:82 | Timestamp: 2026-01-03T22:29:33.338011
+2026-01-03 22:29:33 | INFO     | trinity.state_init | log_initial_state:83 | --------------------------------------------------------------------------------
+2026-01-03 22:29:33 | DEBUG    | trinity.state_init | log_initial_state:86 | initial_agent: meta_planner
+2026-01-03 22:29:33 | DEBUG    | trinity.state_init | log_initial_state:87 | task_type: GENERAL
+2026-01-03 22:29:33 | DEBUG    | trinity.state_init | log_initial_state:88 | is_dev: False
+2026-01-03 22:29:33 | DEBUG    | trinity.state_init | log_initial_state:89 | execution_mode: native
+2026-01-03 22:29:33 | DEBUG    | trinity.state_init | log_initial_state:90 | gui_mode: auto
+2026-01-03 22:29:33 | DEBUG    | trinity.state_init | log_initial_state:94 | meta_config.strategy: None
+2026-01-03 22:29:33 | DEBUG    | trinity.state_init | log_initial_state:95 | meta_config.verification_rigor: None
+2026-01-03 22:29:33 | DEBUG    | trinity.state_init | log_initial_state:96 | meta_config.recovery_mode: None
+2026-01-03 22:29:37 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> meta_planner (step 0, status: success)
+2026-01-03 22:29:37 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
+2026-01-03 22:29:53 | DEBUG    | system_cli.verifier | optimize_plan:93 | [Verifier] Plan optimized (Rigor: MEDIUM): 7 → 12 steps
+2026-01-03 22:29:53 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> atlas (step 1, status: success)
+2026-01-03 22:30:04 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> tetyana (step 1, status: success)
+2026-01-03 22:30:08 | ERROR    | trinity.core | run:369 | Runtime workflow error: maximum recursion depth exceeded
+2026-01-03 22:54:23 | INFO     | root | _handle_tui_command:1514 | TUI mode exited successfully
+2026-01-03 22:54:28 | INFO     | root | cli_main:1444 | CLI started with arguments: []
+2026-01-03 22:54:29 | DEBUG    | root | cli_main:1449 | Parsed command: None
+2026-01-03 22:54:29 | INFO     | root | _handle_tui_command:1510 | Starting TUI mode
+2026-01-03 22:54:29 | ERROR    | root | log_exception:291 | Exception in TUI mode: name 'monitor_service' is not defined
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1512, in _handle_tui_command
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1095, in run_tui
+    monitor_service=monitor_service,
+                    ^^^^^^^^^^^^^^^
+NameError: name 'monitor_service' is not defined
+2026-01-03 22:54:29 | ERROR    | trinity.cli | log_exception:291 | Exception in main(): name 'monitor_service' is not defined
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1733, in main
+    cli_main(sys.argv[1:])
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1452, in cli_main
+    return _handle_tui_command(logger)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1512, in _handle_tui_command
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1095, in run_tui
+    monitor_service=monitor_service,
+                    ^^^^^^^^^^^^^^^
+NameError: name 'monitor_service' is not defined
+2026-01-03 22:54:42 | INFO     | root | cli_main:1444 | CLI started with arguments: []
+2026-01-03 22:54:42 | DEBUG    | root | cli_main:1449 | Parsed command: None
+2026-01-03 22:54:42 | INFO     | root | _handle_tui_command:1510 | Starting TUI mode
+2026-01-03 22:54:42 | ERROR    | root | log_exception:291 | Exception in TUI mode: name 'monitor_service' is not defined
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1512, in _handle_tui_command
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1095, in run_tui
+    monitor_service=monitor_service,
+                    ^^^^^^^^^^^^^^^
+NameError: name 'monitor_service' is not defined
+2026-01-03 22:54:42 | ERROR    | trinity.cli | log_exception:291 | Exception in main(): name 'monitor_service' is not defined
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1733, in main
+    cli_main(sys.argv[1:])
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1452, in cli_main
+    return _handle_tui_command(logger)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1512, in _handle_tui_command
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1095, in run_tui
+    monitor_service=monitor_service,
+                    ^^^^^^^^^^^^^^^
+NameError: name 'monitor_service' is not defined
 ```
 
 ---
 
 ## Last Response
 
-[VOICE] LLM is not configured. Set COPILOT_API_KEY or GITHUB_TOKEN in .env (then restart). Missing: COPILOT_API_KEY, GITHUB_TOKEN.
+[VOICE] Досвід збережено. Завдання завершено.
 
 ---
 
 ## Git Diff (Recent Changes)
 
 ```
- CODEMAP.md | 105616 +---------------------------------------------------------
- 1 file changed, 2 insertions(+), 105614 deletions(-)
+ .last_response.txt           |      2 +-
+ CODEMAP.md                   | 105811 +---------------------------------------
+ core/mcp_registry.py         |     25 +-
+ core/trinity/nodes/grisha.py |     25 +-
+ scripts/run_trinity_task.py  |      2 +-
+ tui/cli.py                   |     19 +-
+ 6 files changed, 158 insertions(+), 105726 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
+0b72a045 Trinity task completed: Знайди інформацію про Python на Wikipedia
 a1914d17 Trinity task completed: Створи файл test_hello.txt з текстом 'Hello World'
 b5599125 Trinity task completed: Знайди інформацію про Python на Wikipedia
 3d922b4f Trinity task completed: Створи файл test_hello.txt з текстом 'Hello World'
 0892a1d3 Коміт версії
-1e423759 Trinity task completed: Знайди інформацію про Python на Wikipedia
 ```
 
 ---
@@ -278,6 +283,7 @@ System/
 │   │   └── sonarqube_mcp.instructions.md
 │   └── workflows/
 │       └── sonarcloud.yml
+├── .self_healing_backups/
 ├── .vscode/
 │   └── settings.json
 ├── bin/
@@ -1122,7 +1128,7 @@ project_structure_final.txt
 ### `.last_response.txt` (0.1 KB)
 
 ```text
-[VOICE] LLM is not configured. Set COPILOT_API_KEY or GITHUB_TOKEN in .env (then restart). Missing: COPILOT_API_KEY, GITHUB_TOKEN.
+[VOICE] Досвід збережено. Завдання завершено.
 ```
 
 ### `.original_hostname` (0.0 KB)
@@ -6588,7 +6594,7 @@ from core.mcp_registry import (
 )
 ```
 
-### `core/mcp_registry.py` (51.0 KB)
+### `core/mcp_registry.py` (51.8 KB)
 
 ```python
 import json
@@ -7546,18 +7552,35 @@ class MCPToolRegistry:
         server_name = parts[0] if len(parts) == 2 else None
         
         if server_name:
+            # Avoid infinite recursion when the MCP client manager is backed by a NativeMCPClient
+            # that calls back into this registry. If we have a connected ExternalMCPProvider for
+            # this server name (e.g. playwright.*), execute it directly.
+            try:
+                if server_name in (self._external_providers or {}):
+                    self._external_tools_map[tool_name] = server_name
+                    direct = self._try_external_direct_call(tool_name, args)
+                    if direct is not None:
+                        return direct
+            except Exception:
+                pass
+
             client = self._mcp_client_manager.get_client(server_name=server_name, task_type=task_type)
             if client:
+                if type(client).__name__ == "NativeMCPClient":
+                    return None
                 res_dict = self._mcp_client_manager.execute(tool_name, args, task_type=task_type)
-                
+
+                if not isinstance(res_dict, dict):
+                    return str(res_dict)
+
                 if res_dict.get("success"):
                     data = res_dict.get("data", "")
                     if isinstance(data, (dict, list)):
                         return json.dumps(data, indent=2, ensure_ascii=False)
                     return str(data)
-                else:
-                    logger.warning(f"MCP Tool execution failed via manager: {res_dict.get('error')}")
-                    return f"Error: {res_dict.get('error')}"
+
+                logger.warning(f"MCP Tool execution failed via manager: {res_dict.get('error')}")
+                return f"Error: {res_dict.get('error')}"
         
         return None
 
@@ -12187,7 +12210,7 @@ def count_uncertain_streak(state: Dict[str, Any]) -> int:
         return 0
 ```
 
-### `core/trinity/nodes/grisha.py` (17.9 KB)
+### `core/trinity/nodes/grisha.py` (18.8 KB)
 
 ```python
 import os
@@ -12317,14 +12340,24 @@ class GrishaMixin:
     def _execute_grisha_tools(self, tool_calls):
         results = []
         forbidden = ["browser_open", "browser_click", "browser_type", "write_", "create_", "delete_", "move_"]
+        MAX_RESULT_SIZE = 10000  # Limit each tool result to 10KB
+        
         for tool in (tool_calls or []):
             name = tool.get("name")
             args = tool.get("args") or {}
             if any(name.startswith(p) for p in forbidden):
                 results.append(f"Result for {name}: [BLOCKED] Grisha is read-only.")
                 continue
+            
             res = self.registry.execute(name, ({"app_name": None} if name == "capture_screen" and not args else args))
-            results.append(f"Result for {name}: {res}")
+            res_str = str(res)
+            
+            # CRITICAL: Truncate huge results (browser_snapshot can be 100KB+)
+            if len(res_str) > MAX_RESULT_SIZE:
+                truncated = res_str[:MAX_RESULT_SIZE] + f"\n\n[...TRUNCATED {len(res_str) - MAX_RESULT_SIZE} chars...]"
+                results.append(f"Result for {name}: {truncated}")
+            else:
+                results.append(f"Result for {name}: {res_str}")
         return results
 
     def _perform_smart_vision(self, state, last_msg):
@@ -12412,9 +12445,20 @@ class GrishaMixin:
     def _get_grisha_verdict(self, content, executed_results, test_results):
         if not executed_results and not test_results: return content
         
-        prompt = (f"Analyze these results:\\n" + "\\n".join(executed_results) + (f"\\nTests:\\n{test_results}" if test_results else "") +
+        # CRITICAL: Limit total results size to prevent LLM recursion overflow
+        MAX_TOTAL_SIZE = 15000  # 15KB max for all results combined
+        results_str = "\\n".join(executed_results)
+        if len(results_str) > MAX_TOTAL_SIZE:
+            results_str = results_str[:MAX_TOTAL_SIZE] + f"\n\n[...TRUNCATED {len(results_str) - MAX_TOTAL_SIZE} chars total...]"
+        
+        prompt = (f"Analyze these results:\\n{results_str}" + (f"\\nTests:\\n{test_results}" if test_results else "") +
                  f"\\n\\nRespond with Reasoning + Marker: [VERIFIED], [STEP_COMPLETED], [FAILED], or [UNCERTAIN]. "
                  f"Do NOT use [VOICE] tag in this response, provide analysis only.")
+        
+        # Additional safety: limit prompt size
+        if len(prompt) > 20000:
+            prompt = prompt[:20000] + "\n\n[PROMPT TRUNCATED FOR SAFETY]"
+        
         try:
             resp = self.llm.invoke([SystemMessage(content="You are Grisha."), HumanMessage(content=prompt)])
             analysis = getattr(resp, "content", "")
@@ -80888,7 +80932,7 @@ import os
 import sys
 
 # Add project root to path
-_repo_root = os.path.dirname(os.path.abspath(__file__))
+_repo_root = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir))
 if _repo_root not in sys.path:
     sys.path.insert(0, _repo_root)
 
@@ -94820,7 +94864,7 @@ _scan_traces = scan_traces
 _get_editors_list = get_editors_list
 ```
 
-### `tui/cli.py` (62.0 KB)
+### `tui/cli.py` (62.3 KB)
 
 ```python
 #!/usr/bin/env python3
@@ -95346,15 +95390,14 @@ _agent_last_permissions = CommandPermissions()
 
 
 
-
-
 # _DummyProcService moved to tui.monitoring_service
 
+fs_usage_service = _ProcTraceService("fs_usage", ["fs_usage", "-w", "-f", "filesys"])
+opensnoop_service = _ProcTraceService("opensnoop", ["opensnoop"])
+recorder_service: Any = None
+opensnoop_service = _ProcTraceService("opensnoop", ["opensnoop"])
 
-monitor_service = _DummyProcService()
-
-
-# _ProcTraceService moved to tui.monitoring_service
+recorder_service: Any = None
 
 
 fs_usage_service = _ProcTraceService("fs_usage", ["fs_usage", "-w", "-f", "filesys"])
@@ -95913,16 +95956,18 @@ def run_tui() -> None:
         set_module_enabled=_set_module_enabled,
         AVAILABLE_LOCALES=AVAILABLE_LOCALES,
         localization=localization,
-        get_monitor_menu_items=_get_monitor_menu_items,
+monitor_service = None  # TODO: Replace with actual initialization or import as needed
+        find_module=_find_module,
+        set_module_enabled=_set_module_enabled,
+        AVAILABLE_LOCALES=AVAILABLE_LOCALES,
+        localization=localization,
         normalize_menu_index=_normalize_menu_index,
         monitor_stop_selected=_monitor_stop_selected,
         monitor_start_selected=_monitor_start_selected,
-        monitor_resolve_watch_items=_monitor_resolve_watch_items,
         monitor_service=monitor_service,
         fs_usage_service=fs_usage_service,
         opensnoop_service=opensnoop_service,
         force_ui_update=force_ui_update,
-    )
 
     show_menu, get_menu_content = build_menu(
         state=state,
@@ -105836,4 +105881,4 @@ def _render_mcp_client_menu(ctx: dict) -> List[Tuple[str, str]]:
 ## Summary
 
 - **Total Files**: 313
-- **Skipped**: 36325
+- **Skipped**: 36342

@@ -521,15 +521,14 @@ _agent_last_permissions = CommandPermissions()
 
 
 
-
-
 # _DummyProcService moved to tui.monitoring_service
 
+fs_usage_service = _ProcTraceService("fs_usage", ["fs_usage", "-w", "-f", "filesys"])
+opensnoop_service = _ProcTraceService("opensnoop", ["opensnoop"])
+recorder_service: Any = None
+opensnoop_service = _ProcTraceService("opensnoop", ["opensnoop"])
 
-monitor_service = _DummyProcService()
-
-
-# _ProcTraceService moved to tui.monitoring_service
+recorder_service: Any = None
 
 
 fs_usage_service = _ProcTraceService("fs_usage", ["fs_usage", "-w", "-f", "filesys"])
@@ -1088,16 +1087,18 @@ def run_tui() -> None:
         set_module_enabled=_set_module_enabled,
         AVAILABLE_LOCALES=AVAILABLE_LOCALES,
         localization=localization,
-        get_monitor_menu_items=_get_monitor_menu_items,
+monitor_service = None  # TODO: Replace with actual initialization or import as needed
+        find_module=_find_module,
+        set_module_enabled=_set_module_enabled,
+        AVAILABLE_LOCALES=AVAILABLE_LOCALES,
+        localization=localization,
         normalize_menu_index=_normalize_menu_index,
         monitor_stop_selected=_monitor_stop_selected,
         monitor_start_selected=_monitor_start_selected,
-        monitor_resolve_watch_items=_monitor_resolve_watch_items,
         monitor_service=monitor_service,
         fs_usage_service=fs_usage_service,
         opensnoop_service=opensnoop_service,
         force_ui_update=force_ui_update,
-    )
 
     show_menu, get_menu_content = build_menu(
         state=state,

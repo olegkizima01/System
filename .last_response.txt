@@ -1,1 +1,1 @@
-[VOICE] LLM is not configured. Set COPILOT_API_KEY or GITHUB_TOKEN in .env (then restart). Missing: COPILOT_API_KEY, GITHUB_TOKEN.
+[VOICE] Досвід збережено. Завдання завершено.

@@ -125,14 +125,24 @@ class GrishaMixin:
     def _execute_grisha_tools(self, tool_calls):
         results = []
         forbidden = ["browser_open", "browser_click", "browser_type", "write_", "create_", "delete_", "move_"]
+        MAX_RESULT_SIZE = 10000  # Limit each tool result to 10KB
+        
         for tool in (tool_calls or []):
             name = tool.get("name")
             args = tool.get("args") or {}
             if any(name.startswith(p) for p in forbidden):
                 results.append(f"Result for {name}: [BLOCKED] Grisha is read-only.")
                 continue
+            
             res = self.registry.execute(name, ({"app_name": None} if name == "capture_screen" and not args else args))
-            results.append(f"Result for {name}: {res}")
+            res_str = str(res)
+            
+            # CRITICAL: Truncate huge results (browser_snapshot can be 100KB+)
+            if len(res_str) > MAX_RESULT_SIZE:
+                truncated = res_str[:MAX_RESULT_SIZE] + f"\n\n[...TRUNCATED {len(res_str) - MAX_RESULT_SIZE} chars...]"
+                results.append(f"Result for {name}: {truncated}")
+            else:
+                results.append(f"Result for {name}: {res_str}")
         return results
 
     def _perform_smart_vision(self, state, last_msg):
@@ -220,9 +230,20 @@ class GrishaMixin:
     def _get_grisha_verdict(self, content, executed_results, test_results):
         if not executed_results and not test_results: return content
         
-        prompt = (f"Analyze these results:\\n" + "\\n".join(executed_results) + (f"\\nTests:\\n{test_results}" if test_results else "") +
+        # CRITICAL: Limit total results size to prevent LLM recursion overflow
+        MAX_TOTAL_SIZE = 15000  # 15KB max for all results combined
+        results_str = "\\n".join(executed_results)
+        if len(results_str) > MAX_TOTAL_SIZE:
+            results_str = results_str[:MAX_TOTAL_SIZE] + f"\n\n[...TRUNCATED {len(results_str) - MAX_TOTAL_SIZE} chars total...]"
+        
+        prompt = (f"Analyze these results:\\n{results_str}" + (f"\\nTests:\\n{test_results}" if test_results else "") +
                  f"\\n\\nRespond with Reasoning + Marker: [VERIFIED], [STEP_COMPLETED], [FAILED], or [UNCERTAIN]. "
                  f"Do NOT use [VOICE] tag in this response, provide analysis only.")
+        
+        # Additional safety: limit prompt size
+        if len(prompt) > 20000:
+            prompt = prompt[:20000] + "\n\n[PROMPT TRUNCATED FOR SAFETY]"
+        
         try:
             resp = self.llm.invoke([SystemMessage(content="You are Grisha."), HumanMessage(content=prompt)])
             analysis = getattr(resp, "content", "")

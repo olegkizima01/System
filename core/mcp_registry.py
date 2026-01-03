@@ -953,18 +953,35 @@ class MCPToolRegistry:
         server_name = parts[0] if len(parts) == 2 else None
         
         if server_name:
+            # Avoid infinite recursion when the MCP client manager is backed by a NativeMCPClient
+            # that calls back into this registry. If we have a connected ExternalMCPProvider for
+            # this server name (e.g. playwright.*), execute it directly.
+            try:
+                if server_name in (self._external_providers or {}):
+                    self._external_tools_map[tool_name] = server_name
+                    direct = self._try_external_direct_call(tool_name, args)
+                    if direct is not None:
+                        return direct
+            except Exception:
+                pass
+
             client = self._mcp_client_manager.get_client(server_name=server_name, task_type=task_type)
             if client:
+                if type(client).__name__ == "NativeMCPClient":
+                    return None
                 res_dict = self._mcp_client_manager.execute(tool_name, args, task_type=task_type)
-                
+
+                if not isinstance(res_dict, dict):
+                    return str(res_dict)
+
                 if res_dict.get("success"):
                     data = res_dict.get("data", "")
                     if isinstance(data, (dict, list)):
                         return json.dumps(data, indent=2, ensure_ascii=False)
                     return str(data)
-                else:
-                    logger.warning(f"MCP Tool execution failed via manager: {res_dict.get('error')}")
-                    return f"Error: {res_dict.get('error')}"
+
+                logger.warning(f"MCP Tool execution failed via manager: {res_dict.get('error')}")
+                return f"Error: {res_dict.get('error')}"
         
         return None
 
