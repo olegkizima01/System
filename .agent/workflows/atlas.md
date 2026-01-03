@@ -3,7 +3,7 @@ description: Authoritative guide for Project Atlas architecture, Cognitive 2.0 m
 ---
 
 # Project Atlas Workflow Guide
-**Pure Native Architecture | Trinity 2.5 | January 2026**
+**Pure Native Architecture | Trinity 2.6 + GoalStack | January 2026**
 
 The single source of truth for the fundamental principles of the Atlas system (Trinity Runtime).
 
@@ -29,6 +29,8 @@ Atlas — **autonomous multi-agent macOS operator**, guided by these principles:
 5. **Continuous Learning 2.0** — Extracts success/failure experience, stores in Knowledge Base with confidence scores.
 
 6. **State Logging & Resilience** — Detailed agent logs (`logs/trinity_state_*.log`) & LLM request recovery (Retries/Timeouts).
+
+7. **GoalStack Recursion** — Stack-based task decomposition on failure. Failed task becomes sub-goal, decomposes into subtasks (3 → 3.1, 3.2, 3.3), returns to parent on completion.
 
 ---
 
@@ -79,6 +81,8 @@ graph TD
 core/trinity/
 ├── __init__.py
 ├── state.py
+├── goal_stack.py      # NEW: Recursive goal decomposition
+├── execution.py       # Router with GoalStack integration
 ├── nodes/ (base.py, meta_planner.py, atlas.py, tetyana.py, grisha.py, knowledge.py, vibe.py)
 ├── planning/
 └── integration/
@@ -200,7 +204,12 @@ Windsurf/VS Code log paths provided. State logger for initial states.
 
 ## 12. Advanced Features
 
-**Self-Healing:** Detection → Correction → Strategy shift → Loop limits.
+**Self-Healing + GoalStack:**
+- Detection → GoalStack Retry (3x) → Decomposition → Stack Return
+- Failed task 3 → becomes goal 3 → splits to 3.1, 3.2, 3.3
+- On 3.2 failure → becomes goal 3.2 → splits to 3.2.1, 3.2.2, 3.2.3  
+- On completion → returns to parent (3.2 → 3 → main)
+- Limits: MAX_DEPTH=5, MAX_RETRIES=3, MAX_SUBTASKS=5
 
 **Dev Mode:** Code editing, shell exec, unsafe tools (confirmed).
 

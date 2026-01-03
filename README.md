@@ -4,7 +4,7 @@
 
 Atlas — це не просто автоматизатор, а **автономний мультиагентний оператор macOS**, що сприймає екран (Vision-First), планує (Meta-Planning 2.1), і виконує дії через MCP інструменти.
 
-**Актуальний стан: Грудень 2025 (Pure Native Architecture | Trinity 2.5)**
+**Актуальний стан: Січень 2026 (Pure Native Architecture | Trinity 2.6 + GoalStack)**
 
 ---
 
@@ -16,6 +16,7 @@ Atlas — це не просто автоматизатор, а **автоном
 4. **Privacy & Stealth** — Очищення слідів та підміна ідентифікаторів
 5. **Continuous Learning 2.0** — Knowledge Base з оцінкою впевненості
 6. **State Logging** — Деталізовані логи в `logs/trinity_state_*.log`
+7. **GoalStack Recursion** — Рекурсивна декомпозиція завдань при збоях (3 → 3.1, 3.2, 3.3)
 
 ---
 
@@ -62,10 +63,37 @@ graph TD
 | **Episodic Memory** | Декілька сесій | Конкретні події |
 | **Semantic Memory** | Постійно | Консолідовані знання |
 
+### GoalStack — Рекурсивна Декомпозиція (`core/trinity/goal_stack.py`)
+
+Стек-орієнтована система для правильної рекурсії без навантаження на пам'ять:
+
+```
+Головна ціль: "Відкрити YouTube та знайти відео"
+  └── Завдання 1: Відкрити браузер ✓
+  └── Завдання 2: Перейти на YouTube ✓  
+  └── Завдання 3: Знайти відео ✗ (провал)
+      → Ціль стає 3, декомпозиція:
+      └── 3.1: Знайти поле ✓
+      └── 3.2: Ввести текст ✗
+          → Ціль стає 3.2:
+          └── 3.2.1: Клікнути ✓
+          └── 3.2.2: Набрати ✓
+          └── 3.2.3: Підтвердити ✓
+          → Повернення до 3
+      └── 3.3: Натиснути пошук ✓
+      → Повернення до main
+→ Головна ціль виконана!
+```
+
+| Параметр | Значення | Опис |
+|:---|:---|:---|
+| MAX_DEPTH | 5 | Максимальна глибина вкладеності |
+| MAX_RETRIES | 3 | Спроби перед декомпозицією |
+| MAX_SUBTASKS | 5 | Підзавдань на рівень |
+
 ### Vision Pipeline
 
 - **DifferentialVisionAnalyzer**: Multi-monitor, OCR, diff visualization
-# core/mcp/manager.py - Unified manager for all MCP serversgion tracking
 - **Enhanced Analysis**: `capture_and_analyze()` з генерацією diff images
 
 ### Context7 Sliding Window
@@ -195,7 +223,7 @@ system-vision [args]
 /autopilot <завдання>       # Режим повної автономії
 /help                       # Показати команди
 ```
-**Актуальний стан: Січень 2026 (Pure Native Architecture | Trinity 2.5)**
+**Актуальний стан: Січень 2026 (Trinity 2.6 + GoalStack)**
 
 ---
 
@@ -222,11 +250,13 @@ system-vision [args]
 
 ## ⚡ Advanced Capabilities
 
-### Self-Healing
+### Self-Healing + GoalStack
 1. **Detection**: Grisha аналізує результат кроку
-2. **Correction**: Replanning Loop при помилках
-3. **Strategy Shift**: Native → GUI при необхідності
-4. **Limits**: `MAX_REPLANS` для уникнення циклів
+2. **GoalStack Retry**: До 3 спроб перед декомпозицією
+3. **Decomposition**: Провалене завдання розбивається на підзавдання
+4. **Stack Return**: По завершенню підзавдань повертається до батьківської цілі
+5. **Strategy Shift**: Native → GUI при необхідності
+6. **Limits**: `MAX_DEPTH=5`, `MAX_REPLANS` для уникнення циклів
 
 ### Dev Mode
 - Direct Code Editing через `multi_replace_file_content`
@@ -240,5 +270,5 @@ system-vision [args]
 
 ---
 
-*Останнє оновлення: 3 січня 2026 р. (Trinity 2.5 - Pure Native Architecture)*
+*Останнє оновлення: 3 січня 2026 р. (Trinity 2.6 - GoalStack Recursion)*
 *Детальна документація: [docs/atlas.md](docs/atlas.md)*
