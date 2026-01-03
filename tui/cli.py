@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+from .services import monitor_service  # or appropriate import/location
 # -*- coding: utf-8 -*-
 """
 Єдиний і основний інтерфейс керування системою.
@@ -522,15 +522,10 @@ _agent_last_permissions = CommandPermissions()
 
 
 # _DummyProcService moved to tui.monitoring_service
-
 fs_usage_service = _ProcTraceService("fs_usage", ["fs_usage", "-w", "-f", "filesys"])
 opensnoop_service = _ProcTraceService("opensnoop", ["opensnoop"])
 recorder_service: Any = None
-opensnoop_service = _ProcTraceService("opensnoop", ["opensnoop"])
-
-recorder_service: Any = None
-
-
+recorder_last_session_dir: str = ""
 fs_usage_service = _ProcTraceService("fs_usage", ["fs_usage", "-w", "-f", "filesys"])
 opensnoop_service = _ProcTraceService("opensnoop", ["opensnoop"])
 
@@ -1092,7 +1087,7 @@ monitor_service = None  # TODO: Replace with actual initialization or import as 
         set_module_enabled=_set_module_enabled,
         AVAILABLE_LOCALES=AVAILABLE_LOCALES,
         localization=localization,
-        normalize_menu_index=_normalize_menu_index,
+monitor_service = None  # TODO: Replace with actual initialization or import as needed
         monitor_stop_selected=_monitor_stop_selected,
         monitor_start_selected=_monitor_start_selected,
         monitor_service=monitor_service,

@@ -3,9 +3,9 @@
 ## Metadata
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
-- **Files Included**: 313
-- **Files Skipped**: 36342
-- **Generated**: 2026-01-03 22:56:07
+- **Files Included**: 315
+- **Files Skipped**: 36365
+- **Generated**: 2026-01-03 23:05:24
 
 ---
 
@@ -243,23 +243,22 @@ NameError: name 'monitor_service' is not defined
 ## Git Diff (Recent Changes)
 
 ```
- .last_response.txt           |      2 +-
- CODEMAP.md                   | 105811 +---------------------------------------
- core/mcp_registry.py         |     25 +-
- core/trinity/nodes/grisha.py |     25 +-
- scripts/run_trinity_task.py  |      2 +-
- tui/cli.py                   |     19 +-
- 6 files changed, 158 insertions(+), 105726 deletions(-)
+ CODEMAP.md                 | 105658 +-----------------------------------------
+ core/trinity/execution.py  |    153 +-
+ core/trinity/nodes/vibe.py |     24 +-
+ core/trinity/state.py      |      6 +
+ tui/cli.py                 |     11 +-
+ 5 files changed, 170 insertions(+), 105682 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
+84439c42 Trinity task completed: Відкрий Google у браузері і введи в пошук сучасного фільму про штучний…
 0b72a045 Trinity task completed: Знайди інформацію про Python на Wikipedia
 a1914d17 Trinity task completed: Створи файл test_hello.txt з текстом 'Hello World'
 b5599125 Trinity task completed: Знайди інформацію про Python на Wikipedia
 3d922b4f Trinity task completed: Створи файл test_hello.txt з текстом 'Hello World'
-0892a1d3 Коміт версії
 ```
 
 ---
@@ -325,6 +324,7 @@ System/
 │   │   │   └── __init__.py
 │   │   ├── __init__.py
 │   │   ├── execution.py
+│   │   ├── goal_stack.py
 │   │   ├── runtime.py
 │   │   ├── state.py
 │   │   └── tools.py
@@ -634,6 +634,7 @@ System/
 ├── sonar-project.properties
 ├── task_analysis.log
 ├── test_browser_recursion.py
+├── test_goal_stack.py
 ├── test_recursion_fix.py
 ├── tui_menu_append.tmp
 ├── UNIFIED_LOGGING.md
@@ -10900,7 +10901,7 @@ from .runtime import TrinityRuntime
 __all__ = ["TrinityState", "TrinityPermissions", "TrinityRuntime", "create_initial_state"]
 ```
 
-### `core/trinity/execution.py` (8.1 KB)
+### `core/trinity/execution.py` (12.2 KB)
 
 ```python
 import os
@@ -10910,6 +10911,7 @@ from typing import Dict, Any, List, Optional
 from langchain_core.messages import AIMessage, BaseMessage
 from langgraph.graph import StateGraph, END
 from core.trinity.state import TrinityState
+from core.trinity.goal_stack import GoalStack, Goal
 from core.constants import VOICE_MARKER, UNKNOWN_STEP
 from core.trinity.nodes.vibe import vibe_analyst_node
 from tui.logger import trace
@@ -10961,13 +10963,21 @@ class TrinityExecutionMixin:
         return "atlas"
 
     def _router(self, state: TrinityState):
-        """Main routing logic after Grisha (Verifier)."""
+        """Main routing logic after Grisha (Verifier).
+        
+        Uses GoalStack for proper recursive task decomposition:
+        - When a task fails, it becomes a sub-goal
+        - Sub-goal is decomposed into smaller steps
+        - On completion, returns to parent goal
+        """
         replan_count = state.get("replan_count") or 0
         step_count = state.get("step_count") or 0
         last_status = state.get("last_step_status")
         
+        # Initialize or restore GoalStack
+        goal_stack = self._get_goal_stack(state)
+        
         # CRITICAL: Anti-recursion protection
-        # If we've done too many steps or replans, force completion
         if step_count >= self.MAX_STEPS:
             if self.verbose:
                 print(f"⚠️ [Router] MAX_STEPS ({self.MAX_STEPS}) reached, forcing completion")
@@ -10976,6 +10986,12 @@ class TrinityExecutionMixin:
         if replan_count >= self.MAX_REPLANS:
             if self.verbose:
                 print(f"⚠️ [Router] MAX_REPLANS ({self.MAX_REPLANS}) reached, forcing completion")
+            return "knowledge"
+        
+        # Check goal stack depth limit
+        if goal_stack and goal_stack.depth >= GoalStack.MAX_DEPTH:
+            if self.verbose:
+                print(f"⚠️ [Router] Goal stack depth limit reached ({goal_stack.depth})")
             return "knowledge"
         
         # 1. Handle Doctor Vibe Pauses (Interventions)
@@ -10988,34 +11004,138 @@ class TrinityExecutionMixin:
         if intervention:
             return intervention
 
-        # 3. Handle Failures & Repairs
+        # 3. Handle Failures with Goal Stack decomposition
         if last_status == "failed":
-            # Additional protection: if we keep failing, force completion
-            if replan_count >= 5:
-                if self.verbose:
-                    print(f"⚠️ [Router] Too many replans ({replan_count}), forcing completion despite failure")
-                return "knowledge"
-            
-            repair_node = self._try_auto_repair(state, replan_count)
-            if repair_node: return repair_node
-            # Default to meta_planner for replan
-            return "meta_planner"
+            return self._handle_failure_with_goal_stack(state, goal_stack, replan_count)
 
         # 4. Handle Uncertainty (Loop protection)
         if last_status == "uncertain":
-            # If uncertain for too long, treat as failure to force replan
             if state.get("uncertain_streak", 0) >= 3:
-                # But if we've already done many replans, just complete
                 if replan_count >= 3:
                     if self.verbose:
                         print(f"⚠️ [Router] Uncertain + many replans, forcing completion")
                     return "knowledge"
                 return "meta_planner"
-            # Otherwise, meta_planner will decide if we continue or replan
             return "meta_planner"
 
-        # 5. Success - Check for Completion
+        # 5. Success - Handle goal completion with stack
+        return self._handle_success_with_goal_stack(state, goal_stack, step_count)
+
+    def _get_goal_stack(self, state: TrinityState) -> GoalStack:
+        """Get or create GoalStack from state."""
+        stack_data = state.get("goal_stack")
+        if stack_data:
+            return GoalStack.from_dict(stack_data)
+        
+        # Initialize with main goal
+        original_task = state.get("original_task", "Unknown task")
+        return GoalStack(initial_goal=original_task)
+
+    def _handle_failure_with_goal_stack(
+        self, 
+        state: TrinityState, 
+        goal_stack: GoalStack, 
+        replan_count: int
+    ) -> str:
+        """
+        Handle task failure using GoalStack for proper recursion.
+        
+        Flow:
+        1. Try retry if under limit
+        2. Decompose goal into subtasks if retry limit hit
+        3. Abort if max depth reached
+        """
+        # Get error context from last message
+        error_context = self._extract_error_context(state)
+        
+        # Let GoalStack decide what to do
+        action = goal_stack.handle_failure(error_context)
+        
+        if self.verbose:
+            print(f"🔄 [GoalStack] Failure action: {action}")
+            print(f"   {goal_stack.get_status_summary()}")
+        
+        if action == "retry":
+            # Simple retry - go back to meta_planner
+            if self.verbose:
+                print(f"   ↻ Retry #{goal_stack.current_goal.fail_count}")
+            return "meta_planner"
+        
+        elif action == "decompose":
+            # Decompose current goal into subtasks
+            # This will be handled by meta_planner with decomposition context
+            if self.verbose:
+                print(f"   🔀 Decomposing goal into subtasks...")
+            
+            # Mark that decomposition is needed
+            state["goal_stack_action"] = "decompose"
+            state["goal_stack"] = goal_stack.to_dict()
+            return "meta_planner"
+        
+        else:  # abort
+            # Max depth reached, force completion
+            if replan_count >= 5:
+                if self.verbose:
+                    print(f"⚠️ [Router] Goal stack abort + too many replans, forcing completion")
+                return "knowledge"
+            
+            # Try one more replan before giving up
+            return "meta_planner"
+
+    def _handle_success_with_goal_stack(
+        self, 
+        state: TrinityState, 
+        goal_stack: GoalStack, 
+        step_count: int
+    ) -> str:
+        """
+        Handle successful step completion with goal stack.
+        
+        Flow:
+        1. Mark current subtask as complete
+        2. Move to next subtask or return to parent
+        3. Check if all goals are complete
+        """
+        # Complete current goal/subtask
+        result = goal_stack.complete_current_subtask()
+        
+        if self.verbose:
+            print(f"✅ [GoalStack] Completion result: {result}")
+            if not goal_stack.is_empty:
+                print(f"   {goal_stack.get_status_summary()}")
+        
+        if result == "all_complete":
+            # All goals done!
+            return "knowledge"
+        
+        elif result == "parent_complete":
+            # Parent goal completed, check recursively
+            # GoalStack handles this internally
+            return self._check_knowledge_transition(state, step_count)
+        
+        elif result == "next_subtask":
+            # Move to next subtask
+            state["goal_stack"] = goal_stack.to_dict()
+            return "meta_planner"
+        
+        # Default: check for knowledge transition
         return self._check_knowledge_transition(state, step_count)
+
+    def _extract_error_context(self, state: TrinityState) -> str:
+        """Extract error context from state messages."""
+        messages = state.get("messages", [])
+        if not messages:
+            return "Unknown error"
+        
+        last_msg = messages[-1]
+        content = getattr(last_msg, 'content', str(last_msg))
+        
+        # Extract error indicators
+        if isinstance(content, str):
+            if "error" in content.lower() or "failed" in content.lower():
+                return content[:500]  # Truncate long errors
+        
+        return "Step failed without specific error"
 
     def _create_vibe_assistant_pause_state(self, state: TrinityState, pause_reason: str, message: str) -> Dict[str, Any]:
         """Create a pause state for Vibe CLI Assistant intervention."""
@@ -11104,6 +11224,345 @@ class TrinityExecutionMixin:
             return "knowledge"
             
         return "meta_planner"
+```
+
+### `core/trinity/goal_stack.py` (11.6 KB)
+
+```python
+"""
+Recursive Goal Stack Management for Trinity Runtime.
+
+Implements a stack-based goal decomposition system:
+- When a subtask fails, it becomes the new main goal
+- Failed goal is decomposed into sub-goals (e.g., 3 -> 3.1, 3.2, 3.3)
+- On completion, returns to parent goal
+- Proper tail-recursion without memory overhead
+
+Example flow:
+  Main Goal: "Open YouTube and search"
+    └── Task 1: Open browser ✓
+    └── Task 2: Navigate to YouTube ✓  
+    └── Task 3: Search for video ✗ (fails)
+        → Goal becomes 3, decomposed to:
+        └── Task 3.1: Find search box ✓
+        └── Task 3.2: Enter text ✗ (fails)
+            → Goal becomes 3.2, decomposed to:
+            └── Task 3.2.1: Click on search box ✓
+            └── Task 3.2.2: Type text ✓
+            └── Task 3.2.3: Press Enter ✓
+            → Goal 3.2 complete, return to 3
+        └── Task 3.3: Click search ✓
+        → Goal 3 complete, return to Main
+    └── Task 4: Verify results ✓
+  → Main Goal complete!
+"""
+
+from typing import Dict, Any, List, Optional
+from dataclasses import dataclass, field
+from datetime import datetime
+import json
+
+
+@dataclass
+class Goal:
+    """Represents a single goal in the stack."""
+    id: str                           # e.g., "main", "3", "3.2", "3.2.1"
+    description: str                  # Human-readable description
+    parent_id: Optional[str] = None   # Parent goal ID
+    subtasks: List[Dict[str, Any]] = field(default_factory=list)  # Decomposed subtasks
+    current_subtask_idx: int = 0      # Current subtask index
+    status: str = "pending"           # pending|in_progress|completed|failed
+    fail_count: int = 0               # Number of failures at this level
+    created_at: str = field(default_factory=lambda: datetime.now().isoformat())
+    completed_at: Optional[str] = None
+    error_context: Optional[str] = None  # Context about why it failed
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary for state serialization."""
+        return {
+            "id": self.id,
+            "description": self.description,
+            "parent_id": self.parent_id,
+            "subtasks": self.subtasks,
+            "current_subtask_idx": self.current_subtask_idx,
+            "status": self.status,
+            "fail_count": self.fail_count,
+            "created_at": self.created_at,
+            "completed_at": self.completed_at,
+            "error_context": self.error_context,
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "Goal":
+        """Create Goal from dictionary."""
+        return cls(
+            id=data["id"],
+            description=data["description"],
+            parent_id=data.get("parent_id"),
+            subtasks=data.get("subtasks", []),
+            current_subtask_idx=data.get("current_subtask_idx", 0),
+            status=data.get("status", "pending"),
+            fail_count=data.get("fail_count", 0),
+            created_at=data.get("created_at", datetime.now().isoformat()),
+            completed_at=data.get("completed_at"),
+            error_context=data.get("error_context"),
+        )
+
+
+class GoalStack:
+    """
+    Stack-based goal management with recursive decomposition.
+    
+    Key principles:
+    1. Goals form a tree but are processed as a stack (LIFO)
+    2. When a task fails, it's decomposed into subtasks
+    3. Subtasks become the new focus until completed
+    4. On completion, control returns to parent goal
+    5. No deep recursion - purely iterative with explicit stack
+    """
+    
+    MAX_DEPTH = 5       # Maximum nesting depth (main -> 3 -> 3.2 -> 3.2.1 -> 3.2.1.1)
+    MAX_SUBTASKS = 5    # Maximum subtasks per decomposition
+    MAX_RETRIES = 3     # Maximum retries before decomposition
+    
+    def __init__(self, initial_goal: Optional[str] = None):
+        self._stack: List[Goal] = []
+        self._history: List[Dict[str, Any]] = []  # Completed goals for learning
+        
+        if initial_goal:
+            self.push_goal("main", initial_goal)
+    
+    @property
+    def depth(self) -> int:
+        """Current stack depth."""
+        return len(self._stack)
+    
+    @property
+    def current_goal(self) -> Optional[Goal]:
+        """Get the current active goal (top of stack)."""
+        return self._stack[-1] if self._stack else None
+    
+    @property
+    def is_empty(self) -> bool:
+        """Check if goal stack is empty (all goals completed)."""
+        return len(self._stack) == 0
+    
+    @property
+    def current_goal_id(self) -> str:
+        """Get current goal ID for display."""
+        return self.current_goal.id if self.current_goal else "none"
+    
+    def push_goal(self, goal_id: str, description: str, parent_id: Optional[str] = None) -> Goal:
+        """Push a new goal onto the stack."""
+        goal = Goal(
+            id=goal_id,
+            description=description,
+            parent_id=parent_id,
+            status="in_progress"
+        )
+        self._stack.append(goal)
+        return goal
+    
+    def pop_goal(self) -> Optional[Goal]:
+        """Pop and return the current goal (marks as completed)."""
+        if not self._stack:
+            return None
+        
+        goal = self._stack.pop()
+        goal.status = "completed"
+        goal.completed_at = datetime.now().isoformat()
+        self._history.append(goal.to_dict())
+        return goal
+    
+    def get_goal_path(self) -> str:
+        """Get the full path of current goals (e.g., 'main > 3 > 3.2')."""
+        return " > ".join(g.id for g in self._stack)
+    
+    def decompose_current_goal(self, subtasks: List[Dict[str, Any]], error_context: str = "") -> bool:
+        """
+        Decompose current failing goal into subtasks.
+        
+        Args:
+            subtasks: List of subtask dicts with 'description' key
+            error_context: Why the goal failed (for learning)
+            
+        Returns:
+            True if decomposition happened, False if max depth reached
+        """
+        if not self.current_goal:
+            return False
+        
+        # Check depth limit
+        if self.depth >= self.MAX_DEPTH:
+            return False
+        
+        # Limit subtasks
+        subtasks = subtasks[:self.MAX_SUBTASKS]
+        if not subtasks:
+            return False
+        
+        current = self.current_goal
+        current.error_context = error_context
+        current.subtasks = subtasks
+        current.status = "decomposed"
+        
+        # Generate subtask IDs
+        base_id = current.id
+        if base_id == "main":
+            base_id = ""
+        
+        # Push first subtask onto stack (others will be pushed as we complete)
+        # We only push the FIRST subtask to start
+        first_subtask = subtasks[0]
+        subtask_id = f"{base_id}.1" if base_id else "1"
+        
+        self.push_goal(
+            goal_id=subtask_id,
+            description=first_subtask.get("description", f"Subtask {subtask_id}"),
+            parent_id=current.id
+        )
+        
+        return True
+    
+    def complete_current_subtask(self) -> Optional[str]:
+        """
+        Mark current subtask as complete and move to next.
+        
+        Returns:
+            - "next_subtask" if there are more subtasks
+            - "parent_complete" if parent goal is now complete
+            - "all_complete" if main goal is complete
+            - None if error
+        """
+        if not self.current_goal:
+            return None
+        
+        completed = self.pop_goal()
+        if not completed:
+            return None
+        
+        # Check if there's a parent
+        if not self._stack:
+            # Main goal completed!
+            return "all_complete"
+        
+        parent = self.current_goal
+        
+        # Move to next subtask in parent
+        parent.current_subtask_idx += 1
+        
+        if parent.current_subtask_idx < len(parent.subtasks):
+            # Push next subtask
+            next_subtask = parent.subtasks[parent.current_subtask_idx]
+            
+            # Generate subtask ID
+            base_id = parent.id
+            if base_id == "main":
+                base_id = ""
+            idx = parent.current_subtask_idx + 1
+            subtask_id = f"{base_id}.{idx}" if base_id else str(idx)
+            
+            self.push_goal(
+                goal_id=subtask_id,
+                description=next_subtask.get("description", f"Subtask {subtask_id}"),
+                parent_id=parent.id
+            )
+            return "next_subtask"
+        else:
+            # All subtasks of parent complete - parent is now complete too
+            # Recursively complete the parent
+            return self.complete_current_subtask()
+    
+    def handle_failure(self, error_context: str = "") -> str:
+        """
+        Handle a failure at the current goal level.
+        
+        Returns:
+            - "retry" if we should retry the same goal
+            - "decompose" if we should decompose into subtasks
+            - "abort" if max depth reached, should fail gracefully
+        """
+        if not self.current_goal:
+            return "abort"
+        
+        goal = self.current_goal
+        goal.fail_count += 1
+        goal.error_context = error_context
+        
+        # Check if we should retry
+        if goal.fail_count < self.MAX_RETRIES:
+            return "retry"
+        
+        # Check if we can decompose (depth limit)
+        if self.depth >= self.MAX_DEPTH:
+            return "abort"
+        
+        return "decompose"
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Serialize the entire goal stack to dict."""
+        return {
+            "stack": [g.to_dict() for g in self._stack],
+            "history": self._history,
+            "depth": self.depth,
+            "current_goal_id": self.current_goal_id,
+        }
+    
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "GoalStack":
+        """Deserialize goal stack from dict."""
+        stack = cls()
+        stack._stack = [Goal.from_dict(g) for g in data.get("stack", [])]
+        stack._history = data.get("history", [])
+        return stack
+    
+    def get_status_summary(self) -> str:
+        """Get a human-readable status summary."""
+        if not self._stack:
+            return "✅ Всі цілі виконані"
+        
+        lines = [f"📍 Шлях цілей: {self.get_goal_path()}"]
+        lines.append(f"📊 Глибина: {self.depth}/{self.MAX_DEPTH}")
+        
+        if self.current_goal:
+            g = self.current_goal
+            lines.append(f"🎯 Поточна ціль [{g.id}]: {g.description}")
+            if g.fail_count > 0:
+                lines.append(f"   ⚠️ Спроб: {g.fail_count}/{self.MAX_RETRIES}")
+            if g.subtasks:
+                lines.append(f"   📝 Підзавдань: {g.current_subtask_idx + 1}/{len(g.subtasks)}")
+        
+        return "\n".join(lines)
+    
+    def __repr__(self) -> str:
+        return f"GoalStack(depth={self.depth}, current={self.current_goal_id})"
+
+
+def generate_subtask_decomposition(
+    goal_description: str,
+    error_context: str,
+    num_subtasks: int = 3
+) -> List[Dict[str, Any]]:
+    """
+    Generate subtask decomposition for a failed goal.
+    
+    This is a placeholder - in production this would call the LLM
+    to intelligently decompose the failed task.
+    
+    Args:
+        goal_description: What we were trying to do
+        error_context: Why it failed
+        num_subtasks: How many subtasks to generate
+        
+    Returns:
+        List of subtask dicts with 'description' key
+    """
+    # In production, this would use Atlas/LLM to decompose
+    # For now, return generic breakdown
+    return [
+        {"description": f"Крок {i+1} для: {goal_description[:50]}..."}
+        for i in range(num_subtasks)
+    ]
 ```
 
 ### `core/trinity/integration/__init__.py` (0.1 KB)
@@ -13359,10 +13818,9 @@ class TetyanaMixin:
         return {**state, "messages": list(context) + [AIMessage(content=err_msg)], "last_step_status": "failed", "current_agent": "grisha"}
 ```
 
-### `core/trinity/nodes/vibe.py` (4.6 KB)
+### `core/trinity/nodes/vibe.py` (5.3 KB)
 
 ```python
-
 import os
 import glob
 import logging
@@ -13371,6 +13829,7 @@ from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from core.trinity.state import TrinityState
 from core.llm import get_llm
 from tui.logger import trace
+import asyncio
 
 logger = logging.getLogger(__name__)
 
@@ -13488,7 +13947,27 @@ FORMAT:
         
         return {"last_vibe_analysis": report}
 
-async def vibe_analyst_node(state: TrinityState) -> Dict[str, Any]:
+def vibe_analyst_node(state: TrinityState) -> Dict[str, Any]:
+    try:
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            return asyncio.run(VibeAnalyst().analyze(state))
+        report = "VibeAnalyst skipped: async loop already running"
+        try:
+            state["last_vibe_analysis"] = report
+        except Exception:
+            pass
+        return {"last_vibe_analysis": report}
+    except Exception as e:
+        report = f"VibeAnalyst unavailable: {e}"
+        try:
+            state["last_vibe_analysis"] = report
+        except Exception:
+            pass
+        return {"last_vibe_analysis": report}
+
+async def vibe_analyst_node_async(state: TrinityState) -> Dict[str, Any]:
     return await VibeAnalyst().analyze(state)
 ```
 
@@ -13928,7 +14407,7 @@ class TrinityRuntime(
             self.logger.warning(f"Post-task hooks failed: {e}")
 ```
 
-### `core/trinity/state.py` (8.9 KB)
+### `core/trinity/state.py` (9.2 KB)
 
 ```python
 """
@@ -14125,6 +14604,10 @@ class TrinityState(TypedDict, total=False):
     
     # Learning
     learning_mode: Optional[bool]
+    
+    # Recursive Goal Stack (for proper task decomposition)
+    goal_stack: Optional[Dict[str, Any]]  # Serialized GoalStack
+    goal_stack_action: Optional[str]  # retry|decompose|complete|abort
 
 
 def create_initial_state(
@@ -14191,6 +14674,8 @@ def create_initial_state(
         vibe_assistant_context=None,
         vision_context=None,
         learning_mode=learning_mode,
+        goal_stack=None,  # Will be initialized by GoalStack
+        goal_stack_action=None,
     )
 ```
 
@@ -87504,6 +87989,332 @@ if __name__ == "__main__":
     sys.exit(0 if success else 1)
 ```
 
+### `test_goal_stack.py` (11.4 KB)
+
+```python
+#!/usr/bin/env python3
+"""
+Test for recursive goal decomposition (GoalStack).
+
+Tests the proper recursion pattern:
+1. If task 3 fails, main goal becomes task 3
+2. Task 3 splits into 3.1, 3.2, 3.3
+3. If 3.2 fails, goal becomes 3.2
+4. 3.2 splits into 3.2.1, 3.2.2, 3.2.3
+5. On completion, return to parent goal (3.2 -> 3 -> main)
+
+This ensures replanning happens at the failure point with proper
+stack-based recursion (no memory overhead).
+"""
+
+import sys
+import os
+
+# Add project root to path
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from core.trinity.goal_stack import GoalStack, Goal, generate_subtask_decomposition
+
+
+def test_basic_goal_stack():
+    """Test basic GoalStack operations."""
+    print("=" * 60)
+    print("🧪 Тест 1: Базові операції GoalStack")
+    print("=" * 60)
+    
+    # Create stack with main goal
+    stack = GoalStack("Відкрити YouTube та знайти відео")
+    
+    assert stack.depth == 1, f"Expected depth 1, got {stack.depth}"
+    assert stack.current_goal_id == "main", f"Expected 'main', got {stack.current_goal_id}"
+    assert not stack.is_empty
+    
+    print(f"✅ Створено стек: {stack}")
+    print(f"   {stack.get_status_summary()}")
+    
+    # Complete main goal
+    result = stack.complete_current_subtask()
+    assert result == "all_complete", f"Expected 'all_complete', got {result}"
+    assert stack.is_empty
+    
+    print("✅ Головна ціль виконана")
+    print()
+    return True
+
+
+def test_single_failure_decomposition():
+    """Test decomposition when a task fails."""
+    print("=" * 60)
+    print("🧪 Тест 2: Декомпозиція при збої")
+    print("=" * 60)
+    
+    stack = GoalStack("Виконати складне завдання")
+    
+    # Simulate failure
+    action = stack.handle_failure("Завдання не вдалося виконати")
+    assert action == "retry", f"First failure should be retry, got {action}"
+    print(f"✅ Перший збій -> {action}")
+    
+    action = stack.handle_failure("Знову не вдалося")
+    assert action == "retry", f"Second failure should be retry, got {action}"
+    print(f"✅ Другий збій -> {action}")
+    
+    action = stack.handle_failure("Третій раз не вдалося")
+    assert action == "decompose", f"Third failure should be decompose, got {action}"
+    print(f"✅ Третій збій -> {action}")
+    
+    # Now decompose
+    subtasks = [
+        {"description": "Крок 1: Підготовка"},
+        {"description": "Крок 2: Виконання"},
+        {"description": "Крок 3: Перевірка"},
+    ]
+    
+    success = stack.decompose_current_goal(subtasks, "Завдання занадто складне")
+    assert success, "Decomposition should succeed"
+    
+    print(f"✅ Декомпозиція успішна")
+    print(f"   {stack.get_status_summary()}")
+    
+    assert stack.depth == 2
+    assert stack.current_goal_id == "1"
+    
+    print()
+    return True
+
+
+def test_recursive_decomposition():
+    """Test recursive decomposition (3 -> 3.2 -> 3.2.1)."""
+    print("=" * 60)
+    print("🧪 Тест 3: Рекурсивна декомпозиція (головний тест)")
+    print("=" * 60)
+    
+    stack = GoalStack("Головна ціль: відкрити YouTube та знайти відео")
+    print(f"📍 Старт: {stack.get_goal_path()}")
+    
+    # Simulate main goal failing
+    for i in range(GoalStack.MAX_RETRIES):
+        stack.handle_failure(f"Спроба {i+1}")
+    
+    # Decompose main -> 1, 2, 3
+    stack.decompose_current_goal([
+        {"description": "Завдання 1: Відкрити браузер"},
+        {"description": "Завдання 2: Перейти на YouTube"},
+        {"description": "Завдання 3: Знайти відео"},
+    ])
+    
+    print(f"📍 Після декомпозиції main: {stack.get_goal_path()}")
+    assert stack.current_goal_id == "1"
+    
+    # Complete task 1
+    result = stack.complete_current_subtask()
+    print(f"   ✅ Завдання 1 виконано, результат: {result}")
+    assert result == "next_subtask"
+    assert stack.current_goal_id == "2"
+    
+    # Complete task 2
+    result = stack.complete_current_subtask()
+    print(f"   ✅ Завдання 2 виконано, результат: {result}")
+    assert result == "next_subtask"
+    assert stack.current_goal_id == "3"
+    
+    # Task 3 fails and needs decomposition
+    for i in range(GoalStack.MAX_RETRIES):
+        stack.handle_failure(f"Завдання 3 провалено, спроба {i+1}")
+    
+    # Decompose 3 -> 3.1, 3.2, 3.3
+    stack.decompose_current_goal([
+        {"description": "Завдання 3.1: Знайти пошукове поле"},
+        {"description": "Завдання 3.2: Ввести текст"},
+        {"description": "Завдання 3.3: Натиснути Enter"},
+    ])
+    
+    print(f"📍 Після декомпозиції 3: {stack.get_goal_path()}")
+    assert stack.current_goal_id == "3.1"
+    
+    # Complete 3.1
+    result = stack.complete_current_subtask()
+    print(f"   ✅ Завдання 3.1 виконано, результат: {result}")
+    assert result == "next_subtask"
+    assert stack.current_goal_id == "3.2"
+    
+    # Task 3.2 fails and needs decomposition
+    for i in range(GoalStack.MAX_RETRIES):
+        stack.handle_failure(f"Завдання 3.2 провалено, спроба {i+1}")
+    
+    # Decompose 3.2 -> 3.2.1, 3.2.2, 3.2.3
+    stack.decompose_current_goal([
+        {"description": "Завдання 3.2.1: Клікнути на поле"},
+        {"description": "Завдання 3.2.2: Набрати текст"},
+        {"description": "Завдання 3.2.3: Підтвердити"},
+    ])
+    
+    print(f"📍 Після декомпозиції 3.2: {stack.get_goal_path()}")
+    assert stack.current_goal_id == "3.2.1"
+    assert stack.depth == 4  # main -> 3 -> 3.2 -> 3.2.1
+    
+    print(f"\n🔍 Стек цілей:")
+    for i, goal in enumerate(stack._stack):
+        indent = "  " * i
+        print(f"   {indent}[{goal.id}] {goal.description[:40]}...")
+    
+    # Complete 3.2.1, 3.2.2, 3.2.3
+    result = stack.complete_current_subtask()
+    print(f"\n   ✅ Завдання 3.2.1 виконано, результат: {result}")
+    assert result == "next_subtask"
+    assert stack.current_goal_id == "3.2.2"
+    
+    result = stack.complete_current_subtask()
+    print(f"   ✅ Завдання 3.2.2 виконано, результат: {result}")
+    assert result == "next_subtask"
+    assert stack.current_goal_id == "3.2.3"
+    
+    result = stack.complete_current_subtask()
+    print(f"   ✅ Завдання 3.2.3 виконано, результат: {result}")
+    # 3.2 should now complete, then move to 3.3
+    assert result == "next_subtask"
+    assert stack.current_goal_id == "3.3", f"Expected 3.3, got {stack.current_goal_id}"
+    
+    print(f"📍 Після завершення 3.2: {stack.get_goal_path()}")
+    
+    # Complete 3.3
+    result = stack.complete_current_subtask()
+    print(f"   ✅ Завдання 3.3 виконано, результат: {result}")
+    # 3 should now complete, and since main has no more subtasks, all complete
+    assert result == "all_complete", f"Expected all_complete, got {result}"
+    assert stack.is_empty
+    
+    print(f"\n✅ Всі цілі виконані!")
+    print(f"   Історія: {len(stack._history)} завершених цілей")
+    
+    print()
+    return True
+
+
+def test_max_depth_limit():
+    """Test that max depth limit is enforced."""
+    print("=" * 60)
+    print("🧪 Тест 4: Ліміт глибини рекурсії")
+    print("=" * 60)
+    
+    stack = GoalStack("Глибоко вкладене завдання")
+    
+    # Keep decomposing until we hit the limit
+    depth_reached = 1
+    for level in range(GoalStack.MAX_DEPTH + 2):
+        # Fail enough times to trigger decomposition
+        for i in range(GoalStack.MAX_RETRIES):
+            action = stack.handle_failure(f"Рівень {level}, спроба {i+1}")
+            if action == "abort":
+                break
+        
+        if action == "abort":
+            print(f"   ⛔ Досягнуто ліміт на глибині {stack.depth}")
+            break
+        
+        # Decompose
+        success = stack.decompose_current_goal([
+            {"description": f"Підзавдання рівня {level + 1}"}
+        ])
+        
+        if not success:
+            print(f"   ⛔ Декомпозиція заблокована на глибині {stack.depth}")
+            break
+        
+        depth_reached = stack.depth
+        print(f"   📍 Рівень {depth_reached}: {stack.get_goal_path()}")
+    
+    assert depth_reached <= GoalStack.MAX_DEPTH, \
+        f"Depth {depth_reached} exceeded MAX_DEPTH {GoalStack.MAX_DEPTH}"
+    
+    print(f"\n✅ Ліміт глибини працює коректно (max={GoalStack.MAX_DEPTH})")
+    print()
+    return True
+
+
+def test_serialization():
+    """Test serialization and deserialization."""
+    print("=" * 60)
+    print("🧪 Тест 5: Серіалізація стану")
+    print("=" * 60)
+    
+    # Create a stack with some state
+    stack = GoalStack("Тестове завдання")
+    
+    for i in range(GoalStack.MAX_RETRIES):
+        stack.handle_failure("Тестовий збій")
+    
+    stack.decompose_current_goal([
+        {"description": "Підзавдання 1"},
+        {"description": "Підзавдання 2"},
+    ])
+    
+    # Serialize
+    data = stack.to_dict()
+    print(f"   📦 Серіалізовано: {len(str(data))} bytes")
+    
+    # Deserialize
+    restored = GoalStack.from_dict(data)
+    
+    assert restored.depth == stack.depth
+    assert restored.current_goal_id == stack.current_goal_id
+    assert restored.current_goal.description == stack.current_goal.description
+    
+    print(f"   ✅ Відновлено: {restored}")
+    print(f"   📍 Шлях: {restored.get_goal_path()}")
+    
+    print()
+    return True
+
+
+def run_all_tests():
+    """Run all GoalStack tests."""
+    print("\n" + "=" * 60)
+    print("🚀 Запуск тестів рекурсивної декомпозиції GoalStack")
+    print("=" * 60 + "\n")
+    
+    tests = [
+        ("Базові операції", test_basic_goal_stack),
+        ("Декомпозиція при збої", test_single_failure_decomposition),
+        ("Рекурсивна декомпозиція", test_recursive_decomposition),
+        ("Ліміт глибини", test_max_depth_limit),
+        ("Серіалізація", test_serialization),
+    ]
+    
+    passed = 0
+    failed = 0
+    
+    for name, test_func in tests:
+        try:
+            if test_func():
+                passed += 1
+            else:
+                failed += 1
+                print(f"❌ Тест '{name}' повернув False")
+        except Exception as e:
+            failed += 1
+            print(f"❌ Тест '{name}' викинув виняток: {e}")
+            import traceback
+            traceback.print_exc()
+    
+    print("=" * 60)
+    print(f"📊 Результати: {passed}/{len(tests)} тестів пройдено")
+    
+    if failed == 0:
+        print("🎉 ВСІ ТЕСТИ ПРОЙДЕНО!")
+    else:
+        print(f"❌ {failed} тестів провалено")
+    
+    print("=" * 60)
+    
+    return failed == 0
+
+
+if __name__ == "__main__":
+    success = run_all_tests()
+    sys.exit(0 if success else 1)
+```
+
 ### `test_recursion_fix.py` (4.7 KB)
 
 ```python
@@ -94867,7 +95678,7 @@ _get_editors_list = get_editors_list
 ### `tui/cli.py` (62.3 KB)
 
 ```python
-#!/usr/bin/env python3
+from .services import monitor_service  # or appropriate import/location
 # -*- coding: utf-8 -*-
 """
 Єдиний і основний інтерфейс керування системою.
@@ -95391,15 +96202,10 @@ _agent_last_permissions = CommandPermissions()
 
 
 # _DummyProcService moved to tui.monitoring_service
-
 fs_usage_service = _ProcTraceService("fs_usage", ["fs_usage", "-w", "-f", "filesys"])
 opensnoop_service = _ProcTraceService("opensnoop", ["opensnoop"])
 recorder_service: Any = None
-opensnoop_service = _ProcTraceService("opensnoop", ["opensnoop"])
-
-recorder_service: Any = None
-
-
+recorder_last_session_dir: str = ""
 fs_usage_service = _ProcTraceService("fs_usage", ["fs_usage", "-w", "-f", "filesys"])
 opensnoop_service = _ProcTraceService("opensnoop", ["opensnoop"])
 
@@ -95961,7 +96767,7 @@ monitor_service = None  # TODO: Replace with actual initialization or import as 
         set_module_enabled=_set_module_enabled,
         AVAILABLE_LOCALES=AVAILABLE_LOCALES,
         localization=localization,
-        normalize_menu_index=_normalize_menu_index,
+monitor_service = None  # TODO: Replace with actual initialization or import as needed
         monitor_stop_selected=_monitor_stop_selected,
         monitor_start_selected=_monitor_start_selected,
         monitor_service=monitor_service,
@@ -105880,5 +106686,5 @@ def _render_mcp_client_menu(ctx: dict) -> List[Tuple[str, str]]:
 
 ## Summary
 
-- **Total Files**: 313
-- **Skipped**: 36342
+- **Total Files**: 315
+- **Skipped**: 36365

@@ -1,4 +1,3 @@
-
 import os
 import glob
 import logging
@@ -7,6 +6,7 @@ from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from core.trinity.state import TrinityState
 from core.llm import get_llm
 from tui.logger import trace
+import asyncio
 
 logger = logging.getLogger(__name__)
 
@@ -124,5 +124,25 @@ FORMAT:
         
         return {"last_vibe_analysis": report}
 
-async def vibe_analyst_node(state: TrinityState) -> Dict[str, Any]:
+def vibe_analyst_node(state: TrinityState) -> Dict[str, Any]:
+    try:
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            return asyncio.run(VibeAnalyst().analyze(state))
+        report = "VibeAnalyst skipped: async loop already running"
+        try:
+            state["last_vibe_analysis"] = report
+        except Exception:
+            pass
+        return {"last_vibe_analysis": report}
+    except Exception as e:
+        report = f"VibeAnalyst unavailable: {e}"
+        try:
+            state["last_vibe_analysis"] = report
+        except Exception:
+            pass
+        return {"last_vibe_analysis": report}
+
+async def vibe_analyst_node_async(state: TrinityState) -> Dict[str, Any]:
     return await VibeAnalyst().analyze(state)

@@ -192,6 +192,10 @@ class TrinityState(TypedDict, total=False):
     
     # Learning
     learning_mode: Optional[bool]
+    
+    # Recursive Goal Stack (for proper task decomposition)
+    goal_stack: Optional[Dict[str, Any]]  # Serialized GoalStack
+    goal_stack_action: Optional[str]  # retry|decompose|complete|abort
 
 
 def create_initial_state(
@@ -258,4 +262,6 @@ def create_initial_state(
         vibe_assistant_context=None,
         vision_context=None,
         learning_mode=learning_mode,
+        goal_stack=None,  # Will be initialized by GoalStack
+        goal_stack_action=None,
     )
