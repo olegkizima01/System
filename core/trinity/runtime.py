@@ -100,10 +100,26 @@ class TrinityRuntime(
             pass
 
         # Register custom tools (vision, window detection, etc.)
-        self._register_tools()
+        try:
+            self._register_tools()
+        except Exception as e:
+            try:
+                from tui.logger import log_exception as _log_exception
+                _log_exception(self.logger, e, "TrinityRuntime._register_tools")
+            except Exception:
+                if self.verbose:
+                    self.logger.warning(f"Tool registration failed (continuing with reduced capabilities): {e}")
 
         # Build Graph
-        self.workflow = self._build_graph()
+        try:
+            self.workflow = self._build_graph()
+        except Exception as e:
+            try:
+                from tui.logger import log_exception as _log_exception
+                _log_exception(self.logger, e, "TrinityRuntime._build_graph")
+            except Exception:
+                pass
+            raise RuntimeError(f"Failed to build Trinity workflow graph: {e}")
         
         # Execution tracing
         self.execution_trace = []

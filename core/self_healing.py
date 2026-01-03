@@ -188,6 +188,10 @@ class CodeSelfHealer:
         
         # Trinity runtime reference (set externally)
         self._trinity_runtime = None
+
+        self._monitor_lock = threading.Lock()
+        self._monitor_stop_event = threading.Event()
+        self._monitor_thread: Optional[threading.Thread] = None
     
     def set_trinity_runtime(self, runtime) -> None:
         """Set the Trinity runtime for executing repairs."""
@@ -804,6 +808,7 @@ Output your repair plan as JSON with this structure:
         interval: float = 30.0,
         max_repairs_per_cycle: int = 3,
         auto_repair: bool = True,
+        stop_event: Optional[threading.Event] = None,
     ) -> None:
         """
         Continuously monitor for errors and attempt repairs.
@@ -817,6 +822,9 @@ Output your repair plan as JSON with this structure:
         
         while True:
             try:
+                if stop_event is not None and stop_event.is_set():
+                    self._stream("Healing loop stopped")
+                    break
                 # Detect new issues
                 issues = self.detect_errors()
                 
@@ -842,14 +850,20 @@ Output your repair plan as JSON with this structure:
                     if repairs_done > 0:
                         self._stream(f"Completed {repairs_done} repairs this cycle")
                 
-                time.sleep(interval)
+                if stop_event is not None:
+                    stop_event.wait(interval)
+                else:
+                    time.sleep(interval)
                 
             except KeyboardInterrupt:
                 self._stream("Healing loop stopped by user")
                 break
             except Exception as e:
                 self._stream(f"Healing loop error: {e}", "error")
-                time.sleep(interval)
+                if stop_event is not None:
+                    stop_event.wait(interval)
+                else:
+                    time.sleep(interval)
     
     # =========================================================================
     # VERIFICATION
@@ -938,16 +952,34 @@ Output your repair plan as JSON with this structure:
         Returns:
             Thread object running the healing loop
         """
-        def monitoring_loop():
-            try:
-                self.healing_loop(interval=interval, auto_repair=True)
-            except Exception as e:
-                self._stream(f"Background monitoring failed: {e}", "error")
-        
-        monitor_thread = threading.Thread(target=monitoring_loop, daemon=True)
-        monitor_thread.start()
-        self._stream(f"Started background monitoring with {interval}s interval", "info")
-        return monitor_thread
+        with self._monitor_lock:
+            if self._monitor_thread is not None and self._monitor_thread.is_alive():
+                return self._monitor_thread
+
+            self._monitor_stop_event.clear()
+
+            def monitoring_loop():
+                try:
+                    self.healing_loop(interval=interval, auto_repair=True, stop_event=self._monitor_stop_event)
+                except Exception as e:
+                    self._stream(f"Background monitoring failed: {e}", "error")
+
+            monitor_thread = threading.Thread(target=monitoring_loop, daemon=True)
+            monitor_thread.start()
+            self._monitor_thread = monitor_thread
+            self._stream(f"Started background monitoring with {interval}s interval", "info")
+            return monitor_thread
+
+    def stop_background_monitoring(self, timeout: float = 5.0) -> bool:
+        with self._monitor_lock:
+            if self._monitor_thread is None:
+                return True
+            if not self._monitor_thread.is_alive():
+                return True
+
+            self._monitor_stop_event.set()
+            self._monitor_thread.join(timeout=timeout)
+            return not self._monitor_thread.is_alive()
     
     def trigger_immediate_scan(self) -> List[CodeIssue]:
         """

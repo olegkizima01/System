@@ -16,6 +16,11 @@ from datetime import datetime
 import json
 import time
 import threading
+import logging
+
+logger = logging.getLogger(__name__)
+
+from mcp_integration.chroma_utils import create_persistent_client, get_default_chroma_persist_dir
 
 
 @dataclass
@@ -49,18 +54,22 @@ class AtlasMemory:
         persist_dir = Path(persist_path).expanduser().resolve()
         persist_dir.mkdir(parents=True, exist_ok=True)
 
-        # Best-effort repair+retry for rare Rust sqlite panics
+        # Use hardened ChromaDB initialization with repair+retry
+        init_res = None
         try:
-            self.client = chromadb.PersistentClient(path=str(persist_dir))
-        except Exception as e:
-            # Handle potential corruption by backing up and recreating
+            init_res = create_persistent_client(persist_dir=persist_dir, logger=logger, retry_repair=True)
+        except BaseException as e:
+            logger.warning(f"⚠️ ChromaDB PersistentClient failed for {persist_dir}: {e}")
+            init_res = None
+
+        if init_res is not None:
+            self.client = init_res.client
+        else:
             try:
-                backup_dir = persist_dir.parent / f"{persist_dir.name}_corrupt_{int(time.time())}"
-                persist_dir.rename(backup_dir)
-                persist_dir.mkdir(parents=True, exist_ok=True)
-                self.client = chromadb.PersistentClient(path=str(persist_dir))
-            except Exception as retry_e:
-                raise RuntimeError(f"ChromaDB PersistentClient failed for {persist_dir}. Original error: {e}. Recovery error: {retry_e}")
+                self.client = chromadb.Client()
+                logger.info("✅ Using in-memory ChromaDB client as fallback")
+            except Exception as fallback_err:
+                raise RuntimeError(f"ChromaDB completely unavailable: {fallback_err}")
         
         # Initialize Collections
         self.ui_patterns = self.client.get_or_create_collection(name="ui_patterns")

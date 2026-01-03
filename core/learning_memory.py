@@ -72,9 +72,19 @@ class LearningMemory:
         """Initialize ChromaDB for semantic search of learning entries."""
         try:
             import chromadb
+            from mcp_integration.chroma_utils import create_persistent_client, get_default_chroma_persist_dir
             chroma_path = self.persist_path / "chroma"
-            chroma_path.mkdir(parents=True, exist_ok=True)
-            self._chroma_client = chromadb.PersistentClient(path=str(chroma_path))
+            init_res = None
+            try:
+                init_res = create_persistent_client(persist_dir=chroma_path, logger=logger, retry_repair=True)
+            except BaseException as e:
+                logger.warning(f"⚠️ ChromaDB PersistentClient failed for {chroma_path}: {e}")
+                init_res = None
+            if init_res is not None:
+                self._chroma_client = init_res.client
+            else:
+                self._chroma_client = chromadb.Client()
+                logger.info("✅ Using in-memory ChromaDB client as fallback")
             self._collection = self._chroma_client.get_or_create_collection(
                 name="learning_entries",
                 metadata={"description": "Learning mode successful executions"}

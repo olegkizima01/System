@@ -13,7 +13,8 @@ class TrinitySelfHealingMixin:
         """Initialize the self-healing module."""
         try:
             from core.self_healing import CodeSelfHealer
-            self.self_healer = CodeSelfHealer(on_stream=getattr(self, 'on_stream', None))
+            if getattr(self, "self_healer", None) is None:
+                self.self_healer = CodeSelfHealer(on_stream=getattr(self, 'on_stream', None))
             self.self_healer.integrate_with_trinity(self)
             
             # Start background monitoring

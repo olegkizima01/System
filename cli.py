@@ -10,6 +10,8 @@ from __future__ import annotations
 import os
 import sys
 
+from core.logging_config import setup_global_logging, get_logger, log_exception
+
 # Silence ChromaDB/PostHog telemetry globally
 os.environ["ANONYMIZED_TELEMETRY"] = "False"
 os.environ["CHROMA_TELEMETRY_ENABLED"] = "False"
@@ -29,6 +31,8 @@ except Exception:
 
 def main() -> None:
     try:
+        setup_global_logging(verbose=False)
+
         # Auto-detect 'run' command for natural language
         if len(sys.argv) > 1:
             first_arg = sys.argv[1]
@@ -52,6 +56,8 @@ def main() -> None:
         sys.exit(0)
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)
+        logger = get_logger("system_cli.cli")
+        log_exception(logger, e, "cli.py main()")
         sys.exit(1)
 
 

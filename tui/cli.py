@@ -68,6 +68,32 @@ try:
     setup_global_logging(verbose=False, tui_state_callback=lambda: state)
 except Exception:
     pass
+
+try:
+    _hook_logger = get_logger("system_cli.excepthook")
+
+    def _sys_excepthook(exc_type, exc, tb):
+        try:
+            log_exception(_hook_logger, exc, "sys.excepthook")
+        except Exception:
+            pass
+        try:
+            sys.__excepthook__(exc_type, exc, tb)
+        except Exception:
+            pass
+
+    sys.excepthook = _sys_excepthook
+
+    def _threading_excepthook(args):
+        try:
+            log_exception(_hook_logger, args.exc_value, f"threading.excepthook thread={getattr(args, 'thread', None)}")
+        except Exception:
+            pass
+
+    if hasattr(threading, "excepthook"):
+        threading.excepthook = _threading_excepthook
+except Exception:
+    pass
 from tui.themes import THEME_NAMES, THEMES
 from tui.messages import MessageBuffer, AgentType
 from tui.cli_paths import (

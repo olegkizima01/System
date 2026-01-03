@@ -10,8 +10,11 @@ import logging
 from typing import Dict, List, Any, Optional, Tuple
 from pathlib import Path
 import chromadb
-from chromadb.config import Settings
-import redis
+
+try:
+    import redis
+except Exception:
+    redis = None
 
 from mcp_integration.chroma_utils import create_persistent_client, get_default_chroma_persist_dir
 
@@ -60,18 +63,19 @@ class MCPToolSelector:
             self.fallback_chain = self.config.get('fallbackChain', ['local_fallback'])
 
     def _init_chroma(self):
-        persist_dir = get_default_chroma_persist_dir() / "mcp_integration"
-        try:
-            init_res = create_persistent_client(persist_dir=persist_dir, logger=logger)
-        except BaseException as e:
-            # Catch pyo3_runtime.PanicException and other fatal errors from chromadb
-            logger.error(f"❌ Chroma PersistentClient init failed (panic or error): {e}")
-            init_res = None
-        
+        persist_enabled = str(os.getenv("SYSTEM_MCP_RAG_PERSIST") or "").strip().lower() in {"1", "true", "yes", "on"}
+        init_res = None
+        if persist_enabled:
+            persist_dir = get_default_chroma_persist_dir() / "mcp_integration"
+            try:
+                init_res = create_persistent_client(persist_dir=persist_dir, logger=logger)
+            except BaseException as e:
+                logger.error(f"❌ Chroma PersistentClient init failed (panic or error): {e}")
+                init_res = None
+
         if init_res is not None:
             self.chroma_client = init_res.client
         else:
-            logger.warning("⚠️ ChromaDB persistence unavailable; using in-memory client")
             try:
                 self.chroma_client = chromadb.Client()
             except Exception as disc_err:
@@ -97,6 +101,9 @@ class MCPToolSelector:
                 logger.warning(f"⚠️ Could not create collection: {col_err}")
 
     def _init_redis(self):
+        if redis is None:
+            self.redis_client = None
+            return
         try:
             self.redis_client = redis.Redis(
                 host='localhost', port=6379, db=0, decode_responses=True
@@ -300,21 +307,30 @@ class MCPToolSelector:
         
         return stats
 
-
 # Singleton instance
-tool_selector = MCPToolSelector()
+_tool_selector: Optional[MCPToolSelector] = None
+
+def _get_tool_selector() -> MCPToolSelector:
+    global _tool_selector
+    if _tool_selector is None:
+        _tool_selector = MCPToolSelector()
+    return _tool_selector
 
 
 def select_tool_for_task(task: str, n_candidates: int = 5) -> List[Dict[str, Any]]:
     """Convenience function for tool selection."""
-    return tool_selector.select_tool(task, n_candidates)
+    return _get_tool_selector().select_tool(task, n_candidates)
 
 
 def get_best_tool_for_task(task: str) -> Optional[Dict[str, Any]]:
     """Convenience function to get the best tool."""
-    return tool_selector.get_best_tool(task)
+    return _get_tool_selector().get_best_tool(task)
 
 
 def classify_task(task: str) -> Tuple[str, float]:
     """Convenience function for task classification."""
-    return tool_selector.classify_task(task)
+    return _get_tool_selector().classify_task(task)
+
+
+def get_rag_stats() -> Dict[str, Any]:
+    return _get_tool_selector().get_stats()

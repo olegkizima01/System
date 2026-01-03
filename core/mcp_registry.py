@@ -16,15 +16,18 @@ from mcp.client.stdio import stdio_client
 # Import RAG integration for intelligent tool selection
 try:
     from mcp_integration.rag_integration import (
-        select_tool_for_task,
-        get_best_tool_for_task,
-        classify_task,
-        tool_selector
+        select_tool_for_task as rag_select_tool_for_task,
+        get_best_tool_for_task as rag_get_best_tool_for_task,
+        classify_task as rag_classify_task,
+        get_rag_stats as rag_get_rag_stats,
     )
     RAG_AVAILABLE = True
 except ImportError:
     RAG_AVAILABLE = False
-    tool_selector = None
+    rag_select_tool_for_task = None
+    rag_get_best_tool_for_task = None
+    rag_classify_task = None
+    rag_get_rag_stats = None
 
 # Import all tools
 from system_ai.tools.automation import (
@@ -74,6 +77,8 @@ class ExternalMCPProvider:
         self.env = env or os.environ.copy()
         self._server_params = StdioServerParameters(command=command, args=args, env=self.env)
         self._tools: Dict[str, Any] = {}
+        self._loop_lock = threading.Lock()
+        self._connect_lock = threading.Lock()
         self._loop = asyncio.new_event_loop()
         self._thread = threading.Thread(target=self._run_loop, daemon=True)
         self._thread.start()
@@ -86,31 +91,56 @@ class ExternalMCPProvider:
         asyncio.set_event_loop(self._loop)
         self._loop.run_forever()
 
-    def connect(self):
-        if self._connected:
-            return
-        
-        async def _setup():
-            self._init_future = self._loop.create_future()
-            self._loop.create_task(self._async_connect())
-            return await self._init_future
-            
-        try:
-            waiter = asyncio.run_coroutine_threadsafe(_setup(), self._loop)
-            waiter.result(timeout=30)
-        except Exception as e:
-            hint = ""
-            if sys.platform == "darwin":
-                hint = " (Check macOS Automation/Accessibility permissions if this times out unexpectedly)"
-                if self.name == "playwright" or "playwright" in self.command.lower():
-                    hint = (
-                        "\n\n🔐 For Playwright MCP server, grant these permissions in System Settings > Privacy & Security:\n"
-                        "   1. Screen Recording - for visual automation\n"
-                        "   2. Accessibility - for browser control\n"
-                        "   After granting permissions, restart the terminal and retry."
-                    )
-            logger.error(f"Failed to connect MCP provider {self.name}: {e}{hint}")
-            raise
+    def _ensure_loop_running(self) -> None:
+        with self._loop_lock:
+            if self._thread is not None and self._thread.is_alive() and self._loop is not None and self._loop.is_running():
+                return
+
+            try:
+                if self._loop is not None and self._loop.is_running():
+                    self._loop.call_soon_threadsafe(self._loop.stop)
+            except Exception:
+                pass
+
+            self._loop = asyncio.new_event_loop()
+            self._thread = threading.Thread(target=self._run_loop, daemon=True)
+            self._thread.start()
+
+            for _ in range(100):
+                if self._loop is not None and self._loop.is_running():
+                    break
+                time.sleep(0.01)
+
+    def connect(self, timeout: float = 30.0):
+        with self._connect_lock:
+            if self._connected:
+                return
+
+            self._ensure_loop_running()
+
+            async def _setup():
+                if self._init_future is None or self._init_future.done():
+                    self._init_future = self._loop.create_future()
+                    self._loop.create_task(self._async_connect())
+                return await self._init_future
+
+            try:
+                waiter = asyncio.run_coroutine_threadsafe(_setup(), self._loop)
+                waiter.result(timeout=timeout)
+            except Exception as e:
+                self._connected = False
+                hint = ""
+                if sys.platform == "darwin":
+                    hint = " (Check macOS Automation/Accessibility permissions if this times out unexpectedly)"
+                    if self.name == "playwright" or "playwright" in self.command.lower():
+                        hint = (
+                            "\n\n🔐 For Playwright MCP server, grant these permissions in System Settings > Privacy & Security:\n"
+                            "   1. Screen Recording - for visual automation\n"
+                            "   2. Accessibility - for browser control\n"
+                            "   After granting permissions, restart the terminal and retry."
+                        )
+                logger.error(f"Failed to connect MCP provider {self.name}: {e}{hint}")
+                raise
 
     async def _async_connect(self):
         """Persistent task that manages the connection lifecycle."""
@@ -121,6 +151,7 @@ class ExternalMCPProvider:
                 await self._session.initialize()
                 
                 tools_list = await self._session.list_tools()
+                self._tools = {}
                 for tool in tools_list.tools:
                     self._tools[tool.name] = tool
                 
@@ -140,15 +171,30 @@ class ExternalMCPProvider:
                 self._connected = False
                 self._session = None
                 self._disconnect_event = None
+                self._tools = {}
 
     def execute(self, tool_name: str, args: Dict[str, Any]) -> Any:
-        if not self._connected:
-            self.connect()
-        future = asyncio.run_coroutine_threadsafe(self._async_execute(tool_name, args), self._loop)
-        return future.result(timeout=60)
+        try:
+            self._ensure_loop_running()
+
+            if not self._connected:
+                self.connect()
+
+            future = asyncio.run_coroutine_threadsafe(self._async_execute(tool_name, args), self._loop)
+            return future.result(timeout=60)
+        except Exception as e:
+            self._connected = False
+            return {
+                "tool": tool_name,
+                "status": "error",
+                "error": str(e),
+                "provider": self.name,
+            }
 
     async def _async_execute(self, tool_name: str, args: Dict[str, Any]) -> Any:
         try:
+            if self._session is None:
+                return {"tool": tool_name, "status": "error", "error": "MCP session is not connected"}
             result = await self._session.call_tool(tool_name, args)
             content = []
             result_content = getattr(result, "content", []) if result is not None else []
@@ -591,7 +637,7 @@ class MCPToolRegistry:
                         
                         # Try to connect immediately to verify configuration
                         try:
-                            provider.connect()
+                            provider.connect(timeout=5.0)
                             print(f"[MCP] Successfully connected to {name} provider")
                         except Exception as connect_error:
                             print(f"[MCP] Warning: Failed to connect to {name} provider: {connect_error}")
@@ -711,7 +757,7 @@ class MCPToolRegistry:
         
         for p_name, provider in self._external_providers.items():
             try:
-                provider.connect()
+                provider.connect(timeout=3.0)
                 for t_name, tool in provider._tools.items():
                     prefixed_name = f"{p_name}.{t_name}"
                     self._external_tools_map[prefixed_name] = p_name
@@ -755,7 +801,7 @@ class MCPToolRegistry:
             try:
                 if not provider._connected:
                      # Attempt connect if not connected (lazy load)
-                     provider.connect()
+                     provider.connect(timeout=3.0)
                      
                 for t_name, tool in provider._tools.items():
                     prefixed_name = f"{p_name}.{t_name}"
@@ -986,8 +1032,8 @@ class MCPToolRegistry:
         """
         Use RAG to intelligently select the best tools for a given task.
         """
-        if RAG_AVAILABLE and tool_selector:
-            return tool_selector.select_tool(task_description, n_candidates)
+        if RAG_AVAILABLE and rag_select_tool_for_task:
+            return rag_select_tool_for_task(task_description, n_candidates)
         
         return self._fallback_tool_selection(task_description, n_candidates)
 
@@ -1000,8 +1046,8 @@ class MCPToolRegistry:
         """
         Classify a task into a category (browser, system, gui, ai, etc.)
         """
-        if RAG_AVAILABLE and tool_selector:
-            return tool_selector.classify_task(task_description)
+        if RAG_AVAILABLE and rag_classify_task:
+            return rag_classify_task(task_description)
         
         task_lower = task_description.lower()
         
@@ -1046,8 +1092,8 @@ class MCPToolRegistry:
 
     def get_rag_stats(self) -> Dict[str, Any]:
         """Get statistics about the RAG system."""
-        if RAG_AVAILABLE and tool_selector:
-            return tool_selector.get_stats()
+        if RAG_AVAILABLE and rag_get_rag_stats:
+            return rag_get_rag_stats()
         return {
             "rag_available": False,
             "fallback_mode": True,
