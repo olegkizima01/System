@@ -18,6 +18,9 @@ export PATH
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 source "$SCRIPT_DIR/common_functions.sh"
 
+# Перевірка безпечного режиму
+check_safe_mode "antigravity_cleanup"
+
 print_header "🛰  ANTIGRAVITY CLEANUP" "$CYAN"
 print_info "Очищення ідентифікаторів Google Antigravity Editor"
 echo ""

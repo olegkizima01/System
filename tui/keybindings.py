@@ -631,9 +631,10 @@ def _handle_cleanup_editors_enter_ctx(ctx):
     import threading
     def run_cleanup_thread():
         import re
-        # Ensure log panel follows new output
+        # Ensure log panel follows new output and is visible
         try:
             ctx["state"].ui_log_follow = True
+            ctx["state"].ui_scroll_target = "log"
         except Exception:
             pass
         ctx["force_ui_update"]()

@@ -8,10 +8,6 @@ setopt NULL_GLOB
 # ═══════════════════════════════════════════════════════════════
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-REPO_ROOT="$SCRIPT_DIR"
-if [ ! -f "$REPO_ROOT/cleanup_modules.json" ] && [ -f "$SCRIPT_DIR/../cleanup_modules.json" ]; then
-    REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-fi
 
 # Підключення common_functions.sh
 COMMON_FUNCTIONS="$SCRIPT_DIR/common_functions.sh"
@@ -24,12 +20,6 @@ fi
 
 CONFIGS_DIR="$REPO_ROOT/configs"
 ORIGINAL_CONFIG="$CONFIGS_DIR/original"
-
-# Завантаження змінних середовища
-load_env "$REPO_ROOT"
-
-# SUDO_ASKPASS
-setup_sudo_askpass "$REPO_ROOT"
 
 print_header "ГЛИБОКЕ ВИДАЛЕННЯ WINDSURF"
 print_info "Для нового клієнта"

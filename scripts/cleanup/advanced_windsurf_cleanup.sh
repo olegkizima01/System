@@ -6,10 +6,6 @@
 # ═══════════════════════════════════════════════════════════════
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-REPO_ROOT="$SCRIPT_DIR"
-if [ ! -f "$REPO_ROOT/cleanup_modules.json" ] && [ -f "$SCRIPT_DIR/../cleanup_modules.json" ]; then
-    REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-fi
 
 # Підключення common_functions.sh
 COMMON_FUNCTIONS="$SCRIPT_DIR/common_functions.sh"
@@ -19,12 +15,6 @@ else
     echo "❌ Не знайдено common_functions.sh"
     exit 1
 fi
-
-# Завантаження змінних середовища
-load_env "$REPO_ROOT"
-
-# SUDO_ASKPASS
-setup_sudo_askpass "$REPO_ROOT"
 
 # Перевірка безпечного режиму
 check_safe_mode "advanced_windsurf_cleanup"

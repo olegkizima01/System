@@ -21,34 +21,64 @@ export PATH
 # ─────────────────────────────────────────────────────────────────
 # ВИЗНАЧЕННЯ ШЛЯХІВ
 # ─────────────────────────────────────────────────────────────────
-SCRIPT_DIR="${SCRIPT_DIR:-$(cd "$(dirname "$0")" && pwd)}"
-REPO_ROOT="$SCRIPT_DIR"
-if [ ! -f "$REPO_ROOT/cleanup_modules.json" ] && [ -f "$SCRIPT_DIR/../cleanup_modules.json" ]; then
-    REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+# Шукаємо корінь проекту (де лежить .env або main.py)
+CURRENT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="$CURRENT_DIR"
+while [ "$REPO_ROOT" != "/" ]; do
+    if [ -f "$REPO_ROOT/.env" ] || [ -f "$REPO_ROOT/main.py" ]; then
+        break
+    fi
+    REPO_ROOT="$(dirname "$REPO_ROOT")"
+done
+# Якщо не знайшли, повертаємось до початкової директорії
+if [ "$REPO_ROOT" = "/" ]; then
+    REPO_ROOT="$CURRENT_DIR"
 fi
+export REPO_ROOT
 
 # ─────────────────────────────────────────────────────────────────
-# ЗАВАНТАЖЕННЯ ЗМІННИХ СЕРЕДОВИЩА
 # ─────────────────────────────────────────────────────────────────
-ENV_FILE="$REPO_ROOT/.env"
-if [ -f "$ENV_FILE" ]; then
-    export $(grep -v '^#' "$ENV_FILE" | grep -v '^$' | xargs 2>/dev/null)
-fi
+# Utility Functions
+# ─────────────────────────────────────────────────────────────────
+load_env() {
+    local root="${1:-$REPO_ROOT}"
+    local env_path="$root/.env"
+    if [ -f "$env_path" ]; then
+        while IFS='=' read -r key value || [ -n "$key" ]; do
+            # Skip comments and empty keys
+            [[ "$key" =~ ^#.*$ ]] && continue
+            [[ -z "$key" ]] && continue
+            # Remove leading/trailing whitespace from key and value
+            key=$(echo "$key" | xargs)
+            value=$(echo "$value" | xargs)
+            [ -n "$key" ] && export "$key=$value"
+        done < "$env_path"
+    fi
+}
 
-# Режими виконання
+setup_sudo_askpass() {
+    local root="${1:-$REPO_ROOT}"
+    local helper="$root/scripts/cleanup/sudo_helper.sh"
+    if [ ! -f "$helper" ] && [ -f "$root/sudo_helper.sh" ]; then
+        helper="$root/sudo_helper.sh"
+    fi
+    if [ -f "$helper" ]; then
+        chmod +x "$helper" 2>/dev/null
+        export SUDO_ASKPASS="$helper"
+    fi
+}
+
+# Initial load
+load_env
+setup_sudo_askpass
+
+# Режими виконання (ensure defaults if not set primitive variables)
 export AUTO_YES="${AUTO_YES:-1}"
 export UNSAFE_MODE="${UNSAFE_MODE:-0}"
 
 # ─────────────────────────────────────────────────────────────────
-# SUDO HELPER
+# SUDO HELPERS & ALIASES
 # ─────────────────────────────────────────────────────────────────
-SUDO_HELPER="$REPO_ROOT/cleanup_scripts/sudo_helper.sh"
-if [ ! -f "$SUDO_HELPER" ] && [ -f "$REPO_ROOT/sudo_helper.sh" ]; then
-    SUDO_HELPER="$REPO_ROOT/sudo_helper.sh"
-fi
-export SUDO_ASKPASS="$SUDO_HELPER"
-chmod +x "$SUDO_ASKPASS" 2>/dev/null
-
 # Перевизначення sudo для використання askpass
 sudo() { command sudo -A "$@"; }
 
@@ -223,35 +253,43 @@ check_sudo() {
 # ─────────────────────────────────────────────────────────────────
 # ВИЗНАЧЕННЯ РЕДАКТОРІВ ТА ЇХ ШЛЯХІВ
 # ─────────────────────────────────────────────────────────────────
-declare -A EDITOR_PATHS
-EDITOR_PATHS[vscode]="$HOME/Library/Application Support/Code"
-EDITOR_PATHS[windsurf]="$HOME/Library/Application Support/Windsurf"
-EDITOR_PATHS[cursor]="$HOME/Library/Application Support/Cursor"
-EDITOR_PATHS[antigravity]="$HOME/Library/Application Support/Antigravity"
+# Using typeset -A for zsh compatibility, fallback to simple variables if not in zsh/bash4
+if [ -n "$ZSH_VERSION" ] || [ "${BASH_VERSINFO[0]:-0}" -ge 4 ]; then
+    typeset -A EDITOR_PATHS
+    EDITOR_PATHS[vscode]="$HOME/Library/Application Support/Code"
+    EDITOR_PATHS[windsurf]="$HOME/Library/Application Support/Windsurf"
+    EDITOR_PATHS[cursor]="$HOME/Library/Application Support/Cursor"
+    EDITOR_PATHS[antigravity]="$HOME/Library/Application Support/Antigravity"
 
-declare -A EDITOR_PROCESS_NAMES
-EDITOR_PROCESS_NAMES[vscode]="Code"
-EDITOR_PROCESS_NAMES[windsurf]="Windsurf"
-EDITOR_PROCESS_NAMES[cursor]="Cursor"
-EDITOR_PROCESS_NAMES[antigravity]="Antigravity"
+    typeset -A EDITOR_PROCESS_NAMES
+    EDITOR_PROCESS_NAMES[vscode]="Code"
+    EDITOR_PROCESS_NAMES[windsurf]="Windsurf"
+    EDITOR_PROCESS_NAMES[cursor]="Cursor"
+    EDITOR_PROCESS_NAMES[antigravity]="Antigravity"
 
-# Hidden paths to clean for specific editors
-declare -A EDITOR_HIDDEN_PATHS
-EDITOR_HIDDEN_PATHS[antigravity]="$HOME/.antigravity"
-EDITOR_HIDDEN_PATHS[windsurf]="$HOME/.codeium"
-EDITOR_HIDDEN_PATHS[vscode]="$HOME/.vscode"
+    # Hidden paths to clean for specific editors
+    typeset -A EDITOR_HIDDEN_PATHS
+    EDITOR_HIDDEN_PATHS[antigravity]="$HOME/.antigravity"
+    EDITOR_HIDDEN_PATHS[windsurf]="$HOME/.codeium"
+    EDITOR_HIDDEN_PATHS[vscode]="$HOME/.vscode"
 
-declare -A EDITOR_BUNDLE_IDS
-EDITOR_BUNDLE_IDS[vscode]="com.microsoft.VSCode"
-EDITOR_BUNDLE_IDS[windsurf]="com.exafunction.windsurf"
-EDITOR_BUNDLE_IDS[cursor]="com.todesktop.230313mzl4w4u92"
-EDITOR_BUNDLE_IDS[antigravity]="com.google.antigravity"
+    typeset -A EDITOR_BUNDLE_IDS
+    EDITOR_BUNDLE_IDS[vscode]="com.microsoft.VSCode"
+    EDITOR_BUNDLE_IDS[windsurf]="com.exafunction.windsurf"
+    EDITOR_BUNDLE_IDS[cursor]="com.todesktop.230313mzl4w4u92"
+    EDITOR_BUNDLE_IDS[antigravity]="com.google.antigravity"
 
-declare -A EDITOR_KEYCHAIN_SERVICES
-EDITOR_KEYCHAIN_SERVICES[vscode]="Code Visual\ Studio\ Code com.microsoft.VSCode VS\ Code GitHub github.com Microsoft microsoft.com"
-EDITOR_KEYCHAIN_SERVICES[windsurf]="Windsurf windsurf com.windsurf Windsurf\ Editor Codeium\ Windsurf Codeium codeium codeium.com api.codeium.com com.exafunction.windsurf"
-EDITOR_KEYCHAIN_SERVICES[cursor]="Cursor cursor com.cursor Cursor\ Editor cursor.sh api.cursor.sh com.todesktop.230313mzl4w4u92"
-EDITOR_KEYCHAIN_SERVICES[antigravity]="Antigravity antigravity Google\ Antigravity google-antigravity antigravity.google.com api.antigravity.google.com com.google.antigravity"
+    typeset -A EDITOR_KEYCHAIN_SERVICES
+    EDITOR_KEYCHAIN_SERVICES[vscode]="Code Visual\ Studio\ Code com.microsoft.VSCode VS\ Code GitHub github.com Microsoft microsoft.com"
+    EDITOR_KEYCHAIN_SERVICES[windsurf]="Windsurf windsurf com.windsurf Windsurf\ Editor Codeium\ Windsurf Codeium codeium codeium.com api.codeium.com com.exafunction.windsurf"
+    EDITOR_KEYCHAIN_SERVICES[cursor]="Cursor cursor com.cursor Cursor\ Editor cursor.sh api.cursor.sh com.todesktop.230313mzl4w4u92"
+    EDITOR_KEYCHAIN_SERVICES[antigravity]="Antigravity antigravity Google\ Antigravity google-antigravity antigravity.google.com api.antigravity.google.com com.google.antigravity"
+else
+    # Fallback for old bash (simple variables)
+    EDITOR_PATHS_vscode="$HOME/Library/Application Support/Code"
+    # ... (skipping full fallback implementation for now as we primarily target zsh)
+    print_warning "Limited functionality: Associative arrays not supported in this shell."
+fi
 
 # ─────────────────────────────────────────────────────────────────
 # ФУНКЦІЇ ОЧИЩЕННЯ РЕДАКТОРІВ

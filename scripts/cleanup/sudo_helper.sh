@@ -3,10 +3,17 @@
 # Використовується через SUDO_ASKPASS
 
 # Завантаження змінних з .env файлу
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-REPO_ROOT="$SCRIPT_DIR"
-if [ ! -f "$REPO_ROOT/cleanup_modules.json" ] && [ -f "$SCRIPT_DIR/../cleanup_modules.json" ]; then
-    REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+# Шукаємо корінь проекту (де лежить .env або main.py)
+CURRENT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="$CURRENT_DIR"
+while [ "$REPO_ROOT" != "/" ]; do
+    if [ -f "$REPO_ROOT/.env" ] || [ -f "$REPO_ROOT/main.py" ]; then
+        break
+    fi
+    REPO_ROOT="$(dirname "$REPO_ROOT")"
+done
+if [ "$REPO_ROOT" = "/" ]; then
+    REPO_ROOT="$CURRENT_DIR"
 fi
 ENV_FILE="$REPO_ROOT/.env"
 

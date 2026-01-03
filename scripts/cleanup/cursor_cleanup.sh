@@ -10,6 +10,9 @@ setopt NULL_GLOB
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 source "$SCRIPT_DIR/common_functions.sh"
 
+# Перевірка безпечного режиму
+check_safe_mode "cursor_cleanup"
+
 print_header "🖱️  CURSOR CLEANUP" "$CYAN"
 print_info "Очищення ідентифікаторів Cursor Editor"
 echo ""
