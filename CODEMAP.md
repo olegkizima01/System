@@ -4,8 +4,8 @@
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 312
-- **Files Skipped**: 36273
-- **Generated**: 2026-01-03 22:05:32
+- **Files Skipped**: 36303
+- **Generated**: 2026-01-03 22:05:38
 
 ---
 
@@ -243,34 +243,18 @@ graph TD
 ## Git Diff (Recent Changes)
 
 ```
- .last_response.txt                 |      4 +-
- CODEMAP.md                         | 105193 +---------------------------------
- RECOMMENDATIONS.md                 |    300 -
- cli.sh                             |    118 +-
- core/mcp_registry.py               |     19 +-
- core/memory.py                     |     24 +-
- core/trinity/execution.py          |     23 +
- core/trinity/nodes/atlas.py        |     27 +-
- core/trinity/nodes/grisha.py       |      4 +-
- core/trinity/nodes/meta_planner.py |     11 +-
- core/trinity/nodes/vibe.py         |     17 +-
- core/trinity/runtime.py            |     41 +-
- system_ai/tools/__init__.py        |      2 +
- tui/agents.py                      |      7 +-
- tui/cli.py                         |     44 +-
- tui/cli_helpers.py                 |     38 +-
- tui/monitoring.py                  |    244 +
- 17 files changed, 645 insertions(+), 105471 deletions(-)
+ CODEMAP.md | 105424 +---------------------------------------------------------
+ 1 file changed, 2 insertions(+), 105422 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
+5b524b57 Trinity task completed: Створи файл test_hello.txt з текстом 'Hello World'
 4e984beb Update: Cleanup: Removed legacy project_structure_final.txt, verified CODEMAP.md
 47428bf4 Update: Codemap Improvements: Added Trinity Runtime Architecture, replaced proje
 e886f271 docs: localize and simplify Atlas workflow documentation and add `clean_antigravity.sh` script.
 9e75bc3c Docs: Update Codemap Structure, README, and Atlas Workflow
-aa46d04e feat: Add app scanning and process monitoring, refactor TUI CLI into dedicated modules, and enhance CLI startup script.
 ```
 
 ---
@@ -105649,4 +105633,4 @@ def _render_mcp_client_menu(ctx: dict) -> List[Tuple[str, str]]:
 ## Summary
 
 - **Total Files**: 312
-- **Skipped**: 36273
+- **Skipped**: 36303
