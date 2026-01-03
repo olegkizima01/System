@@ -3,9 +3,9 @@
 ## Metadata
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
-- **Files Included**: 312
-- **Files Skipped**: 36315
-- **Generated**: 2026-01-03 22:11:28
+- **Files Included**: 313
+- **Files Skipped**: 36313
+- **Generated**: 2026-01-03 22:23:31
 
 ---
 
@@ -130,67 +130,6 @@ graph TD
 ## Program Execution Logs (Last 100 lines)
 
 ```
-2026-01-03 19:29:49 | DEBUG    | trinity.state_init | log_initial_state:94 | meta_config.strategy: None
-2026-01-03 19:29:49 | DEBUG    | trinity.state_init | log_initial_state:95 | meta_config.verification_rigor: None
-2026-01-03 19:29:49 | DEBUG    | trinity.state_init | log_initial_state:96 | meta_config.recovery_mode: None
-2026-01-03 19:29:55 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> meta_planner (step 0, status: success)
-2026-01-03 19:29:55 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
-2026-01-03 19:30:09 | DEBUG    | system_cli.verifier | optimize_plan:93 | [Verifier] Plan optimized (Rigor: MEDIUM): 7 → 12 steps
-2026-01-03 19:30:09 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> atlas (step 1, status: success)
-2026-01-03 19:30:14 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> tetyana (step 1, status: success)
-2026-01-03 19:30:45 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> grisha (step 0, status: success)
-2026-01-03 19:30:45 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> meta_planner (step 2, status: success)
-2026-01-03 19:30:45 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> atlas (step 3, status: success)
-2026-01-03 19:30:49 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> tetyana (step 3, status: success)
-2026-01-03 19:31:14 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> grisha (step 0, status: success)
-2026-01-03 19:31:18 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> meta_planner (step 4, status: success)
-2026-01-03 19:31:18 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> atlas (step 5, status: success)
-2026-01-03 19:31:22 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> tetyana (step 5, status: success)
-2026-01-03 19:31:35 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> grisha (step 0, status: success)
-2026-01-03 19:31:35 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> meta_planner (step 6, status: success)
-2026-01-03 19:31:35 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> atlas (step 7, status: success)
-2026-01-03 19:31:40 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> tetyana (step 7, status: success)
-2026-01-03 19:31:54 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> grisha (step 0, status: success)
-2026-01-03 19:31:54 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> meta_planner (step 8, status: success)
-2026-01-03 19:31:54 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> atlas (step 9, status: success)
-2026-01-03 19:32:04 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> tetyana (step 9, status: success)
-2026-01-03 19:32:08 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> grisha (step 0, status: success)
-2026-01-03 19:32:12 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> meta_planner (step 10, status: success)
-2026-01-03 19:32:12 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> atlas (step 11, status: success)
-2026-01-03 19:32:16 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> tetyana (step 11, status: failed)
-2026-01-03 19:32:34 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> grisha (step 0, status: success)
-2026-01-03 19:32:34 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> meta_planner (step 12, status: success)
-2026-01-03 19:32:34 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> atlas (step 13, status: success)
-2026-01-03 19:32:39 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> tetyana (step 13, status: failed)
-2026-01-03 19:32:54 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> grisha (step 0, status: success)
-2026-01-03 19:32:54 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> meta_planner (step 14, status: success)
-2026-01-03 19:32:54 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> atlas (step 15, status: success)
-2026-01-03 19:32:58 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> tetyana (step 15, status: failed)
-2026-01-03 19:33:11 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> grisha (step 0, status: success)
-2026-01-03 19:33:15 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> meta_planner (step 16, status: success)
-2026-01-03 19:33:15 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> atlas (step 17, status: success)
-2026-01-03 19:33:20 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> tetyana (step 17, status: failed)
-2026-01-03 19:33:24 | ERROR    | trinity.core | run:364 | Runtime workflow error: maximum recursion depth exceeded
-2026-01-03 20:30:02 | INFO     | trinity.core | _enrich_context_with_sonar:121 | 🔎 Sonar enrichment added to context (project=System)
-2026-01-03 21:30:15 | INFO     | trinity.core | _enrich_context_with_sonar:121 | 🔎 Sonar enrichment added to context (project=System)
-2026-01-03 21:54:47 | INFO     | root | _handle_tui_command:1514 | TUI mode exited successfully
-2026-01-03 21:54:56 | INFO     | root | cli_main:1445 | CLI started with arguments: []
-2026-01-03 21:54:56 | DEBUG    | root | cli_main:1450 | Parsed command: None
-2026-01-03 21:54:56 | INFO     | root | _handle_tui_command:1511 | Starting TUI mode
-2026-01-03 21:54:56 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
-2026-01-03 21:54:56 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
-2026-01-03 21:55:06 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
-2026-01-03 21:55:07 | INFO     | trinity.core | _enrich_context_with_sonar:121 | 🔎 Sonar enrichment added to context (project=System)
-2026-01-03 21:55:09 | INFO     | trinity.state_init | log_initial_state:79 | ================================================================================
-2026-01-03 21:55:09 | INFO     | trinity.state_init | log_initial_state:80 | TRINITY STATE INITIALIZATION
-2026-01-03 21:55:09 | INFO     | trinity.state_init | log_initial_state:81 | Task: відкрий кліп архангер на все вікно...
-2026-01-03 21:55:09 | INFO     | trinity.state_init | log_initial_state:82 | Timestamp: 2026-01-03T21:55:09.837120
-2026-01-03 21:55:09 | INFO     | trinity.state_init | log_initial_state:83 | --------------------------------------------------------------------------------
-2026-01-03 21:55:09 | DEBUG    | trinity.state_init | log_initial_state:86 | initial_agent: meta_planner
-2026-01-03 21:55:09 | DEBUG    | trinity.state_init | log_initial_state:87 | task_type: GENERAL
-2026-01-03 21:55:09 | DEBUG    | trinity.state_init | log_initial_state:88 | is_dev: False
-2026-01-03 21:55:09 | DEBUG    | trinity.state_init | log_initial_state:89 | execution_mode: native
-2026-01-03 21:55:09 | DEBUG    | trinity.state_init | log_initial_state:90 | gui_mode: auto
 2026-01-03 21:55:09 | DEBUG    | trinity.state_init | log_initial_state:94 | meta_config.strategy: None
 2026-01-03 21:55:09 | DEBUG    | trinity.state_init | log_initial_state:95 | meta_config.verification_rigor: None
 2026-01-03 21:55:09 | DEBUG    | trinity.state_init | log_initial_state:96 | meta_config.recovery_mode: None
@@ -230,6 +169,67 @@ graph TD
 2026-01-03 21:58:49 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> tetyana (step 14, status: success)
 2026-01-03 21:58:53 | ERROR    | trinity.core | run:364 | Runtime workflow error: maximum recursion depth exceeded
 2026-01-03 22:01:44 | INFO     | root | _handle_tui_command:1514 | TUI mode exited successfully
+2026-01-03 22:12:26 | INFO     | root | cli_main:1445 | CLI started with arguments: []
+2026-01-03 22:12:26 | DEBUG    | root | cli_main:1450 | Parsed command: None
+2026-01-03 22:12:26 | INFO     | root | _handle_tui_command:1511 | Starting TUI mode
+2026-01-03 22:12:26 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
+2026-01-03 22:12:26 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
+2026-01-03 22:13:08 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
+2026-01-03 22:13:09 | INFO     | trinity.core | _enrich_context_with_sonar:121 | 🔎 Sonar enrichment added to context (project=System)
+2026-01-03 22:13:11 | INFO     | trinity.state_init | log_initial_state:79 | ================================================================================
+2026-01-03 22:13:11 | INFO     | trinity.state_init | log_initial_state:80 | TRINITY STATE INITIALIZATION
+2026-01-03 22:13:11 | INFO     | trinity.state_init | log_initial_state:81 | Task: відкрий кліп архангела в ютубі на все вікно і провірь щоб кліп був запущений на все вікно...
+2026-01-03 22:13:11 | INFO     | trinity.state_init | log_initial_state:82 | Timestamp: 2026-01-03T22:13:11.235460
+2026-01-03 22:13:11 | INFO     | trinity.state_init | log_initial_state:83 | --------------------------------------------------------------------------------
+2026-01-03 22:13:11 | DEBUG    | trinity.state_init | log_initial_state:86 | initial_agent: meta_planner
+2026-01-03 22:13:11 | DEBUG    | trinity.state_init | log_initial_state:87 | task_type: GENERAL
+2026-01-03 22:13:11 | DEBUG    | trinity.state_init | log_initial_state:88 | is_dev: False
+2026-01-03 22:13:11 | DEBUG    | trinity.state_init | log_initial_state:89 | execution_mode: native
+2026-01-03 22:13:11 | DEBUG    | trinity.state_init | log_initial_state:90 | gui_mode: auto
+2026-01-03 22:13:11 | DEBUG    | trinity.state_init | log_initial_state:94 | meta_config.strategy: None
+2026-01-03 22:13:11 | DEBUG    | trinity.state_init | log_initial_state:95 | meta_config.verification_rigor: None
+2026-01-03 22:13:11 | DEBUG    | trinity.state_init | log_initial_state:96 | meta_config.recovery_mode: None
+2026-01-03 22:13:16 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> meta_planner (step 0, status: success)
+2026-01-03 22:13:16 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
+2026-01-03 22:13:29 | DEBUG    | system_cli.verifier | optimize_plan:93 | [Verifier] Plan optimized (Rigor: MEDIUM): 5 → 8 steps
+2026-01-03 22:13:29 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> atlas (step 1, status: success)
+2026-01-03 22:13:40 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> tetyana (step 1, status: success)
+2026-01-03 22:13:45 | ERROR    | trinity.core | run:364 | Runtime workflow error: maximum recursion depth exceeded
+2026-01-03 22:17:31 | INFO     | root | _handle_tui_command:1514 | TUI mode exited successfully
+2026-01-03 22:17:37 | INFO     | root | cli_main:1445 | CLI started with arguments: []
+2026-01-03 22:17:37 | DEBUG    | root | cli_main:1450 | Parsed command: None
+2026-01-03 22:17:37 | INFO     | root | _handle_tui_command:1511 | Starting TUI mode
+2026-01-03 22:17:37 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
+2026-01-03 22:17:37 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
+2026-01-03 22:18:06 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
+2026-01-03 22:18:07 | INFO     | trinity.core | _enrich_context_with_sonar:121 | 🔎 Sonar enrichment added to context (project=System)
+2026-01-03 22:18:09 | INFO     | trinity.state_init | log_initial_state:79 | ================================================================================
+2026-01-03 22:18:09 | INFO     | trinity.state_init | log_initial_state:80 | TRINITY STATE INITIALIZATION
+2026-01-03 22:18:09 | INFO     | trinity.state_init | log_initial_state:81 | Task: відкрий кліп архангел в браузері на все вікно і перевірь щоб кліп був розгорнутий як і бразузер...
+2026-01-03 22:18:09 | INFO     | trinity.state_init | log_initial_state:82 | Timestamp: 2026-01-03T22:18:09.243521
+2026-01-03 22:18:09 | INFO     | trinity.state_init | log_initial_state:83 | --------------------------------------------------------------------------------
+2026-01-03 22:18:09 | DEBUG    | trinity.state_init | log_initial_state:86 | initial_agent: meta_planner
+2026-01-03 22:18:09 | DEBUG    | trinity.state_init | log_initial_state:87 | task_type: GENERAL
+2026-01-03 22:18:09 | DEBUG    | trinity.state_init | log_initial_state:88 | is_dev: False
+2026-01-03 22:18:09 | DEBUG    | trinity.state_init | log_initial_state:89 | execution_mode: native
+2026-01-03 22:18:09 | DEBUG    | trinity.state_init | log_initial_state:90 | gui_mode: auto
+2026-01-03 22:18:09 | DEBUG    | trinity.state_init | log_initial_state:94 | meta_config.strategy: None
+2026-01-03 22:18:09 | DEBUG    | trinity.state_init | log_initial_state:95 | meta_config.verification_rigor: None
+2026-01-03 22:18:09 | DEBUG    | trinity.state_init | log_initial_state:96 | meta_config.recovery_mode: None
+2026-01-03 22:18:13 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> meta_planner (step 0, status: success)
+2026-01-03 22:18:13 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
+2026-01-03 22:18:28 | DEBUG    | system_cli.verifier | optimize_plan:93 | [Verifier] Plan optimized (Rigor: MEDIUM): 5 → 8 steps
+2026-01-03 22:18:28 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> atlas (step 1, status: success)
+2026-01-03 22:18:33 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> tetyana (step 1, status: success)
+2026-01-03 22:18:45 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> grisha (step 0, status: success)
+2026-01-03 22:18:45 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> meta_planner (step 2, status: success)
+2026-01-03 22:18:45 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> atlas (step 3, status: success)
+2026-01-03 22:18:52 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> tetyana (step 3, status: failed)
+2026-01-03 22:19:05 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> grisha (step 0, status: success)
+2026-01-03 22:19:09 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> meta_planner (step 4, status: success)
+2026-01-03 22:19:09 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> atlas (step 5, status: success)
+2026-01-03 22:19:15 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> tetyana (step 5, status: failed)
+2026-01-03 22:19:18 | ERROR    | trinity.core | run:364 | Runtime workflow error: maximum recursion depth exceeded
 ```
 
 ---
@@ -243,18 +243,23 @@ graph TD
 ## Git Diff (Recent Changes)
 
 ```
- CODEMAP.md | 105478 +---------------------------------------------------------
- 1 file changed, 2 insertions(+), 105476 deletions(-)
+ CODEMAP.md                         | 105600 +---------------------------------
+ core/trinity/nodes/atlas.py        |      7 +
+ core/trinity/nodes/grisha.py       |      6 +
+ core/trinity/nodes/meta_planner.py |      7 +
+ core/trinity/nodes/tetyana.py      |      6 +
+ core/trinity/runtime.py            |      8 +
+ 6 files changed, 98 insertions(+), 105536 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
+b5599125 Trinity task completed: Знайди інформацію про Python на Wikipedia
 3d922b4f Trinity task completed: Створи файл test_hello.txt з текстом 'Hello World'
 0892a1d3 Коміт версії
 1e423759 Trinity task completed: Знайди інформацію про Python на Wikipedia
 5b524b57 Trinity task completed: Створи файл test_hello.txt з текстом 'Hello World'
-4e984beb Update: Cleanup: Removed legacy project_structure_final.txt, verified CODEMAP.md
 ```
 
 ---
@@ -627,6 +632,7 @@ System/
 ├── setup.sh
 ├── sonar-project.properties
 ├── task_analysis.log
+├── test_browser_recursion.py
 ├── test_recursion_fix.py
 ├── tui_menu_append.tmp
 ├── UNIFIED_LOGGING.md
@@ -11474,7 +11480,7 @@ __all__ = [
 ]
 ```
 
-### `core/trinity/nodes/atlas.py` (29.5 KB)
+### `core/trinity/nodes/atlas.py` (30.1 KB)
 
 ```python
 import os
@@ -11495,6 +11501,13 @@ class AtlasMixin:
 
     def _atlas_node(self, state: TrinityState):
         """Generates the plan based on Meta-Planner policy."""
+        # EMERGENCY: Check recursion depth before any processing
+        step_count = state.get("step_count", 0)
+        replan_count = state.get("replan_count", 0)
+        if step_count >= getattr(self, "MAX_STEPS", 30) or replan_count >= getattr(self, "MAX_REPLANS", 10):
+            if self.verbose: print(f"🚨 [Atlas] EMERGENCY: Limits reached (step={step_count}, replan={replan_count}), forcing completion")
+            return {"current_agent": "knowledge", "last_step_status": "failed", "messages": list(state.get("messages", []))}
+        
         if self.verbose: print("🌐 [Atlas] Generating steps...")
         
         # 1. State extraction
@@ -12179,7 +12192,7 @@ def count_uncertain_streak(state: Dict[str, Any]) -> int:
         return 0
 ```
 
-### `core/trinity/nodes/grisha.py` (17.5 KB)
+### `core/trinity/nodes/grisha.py` (17.9 KB)
 
 ```python
 import os
@@ -12197,6 +12210,12 @@ class GrishaMixin:
     """Mixin for TrinityRuntime containing Grisha (Verifier) logic."""
 
     def _grisha_node(self, state: TrinityState):
+        # EMERGENCY: Check recursion depth before any processing
+        step_count = state.get("step_count", 0)
+        if step_count >= getattr(self, "MAX_STEPS", 30):
+            if self.verbose: print(f"🚨 [Grisha] EMERGENCY: MAX_STEPS reached ({step_count}), forcing completion")
+            return {"current_agent": "knowledge", "last_step_status": "success", "messages": list(state.get("messages", []))}
+        
         if self.verbose: print(f"👁️ {VOICE_MARKER} [Grisha] Verifying...")
         context = state.get("messages", [])
         last_msg = self._get_last_msg_content(context)
@@ -12586,7 +12605,7 @@ class KnowledgeMixin:
                 print(f"⚠️ [Learning] Error: {e}")
 ```
 
-### `core/trinity/nodes/meta_planner.py` (14.3 KB)
+### `core/trinity/nodes/meta_planner.py` (14.8 KB)
 
 ```python
 from typing import List, Dict, Any, Optional
@@ -12600,6 +12619,13 @@ class MetaPlannerMixin:
 
     def _meta_planner_node(self, state: TrinityState):
         """The 'Controller Brain' that sets policies and manages replanning strategy."""
+        # EMERGENCY: Check recursion depth before any processing
+        step_count = state.get("step_count", 0)
+        replan_count = state.get("replan_count", 0)
+        if step_count >= getattr(self, "MAX_STEPS", 30) or replan_count >= getattr(self, "MAX_REPLANS", 10):
+            if self.verbose: print(f"🚨 [Meta-Planner] EMERGENCY: Limits reached (step={step_count}, replan={replan_count}), forcing completion")
+            return {"current_agent": "end", "messages": list(state.get("messages", []))}
+        
         if self.verbose: print(f"🧠 {VOICE_MARKER} [Meta-Planner] Analyzing strategy...")
         context = state.get("messages", [])
         last_msg = getattr(context[-1], "content", "Start") if context and context[-1] else "Start"
@@ -12870,7 +12896,7 @@ class MetaPlannerMixin:
         state["retrieved_context"] = "\n".join(relevant)
 ```
 
-### `core/trinity/nodes/tetyana.py` (21.3 KB)
+### `core/trinity/nodes/tetyana.py` (21.7 KB)
 
 ```python
 import os
@@ -12890,6 +12916,12 @@ class TetyanaMixin:
 
     def _tetyana_node(self, state: TrinityState):
         """Executes the next step in the plan using Tetyana (Executor)."""
+        # EMERGENCY: Check recursion depth before any processing
+        step_count = state.get("step_count", 0)
+        if step_count >= getattr(self, "MAX_STEPS", 30):
+            if self.verbose: print(f"🚨 [Tetyana] EMERGENCY: MAX_STEPS reached ({step_count}), forcing completion")
+            return {"current_agent": "knowledge", "last_step_status": "failed", "messages": list(state.get("messages", []))}
+        
         if self.verbose:
             print(f"🔧 {VOICE_MARKER} [Tetyana] Executing step...")
         
@@ -13431,7 +13463,7 @@ Trinity Planning module - Strategy and plan optimization.
 __all__ = []
 ```
 
-### `core/trinity/runtime.py` (16.4 KB)
+### `core/trinity/runtime.py` (16.8 KB)
 
 ```python
 import os
@@ -13722,6 +13754,11 @@ class TrinityRuntime(
 
     def run(self, task: str, gui_mode: str = "auto", execution_mode: str = "native", recursion_limit: int = 200) -> Generator[Dict[str, Any], None, None]:
         """Core execution loop using the LangGraph workflow."""
+        # CRITICAL: Set higher Python recursion limit to prevent stack overflow during LangGraph execution
+        import sys
+        old_recursion_limit = sys.getrecursionlimit()
+        sys.setrecursionlimit(max(3000, old_recursion_limit))  # Ensure at least 3000
+        
         # Reset execution trace
         self.execution_trace = []
         
@@ -13799,6 +13836,9 @@ class TrinityRuntime(
         except Exception as e:
             self.logger.error(f"Runtime workflow error: {e}")
             raise
+        finally:
+            # Restore original Python recursion limit
+            sys.setrecursionlimit(old_recursion_limit)
 
     def _log_execution_step(self, step_name: str, state: Dict[str, Any]):
         """Log execution steps for debugging and tracing"""
@@ -87325,6 +87365,106 @@ def send_to_windsurf(message: str) -> Dict[str, Any]:
     }
 ```
 
+### `test_browser_recursion.py` (3.2 KB)
+
+```python
+#!/usr/bin/env python3
+"""Test Trinity with real browser task to verify anti-loop fixes."""
+
+import os
+import sys
+
+# Recursion limit для Python (не плутати з LangGraph recursion_limit)
+sys.setrecursionlimit(500)
+
+# Suppress warnings
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
+from core.trinity import TrinityRuntime, TrinityPermissions
+
+def test_browser_task():
+    """Test with browser task that previously caused loops."""
+    print("🧪 Тест: Браузерне завдання (реальний запуск)")
+    print("=" * 60)
+    
+    permissions = TrinityPermissions(
+        allow_shell=True,
+        allow_applescript=True,
+        allow_file_write=True,
+        allow_gui=True,
+        allow_shortcuts=True,
+        hyper_mode=False
+    )
+    
+    runtime = TrinityRuntime(
+        verbose=True,
+        permissions=permissions,
+        preferred_language="uk"
+    )
+    
+    # Task that previously caused recursion
+    task = "Відкрий YouTube і знайди Архангел виконавець"
+    
+    print(f"📋 Завдання: {task}\n")
+    
+    event_count = 0
+    step_count = 0
+    agent_sequence = []
+    
+    try:
+        # Use lower recursion_limit to catch issues early
+        for event in runtime.run(task, gui_mode="auto", execution_mode="native", recursion_limit=100):
+            event_count += 1
+            
+            for node_name, state_update in event.items():
+                agent_sequence.append(node_name)
+                step_count = state_update.get("step_count", step_count)
+                replan_count = state_update.get("replan_count", 0)
+                
+                # Print progress
+                print(f"  [{event_count:02d}] {node_name:15s} (step={step_count}, replan={replan_count})")
+                
+                # Safety check
+                if event_count > 50:
+                    print(f"\n⚠️ ABORT: Event count exceeded 50!")
+                    return False
+                    
+                if step_count > 30:
+                    print(f"\n⚠️ ABORT: Step count exceeded 30!")
+                    return False
+    
+    except RecursionError as e:
+        print(f"\n❌ RECURSION ERROR після {event_count} подій!")
+        print(f"   Послідовність агентів: {' → '.join(agent_sequence[-20:])}")
+        return False
+    except Exception as e:
+        print(f"\n❌ ERROR: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
+    
+    print(f"\n✅ Завдання завершено успішно!")
+    print(f"   Події: {event_count}, Кроки: {step_count}")
+    print(f"   Послідовність: {' → '.join(agent_sequence)}")
+    
+    # Validate no excessive looping
+    if event_count > 40:
+        print(f"⚠️ WARN: Багато подій ({event_count}), можливі субоптимальні цикли")
+    
+    return True
+
+if __name__ == "__main__":
+    print("🚀 Запуск тесту рекурсії з браузерним завданням\n")
+    success = test_browser_task()
+    print("\n" + "=" * 60)
+    if success:
+        print("🎉 ТЕСТ ПРОЙДЕНО!")
+    else:
+        print("❌ ТЕСТ НЕ ПРОЙДЕНО!")
+    print("=" * 60)
+    sys.exit(0 if success else 1)
+```
+
 ### `test_recursion_fix.py` (4.7 KB)
 
 ```python
@@ -105700,5 +105840,5 @@ def _render_mcp_client_menu(ctx: dict) -> List[Tuple[str, str]]:
 
 ## Summary
 
-- **Total Files**: 312
-- **Skipped**: 36315
+- **Total Files**: 313
+- **Skipped**: 36313

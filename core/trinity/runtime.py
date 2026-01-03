@@ -286,6 +286,11 @@ class TrinityRuntime(
 
     def run(self, task: str, gui_mode: str = "auto", execution_mode: str = "native", recursion_limit: int = 200) -> Generator[Dict[str, Any], None, None]:
         """Core execution loop using the LangGraph workflow."""
+        # CRITICAL: Set higher Python recursion limit to prevent stack overflow during LangGraph execution
+        import sys
+        old_recursion_limit = sys.getrecursionlimit()
+        sys.setrecursionlimit(max(3000, old_recursion_limit))  # Ensure at least 3000
+        
         # Reset execution trace
         self.execution_trace = []
         
@@ -363,6 +368,9 @@ class TrinityRuntime(
         except Exception as e:
             self.logger.error(f"Runtime workflow error: {e}")
             raise
+        finally:
+            # Restore original Python recursion limit
+            sys.setrecursionlimit(old_recursion_limit)
 
     def _log_execution_step(self, step_name: str, state: Dict[str, Any]):
         """Log execution steps for debugging and tracing"""

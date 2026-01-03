@@ -15,6 +15,12 @@ class TetyanaMixin:
 
     def _tetyana_node(self, state: TrinityState):
         """Executes the next step in the plan using Tetyana (Executor)."""
+        # EMERGENCY: Check recursion depth before any processing
+        step_count = state.get("step_count", 0)
+        if step_count >= getattr(self, "MAX_STEPS", 30):
+            if self.verbose: print(f"🚨 [Tetyana] EMERGENCY: MAX_STEPS reached ({step_count}), forcing completion")
+            return {"current_agent": "knowledge", "last_step_status": "failed", "messages": list(state.get("messages", []))}
+        
         if self.verbose:
             print(f"🔧 {VOICE_MARKER} [Tetyana] Executing step...")
         

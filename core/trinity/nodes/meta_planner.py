@@ -9,6 +9,13 @@ class MetaPlannerMixin:
 
     def _meta_planner_node(self, state: TrinityState):
         """The 'Controller Brain' that sets policies and manages replanning strategy."""
+        # EMERGENCY: Check recursion depth before any processing
+        step_count = state.get("step_count", 0)
+        replan_count = state.get("replan_count", 0)
+        if step_count >= getattr(self, "MAX_STEPS", 30) or replan_count >= getattr(self, "MAX_REPLANS", 10):
+            if self.verbose: print(f"🚨 [Meta-Planner] EMERGENCY: Limits reached (step={step_count}, replan={replan_count}), forcing completion")
+            return {"current_agent": "end", "messages": list(state.get("messages", []))}
+        
         if self.verbose: print(f"🧠 {VOICE_MARKER} [Meta-Planner] Analyzing strategy...")
         context = state.get("messages", [])
         last_msg = getattr(context[-1], "content", "Start") if context and context[-1] else "Start"

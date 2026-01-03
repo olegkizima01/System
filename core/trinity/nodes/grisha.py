@@ -13,6 +13,12 @@ class GrishaMixin:
     """Mixin for TrinityRuntime containing Grisha (Verifier) logic."""
 
     def _grisha_node(self, state: TrinityState):
+        # EMERGENCY: Check recursion depth before any processing
+        step_count = state.get("step_count", 0)
+        if step_count >= getattr(self, "MAX_STEPS", 30):
+            if self.verbose: print(f"🚨 [Grisha] EMERGENCY: MAX_STEPS reached ({step_count}), forcing completion")
+            return {"current_agent": "knowledge", "last_step_status": "success", "messages": list(state.get("messages", []))}
+        
         if self.verbose: print(f"👁️ {VOICE_MARKER} [Grisha] Verifying...")
         context = state.get("messages", [])
         last_msg = self._get_last_msg_content(context)

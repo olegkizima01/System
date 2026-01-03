@@ -16,6 +16,13 @@ class AtlasMixin:
 
     def _atlas_node(self, state: TrinityState):
         """Generates the plan based on Meta-Planner policy."""
+        # EMERGENCY: Check recursion depth before any processing
+        step_count = state.get("step_count", 0)
+        replan_count = state.get("replan_count", 0)
+        if step_count >= getattr(self, "MAX_STEPS", 30) or replan_count >= getattr(self, "MAX_REPLANS", 10):
+            if self.verbose: print(f"🚨 [Atlas] EMERGENCY: Limits reached (step={step_count}, replan={replan_count}), forcing completion")
+            return {"current_agent": "knowledge", "last_step_status": "failed", "messages": list(state.get("messages", []))}
+        
         if self.verbose: print("🌐 [Atlas] Generating steps...")
         
         # 1. State extraction
