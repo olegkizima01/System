@@ -1,3 +1,3 @@
 ## My Last Response
 
-Docs: full system description + issues from logs; Fix TUI /resume; Fix Vibe node trace/log reading
+Finalize: restore auto-commit workflow; commit docs+fixes; ensure post-commit generates project_structure_final.txt

@@ -20,7 +20,7 @@ REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 cd "$REPO_ROOT"
 
 # Use save_response.sh to handle the response saving logic
-./save_response.sh "$RESPONSE"
+bash ./save_response.sh "$RESPONSE"
 
 if [ $? -ne 0 ]; then
     echo "❌ Failed to save response"
@@ -29,10 +29,19 @@ fi
 
 # Add to git
 echo "📝 Creating commit..."
-git add .last_response.txt 2>/dev/null
+
+# Stage all changes (code, docs, scripts, and the saved response)
+git add -A 2>/dev/null
 
 # Create commit
-git commit -m "Update: Add latest response" 2>/dev/null
+SUBJECT=$(echo "$RESPONSE" | tr '\n' ' ' | cut -c1-72)
+if [ -z "$SUBJECT" ]; then
+    SUBJECT="Update: Add latest response"
+else
+    SUBJECT="Update: $SUBJECT"
+fi
+
+git commit -m "$SUBJECT" 2>/dev/null
 
 if [ $? -eq 0 ]; then
     echo "✅ Commit created successfully"

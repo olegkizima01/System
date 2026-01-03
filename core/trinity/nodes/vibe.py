@@ -26,7 +26,9 @@ class VibeAnalyst:
         # 1. State Log (Logic)
         try:
             # Find latest state log
-            state_logs = glob.glob("logs/trinity_state_*.log")
+            state_logs = glob.glob(os.path.expanduser("~/.system_cli/logs/trinity_state_*.log"))
+            if not state_logs:
+                state_logs = glob.glob("logs/trinity_state_*.log")
             if state_logs:
                 latest_state = max(state_logs, key=os.path.getmtime)
                 with open(latest_state, "r", encoding="utf-8") as f:
@@ -51,7 +53,7 @@ class VibeAnalyst:
 
     async def analyze(self, state: TrinityState) -> Dict[str, Any]:
         """Main analysis entry point."""
-        trace("💉 Doctor Vibe is analyzing execution...", "VibeAnalyst")
+        trace(logger, "vibe_analysis_start", {"task": str(state.get("original_task") or "")[:200]})
         
         task = state.get("original_task", "Unknown Task")
         logs = self._read_recent_logs(lines=150)
@@ -94,7 +96,10 @@ FORMAT:
             HumanMessage(content=prompt)
         ]
         
-        response = await self.llm.ainvoke(messages)
+        if hasattr(self.llm, "ainvoke"):
+            response = await self.llm.ainvoke(messages)
+        else:
+            response = self.llm.invoke(messages)
         
         # We don't change state much, just log/notify
         # We could potentially return a 'repair' action, but for now just report.

@@ -127,6 +127,7 @@ def build_menu(
             MenuLevel.LOCALES: _render_locales_menu,
             MenuLevel.LOCALES: _render_locales_menu,
             MenuLevel.MCP_CLIENT_SETTINGS: _render_mcp_client_menu,
+            MenuLevel.ETERNAL_ENGINE: _render_eternal_engine_menu,
         }
         
         # Check for LLM sub-menus
@@ -137,7 +138,7 @@ def build_menu(
         if handler:
             return handler(ctx)
         
-        return [(STYLE_MENU_ITEM, "(menu)")]
+        return [(STYLE_MENU_ITEM, f"(menu: {level})")]
 
     return show_menu, get_menu_content
 
@@ -739,4 +740,13 @@ def _render_mcp_client_menu(ctx: dict) -> List[Tuple[str, str]]:
     result.append((STYLE_MENU_ITEM, "\n Note: Auto mode uses Continue for DEV tasks and Open-MCP for others.\n"))
     return result
 
+
+def _render_eternal_engine_menu(ctx: dict) -> List[Tuple[str, str]]:
+    """Render Eternal Engine status menu (fallback)."""
+    state = ctx["state"]
+    return [
+        (STYLE_MENU_TITLE, " 🔥 ETERNAL ENGINE INITIALIZING...\n\n"),
+        (STYLE_MENU_ITEM, " If this screen persists, an error occurred.\n"),
+        (STYLE_MENU_ITEM, " Press F2 or Enter to close menu and view logs.\n")
+    ]
 

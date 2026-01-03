@@ -443,15 +443,29 @@ def _get_menu_enter_dispatch(ctx, state, MenuLevel, _llm_sub_hint):
     }
 
 def _handle_eternal_engine_enter(ctx):
-    import asyncio
-    from core.eternal import EternalEngine
+    # 1. Close menu IMMEDIATELY
+    ctx["state"].menu_level = ctx["MenuLevel"].NONE
+    ctx["state"].ui_scroll_target = "log"
+    ctx["force_ui_update"]()
+    
     ctx["log"]("Starting Eternal Engine...", "action")
-    # We run blocking here for simplicity, or we could spawn a thread but asyncio.run is blocking.
-    # TUI might freeze unless we run in thread. Let's spawn a thread that runs the loop.
+
+    # 2. Lazy import and run in thread
     import threading
     def _run():
-        engine = EternalEngine()
-        asyncio.run(engine.run_forever())
+        try:
+            import asyncio
+            from core.eternal import EternalEngine
+            engine = EternalEngine()
+            asyncio.run(engine.run_forever())
+        except Exception as e:
+            import traceback
+            err = traceback.format_exc()
+            try:
+                ctx["log"](f"🔥 Eternal Engine Failed: {e}", "error")
+                ctx["log"](err, "error")
+            except:
+                pass
     
     t = threading.Thread(target=_run, daemon=True)
     t.start()

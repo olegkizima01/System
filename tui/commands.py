@@ -94,6 +94,28 @@ def resume_paused_agent() -> None:
     if not state.agent_paused:
         return
 
+    from tui.render import log
+    text = str(state.agent_pause_pending_text or "").strip()
+
+    log(f"Resuming agent with: {text}", "action")
+    clear_agent_pause_state()
+
+    # Trigger graph task again with the same text
+    from tui.agents import run_graph_agent_task
+    import threading
+    threading.Thread(
+        target=run_graph_agent_task,
+        args=(text,),
+        kwargs={
+            "allow_file_write": True,
+            "allow_shell": True,
+            "allow_applescript": True,
+            "allow_gui": True,
+            "allow_shortcuts": True,
+        },
+        daemon=True,
+    ).start()
+
 def check_self_healing_status() -> None:
     """Check the status of the self-healing module."""
     try:
@@ -272,29 +294,6 @@ def start_eternal_engine_mode(task: str, hyper_mode: bool = False) -> None:
         print(f"❌ Eternal engine failed: {e}")
         import traceback
         traceback.print_exc()
-    
-    from tui.render import log
-    text = str(state.agent_pause_pending_text or "").strip()
-    msg = str(state.agent_pause_message or "").strip()
-    
-    log(f"Resuming agent with: {text}", "action")
-    clear_agent_pause_state()
-    
-    # Trigger graph task again with the same text
-    from tui.agents import run_graph_agent_task
-    import threading
-    threading.Thread(
-        target=run_graph_agent_task,
-        args=(text,),
-        kwargs={
-            "allow_file_write": True,
-            "allow_shell": True,
-            "allow_applescript": True,
-            "allow_gui": True,
-            "allow_shortcuts": True,
-        },
-        daemon=True,
-    ).start()
 
 def handle_input(buff: Any) -> None:
     """Handle user input from the TUI buffer."""
