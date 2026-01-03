@@ -2,3 +2,5 @@
 
 Tools are designed to be callable from an LLM-driven runtime.
 """
+
+from . import windsurf

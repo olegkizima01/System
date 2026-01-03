@@ -32,6 +32,41 @@ from core.trinity.integration.integration_git import IntegrationGitMixin
 DEV_KEYWORDS = {"code", "debug", "fix", "implement", "refactor", "test", "create file", "edit", "modify", "function", "class", "module", "script"}
 GENERAL_KEYWORDS = {"search", "find", "look up", "browse", "read", "check", "verify", "analyze", "summarize", "explain", "video", "watch"}
 
+
+class _NullLLM:
+    def __init__(self, error: str):
+        self.error = str(error or "").strip() or "LLM is not configured"
+
+    def bind_tools(self, tools: Any) -> "_NullLLM":
+        _ = tools
+        return self
+
+    def invoke(self, messages: Any, **kwargs: Any) -> AIMessage:
+        _ = messages
+        _ = kwargs
+        return AIMessage(content=f"[LLM DISABLED] {self.error}")
+
+    async def ainvoke(self, messages: Any, **kwargs: Any) -> AIMessage:
+        _ = messages
+        _ = kwargs
+        return AIMessage(content=f"[LLM DISABLED] {self.error}")
+
+
+def _build_llm() -> Any:
+    try:
+        return CopilotLLM()
+    except Exception as e:
+        try:
+            from langchain_openai import ChatOpenAI
+
+            api_key = str(os.getenv("OPENAI_API_KEY") or "").strip()
+            if api_key:
+                model = str(os.getenv("OPENAI_MODEL") or "gpt-4o").strip() or "gpt-4o"
+                return ChatOpenAI(model=model, api_key=api_key)
+        except Exception:
+            pass
+        return _NullLLM(str(e))
+
 class TrinityRuntime(
     MetaPlannerMixin,
     AtlasMixin,
@@ -46,8 +81,8 @@ class TrinityRuntime(
     """Main Trinity runtime engine, composed of modular mixins."""
 
     # Constants
-    MAX_STEPS = 200  # Increased for complex tasks
-    MAX_REPLANS = 20 # Increased for persistence
+    MAX_STEPS = 30  # Reduced to prevent infinite loops (was 200)
+    MAX_REPLANS = 10  # Reduced to force completion faster (was 20)
     PROJECT_STRUCTURE_FILE = "project_structure_final.txt"
     LAST_RESPONSE_FILE = ".last_response.txt"
     TRINITY_REPORT_HEADER = "## Trinity Report"
@@ -65,7 +100,7 @@ class TrinityRuntime(
         hyper_mode: bool = False,
         learning_mode: bool = False
     ):
-        self.llm = CopilotLLM()
+        self.llm = _build_llm()
         self.verbose = verbose
         self.logger = get_logger("trinity.core")
         self.registry = MCPToolRegistry()

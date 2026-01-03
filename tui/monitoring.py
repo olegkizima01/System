@@ -28,6 +28,210 @@ from tui.cli_paths import (
 import shutil
 
 
+_DB_INIT_LOCK = threading.Lock()
+_DB_INIT_DONE: set[str] = set()
+_DB_PRUNE_LOCK = threading.Lock()
+_DB_LAST_PRUNE_TS: Dict[str, int] = {}
+
+
+def _env_int(name: str, default: int) -> int:
+    try:
+        return int(str(os.getenv(name) or "").strip() or str(default))
+    except Exception:
+        return int(default)
+
+
+def _env_bool(name: str, default: bool = False) -> bool:
+    raw = str(os.getenv(name) or "").strip().lower()
+    if not raw:
+        return bool(default)
+    return raw in {"1", "true", "yes", "on"}
+
+
+def monitor_db_init(db_path: str) -> None:
+    """Ensure the monitor DB exists and has the expected schema."""
+    try:
+        db_path = str(db_path or "").strip()
+        if not db_path:
+            return
+
+        with _DB_INIT_LOCK:
+            if db_path in _DB_INIT_DONE:
+                return
+
+            try:
+                os.makedirs(os.path.dirname(db_path), exist_ok=True)
+            except Exception:
+                pass
+
+            conn = sqlite3.connect(db_path)
+            try:
+                try:
+                    conn.execute("PRAGMA synchronous=NORMAL")
+                    conn.execute("PRAGMA temp_store=MEMORY")
+                except Exception:
+                    pass
+
+                conn.execute(
+                    "CREATE TABLE IF NOT EXISTS events(" \
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT, " \
+                    "ts INTEGER, source TEXT, event_type TEXT, " \
+                    "src_path TEXT, dest_path TEXT, is_directory INTEGER, " \
+                    "target_key TEXT, pid INTEGER, process TEXT, raw_line TEXT" \
+                    ")"
+                )
+                try:
+                    conn.execute("CREATE INDEX IF NOT EXISTS idx_events_ts ON events(ts)")
+                except Exception:
+                    pass
+
+                try:
+                    conn.execute("PRAGMA auto_vacuum=INCREMENTAL")
+                except Exception:
+                    pass
+
+                conn.commit()
+            finally:
+                conn.close()
+
+            _DB_INIT_DONE.add(db_path)
+    except Exception:
+        return
+
+
+def _monitor_db_prune_keep_last(
+    db_path: str,
+    *,
+    keep_last: int,
+    incremental_vacuum_pages: int = 0,
+    hard_vacuum: bool = False,
+) -> Dict[str, Any]:
+    """Prune DB by keeping only the last N events by id."""
+    try:
+        keep_last = max(0, int(keep_last or 0))
+    except Exception:
+        keep_last = 0
+
+    monitor_db_init(db_path)
+    before_size = 0
+    after_size = 0
+    deleted = 0
+    min_id = 0
+    max_id = 0
+
+    try:
+        if os.path.exists(db_path):
+            before_size = int(os.path.getsize(db_path) or 0)
+    except Exception:
+        before_size = 0
+
+    try:
+        conn = sqlite3.connect(db_path)
+        try:
+            row = conn.execute("SELECT MIN(id), MAX(id) FROM events").fetchone()
+            if row:
+                min_id = int(row[0] or 0)
+                max_id = int(row[1] or 0)
+
+            if keep_last > 0 and max_id > 0:
+                cutoff_id = max(0, int(max_id) - int(keep_last))
+                if cutoff_id > 0:
+                    cur = conn.execute("DELETE FROM events WHERE id <= ?", (int(cutoff_id),))
+                    deleted = int(getattr(cur, "rowcount", 0) or 0)
+                    conn.commit()
+
+            if incremental_vacuum_pages and int(incremental_vacuum_pages) > 0:
+                try:
+                    conn.execute(f"PRAGMA incremental_vacuum({int(incremental_vacuum_pages)})")
+                except Exception:
+                    pass
+                try:
+                    conn.commit()
+                except Exception:
+                    pass
+
+            if hard_vacuum:
+                try:
+                    conn.execute("VACUUM")
+                except Exception:
+                    pass
+        finally:
+            conn.close()
+    except Exception:
+        pass
+
+    try:
+        if os.path.exists(db_path):
+            after_size = int(os.path.getsize(db_path) or 0)
+    except Exception:
+        after_size = before_size
+
+    return {
+        "ok": True,
+        "db": db_path,
+        "before_size": int(before_size),
+        "after_size": int(after_size),
+        "deleted": int(deleted),
+        "min_id": int(min_id),
+        "max_id": int(max_id),
+    }
+
+
+def _monitor_db_maybe_prune(db_path: str, *, force: bool = False) -> None:
+    """Best-effort retention to avoid unbounded DB growth."""
+    try:
+        db_path = str(db_path or "").strip()
+        if not db_path:
+            return
+
+        interval_sec = _env_int("SYSTEM_MONITOR_PRUNE_INTERVAL_SEC", 600)
+        max_db_mb = _env_int("SYSTEM_MONITOR_MAX_DB_MB", 1024)
+        keep_last = _env_int("SYSTEM_MONITOR_KEEP_LAST_EVENTS", 2_000_000)
+        incremental_pages = _env_int("SYSTEM_MONITOR_INCREMENTAL_VACUUM_PAGES", 0)
+        hard_vacuum = _env_bool("SYSTEM_MONITOR_HARD_VACUUM", False)
+
+        now = int(time.time())
+        last = int(_DB_LAST_PRUNE_TS.get(db_path) or 0)
+        if (not force) and interval_sec > 0 and (now - last) < int(interval_sec):
+            return
+
+        size_mb = 0
+        try:
+            if os.path.exists(db_path):
+                size_mb = int(os.path.getsize(db_path) / (1024 * 1024))
+        except Exception:
+            size_mb = 0
+
+        if (not force) and max_db_mb > 0 and size_mb <= int(max_db_mb):
+            return
+
+        if keep_last <= 0:
+            return
+
+        if not _DB_PRUNE_LOCK.acquire(blocking=False):
+            return
+
+        def _worker() -> None:
+            try:
+                _monitor_db_prune_keep_last(
+                    db_path,
+                    keep_last=int(keep_last),
+                    incremental_vacuum_pages=int(incremental_pages),
+                    hard_vacuum=bool(hard_vacuum),
+                )
+            finally:
+                _DB_LAST_PRUNE_TS[db_path] = int(time.time())
+                try:
+                    _DB_PRUNE_LOCK.release()
+                except Exception:
+                    pass
+
+        t = threading.Thread(target=_worker, daemon=True)
+        t.start()
+    except Exception:
+        return
+
+
 
 def load_monitor_settings() -> None:
     """Load monitor settings from file."""
@@ -221,6 +425,7 @@ def monitor_db_insert(
 ) -> None:
     """Insert a new event into the monitor database."""
     try:
+        monitor_db_init(db_path)
         conn = sqlite3.connect(db_path)
         try:
             conn.execute(
@@ -242,6 +447,8 @@ def monitor_db_insert(
             conn.commit()
         finally:
             conn.close()
+
+        _monitor_db_maybe_prune(db_path)
     except Exception:
         return
 
@@ -570,6 +777,13 @@ def _monitor_startup_log() -> None:
 # Run startup log once
 _monitor_startup_log()
 
+# Ensure DB schema exists and apply best-effort retention if DB is large
+try:
+    monitor_db_init(MONITOR_EVENTS_DB_PATH)
+    _monitor_db_maybe_prune(MONITOR_EVENTS_DB_PATH, force=False)
+except Exception:
+    pass
+
 
 
 def monitor_start_selected() -> Tuple[bool, str]:
@@ -717,6 +931,36 @@ def tool_monitor_summarize(args: Dict[str, Any]) -> Dict[str, Any]:
         )
 
         return {"ok": True, "summary": summary_text}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+
+def tool_monitor_db_prune(args: Dict[str, Any]) -> Dict[str, Any]:
+    """Prune monitor DB to keep only last N events.
+
+    Args (optional):
+      - keep_last: int (default SYSTEM_MONITOR_KEEP_LAST_EVENTS or 2000000)
+      - hard_vacuum: bool (default false)
+      - incremental_pages: int (default SYSTEM_MONITOR_INCREMENTAL_VACUUM_PAGES or 0)
+    """
+    try:
+        keep_last = int((args or {}).get("keep_last") or _env_int("SYSTEM_MONITOR_KEEP_LAST_EVENTS", 2_000_000))
+    except Exception:
+        keep_last = _env_int("SYSTEM_MONITOR_KEEP_LAST_EVENTS", 2_000_000)
+    try:
+        incremental_pages = int((args or {}).get("incremental_pages") or _env_int("SYSTEM_MONITOR_INCREMENTAL_VACUUM_PAGES", 0))
+    except Exception:
+        incremental_pages = _env_int("SYSTEM_MONITOR_INCREMENTAL_VACUUM_PAGES", 0)
+    hard_vacuum = bool((args or {}).get("hard_vacuum")) or _env_bool("SYSTEM_MONITOR_HARD_VACUUM", False)
+
+    try:
+        with _DB_PRUNE_LOCK:
+            return _monitor_db_prune_keep_last(
+                MONITOR_EVENTS_DB_PATH,
+                keep_last=int(keep_last),
+                incremental_vacuum_pages=int(incremental_pages),
+                hard_vacuum=bool(hard_vacuum),
+            )
     except Exception as e:
         return {"ok": False, "error": str(e)}
 

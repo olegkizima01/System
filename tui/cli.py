@@ -1372,18 +1372,14 @@ def _tool_ui_theme_set(args: Dict[str, Any]) -> Dict[str, Any]:
 
 # ================== CLI SUBCOMMANDS ==================
 
-def cli_main(argv: List[str]) -> None:
-    # Setup logging
-    verbose = "--verbose" in argv or "-v" in argv
-    logger = setup_global_logging(verbose=verbose)
-    logger.info(f"CLI started with arguments: {argv}")
-    
+def _build_cli_parser() -> Tuple[argparse.ArgumentParser, Any]:
     parser = argparse.ArgumentParser(prog="cli.py", description="System CLI")
+    parser.add_argument("-v", "--verbose", action="store_true")
     sub = parser.add_subparsers(dest="command")
 
     sub.add_parser("tui", help="Запустити TUI (за замовчуванням)")
 
-    p_list = sub.add_parser("list-editors", help="Список редакторів")
+    sub.add_parser("list-editors", help="Список редакторів")
 
     p_list_mod = sub.add_parser("list-modules", help="Список модулів")
     p_list_mod.add_argument("--editor")
@@ -1413,19 +1409,18 @@ def cli_main(argv: List[str]) -> None:
     p_agent_chat = sub.add_parser("agent-chat", help="Agent chat (single-shot)")
     p_agent_chat.add_argument("--message", required=True)
 
-    p_self_healing_status = sub.add_parser("self-healing-status", help="Check self-healing status")
-    p_self_healing_scan = sub.add_parser("self-healing-scan", help="Trigger immediate self-healing scan")
-    
-    p_vibe_status = sub.add_parser("vibe-status", help="Check Vibe CLI Assistant status")
-    p_vibe_continue = sub.add_parser("vibe-continue", help="Continue execution after Vibe CLI Assistant pause")
-    p_vibe_cancel = sub.add_parser("vibe-cancel", help="Cancel current task from Vibe CLI Assistant pause")
-    p_vibe_help = sub.add_parser("vibe-help", help="Show Vibe CLI Assistant help")
-    
+    sub.add_parser("self-healing-status", help="Check self-healing status")
+    sub.add_parser("self-healing-scan", help="Trigger immediate self-healing scan")
+
+    sub.add_parser("vibe-status", help="Check Vibe CLI Assistant status")
+    sub.add_parser("vibe-continue", help="Continue execution after Vibe CLI Assistant pause")
+    sub.add_parser("vibe-cancel", help="Cancel current task from Vibe CLI Assistant pause")
+    sub.add_parser("vibe-help", help="Show Vibe CLI Assistant help")
+
     p_eternal_engine = sub.add_parser("eternal-engine", help="Start eternal engine mode with Doctor Vibe")
     p_eternal_engine.add_argument("--task", default="Auto-generate", help="Initial task (optional)")
     p_eternal_engine.add_argument("--hyper", action="store_true", help="Enable hyper mode (unlimited permissions)")
 
-    # Screenshots management
     p_screens = sub.add_parser("screenshots", help="List or open task screenshots")
     p_screens.add_argument("action", choices=["list", "open"], help="Action: list or open")
     p_screens.add_argument("--count", type=int, default=10, help="Number of items to list (default 10)")
@@ -1433,6 +1428,23 @@ def cli_main(argv: List[str]) -> None:
     sub.add_parser("agent-reset", help="Reset in-memory agent session")
     sub.add_parser("agent-on", help="Enable agent chat")
     sub.add_parser("agent-off", help="Disable agent chat")
+
+    return parser, sub
+
+
+def get_cli_known_commands() -> set[str]:
+    parser, sub = _build_cli_parser()
+    _ = parser
+    return set(sub.choices.keys()) | {"-h", "--help", "-v", "--verbose"}
+
+
+def cli_main(argv: List[str]) -> None:
+    # Setup logging
+    verbose = "--verbose" in argv or "-v" in argv
+    logger = setup_global_logging(verbose=verbose)
+    logger.info(f"CLI started with arguments: {argv}")
+
+    parser, sub = _build_cli_parser()
 
     args = parser.parse_args(argv)
     logger.debug(f"Parsed command: {args.command}")

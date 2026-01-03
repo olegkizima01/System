@@ -240,13 +240,13 @@ class GrishaMixin:
         
         # Priority 0: Anti-loop protection - force decision after too many steps
         # This prevents infinite loops seen in logs where tasks run for 30+ steps
-        if step_count > 15 and "failed" not in lower and "error" not in lower:
+        if step_count > 10 and "failed" not in lower and "error" not in lower:
             if self.verbose:
                 print(f"⚠️ [Grisha] Anti-loop triggered: step_count={step_count}, forcing success")
             return "success", "meta_planner"
         
         # If we've been in uncertain streak for too long, force a decision
-        if uncertain_streak >= 5 and "failed" not in lower:
+        if uncertain_streak >= 3 and "failed" not in lower:
             if self.verbose:
                 print(f"⚠️ [Grisha] Uncertain streak={uncertain_streak}, forcing success")
             return "success", "meta_planner"

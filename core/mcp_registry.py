@@ -251,6 +251,7 @@ class MCPToolRegistry:
         # FORCE ROUTE: generic open_url should use Playwright to avoid unmanaged Safari windows
         "open_url": ("playwright", "browser_navigate"),
         "browser_click_element": ("playwright", "browser_click"),
+        "browser_type_text": ("playwright", "browser_type"),
         "browser_screenshot": ("playwright", "browser_screenshot"),
         "browser_press_key": ("playwright", "browser_press_key"),
         "browser_get_links": ("playwright", "browser_evaluate"),
@@ -690,11 +691,21 @@ class MCPToolRegistry:
         selector = self._smart_selector(args.get("selector", ""))
         text = args.get("text", "").replace('"', '\\"')
         
-        if selector.startswith("ref="):
-            return {"ref": selector[4:], "text": text, "element": ""}
+        # Microsoft Playwright MCP uses ref-based addressing from snapshots
+        # But we're working with CSS selectors, so we need to convert
+        # For now, use the selector-based approach and let Playwright handle it
         
-        # Return selector and value for MCP compatibility (tests expect 'value' key)
-        result = {"selector": selector, "value": text}
+        # Return parameters compatible with Microsoft Playwright MCP browser_type
+        result = {
+            "element": selector,  # Human-readable element description
+            "ref": "",  # Will be empty if we don't have a snapshot ref
+            "text": text,
+        }
+        
+        # Check if submit flag is set
+        if args.get("press_enter") or args.get("submit"):
+            result["submit"] = True
+        
         return result
 
     def _smart_ref(self, selector: str) -> str:

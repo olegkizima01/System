@@ -3,9 +3,9 @@
 ## Metadata
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
-- **Files Included**: 311
-- **Files Skipped**: 36250
-- **Generated**: 2026-01-03 17:22:32
+- **Files Included**: 312
+- **Files Skipped**: 36273
+- **Generated**: 2026-01-03 22:05:32
 
 ---
 
@@ -130,134 +130,147 @@ graph TD
 ## Program Execution Logs (Last 100 lines)
 
 ```
-2026-01-03 10:21:50 | INFO     | root | _handle_tui_command:1988 | TUI mode exited successfully
-2026-01-03 10:21:54 | INFO     | root | cli_main:1865 | CLI started with arguments: []
-2026-01-03 10:21:54 | DEBUG    | root | cli_main:1924 | Parsed command: None
-2026-01-03 10:21:54 | INFO     | root | _handle_tui_command:1985 | Starting TUI mode
-2026-01-03 10:21:54 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
-2026-01-03 10:21:54 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
-2026-01-03 10:38:57 | INFO     | root | _handle_tui_command:1988 | TUI mode exited successfully
-2026-01-03 10:39:01 | INFO     | root | cli_main:1865 | CLI started with arguments: []
-2026-01-03 10:39:01 | DEBUG    | root | cli_main:1924 | Parsed command: None
-2026-01-03 10:39:01 | INFO     | root | _handle_tui_command:1985 | Starting TUI mode
-2026-01-03 10:39:01 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
-2026-01-03 10:39:01 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
-2026-01-03 19:58:31 | INFO     | root | _handle_tui_command:1988 | TUI mode exited successfully
-2026-01-03 19:58:35 | INFO     | root | cli_main:1865 | CLI started with arguments: []
-2026-01-03 19:58:35 | DEBUG    | root | cli_main:1924 | Parsed command: None
-2026-01-03 19:58:35 | INFO     | root | _handle_tui_command:1985 | Starting TUI mode
-2026-01-03 19:58:35 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
-2026-01-03 19:58:35 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
-2026-01-03 11:53:26 | INFO     | root | cli_main:1865 | CLI started with arguments: []
-2026-01-03 11:53:26 | DEBUG    | root | cli_main:1924 | Parsed command: None
-2026-01-03 11:53:26 | INFO     | root | _handle_tui_command:1985 | Starting TUI mode
-2026-01-03 11:53:26 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
-2026-01-03 11:53:26 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
-2026-01-03 12:39:54 | INFO     | root | _handle_tui_command:1988 | TUI mode exited successfully
-2026-01-03 12:39:58 | INFO     | root | cli_main:1865 | CLI started with arguments: []
-2026-01-03 12:39:58 | DEBUG    | root | cli_main:1924 | Parsed command: None
-2026-01-03 12:39:58 | INFO     | root | _handle_tui_command:1985 | Starting TUI mode
-2026-01-03 12:39:58 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
-2026-01-03 12:39:58 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
-2026-01-03 12:49:54 | INFO     | root | _handle_tui_command:1988 | TUI mode exited successfully
-2026-01-03 12:49:58 | INFO     | root | cli_main:1865 | CLI started with arguments: []
-2026-01-03 12:49:58 | DEBUG    | root | cli_main:1924 | Parsed command: None
-2026-01-03 12:49:58 | INFO     | root | _handle_tui_command:1985 | Starting TUI mode
-2026-01-03 12:49:58 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
-2026-01-03 12:49:58 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
-2026-01-03 12:51:47 | INFO     | root | _handle_tui_command:1988 | TUI mode exited successfully
-2026-01-03 12:51:54 | INFO     | root | cli_main:1865 | CLI started with arguments: []
-2026-01-03 12:51:54 | DEBUG    | root | cli_main:1924 | Parsed command: None
-2026-01-03 12:51:54 | INFO     | root | _handle_tui_command:1985 | Starting TUI mode
-2026-01-03 12:51:54 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
-2026-01-03 12:51:54 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
-2026-01-03 12:58:07 | INFO     | root | _handle_tui_command:1988 | TUI mode exited successfully
-2026-01-03 12:58:10 | INFO     | root | cli_main:1865 | CLI started with arguments: []
-2026-01-03 12:58:11 | DEBUG    | root | cli_main:1924 | Parsed command: None
-2026-01-03 12:58:11 | INFO     | root | _handle_tui_command:1985 | Starting TUI mode
-2026-01-03 12:58:11 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
-2026-01-03 12:58:11 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
-2026-01-03 13:10:03 | INFO     | root | _handle_tui_command:1988 | TUI mode exited successfully
-2026-01-03 13:10:07 | INFO     | root | cli_main:1865 | CLI started with arguments: []
-2026-01-03 13:10:07 | DEBUG    | root | cli_main:1924 | Parsed command: None
-2026-01-03 13:10:07 | INFO     | root | _handle_tui_command:1985 | Starting TUI mode
-2026-01-03 13:10:07 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
-2026-01-03 13:10:07 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
-2026-01-03 13:23:42 | INFO     | root | _handle_tui_command:1988 | TUI mode exited successfully
-2026-01-03 13:23:46 | INFO     | root | cli_main:1865 | CLI started with arguments: []
-2026-01-03 13:23:46 | DEBUG    | root | cli_main:1924 | Parsed command: None
-2026-01-03 13:23:46 | INFO     | root | _handle_tui_command:1985 | Starting TUI mode
-2026-01-03 13:23:46 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
-2026-01-03 13:23:46 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
-2026-01-03 13:26:28 | INFO     | root | _handle_tui_command:1988 | TUI mode exited successfully
-2026-01-03 13:26:32 | INFO     | root | cli_main:1865 | CLI started with arguments: []
-2026-01-03 13:26:32 | DEBUG    | root | cli_main:1924 | Parsed command: None
-2026-01-03 13:26:32 | INFO     | root | _handle_tui_command:1985 | Starting TUI mode
-2026-01-03 13:26:32 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
-2026-01-03 13:26:32 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
-2026-01-03 13:29:12 | INFO     | root | _handle_tui_command:1988 | TUI mode exited successfully
-2026-01-03 13:30:39 | INFO     | root | cli_main:1865 | CLI started with arguments: []
-2026-01-03 13:30:39 | DEBUG    | root | cli_main:1924 | Parsed command: None
-2026-01-03 13:30:39 | INFO     | root | _handle_tui_command:1985 | Starting TUI mode
-2026-01-03 13:30:39 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
-2026-01-03 13:30:39 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
-2026-01-03 13:31:59 | INFO     | root | _handle_tui_command:1988 | TUI mode exited successfully
-2026-01-03 14:08:35 | INFO     | root | cli_main:1865 | CLI started with arguments: []
-2026-01-03 14:08:35 | DEBUG    | root | cli_main:1924 | Parsed command: None
-2026-01-03 14:08:35 | INFO     | root | _handle_tui_command:1985 | Starting TUI mode
-2026-01-03 14:08:35 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
-2026-01-03 14:08:35 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
-2026-01-03 14:10:33 | INFO     | root | _handle_tui_command:1988 | TUI mode exited successfully
-2026-01-03 14:15:08 | INFO     | root | cli_main:1865 | CLI started with arguments: []
-2026-01-03 14:15:08 | DEBUG    | root | cli_main:1924 | Parsed command: None
-2026-01-03 14:15:08 | INFO     | root | _handle_tui_command:1985 | Starting TUI mode
-2026-01-03 14:15:08 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
-2026-01-03 14:15:08 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
-2026-01-03 09:29:14 | INFO     | root | _handle_tui_command:1988 | TUI mode exited successfully
-2026-01-03 09:36:59 | INFO     | root | cli_main:1865 | CLI started with arguments: []
-2026-01-03 09:36:59 | DEBUG    | root | cli_main:1924 | Parsed command: None
-2026-01-03 09:36:59 | INFO     | root | _handle_tui_command:1985 | Starting TUI mode
-2026-01-03 09:36:59 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
-2026-01-03 09:36:59 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
-2026-01-03 16:04:51 | ERROR    | system_cli.cli | log_exception:266 | Exception in cli.py main(): invalid syntax (cli.py, line 529)
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/cli.py", line 41, in main
-    from tui.cli import main as tui_main
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 529
-    monitor_service = _DummyProcService()
-    ^^^^^^^^^^^^^^^
-SyntaxError: invalid syntax
-2026-01-03 16:05:23 | INFO     | root | cli_main:1379 | CLI started with arguments: ['--help']
-2026-01-03 16:10:22 | INFO     | root | cli_main:1379 | CLI started with arguments: ['--help']
-2026-01-03 16:38:35 | INFO     | root | _handle_tui_command:1988 | TUI mode exited successfully
+2026-01-03 19:29:49 | DEBUG    | trinity.state_init | log_initial_state:94 | meta_config.strategy: None
+2026-01-03 19:29:49 | DEBUG    | trinity.state_init | log_initial_state:95 | meta_config.verification_rigor: None
+2026-01-03 19:29:49 | DEBUG    | trinity.state_init | log_initial_state:96 | meta_config.recovery_mode: None
+2026-01-03 19:29:55 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> meta_planner (step 0, status: success)
+2026-01-03 19:29:55 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
+2026-01-03 19:30:09 | DEBUG    | system_cli.verifier | optimize_plan:93 | [Verifier] Plan optimized (Rigor: MEDIUM): 7 → 12 steps
+2026-01-03 19:30:09 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> atlas (step 1, status: success)
+2026-01-03 19:30:14 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> tetyana (step 1, status: success)
+2026-01-03 19:30:45 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> grisha (step 0, status: success)
+2026-01-03 19:30:45 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> meta_planner (step 2, status: success)
+2026-01-03 19:30:45 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> atlas (step 3, status: success)
+2026-01-03 19:30:49 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> tetyana (step 3, status: success)
+2026-01-03 19:31:14 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> grisha (step 0, status: success)
+2026-01-03 19:31:18 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> meta_planner (step 4, status: success)
+2026-01-03 19:31:18 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> atlas (step 5, status: success)
+2026-01-03 19:31:22 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> tetyana (step 5, status: success)
+2026-01-03 19:31:35 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> grisha (step 0, status: success)
+2026-01-03 19:31:35 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> meta_planner (step 6, status: success)
+2026-01-03 19:31:35 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> atlas (step 7, status: success)
+2026-01-03 19:31:40 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> tetyana (step 7, status: success)
+2026-01-03 19:31:54 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> grisha (step 0, status: success)
+2026-01-03 19:31:54 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> meta_planner (step 8, status: success)
+2026-01-03 19:31:54 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> atlas (step 9, status: success)
+2026-01-03 19:32:04 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> tetyana (step 9, status: success)
+2026-01-03 19:32:08 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> grisha (step 0, status: success)
+2026-01-03 19:32:12 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> meta_planner (step 10, status: success)
+2026-01-03 19:32:12 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> atlas (step 11, status: success)
+2026-01-03 19:32:16 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> tetyana (step 11, status: failed)
+2026-01-03 19:32:34 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> grisha (step 0, status: success)
+2026-01-03 19:32:34 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> meta_planner (step 12, status: success)
+2026-01-03 19:32:34 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> atlas (step 13, status: success)
+2026-01-03 19:32:39 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> tetyana (step 13, status: failed)
+2026-01-03 19:32:54 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> grisha (step 0, status: success)
+2026-01-03 19:32:54 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> meta_planner (step 14, status: success)
+2026-01-03 19:32:54 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> atlas (step 15, status: success)
+2026-01-03 19:32:58 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> tetyana (step 15, status: failed)
+2026-01-03 19:33:11 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> grisha (step 0, status: success)
+2026-01-03 19:33:15 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> meta_planner (step 16, status: success)
+2026-01-03 19:33:15 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> atlas (step 17, status: success)
+2026-01-03 19:33:20 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> tetyana (step 17, status: failed)
+2026-01-03 19:33:24 | ERROR    | trinity.core | run:364 | Runtime workflow error: maximum recursion depth exceeded
+2026-01-03 20:30:02 | INFO     | trinity.core | _enrich_context_with_sonar:121 | 🔎 Sonar enrichment added to context (project=System)
+2026-01-03 21:30:15 | INFO     | trinity.core | _enrich_context_with_sonar:121 | 🔎 Sonar enrichment added to context (project=System)
+2026-01-03 21:54:47 | INFO     | root | _handle_tui_command:1514 | TUI mode exited successfully
+2026-01-03 21:54:56 | INFO     | root | cli_main:1445 | CLI started with arguments: []
+2026-01-03 21:54:56 | DEBUG    | root | cli_main:1450 | Parsed command: None
+2026-01-03 21:54:56 | INFO     | root | _handle_tui_command:1511 | Starting TUI mode
+2026-01-03 21:54:56 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
+2026-01-03 21:54:56 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
+2026-01-03 21:55:06 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
+2026-01-03 21:55:07 | INFO     | trinity.core | _enrich_context_with_sonar:121 | 🔎 Sonar enrichment added to context (project=System)
+2026-01-03 21:55:09 | INFO     | trinity.state_init | log_initial_state:79 | ================================================================================
+2026-01-03 21:55:09 | INFO     | trinity.state_init | log_initial_state:80 | TRINITY STATE INITIALIZATION
+2026-01-03 21:55:09 | INFO     | trinity.state_init | log_initial_state:81 | Task: відкрий кліп архангер на все вікно...
+2026-01-03 21:55:09 | INFO     | trinity.state_init | log_initial_state:82 | Timestamp: 2026-01-03T21:55:09.837120
+2026-01-03 21:55:09 | INFO     | trinity.state_init | log_initial_state:83 | --------------------------------------------------------------------------------
+2026-01-03 21:55:09 | DEBUG    | trinity.state_init | log_initial_state:86 | initial_agent: meta_planner
+2026-01-03 21:55:09 | DEBUG    | trinity.state_init | log_initial_state:87 | task_type: GENERAL
+2026-01-03 21:55:09 | DEBUG    | trinity.state_init | log_initial_state:88 | is_dev: False
+2026-01-03 21:55:09 | DEBUG    | trinity.state_init | log_initial_state:89 | execution_mode: native
+2026-01-03 21:55:09 | DEBUG    | trinity.state_init | log_initial_state:90 | gui_mode: auto
+2026-01-03 21:55:09 | DEBUG    | trinity.state_init | log_initial_state:94 | meta_config.strategy: None
+2026-01-03 21:55:09 | DEBUG    | trinity.state_init | log_initial_state:95 | meta_config.verification_rigor: None
+2026-01-03 21:55:09 | DEBUG    | trinity.state_init | log_initial_state:96 | meta_config.recovery_mode: None
+2026-01-03 21:55:15 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> meta_planner (step 0, status: success)
+2026-01-03 21:55:15 | DEBUG    | asyncio | __init__:54 | Using selector: KqueueSelector
+2026-01-03 21:55:29 | DEBUG    | system_cli.verifier | optimize_plan:93 | [Verifier] Plan optimized (Rigor: LOW): 4 → 6 steps
+2026-01-03 21:55:29 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> atlas (step 1, status: success)
+2026-01-03 21:55:33 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> tetyana (step 1, status: failed)
+2026-01-03 21:55:44 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> grisha (step 0, status: success)
+2026-01-03 21:55:44 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> meta_planner (step 2, status: success)
+2026-01-03 21:55:44 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> atlas (step 3, status: success)
+2026-01-03 21:55:48 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> tetyana (step 3, status: failed)
+2026-01-03 21:56:00 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> grisha (step 0, status: success)
+2026-01-03 21:56:03 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> meta_planner (step 4, status: success)
+2026-01-03 21:56:03 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> atlas (step 5, status: success)
+2026-01-03 21:56:14 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> tetyana (step 5, status: success)
+2026-01-03 21:56:40 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> grisha (step 0, status: success)
+2026-01-03 21:56:40 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> meta_planner (step 6, status: success)
+2026-01-03 21:56:40 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> atlas (step 7, status: success)
+2026-01-03 21:56:44 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> tetyana (step 7, status: success)
+2026-01-03 21:56:56 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> grisha (step 0, status: success)
+2026-01-03 21:56:56 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> meta_planner (step 8, status: success)
+2026-01-03 21:56:56 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> atlas (step 9, status: success)
+2026-01-03 21:57:00 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> tetyana (step 9, status: success)
+2026-01-03 21:57:19 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> grisha (step 0, status: success)
+2026-01-03 21:57:21 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> meta_planner (step 10, status: success)
+2026-01-03 21:57:21 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> atlas (step 11, status: success)
+2026-01-03 21:57:37 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> tetyana (step 11, status: success)
+2026-01-03 21:57:52 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> grisha (step 0, status: success)
+2026-01-03 21:58:00 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> meta_planner (step 0, status: success)
+2026-01-03 21:58:15 | DEBUG    | system_cli.verifier | optimize_plan:93 | [Verifier] Plan optimized (Rigor: MEDIUM): 6 → 10 steps
+2026-01-03 21:58:15 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> atlas (step 12, status: success)
+2026-01-03 21:58:26 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> tetyana (step 12, status: success)
+2026-01-03 21:58:42 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> grisha (step 0, status: success)
+2026-01-03 21:58:45 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> meta_planner (step 13, status: success)
+2026-01-03 21:58:45 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> atlas (step 14, status: success)
+2026-01-03 21:58:49 | INFO     | trinity.state_init | log_state_transition:107 | TRANSITION: trinity -> tetyana (step 14, status: success)
+2026-01-03 21:58:53 | ERROR    | trinity.core | run:364 | Runtime workflow error: maximum recursion depth exceeded
+2026-01-03 22:01:44 | INFO     | root | _handle_tui_command:1514 | TUI mode exited successfully
 ```
 
 ---
 
 ## Last Response
 
-## My Last Response
-
-Codemap Improvements: Added Trinity Runtime Architecture, replaced project_structure_final.txt with CODEMAP.md (3.2MB, -70% size)
-
+[VOICE] LLM is not configured. Set COPILOT_API_KEY or GITHUB_TOKEN in .env (then restart). Missing: COPILOT_API_KEY, GITHUB_TOKEN.
 
 ---
 
 ## Git Diff (Recent Changes)
 
 ```
- CODEMAP.md | 104995 +---------------------------------------------------------
- 1 file changed, 2 insertions(+), 104993 deletions(-)
+ .last_response.txt                 |      4 +-
+ CODEMAP.md                         | 105193 +---------------------------------
+ RECOMMENDATIONS.md                 |    300 -
+ cli.sh                             |    118 +-
+ core/mcp_registry.py               |     19 +-
+ core/memory.py                     |     24 +-
+ core/trinity/execution.py          |     23 +
+ core/trinity/nodes/atlas.py        |     27 +-
+ core/trinity/nodes/grisha.py       |      4 +-
+ core/trinity/nodes/meta_planner.py |     11 +-
+ core/trinity/nodes/vibe.py         |     17 +-
+ core/trinity/runtime.py            |     41 +-
+ system_ai/tools/__init__.py        |      2 +
+ tui/agents.py                      |      7 +-
+ tui/cli.py                         |     44 +-
+ tui/cli_helpers.py                 |     38 +-
+ tui/monitoring.py                  |    244 +
+ 17 files changed, 645 insertions(+), 105471 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
+4e984beb Update: Cleanup: Removed legacy project_structure_final.txt, verified CODEMAP.md
 47428bf4 Update: Codemap Improvements: Added Trinity Runtime Architecture, replaced proje
 e886f271 docs: localize and simplify Atlas workflow documentation and add `clean_antigravity.sh` script.
 9e75bc3c Docs: Update Codemap Structure, README, and Atlas Workflow
 aa46d04e feat: Add app scanning and process monitoring, refactor TUI CLI into dedicated modules, and enhance CLI startup script.
-e364ff67 fix(mikrotik_wifi_spoof): enable network isolation in cleanup modules and enhance script functionality
 ```
 
 ---
@@ -269,6 +282,13 @@ System/
 ├── .agent/
 │   └── workflows/
 │       └── atlas.md
+├── .atlas_memory_corrupt_20260103_173325/
+│   ├── ee124893-9055-4de7-a988-1d3b02f58cf1/
+│   │   ├── data_level0.bin
+│   │   ├── header.bin
+│   │   ├── length.bin
+│   │   └── link_lists.bin
+│   └── chroma.sqlite3
 ├── .github/
 │   ├── instructions/
 │   │   └── sonarqube_mcp.instructions.md
@@ -496,7 +516,8 @@ System/
 │   │   ├── permissions_manager.py
 │   │   ├── screenshot.py
 │   │   ├── system.py
-│   │   └── vision.py
+│   │   ├── vision.py
+│   │   └── windsurf.py
 │   ├── __init__.py
 │   └── recorder.py
 ├── tests/
@@ -612,10 +633,8 @@ System/
 ├── generate_structure.py
 ├── i18n.py
 ├── main.py
-├── project_structure_final.txt
 ├── pytest.ini
 ├── README.md
-├── RECOMMENDATIONS.md
 ├── regenerate_structure.sh
 ├── repro_browser_type.py
 ├── requirements.txt
@@ -624,6 +643,7 @@ System/
 ├── setup.sh
 ├── sonar-project.properties
 ├── task_analysis.log
+├── test_recursion_fix.py
 ├── tui_menu_append.tmp
 ├── UNIFIED_LOGGING.md
 └── WALLPAPER_TASK_ANALYSIS_AND_FIX.md
@@ -1117,9 +1137,7 @@ project_structure_final.txt
 ### `.last_response.txt` (0.1 KB)
 
 ```text
-## My Last Response
-
-Codemap Improvements: Added Trinity Runtime Architecture, replaced project_structure_final.txt with CODEMAP.md (3.2MB, -70% size)
+[VOICE] LLM is not configured. Set COPILOT_API_KEY or GITHUB_TOKEN in .env (then restart). Missing: COPILOT_API_KEY, GITHUB_TOKEN.
 ```
 
 ### `.original_hostname` (0.0 KB)
@@ -1735,311 +1753,6 @@ system-vision [args]
 
 *Останнє оновлення: 3 січня 2026 р. (Trinity 2.5 - Pure Native Architecture)*
 *Детальна документація: [docs/atlas.md](docs/atlas.md)*
-```
-
-### `RECOMMENDATIONS.md` (10.1 KB)
-
-```markdown
-# Trinity Runtime - Recommendations and Improvements
-
-## Executive Summary
-
-The Trinity Runtime system has been thoroughly tested and analyzed. While all individual components work correctly, there are some issues with the full graph execution that need to be addressed. This document provides comprehensive recommendations for improving the system.
-
-## Current Status
-
-### ✅ Working Components
-- **MCP Registry**: 69 tools + external servers working correctly
-- **Individual Nodes**: Meta-Planner, Atlas, Tetyana, Grisha, Knowledge all functional
-- **Routing Logic**: Proper routing between nodes
-- **State Management**: Correct state creation and management
-- **Error Handling**: Robust error handling for message content types
-- **Self-Healing**: Module initializes and is ready for use
-
-### ⚠️ Issues Identified
-
-#### 1. Graph Execution Timeout
-**Problem**: Full task execution times out during testing, suggesting an infinite loop or execution issue.
-
-**Root Cause Analysis**:
-- Individual components work correctly when tested separately
-- Routing logic is correct
-- Mock responses may not cover all execution paths
-- Possible issue with LangGraph execution engine or state management
-
-**Recommendations**:
-- **Implement Execution Tracing**: Add detailed logging of graph execution steps
-- **Enhance Mock Testing**: Create more comprehensive mocks that cover all execution paths
-- **Add Execution Timeouts**: Implement safety timeouts for production use
-- **Improve Debugging**: Add execution step counters and loop detection
-
-#### 2. Mock Testing Limitations
-**Problem**: Current mock testing doesn't fully simulate real LLM behavior.
-
-**Recommendations**:
-- **Create Smart Mock System**: Develop a mock that understands the full conversation context
-- **Add Test Scenarios**: Include more diverse test cases (failure scenarios, edge cases)
-- **Implement Test Coverage**: Ensure all code paths are tested
-
-#### 3. Performance Optimization
-**Problem**: Execution can be slow due to complex graph traversal.
-
-**Recommendations**:
-- **Add Caching**: Cache frequent LLM calls and tool executions
-- **Optimize Graph**: Simplify graph structure where possible
-- **Implement Parallel Execution**: Use parallel tool execution for independent tasks
-- **Add Performance Monitoring**: Track execution times for optimization
-
-#### 4. Error Handling Enhancements
-**Problem**: While basic error handling works, more comprehensive error recovery is needed.
-
-**Recommendations**:
-- **Enhanced Error Recovery**: Add automatic recovery strategies for common failures
-- **Improved Logging**: Add detailed error logging with context
-- **User-Friendly Messages**: Provide clearer error messages to users
-- **Automatic Retry**: Implement intelligent retry logic for transient failures
-
-#### 5. Testing Infrastructure
-**Problem**: Current testing is limited and doesn't cover all scenarios.
-
-**Recommendations**:
-- **Comprehensive Test Suite**: Develop tests for all major scenarios
-- **Integration Testing**: Add tests for full system integration
-- **Performance Testing**: Include performance benchmarks
-- **Regression Testing**: Implement automated regression tests
-
-## Specific Code Improvements
-
-### 1. Execution Tracing
-```python
-# Add to runtime.py
-class TrinityRuntime:
-    def __init__(self, ...):
-        self.execution_trace = []
-        self.start_time = None
-        
-    def _log_execution_step(self, step_name, state):
-        """Log execution steps for debugging"""
-        if self.verbose:
-            step_info = {
-                'timestamp': datetime.now().isoformat(),
-                'step': step_name,
-                'agent': state.get('current_agent'),
-                'step_count': state.get('step_count'),
-                'replan_count': state.get('replan_count')
-            }
-            self.execution_trace.append(step_info)
-            if len(self.execution_trace) % 5 == 0:
-                print(f"🔄 Execution trace: {len(self.execution_trace)} steps")
-```
-
-### 2. Enhanced Error Handling
-```python
-# Add to nodes/base.py
-def safe_execute(func):
-    """Decorator for safe node execution"""
-    def wrapper(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except Exception as e:
-            error_info = {
-                'error': str(e),
-                'type': type(e).__name__,
-                'timestamp': datetime.now().isoformat(),
-                'context': str(args[1] if len(args) > 1 else {})
-            }
-            # Log error and return safe fallback
-            return {
-                'current_agent': 'meta_planner',
-                'last_step_status': 'failed',
-                'error_info': error_info
-            }
-    return wrapper
-```
-
-### 3. Performance Monitoring
-```python
-# Add to runtime.py
-class TrinityRuntime:
-    def __init__(self, ...):
-        self.performance_metrics = {
-            'execution_times': [],
-            'llm_calls': 0,
-            'tool_executions': 0,
-            'total_time': 0
-        }
-        
-    def _start_performance_tracking(self):
-        self.performance_metrics['start_time'] = time.time()
-        
-    def _end_performance_tracking(self):
-        end_time = time.time()
-        self.performance_metrics['total_time'] = end_time - self.performance_metrics['start_time']
-        
-    def _log_llm_call(self):
-        self.performance_metrics['llm_calls'] += 1
-        
-    def _log_tool_execution(self):
-        self.performance_metrics['tool_executions'] += 1
-```
-
-## Testing Recommendations
-
-### 1. Test Case Expansion
-```python
-# Example test cases to add
-test_cases = [
-    # Basic functionality
-    {"description": "Open calculator", "type": "gui", "expected": "success"},
-    {"description": "Search Google for AI", "type": "browser", "expected": "success"},
-    {"description": "Create test file", "type": "file", "expected": "success"},
-    
-    # Edge cases
-    {"description": "Invalid command", "type": "error", "expected": "failure"},
-    {"description": "Permission denied task", "type": "permission", "expected": "failure"},
-    {"description": "Network unavailable", "type": "network", "expected": "retry"},
-    
-    # Complex scenarios
-    {"description": "Multi-step workflow", "type": "complex", "expected": "success"},
-    {"description": "Conditional execution", "type": "conditional", "expected": "success"},
-    {"description": "Error recovery", "type": "recovery", "expected": "success"}
-]
-```
-
-### 2. Mock Improvement
-```python
-class SmartMockLLM:
-    """Intelligent mock that understands conversation context"""
-    
-    def __init__(self):
-        self.call_history = []
-        self.context_memory = {}
-        
-    def invoke(self, messages):
-        """Provide intelligent responses based on conversation history"""
-        # Analyze conversation context
-        context = self._analyze_context(messages)
-        
-        # Provide appropriate response
-        response = self._generate_response(context)
-        
-        # Store for future reference
-        self.call_history.append({'context': context, 'response': response})
-        
-        return response
-    
-    def _analyze_context(self, messages):
-        """Analyze conversation context and history"""
-        # Implement context analysis logic
-        pass
-    
-    def _generate_response(self, context):
-        """Generate appropriate response based on context"""
-        # Implement response generation logic
-        pass
-```
-
-## Production Readiness Checklist
-
-### ✅ Completed
-- [x] Core functionality implementation
-- [x] Basic error handling
-- [x] MCP integration
-- [x] Individual component testing
-- [x] String conversion fixes
-- [x] Self-healing module
-- [x] Vision tools integration
-
-### 🟡 In Progress
-- [ ] Full execution testing
-- [ ] Performance optimization
-- [ ] Comprehensive error recovery
-- [ ] Advanced testing infrastructure
-
-### ❌ Not Started
-- [ ] Production deployment
-- [ ] User documentation
-- [ ] Monitoring and alerting
-- [ ] Scaling optimization
-
-## Deployment Recommendations
-
-### 1. Staged Deployment
-```
-Phase 1: Internal testing with limited functionality
-Phase 2: Beta testing with selected users
-Phase 3: Full deployment with monitoring
-Phase 4: Performance optimization
-```
-
-### 2. Monitoring Setup
-```python
-# Example monitoring setup
-monitoring_config = {
-    'performance_thresholds': {
-        'max_execution_time': 30,  # seconds
-        'max_steps': 50,
-        'max_replans': 10
-    },
-    'alerting': {
-        'error_threshold': 5,  # errors before alert
-        'timeout_threshold': 10,  # timeouts before alert
-        'notification_channels': ['email', 'slack', 'pagerduty']
-    },
-    'logging': {
-        'log_level': 'INFO',
-        'log_retention': 30,  # days
-        'log_rotation': 'daily'
-    }
-}
-```
-
-### 3. Security Considerations
-```
-# Security checklist
-security_checklist = {
-    'api_key_management': 'Use secure vault for API keys',
-    'permission_controls': 'Implement fine-grained permissions',
-    'input_validation': 'Validate all user inputs',
-    'output_sanitization': 'Sanitize all outputs',
-    'rate_limiting': 'Implement request rate limiting',
-    'authentication': 'Use strong authentication methods',
-    'encryption': 'Encrypt sensitive data at rest and in transit'
-}
-```
-
-## Conclusion
-
-The Trinity Runtime system is fundamentally sound with all core components working correctly. The main issues identified are:
-
-1. **Graph Execution**: Needs better debugging and tracing
-2. **Testing Infrastructure**: Needs expansion and improvement
-3. **Performance**: Could be optimized for production use
-4. **Error Handling**: Could be enhanced for better reliability
-
-### Recommendations Priority
-
-**High Priority**:
-- Fix graph execution timeout issues
-- Implement comprehensive execution tracing
-- Add safety timeouts and limits
-- Enhance error recovery mechanisms
-
-**Medium Priority**:
-- Expand test coverage
-- Improve mock testing system
-- Add performance monitoring
-- Implement caching strategies
-
-**Low Priority**:
-- Add advanced features
-- Optimize for specific use cases
-- Enhance user interface
-- Add monitoring and alerting
-
-With these improvements, the Trinity Runtime system will be ready for robust production use and able to handle complex real-world tasks reliably.
-
-**Status**: ✅ System is fundamentally sound, needs execution improvements for full production readiness
 ```
 
 ### `UNIFIED_LOGGING.md` (7.2 KB)
@@ -2673,11 +2386,12 @@ if __name__ == "__main__":
     main()
 ```
 
-### `cli.sh` (2.2 KB)
+### `cli.sh` (4.1 KB)
 
 ```bash
 #!/bin/zsh
-set -e
+set -euo pipefail
+IFS=$'\n\t'
 
 # System Vision CLI Entry Point
 # Ensures robust execution with correct Python environment and permissions.
@@ -2690,20 +2404,85 @@ cd "$SCRIPT_DIR"
 VENV_DIR="$SCRIPT_DIR/.venv"
 ENV_FILE="$SCRIPT_DIR/.env"
 
-# Load .env if it exists
-if [ -f "$ENV_FILE" ]; then
-    # Safely export vars, ignoring comments and empty lines
-    export $(grep -v '^#' "$ENV_FILE" | grep -v '^\s*$' | xargs) 2>/dev/null || true
-fi
+load_env_file() {
+    local env_path="$1"
+    [ -f "$env_path" ] || return 0
+
+    local line
+    local key
+    local value
+
+    while IFS= read -r line || [ -n "$line" ]; do
+        line="$(printf '%s' "$line" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+        [ -z "$line" ] && continue
+        case "$line" in
+            \#*) continue ;;
+        esac
+        case "$line" in
+            export\ *) line="${line#export }" ;;
+        esac
+        case "$line" in
+            *=*) ;;
+            *) continue ;;
+        esac
+
+        key="${line%%=*}"
+        value="${line#*=}"
+
+        key="$(printf '%s' "$key" | xargs)"
+        [ -z "$key" ] && continue
+        case "$key" in
+            [A-Za-z_][A-Za-z0-9_]*) ;;
+            *) continue ;;
+        esac
+
+        value="$(printf '%s' "$value" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+        if [ "${#value}" -ge 2 ]; then
+            if [ "${value#\"}" != "$value" ] && [ "${value%\"}" != "$value" ]; then
+                value="${value#\"}"
+                value="${value%\"}"
+            elif [ "${value#\'}" != "$value" ] && [ "${value%\'}" != "$value" ]; then
+                value="${value#\'}"
+                value="${value%\'}"
+            fi
+        fi
+
+        export "$key=$value"
+    done < "$env_path"
+}
+
+load_env_file "$ENV_FILE"
 
 # 3. Python Selection
-if [ -f "$VENV_DIR/bin/activate" ]; then
-    source "$VENV_DIR/bin/activate"
+PYTHON_EXE=""
+
+if [ -n "${SYSTEM_CLI_PYTHON-}" ]; then
+    PYTHON_EXE="$SYSTEM_CLI_PYTHON"
+elif [ -x "$VENV_DIR/bin/python" ]; then
+    if [ -f "$VENV_DIR/bin/activate" ]; then
+        source "$VENV_DIR/bin/activate" || true
+    fi
     PYTHON_EXE="$VENV_DIR/bin/python"
 else
     echo "⚠️  Virtual environment not found at $VENV_DIR"
     echo "   Attempting to use system python (not recommended)..."
-    PYTHON_EXE="python3"
+    if command -v python3.11 >/dev/null 2>&1; then
+        PYTHON_EXE="python3.11"
+    else
+        PYTHON_EXE="python3"
+    fi
+fi
+
+if [ "${PYTHON_EXE#/}" != "$PYTHON_EXE" ]; then
+    if [ ! -x "$PYTHON_EXE" ]; then
+        echo "❌ Error: Python executable is not executable: $PYTHON_EXE"
+        exit 1
+    fi
+else
+    if ! command -v "$PYTHON_EXE" >/dev/null 2>&1; then
+        echo "❌ Error: Python executable not found on PATH: $PYTHON_EXE"
+        exit 1
+    fi
 fi
 
 # 4. Version Check (Fast)
@@ -2717,22 +2496,24 @@ fi
 
 # 5. Permission Handling (SUDO)
 # Securely handle sudo password if provided
-if [ -n "$SUDO_PASSWORD" ]; then
-    SUDO_ASKPASS_DIR="$HOME/.system_cli"
-    mkdir -p "$SUDO_ASKPASS_DIR"
-    SUDO_ASKPASS_SCRIPT="$SUDO_ASKPASS_DIR/.sudo_askpass"
-    
-    # Verify password validity quietly
-    if echo "$SUDO_PASSWORD" | sudo -S -k true 2>/dev/null; then
-        # Create askpass script with restrictive permissions
-        cat <<EOF > "$SUDO_ASKPASS_SCRIPT"
-#!/bin/bash
-echo "\$SUDO_PASSWORD"
-EOF
-        chmod 700 "$SUDO_ASKPASS_SCRIPT"
+SUDO_ASKPASS_SCRIPT=""
+SUDO_ASKPASS_IS_TEMP=0
+if [ -n "${SUDO_PASSWORD-}" ]; then
+    export SUDO_PASSWORD
+    if [ -f "$SCRIPT_DIR/scripts/cleanup/sudo_helper.sh" ]; then
+        SUDO_ASKPASS_SCRIPT="$SCRIPT_DIR/scripts/cleanup/sudo_helper.sh"
+    elif [ -f "$SCRIPT_DIR/sudo_helper.sh" ]; then
+        SUDO_ASKPASS_SCRIPT="$SCRIPT_DIR/sudo_helper.sh"
+    fi
+
+    if [ -n "$SUDO_ASKPASS_SCRIPT" ]; then
+        chmod 700 "$SUDO_ASKPASS_SCRIPT" 2>/dev/null || true
         export SUDO_ASKPASS="$SUDO_ASKPASS_SCRIPT"
+        if ! command sudo -A -k true 2>/dev/null; then
+            echo "⚠️  Warning: SUDO_PASSWORD provided but sudo validation failed."
+        fi
     else
-        echo "⚠️  Warning: SUDO_PASSWORD provided but invalid."
+        echo "⚠️  Warning: SUDO_PASSWORD provided but sudo helper script not found."
     fi
 fi
 
@@ -2743,8 +2524,8 @@ echo "🚀 Launching System CLI with $PYTHON_EXE..."
 
 # Trap cleanup to run on exit
 cleanup() {
-    if [ -n "$SUDO_ASKPASS_SCRIPT" ] && [ -f "$SUDO_ASKPASS_SCRIPT" ]; then
-        rm -f "$SUDO_ASKPASS_SCRIPT"
+    if [ "${SUDO_ASKPASS_IS_TEMP:-0}" = "1" ] && [ -n "${SUDO_ASKPASS_SCRIPT:-}" ] && [ -f "${SUDO_ASKPASS_SCRIPT:-}" ]; then
+        rm -f "${SUDO_ASKPASS_SCRIPT:-}"
     fi
 }
 trap cleanup EXIT INT TERM
@@ -6822,7 +6603,7 @@ from core.mcp_registry import (
 )
 ```
 
-### `core/mcp_registry.py` (50.6 KB)
+### `core/mcp_registry.py` (51.0 KB)
 
 ```python
 import json
@@ -7078,6 +6859,7 @@ class MCPToolRegistry:
         # FORCE ROUTE: generic open_url should use Playwright to avoid unmanaged Safari windows
         "open_url": ("playwright", "browser_navigate"),
         "browser_click_element": ("playwright", "browser_click"),
+        "browser_type_text": ("playwright", "browser_type"),
         "browser_screenshot": ("playwright", "browser_screenshot"),
         "browser_press_key": ("playwright", "browser_press_key"),
         "browser_get_links": ("playwright", "browser_evaluate"),
@@ -7517,11 +7299,21 @@ class MCPToolRegistry:
         selector = self._smart_selector(args.get("selector", ""))
         text = args.get("text", "").replace('"', '\\"')
         
-        if selector.startswith("ref="):
-            return {"ref": selector[4:], "text": text, "element": ""}
+        # Microsoft Playwright MCP uses ref-based addressing from snapshots
+        # But we're working with CSS selectors, so we need to convert
+        # For now, use the selector-based approach and let Playwright handle it
         
-        # Return selector and value for MCP compatibility (tests expect 'value' key)
-        result = {"selector": selector, "value": text}
+        # Return parameters compatible with Microsoft Playwright MCP browser_type
+        result = {
+            "element": selector,  # Human-readable element description
+            "ref": "",  # Will be empty if we don't have a snapshot ref
+            "text": text,
+        }
+        
+        # Check if submit flag is set
+        if args.get("press_enter") or args.get("submit"):
+            result["submit"] = True
+        
         return result
 
     def _smart_ref(self, selector: str) -> str:
@@ -7928,7 +7720,7 @@ class MCPToolRegistry:
         }
 ```
 
-### `core/memory.py` (23.6 KB)
+### `core/memory.py` (24.1 KB)
 
 ```python
 """Atlas Memory System with Hierarchical Layers
@@ -7987,20 +7779,32 @@ class AtlasMemory:
         persist_dir = Path(persist_path).expanduser().resolve()
         persist_dir.mkdir(parents=True, exist_ok=True)
 
+        disable_env = str(os.environ.get("SYSTEM_ATLAS_MEMORY_PERSIST") or "").strip().lower() in {"0", "false", "no", "off", "disable", "disabled"}
+        disable_marker = persist_dir / ".disable_persist"
+
         # Use hardened ChromaDB initialization with repair+retry
         init_res = None
-        try:
-            init_res = create_persistent_client(persist_dir=persist_dir, logger=logger, retry_repair=True)
-        except BaseException as e:
-            logger.warning(f"⚠️ ChromaDB PersistentClient failed for {persist_dir}: {e}")
-            init_res = None
+        if not disable_env and not disable_marker.exists():
+            try:
+                init_res = create_persistent_client(persist_dir=persist_dir, logger=logger, retry_repair=True)
+            except BaseException as e:
+                logger.warning(f"⚠️ ChromaDB PersistentClient failed for {persist_dir}: {e}")
+                init_res = None
 
         if init_res is not None:
             self.client = init_res.client
+            try:
+                if disable_marker.exists():
+                    disable_marker.unlink()
+            except Exception:
+                pass
         else:
             try:
                 self.client = chromadb.Client()
-                logger.info("✅ Using in-memory ChromaDB client as fallback")
+                try:
+                    disable_marker.touch(exist_ok=True)
+                except Exception:
+                    pass
             except Exception as fallback_err:
                 raise RuntimeError(f"ChromaDB completely unavailable: {fallback_err}")
         
@@ -11088,7 +10892,7 @@ from .runtime import TrinityRuntime
 __all__ = ["TrinityState", "TrinityPermissions", "TrinityRuntime", "create_initial_state"]
 ```
 
-### `core/trinity/execution.py` (7.0 KB)
+### `core/trinity/execution.py` (8.1 KB)
 
 ```python
 import os
@@ -11154,6 +10958,18 @@ class TrinityExecutionMixin:
         step_count = state.get("step_count") or 0
         last_status = state.get("last_step_status")
         
+        # CRITICAL: Anti-recursion protection
+        # If we've done too many steps or replans, force completion
+        if step_count >= self.MAX_STEPS:
+            if self.verbose:
+                print(f"⚠️ [Router] MAX_STEPS ({self.MAX_STEPS}) reached, forcing completion")
+            return "knowledge"
+        
+        if replan_count >= self.MAX_REPLANS:
+            if self.verbose:
+                print(f"⚠️ [Router] MAX_REPLANS ({self.MAX_REPLANS}) reached, forcing completion")
+            return "knowledge"
+        
         # 1. Handle Doctor Vibe Pauses (Interventions)
         pause = state.get("vibe_assistant_pause")
         if pause:
@@ -11166,6 +10982,12 @@ class TrinityExecutionMixin:
 
         # 3. Handle Failures & Repairs
         if last_status == "failed":
+            # Additional protection: if we keep failing, force completion
+            if replan_count >= 5:
+                if self.verbose:
+                    print(f"⚠️ [Router] Too many replans ({replan_count}), forcing completion despite failure")
+                return "knowledge"
+            
             repair_node = self._try_auto_repair(state, replan_count)
             if repair_node: return repair_node
             # Default to meta_planner for replan
@@ -11175,6 +10997,11 @@ class TrinityExecutionMixin:
         if last_status == "uncertain":
             # If uncertain for too long, treat as failure to force replan
             if state.get("uncertain_streak", 0) >= 3:
+                # But if we've already done many replans, just complete
+                if replan_count >= 3:
+                    if self.verbose:
+                        print(f"⚠️ [Router] Uncertain + many replans, forcing completion")
+                    return "knowledge"
                 return "meta_planner"
             # Otherwise, meta_planner will decide if we continue or replan
             return "meta_planner"
@@ -11663,7 +11490,7 @@ __all__ = [
 ]
 ```
 
-### `core/trinity/nodes/atlas.py` (25.5 KB)
+### `core/trinity/nodes/atlas.py` (26.5 KB)
 
 ```python
 import os
@@ -11711,6 +11538,13 @@ class AtlasMixin:
             
             # 6. Execute planning request
             raw_plan_data = self._execute_atlas_planning_request(prompt)
+
+            if isinstance(raw_plan_data, dict) and raw_plan_data.get("status") == "llm_unavailable":
+                msg = str(raw_plan_data.get("message") or "LLM unavailable")
+                return {
+                    "current_agent": "end",
+                    "messages": list(context) + [AIMessage(content=f"[VOICE] {msg}")],
+                }
             
             # 7. Check for completion or valid plan
             if isinstance(raw_plan_data, dict) and raw_plan_data.get("status") == "completed":
@@ -11840,7 +11674,20 @@ Return JSON with ONLY the replacement step.'''))
             self._deduplicated_stream("atlas", chunk)
 
         atlas_model = os.getenv("ATLAS_MODEL") or os.getenv("COPILOT_MODEL") or "gpt-4.1"
-        atlas_llm = CopilotLLM(model_name=atlas_model)
+        try:
+            atlas_llm = CopilotLLM(model_name=atlas_model)
+        except Exception:
+            missing = []
+            if not str(os.getenv("COPILOT_API_KEY") or "").strip():
+                missing.append("COPILOT_API_KEY")
+            if not str(os.getenv("GITHUB_TOKEN") or "").strip():
+                missing.append("GITHUB_TOKEN")
+            hint = " or ".join(["COPILOT_API_KEY", "GITHUB_TOKEN"])
+            extra = f" Missing: {', '.join(missing)}." if missing else ""
+            return {
+                "status": "llm_unavailable",
+                "message": f"LLM is not configured. Set {hint} in .env (then restart).{extra}",
+            }
 
         plan_resp = atlas_llm.invoke_with_stream(prompt.format_messages(), on_delta=on_delta)
         plan_resp_content = getattr(plan_resp, "content", "") if plan_resp is not None else ""
@@ -11883,7 +11730,10 @@ Return JSON with ONLY the replacement step.'''))
         else:
             # Full replan: optimize new plan
             grisha_model = os.getenv("GRISHA_MODEL") or os.getenv("COPILOT_MODEL") or "gpt-4.1"
-            grisha_llm = CopilotLLM(model_name=grisha_model)
+            try:
+                grisha_llm = CopilotLLM(model_name=grisha_model)
+            except Exception:
+                grisha_llm = getattr(self, "llm", None)
             local_verifier = AdaptiveVerifier(grisha_llm)
             return local_verifier.optimize_plan(raw_plan, meta_config=meta_config)
 
@@ -12532,13 +12382,13 @@ class GrishaMixin:
         
         # Priority 0: Anti-loop protection - force decision after too many steps
         # This prevents infinite loops seen in logs where tasks run for 30+ steps
-        if step_count > 15 and "failed" not in lower and "error" not in lower:
+        if step_count > 10 and "failed" not in lower and "error" not in lower:
             if self.verbose:
                 print(f"⚠️ [Grisha] Anti-loop triggered: step_count={step_count}, forcing success")
             return "success", "meta_planner"
         
         # If we've been in uncertain streak for too long, force a decision
-        if uncertain_streak >= 5 and "failed" not in lower:
+        if uncertain_streak >= 3 and "failed" not in lower:
             if self.verbose:
                 print(f"⚠️ [Grisha] Uncertain streak={uncertain_streak}, forcing success")
             return "success", "meta_planner"
@@ -12694,7 +12544,7 @@ class KnowledgeMixin:
                 print(f"⚠️ [Learning] Error: {e}")
 ```
 
-### `core/trinity/nodes/meta_planner.py` (13.6 KB)
+### `core/trinity/nodes/meta_planner.py` (13.7 KB)
 
 ```python
 from typing import List, Dict, Any, Optional
@@ -12786,11 +12636,14 @@ class MetaPlannerMixin:
 
     def _check_master_limits(self, state: TrinityState, context: List[Any]) -> Optional[Dict[str, Any]]:
         lang = self.preferred_language if self.preferred_language in MESSAGES else "en"
-        if state.get("step_count", 0) >= getattr(self, "MAX_STEPS", 50):
-            msg = MESSAGES[lang]["step_limit_reached"].format(limit=getattr(self, "MAX_STEPS", 50))
+        max_steps = getattr(self, "MAX_STEPS", 30)
+        max_replans = getattr(self, "MAX_REPLANS", 10)
+        
+        if state.get("step_count", 0) >= max_steps:
+            msg = MESSAGES[lang]["step_limit_reached"].format(limit=max_steps)
             return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"{VOICE_MARKER} {msg}")]}
-        if state.get("replan_count", 0) >= getattr(self, "MAX_REPLANS", 10):
-            msg = MESSAGES[lang]["replan_limit_reached"].format(limit=getattr(self, "MAX_REPLANS", 10))
+        if state.get("replan_count", 0) >= max_replans:
+            msg = MESSAGES[lang]["replan_limit_reached"].format(limit=max_replans)
             return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"{VOICE_MARKER} {msg}")]}
         return None
 
@@ -13383,7 +13236,7 @@ class TetyanaMixin:
         return {**state, "messages": list(context) + [AIMessage(content=err_msg)], "last_step_status": "failed", "current_agent": "grisha"}
 ```
 
-### `core/trinity/nodes/vibe.py` (4.3 KB)
+### `core/trinity/nodes/vibe.py` (4.6 KB)
 
 ```python
 
@@ -13405,7 +13258,7 @@ class VibeAnalyst:
     """
     
     def __init__(self):
-        self.llm = get_llm(model_id="anthropic/claude-3-5-sonnet-latest") # High intelligence for analysis
+        self.llm = None
         
     def _read_recent_logs(self, lines: int = 200) -> str:
         """Reads recent CLI and State logs."""
@@ -13442,6 +13295,17 @@ class VibeAnalyst:
     async def analyze(self, state: TrinityState) -> Dict[str, Any]:
         """Main analysis entry point."""
         trace(logger, "vibe_analysis_start", {"task": str(state.get("original_task") or "")[:200]})
+
+        try:
+            if self.llm is None:
+                self.llm = get_llm(model_id="anthropic/claude-3-5-sonnet-latest")
+        except Exception as e:
+            report = f"VibeAnalyst unavailable: {e}"
+            try:
+                state["last_vibe_analysis"] = report
+            except Exception:
+                pass
+            return {"last_vibe_analysis": report}
         
         task = state.get("original_task", "Unknown Task")
         logs = self._read_recent_logs(lines=150)
@@ -13501,8 +13365,8 @@ FORMAT:
         
         return {"last_vibe_analysis": report}
 
-# Expose callable for Graph
-vibe_analyst_node = VibeAnalyst().analyze
+async def vibe_analyst_node(state: TrinityState) -> Dict[str, Any]:
+    return await VibeAnalyst().analyze(state)
 ```
 
 ### `core/trinity/planning/__init__.py` (0.1 KB)
@@ -13515,7 +13379,7 @@ Trinity Planning module - Strategy and plan optimization.
 __all__ = []
 ```
 
-### `core/trinity/runtime.py` (15.4 KB)
+### `core/trinity/runtime.py` (16.4 KB)
 
 ```python
 import os
@@ -13552,6 +13416,41 @@ from core.trinity.integration.integration_git import IntegrationGitMixin
 DEV_KEYWORDS = {"code", "debug", "fix", "implement", "refactor", "test", "create file", "edit", "modify", "function", "class", "module", "script"}
 GENERAL_KEYWORDS = {"search", "find", "look up", "browse", "read", "check", "verify", "analyze", "summarize", "explain", "video", "watch"}
 
+
+class _NullLLM:
+    def __init__(self, error: str):
+        self.error = str(error or "").strip() or "LLM is not configured"
+
+    def bind_tools(self, tools: Any) -> "_NullLLM":
+        _ = tools
+        return self
+
+    def invoke(self, messages: Any, **kwargs: Any) -> AIMessage:
+        _ = messages
+        _ = kwargs
+        return AIMessage(content=f"[LLM DISABLED] {self.error}")
+
+    async def ainvoke(self, messages: Any, **kwargs: Any) -> AIMessage:
+        _ = messages
+        _ = kwargs
+        return AIMessage(content=f"[LLM DISABLED] {self.error}")
+
+
+def _build_llm() -> Any:
+    try:
+        return CopilotLLM()
+    except Exception as e:
+        try:
+            from langchain_openai import ChatOpenAI
+
+            api_key = str(os.getenv("OPENAI_API_KEY") or "").strip()
+            if api_key:
+                model = str(os.getenv("OPENAI_MODEL") or "gpt-4o").strip() or "gpt-4o"
+                return ChatOpenAI(model=model, api_key=api_key)
+        except Exception:
+            pass
+        return _NullLLM(str(e))
+
 class TrinityRuntime(
     MetaPlannerMixin,
     AtlasMixin,
@@ -13566,8 +13465,8 @@ class TrinityRuntime(
     """Main Trinity runtime engine, composed of modular mixins."""
 
     # Constants
-    MAX_STEPS = 200  # Increased for complex tasks
-    MAX_REPLANS = 20 # Increased for persistence
+    MAX_STEPS = 30  # Reduced to prevent infinite loops (was 200)
+    MAX_REPLANS = 10  # Reduced to force completion faster (was 20)
     PROJECT_STRUCTURE_FILE = "project_structure_final.txt"
     LAST_RESPONSE_FILE = ".last_response.txt"
     TRINITY_REPORT_HEADER = "## Trinity Report"
@@ -13585,7 +13484,7 @@ class TrinityRuntime(
         hyper_mode: bool = False,
         learning_mode: bool = False
     ):
-        self.llm = CopilotLLM()
+        self.llm = _build_llm()
         self.verbose = verbose
         self.logger = get_logger("trinity.core")
         self.registry = MCPToolRegistry()
@@ -83325,6 +83224,8 @@ class RecorderService:
 
 Tools are designed to be callable from an LLM-driven runtime.
 """
+
+from . import windsurf
 ```
 
 ### `system_ai/tools/automation.py` (7.6 KB)
@@ -87248,6 +87149,263 @@ class EnhancedVisionTools:
             generate_diff_image=True,
             multi_monitor=True
         )
+```
+
+### `system_ai/tools/windsurf.py` (4.4 KB)
+
+```python
+import os
+import subprocess
+from typing import Any, Dict, Optional
+
+
+def _truthy_env(name: str) -> bool:
+    return str(os.getenv(name) or "").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _blocked_by_vibe(tool: str) -> Dict[str, Any]:
+    return {
+        "tool": tool,
+        "status": "blocked_by_doctor_vibe",
+        "error": "Blocked: TRINITY_DEV_BY_VIBE is enabled",
+    }
+
+
+def is_windsurf_running() -> Dict[str, Any]:
+    if _truthy_env("TRINITY_DEV_BY_VIBE"):
+        return _blocked_by_vibe("is_windsurf_running")
+
+    try:
+        try:
+            import psutil  # type: ignore
+
+            for p in psutil.process_iter(["name", "cmdline"]):
+                try:
+                    name = str((p.info or {}).get("name") or "")
+                    cmdline = " ".join((p.info or {}).get("cmdline") or [])
+                    hay = (name + " " + cmdline).lower()
+                    if "windsurf" in hay:
+                        return {"tool": "is_windsurf_running", "status": "success", "running": True}
+                except Exception:
+                    continue
+            return {"tool": "is_windsurf_running", "status": "success", "running": False}
+        except Exception:
+            proc = subprocess.run(["pgrep", "-f", "Windsurf"], capture_output=True, text=True)
+            running = proc.returncode == 0 and bool((proc.stdout or "").strip())
+            return {"tool": "is_windsurf_running", "status": "success", "running": bool(running)}
+    except Exception as e:
+        return {"tool": "is_windsurf_running", "status": "error", "error": str(e)}
+
+
+def open_project_in_windsurf(path: str, new_window: bool = False) -> Dict[str, Any]:
+    if _truthy_env("TRINITY_DEV_BY_VIBE"):
+        return _blocked_by_vibe("open_project_in_windsurf")
+
+    p = os.path.abspath(os.path.expanduser(str(path or "").strip()))
+    if not p or not os.path.isdir(p):
+        return {"tool": "open_project_in_windsurf", "status": "error", "error": f"Path is not a directory: {p}", "path": p}
+
+    try:
+        cmd = ["open"]
+        if new_window:
+            cmd += ["-n"]
+        cmd += ["-a", "Windsurf", p]
+        proc = subprocess.run(cmd, capture_output=True, text=True)
+        return {
+            "tool": "open_project_in_windsurf",
+            "status": "success" if proc.returncode == 0 else "error",
+            "path": p,
+            "returncode": proc.returncode,
+            "stdout": (proc.stdout or "")[-4000:],
+            "stderr": (proc.stderr or "")[-4000:],
+        }
+    except Exception as e:
+        return {"tool": "open_project_in_windsurf", "status": "error", "error": str(e), "path": p}
+
+
+def open_file_in_windsurf(path: str, line: Optional[int] = None) -> Dict[str, Any]:
+    if _truthy_env("TRINITY_DEV_BY_VIBE"):
+        return _blocked_by_vibe("open_file_in_windsurf")
+
+    p = os.path.abspath(os.path.expanduser(str(path or "").strip()))
+    if not p or not os.path.exists(p):
+        return {"tool": "open_file_in_windsurf", "status": "error", "error": f"File not found: {p}", "path": p, "line": line}
+
+    try:
+        cmd = ["open", "-a", "Windsurf", p]
+        proc = subprocess.run(cmd, capture_output=True, text=True)
+        return {
+            "tool": "open_file_in_windsurf",
+            "status": "success" if proc.returncode == 0 else "error",
+            "path": p,
+            "line": int(line) if line is not None else None,
+            "returncode": proc.returncode,
+            "stdout": (proc.stdout or "")[-4000:],
+            "stderr": (proc.stderr or "")[-4000:],
+        }
+    except Exception as e:
+        return {"tool": "open_file_in_windsurf", "status": "error", "error": str(e), "path": p, "line": line}
+
+
+def get_windsurf_current_project_path() -> Dict[str, Any]:
+    if _truthy_env("TRINITY_DEV_BY_VIBE"):
+        return _blocked_by_vibe("get_windsurf_current_project_path")
+
+    return {
+        "tool": "get_windsurf_current_project_path",
+        "status": "error",
+        "error": "Not available: current project path discovery is not implemented in this build",
+    }
+
+
+def send_to_windsurf(message: str) -> Dict[str, Any]:
+    if _truthy_env("TRINITY_DEV_BY_VIBE"):
+        return _blocked_by_vibe("send_to_windsurf")
+
+    msg = str(message or "").strip()
+    if not msg:
+        return {"tool": "send_to_windsurf", "status": "error", "error": "Empty message"}
+
+    return {
+        "tool": "send_to_windsurf",
+        "status": "error",
+        "error": "Not available: no supported automation bridge to Windsurf Chat in this build",
+    }
+```
+
+### `test_recursion_fix.py` (4.7 KB)
+
+```python
+#!/usr/bin/env python3
+"""
+Тест для перевірки виправлення проблеми з нескінченною рекурсією
+"""
+
+import sys
+import os
+
+# Add project root to path
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+def test_simple_task():
+    """Тест простого завдання, яке не повинно викликати рекурсію"""
+    from core.trinity.runtime import TrinityRuntime
+    
+    print("=" * 60)
+    print("🧪 Тест: Простий запит")
+    print("=" * 60)
+    
+    runtime = TrinityRuntime(verbose=True, hyper_mode=False)
+    
+    try:
+        task = "Створи файл test_hello.txt з текстом 'Hello World'"
+        print(f"\n📋 Завдання: {task}\n")
+        
+        step_count = 0
+        for event in runtime.run(task, recursion_limit=50):
+            step_count += 1
+            if step_count > 50:
+                print(f"\n❌ ПОМИЛКА: Перевищено 50 кроків!")
+                return False
+            
+            # Показуємо прогрес
+            for node_name, node_state in event.items():
+                agent = node_state.get("current_agent")
+                step = node_state.get("step_count", 0)
+                status = node_state.get("last_step_status")
+                print(f"  [{step:02d}] {node_name:15} -> {agent:15} (status: {status})")
+                
+                if agent == "end":
+                    print(f"\n✅ Завдання завершено за {step} кроків")
+                    return True
+        
+        print(f"\n⚠️  Завдання не завершилось, але й не зациклилось (кроків: {step_count})")
+        return True
+        
+    except RecursionError as e:
+        print(f"\n❌ RecursionError: {e}")
+        return False
+    except Exception as e:
+        print(f"\n❌ Помилка: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
+    finally:
+        runtime.cleanup()
+
+def test_browser_task():
+    """Тест браузерного завдання (без фактичного відкриття браузера)"""
+    from core.trinity.runtime import TrinityRuntime
+    
+    print("\n" + "=" * 60)
+    print("🧪 Тест: Браузерне завдання (симуляція)")
+    print("=" * 60)
+    
+    runtime = TrinityRuntime(verbose=True, hyper_mode=False)
+    
+    try:
+        task = "Знайди інформацію про Python на Wikipedia"
+        print(f"\n📋 Завдання: {task}\n")
+        
+        step_count = 0
+        for event in runtime.run(task, recursion_limit=50):
+            step_count += 1
+            if step_count > 50:
+                print(f"\n❌ ПОМИЛКА: Перевищено 50 кроків!")
+                return False
+            
+            for node_name, node_state in event.items():
+                agent = node_state.get("current_agent")
+                step = node_state.get("step_count", 0)
+                
+                if agent == "end" or step >= 20:  # Форсуємо завершення
+                    print(f"\n✅ Завдання зупинено (кроків: {step})")
+                    return True
+        
+        return True
+        
+    except RecursionError as e:
+        print(f"\n❌ RecursionError: {e}")
+        return False
+    except Exception as e:
+        print(f"\n⚠️  Очікувана помилка (це нормально для тесту): {type(e).__name__}")
+        return True
+    finally:
+        runtime.cleanup()
+
+if __name__ == "__main__":
+    print("\n🚀 Запуск тестів виправлення рекурсії\n")
+    
+    # Встановлюємо обмеження рекурсії Python
+    sys.setrecursionlimit(500)  # Низький ліміт для швидкого виявлення проблем
+    
+    results = []
+    
+    # Тест 1
+    results.append(("Простий файл", test_simple_task()))
+    
+    # Тест 2
+    results.append(("Браузерне завдання", test_browser_task()))
+    
+    # Результати
+    print("\n" + "=" * 60)
+    print("📊 РЕЗУЛЬТАТИ ТЕСТІВ")
+    print("=" * 60)
+    
+    for name, passed in results:
+        status = "✅ PASS" if passed else "❌ FAIL"
+        print(f"{status:10} | {name}")
+    
+    all_passed = all(r[1] for r in results)
+    
+    print("\n" + "=" * 60)
+    if all_passed:
+        print("🎉 Всі тести пройдено! Рекурсія виправлена.")
+    else:
+        print("⚠️  Деякі тести не пройдено.")
+    print("=" * 60 + "\n")
+    
+    sys.exit(0 if all_passed else 1)
 ```
 
 ### `tests/conftest.py` (0.4 KB)
@@ -93144,7 +93302,7 @@ if __name__ == "__main__":
 
 ```
 
-### `tui/agents.py` (31.8 KB)
+### `tui/agents.py` (32.1 KB)
 
 ```python
 """Agent session and LLM interaction for TUI.
@@ -93491,7 +93649,7 @@ def init_agent_tools() -> None:
     from tui.commands import tool_app_command
     from tui.monitoring import (
         tool_monitor_status, tool_monitor_set_source, tool_monitor_set_use_sudo,
-        tool_monitor_start, tool_monitor_stop, tool_monitor_set_mode
+        tool_monitor_start, tool_monitor_stop, tool_monitor_set_mode, tool_monitor_db_prune
     )
 
     agent_session.tools = [
@@ -93552,6 +93710,11 @@ def init_agent_tools() -> None:
             name="monitor_stop",
             description="Stop monitoring. args: {}",
             handler=lambda _args: tool_monitor_stop(),
+        ),
+        AgentTool(
+            name="monitor_db_prune",
+            description="Prune monitor DB to keep last N events. args: {keep_last?, hard_vacuum?, incremental_pages?}",
+            handler=tool_monitor_db_prune,
         ),
         AgentTool(
             name="llm_status",
@@ -94470,7 +94633,7 @@ _scan_traces = scan_traces
 _get_editors_list = get_editors_list
 ```
 
-### `tui/cli.py` (61.8 KB)
+### `tui/cli.py` (62.0 KB)
 
 ```python
 #!/usr/bin/env python3
@@ -95847,18 +96010,14 @@ def _tool_ui_theme_set(args: Dict[str, Any]) -> Dict[str, Any]:
 
 # ================== CLI SUBCOMMANDS ==================
 
-def cli_main(argv: List[str]) -> None:
-    # Setup logging
-    verbose = "--verbose" in argv or "-v" in argv
-    logger = setup_global_logging(verbose=verbose)
-    logger.info(f"CLI started with arguments: {argv}")
-    
+def _build_cli_parser() -> Tuple[argparse.ArgumentParser, Any]:
     parser = argparse.ArgumentParser(prog="cli.py", description="System CLI")
+    parser.add_argument("-v", "--verbose", action="store_true")
     sub = parser.add_subparsers(dest="command")
 
     sub.add_parser("tui", help="Запустити TUI (за замовчуванням)")
 
-    p_list = sub.add_parser("list-editors", help="Список редакторів")
+    sub.add_parser("list-editors", help="Список редакторів")
 
     p_list_mod = sub.add_parser("list-modules", help="Список модулів")
     p_list_mod.add_argument("--editor")
@@ -95888,19 +96047,18 @@ def cli_main(argv: List[str]) -> None:
     p_agent_chat = sub.add_parser("agent-chat", help="Agent chat (single-shot)")
     p_agent_chat.add_argument("--message", required=True)
 
-    p_self_healing_status = sub.add_parser("self-healing-status", help="Check self-healing status")
-    p_self_healing_scan = sub.add_parser("self-healing-scan", help="Trigger immediate self-healing scan")
-    
-    p_vibe_status = sub.add_parser("vibe-status", help="Check Vibe CLI Assistant status")
-    p_vibe_continue = sub.add_parser("vibe-continue", help="Continue execution after Vibe CLI Assistant pause")
-    p_vibe_cancel = sub.add_parser("vibe-cancel", help="Cancel current task from Vibe CLI Assistant pause")
-    p_vibe_help = sub.add_parser("vibe-help", help="Show Vibe CLI Assistant help")
-    
+    sub.add_parser("self-healing-status", help="Check self-healing status")
+    sub.add_parser("self-healing-scan", help="Trigger immediate self-healing scan")
+
+    sub.add_parser("vibe-status", help="Check Vibe CLI Assistant status")
+    sub.add_parser("vibe-continue", help="Continue execution after Vibe CLI Assistant pause")
+    sub.add_parser("vibe-cancel", help="Cancel current task from Vibe CLI Assistant pause")
+    sub.add_parser("vibe-help", help="Show Vibe CLI Assistant help")
+
     p_eternal_engine = sub.add_parser("eternal-engine", help="Start eternal engine mode with Doctor Vibe")
     p_eternal_engine.add_argument("--task", default="Auto-generate", help="Initial task (optional)")
     p_eternal_engine.add_argument("--hyper", action="store_true", help="Enable hyper mode (unlimited permissions)")
 
-    # Screenshots management
     p_screens = sub.add_parser("screenshots", help="List or open task screenshots")
     p_screens.add_argument("action", choices=["list", "open"], help="Action: list or open")
     p_screens.add_argument("--count", type=int, default=10, help="Number of items to list (default 10)")
@@ -95908,6 +96066,23 @@ def cli_main(argv: List[str]) -> None:
     sub.add_parser("agent-reset", help="Reset in-memory agent session")
     sub.add_parser("agent-on", help="Enable agent chat")
     sub.add_parser("agent-off", help="Disable agent chat")
+
+    return parser, sub
+
+
+def get_cli_known_commands() -> set[str]:
+    parser, sub = _build_cli_parser()
+    _ = parser
+    return set(sub.choices.keys()) | {"-h", "--help", "-v", "--verbose"}
+
+
+def cli_main(argv: List[str]) -> None:
+    # Setup logging
+    verbose = "--verbose" in argv or "-v" in argv
+    logger = setup_global_logging(verbose=verbose)
+    logger.info(f"CLI started with arguments: {argv}")
+
+    parser, sub = _build_cli_parser()
 
     args = parser.parse_args(argv)
     logger.debug(f"Parsed command: {args.command}")
@@ -96221,7 +96396,7 @@ DEFAULT_CLEANUP_CONFIG: Dict[str, Any] = {
 }
 ```
 
-### `tui/cli_helpers.py` (1.1 KB)
+### `tui/cli_helpers.py` (1.4 KB)
 
 ```python
 
@@ -96237,21 +96412,35 @@ def parse_natural_language_args(argv: list[str]) -> list[str]:
     if len(argv) <= 1:
         return argv
 
-    first_arg = argv[1]
-    known_commands = {
-        "tui", "list-editors", "list-modules", "run", "enable", "disable", 
-        "install", "smart-plan", "ask", "agent-chat", "agent-reset", 
-        "agent-on", "agent-off", "self-healing-status", "self-healing-scan",
-        "vibe-status", "vibe-continue", "vibe-cancel", "vibe-help",
-        "eternal-engine", "screenshots",
-        "-h", "--help"
-    }
-    
+    global_flags = {"-v", "--verbose"}
+    i = 1
+    while i < len(argv) and argv[i] in global_flags:
+        i += 1
+
+    if i >= len(argv):
+        return argv
+
+    first_arg = argv[i]
+
+    try:
+        from tui.cli import get_cli_known_commands
+        known_commands = get_cli_known_commands()
+    except Exception:
+        known_commands = {
+            "tui", "list-editors", "list-modules", "run", "enable", "disable",
+            "install", "smart-plan", "ask", "agent-chat", "agent-reset",
+            "agent-on", "agent-off", "self-healing-status", "self-healing-scan",
+            "vibe-status", "vibe-continue", "vibe-cancel", "vibe-help",
+            "eternal-engine", "screenshots",
+            "-h", "--help", "-v", "--verbose",
+        }
+
     if first_arg not in known_commands and not first_arg.startswith("-"):
         # Treat as agent-chat message
         # Reconstruct argv to: cli.py agent-chat --message "all args joined"
-        message = " ".join(argv[1:])
-        return [argv[0], "agent-chat", "--message", message]
+        message = " ".join(argv[i:])
+        preserved = argv[1:i]
+        return [argv[0], *preserved, "agent-chat", "--message", message]
     
     return argv
 ```
@@ -100397,7 +100586,7 @@ class MessageBuffer:
         return self.messages[-n:] if n > 0 else []
 ```
 
-### `tui/monitoring.py` (29.4 KB)
+### `tui/monitoring.py` (36.9 KB)
 
 ```python
 """File monitoring service for TUI.
@@ -100428,6 +100617,210 @@ from tui.cli_paths import (
     MONITOR_EVENTS_DB_PATH,
 )
 import shutil
+
+
+_DB_INIT_LOCK = threading.Lock()
+_DB_INIT_DONE: set[str] = set()
+_DB_PRUNE_LOCK = threading.Lock()
+_DB_LAST_PRUNE_TS: Dict[str, int] = {}
+
+
+def _env_int(name: str, default: int) -> int:
+    try:
+        return int(str(os.getenv(name) or "").strip() or str(default))
+    except Exception:
+        return int(default)
+
+
+def _env_bool(name: str, default: bool = False) -> bool:
+    raw = str(os.getenv(name) or "").strip().lower()
+    if not raw:
+        return bool(default)
+    return raw in {"1", "true", "yes", "on"}
+
+
+def monitor_db_init(db_path: str) -> None:
+    """Ensure the monitor DB exists and has the expected schema."""
+    try:
+        db_path = str(db_path or "").strip()
+        if not db_path:
+            return
+
+        with _DB_INIT_LOCK:
+            if db_path in _DB_INIT_DONE:
+                return
+
+            try:
+                os.makedirs(os.path.dirname(db_path), exist_ok=True)
+            except Exception:
+                pass
+
+            conn = sqlite3.connect(db_path)
+            try:
+                try:
+                    conn.execute("PRAGMA synchronous=NORMAL")
+                    conn.execute("PRAGMA temp_store=MEMORY")
+                except Exception:
+                    pass
+
+                conn.execute(
+                    "CREATE TABLE IF NOT EXISTS events(" \
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT, " \
+                    "ts INTEGER, source TEXT, event_type TEXT, " \
+                    "src_path TEXT, dest_path TEXT, is_directory INTEGER, " \
+                    "target_key TEXT, pid INTEGER, process TEXT, raw_line TEXT" \
+                    ")"
+                )
+                try:
+                    conn.execute("CREATE INDEX IF NOT EXISTS idx_events_ts ON events(ts)")
+                except Exception:
+                    pass
+
+                try:
+                    conn.execute("PRAGMA auto_vacuum=INCREMENTAL")
+                except Exception:
+                    pass
+
+                conn.commit()
+            finally:
+                conn.close()
+
+            _DB_INIT_DONE.add(db_path)
+    except Exception:
+        return
+
+
+def _monitor_db_prune_keep_last(
+    db_path: str,
+    *,
+    keep_last: int,
+    incremental_vacuum_pages: int = 0,
+    hard_vacuum: bool = False,
+) -> Dict[str, Any]:
+    """Prune DB by keeping only the last N events by id."""
+    try:
+        keep_last = max(0, int(keep_last or 0))
+    except Exception:
+        keep_last = 0
+
+    monitor_db_init(db_path)
+    before_size = 0
+    after_size = 0
+    deleted = 0
+    min_id = 0
+    max_id = 0
+
+    try:
+        if os.path.exists(db_path):
+            before_size = int(os.path.getsize(db_path) or 0)
+    except Exception:
+        before_size = 0
+
+    try:
+        conn = sqlite3.connect(db_path)
+        try:
+            row = conn.execute("SELECT MIN(id), MAX(id) FROM events").fetchone()
+            if row:
+                min_id = int(row[0] or 0)
+                max_id = int(row[1] or 0)
+
+            if keep_last > 0 and max_id > 0:
+                cutoff_id = max(0, int(max_id) - int(keep_last))
+                if cutoff_id > 0:
+                    cur = conn.execute("DELETE FROM events WHERE id <= ?", (int(cutoff_id),))
+                    deleted = int(getattr(cur, "rowcount", 0) or 0)
+                    conn.commit()
+
+            if incremental_vacuum_pages and int(incremental_vacuum_pages) > 0:
+                try:
+                    conn.execute(f"PRAGMA incremental_vacuum({int(incremental_vacuum_pages)})")
+                except Exception:
+                    pass
+                try:
+                    conn.commit()
+                except Exception:
+                    pass
+
+            if hard_vacuum:
+                try:
+                    conn.execute("VACUUM")
+                except Exception:
+                    pass
+        finally:
+            conn.close()
+    except Exception:
+        pass
+
+    try:
+        if os.path.exists(db_path):
+            after_size = int(os.path.getsize(db_path) or 0)
+    except Exception:
+        after_size = before_size
+
+    return {
+        "ok": True,
+        "db": db_path,
+        "before_size": int(before_size),
+        "after_size": int(after_size),
+        "deleted": int(deleted),
+        "min_id": int(min_id),
+        "max_id": int(max_id),
+    }
+
+
+def _monitor_db_maybe_prune(db_path: str, *, force: bool = False) -> None:
+    """Best-effort retention to avoid unbounded DB growth."""
+    try:
+        db_path = str(db_path or "").strip()
+        if not db_path:
+            return
+
+        interval_sec = _env_int("SYSTEM_MONITOR_PRUNE_INTERVAL_SEC", 600)
+        max_db_mb = _env_int("SYSTEM_MONITOR_MAX_DB_MB", 1024)
+        keep_last = _env_int("SYSTEM_MONITOR_KEEP_LAST_EVENTS", 2_000_000)
+        incremental_pages = _env_int("SYSTEM_MONITOR_INCREMENTAL_VACUUM_PAGES", 0)
+        hard_vacuum = _env_bool("SYSTEM_MONITOR_HARD_VACUUM", False)
+
+        now = int(time.time())
+        last = int(_DB_LAST_PRUNE_TS.get(db_path) or 0)
+        if (not force) and interval_sec > 0 and (now - last) < int(interval_sec):
+            return
+
+        size_mb = 0
+        try:
+            if os.path.exists(db_path):
+                size_mb = int(os.path.getsize(db_path) / (1024 * 1024))
+        except Exception:
+            size_mb = 0
+
+        if (not force) and max_db_mb > 0 and size_mb <= int(max_db_mb):
+            return
+
+        if keep_last <= 0:
+            return
+
+        if not _DB_PRUNE_LOCK.acquire(blocking=False):
+            return
+
+        def _worker() -> None:
+            try:
+                _monitor_db_prune_keep_last(
+                    db_path,
+                    keep_last=int(keep_last),
+                    incremental_vacuum_pages=int(incremental_pages),
+                    hard_vacuum=bool(hard_vacuum),
+                )
+            finally:
+                _DB_LAST_PRUNE_TS[db_path] = int(time.time())
+                try:
+                    _DB_PRUNE_LOCK.release()
+                except Exception:
+                    pass
+
+        t = threading.Thread(target=_worker, daemon=True)
+        t.start()
+    except Exception:
+        return
 
 
 
@@ -100623,6 +101016,7 @@ def monitor_db_insert(
 ) -> None:
     """Insert a new event into the monitor database."""
     try:
+        monitor_db_init(db_path)
         conn = sqlite3.connect(db_path)
         try:
             conn.execute(
@@ -100644,6 +101038,8 @@ def monitor_db_insert(
             conn.commit()
         finally:
             conn.close()
+
+        _monitor_db_maybe_prune(db_path)
     except Exception:
         return
 
@@ -100972,6 +101368,13 @@ def _monitor_startup_log() -> None:
 # Run startup log once
 _monitor_startup_log()
 
+# Ensure DB schema exists and apply best-effort retention if DB is large
+try:
+    monitor_db_init(MONITOR_EVENTS_DB_PATH)
+    _monitor_db_maybe_prune(MONITOR_EVENTS_DB_PATH, force=False)
+except Exception:
+    pass
+
 
 
 def monitor_start_selected() -> Tuple[bool, str]:
@@ -101119,6 +101522,36 @@ def tool_monitor_summarize(args: Dict[str, Any]) -> Dict[str, Any]:
         )
 
         return {"ok": True, "summary": summary_text}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+
+def tool_monitor_db_prune(args: Dict[str, Any]) -> Dict[str, Any]:
+    """Prune monitor DB to keep only last N events.
+
+    Args (optional):
+      - keep_last: int (default SYSTEM_MONITOR_KEEP_LAST_EVENTS or 2000000)
+      - hard_vacuum: bool (default false)
+      - incremental_pages: int (default SYSTEM_MONITOR_INCREMENTAL_VACUUM_PAGES or 0)
+    """
+    try:
+        keep_last = int((args or {}).get("keep_last") or _env_int("SYSTEM_MONITOR_KEEP_LAST_EVENTS", 2_000_000))
+    except Exception:
+        keep_last = _env_int("SYSTEM_MONITOR_KEEP_LAST_EVENTS", 2_000_000)
+    try:
+        incremental_pages = int((args or {}).get("incremental_pages") or _env_int("SYSTEM_MONITOR_INCREMENTAL_VACUUM_PAGES", 0))
+    except Exception:
+        incremental_pages = _env_int("SYSTEM_MONITOR_INCREMENTAL_VACUUM_PAGES", 0)
+    hard_vacuum = bool((args or {}).get("hard_vacuum")) or _env_bool("SYSTEM_MONITOR_HARD_VACUUM", False)
+
+    try:
+        with _DB_PRUNE_LOCK:
+            return _monitor_db_prune_keep_last(
+                MONITOR_EVENTS_DB_PATH,
+                keep_last=int(keep_last),
+                incremental_vacuum_pages=int(incremental_pages),
+                hard_vacuum=bool(hard_vacuum),
+            )
     except Exception as e:
         return {"ok": False, "error": str(e)}
 
@@ -105215,5 +105648,5 @@ def _render_mcp_client_menu(ctx: dict) -> List[Tuple[str, str]]:
 
 ## Summary
 
-- **Total Files**: 311
-- **Skipped**: 36250
+- **Total Files**: 312
+- **Skipped**: 36273

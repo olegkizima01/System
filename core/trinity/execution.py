@@ -61,6 +61,18 @@ class TrinityExecutionMixin:
         step_count = state.get("step_count") or 0
         last_status = state.get("last_step_status")
         
+        # CRITICAL: Anti-recursion protection
+        # If we've done too many steps or replans, force completion
+        if step_count >= self.MAX_STEPS:
+            if self.verbose:
+                print(f"⚠️ [Router] MAX_STEPS ({self.MAX_STEPS}) reached, forcing completion")
+            return "knowledge"
+        
+        if replan_count >= self.MAX_REPLANS:
+            if self.verbose:
+                print(f"⚠️ [Router] MAX_REPLANS ({self.MAX_REPLANS}) reached, forcing completion")
+            return "knowledge"
+        
         # 1. Handle Doctor Vibe Pauses (Interventions)
         pause = state.get("vibe_assistant_pause")
         if pause:
@@ -73,6 +85,12 @@ class TrinityExecutionMixin:
 
         # 3. Handle Failures & Repairs
         if last_status == "failed":
+            # Additional protection: if we keep failing, force completion
+            if replan_count >= 5:
+                if self.verbose:
+                    print(f"⚠️ [Router] Too many replans ({replan_count}), forcing completion despite failure")
+                return "knowledge"
+            
             repair_node = self._try_auto_repair(state, replan_count)
             if repair_node: return repair_node
             # Default to meta_planner for replan
@@ -82,6 +100,11 @@ class TrinityExecutionMixin:
         if last_status == "uncertain":
             # If uncertain for too long, treat as failure to force replan
             if state.get("uncertain_streak", 0) >= 3:
+                # But if we've already done many replans, just complete
+                if replan_count >= 3:
+                    if self.verbose:
+                        print(f"⚠️ [Router] Uncertain + many replans, forcing completion")
+                    return "knowledge"
                 return "meta_planner"
             # Otherwise, meta_planner will decide if we continue or replan
             return "meta_planner"

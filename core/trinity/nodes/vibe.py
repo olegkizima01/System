@@ -17,7 +17,7 @@ class VibeAnalyst:
     """
     
     def __init__(self):
-        self.llm = get_llm(model_id="anthropic/claude-3-5-sonnet-latest") # High intelligence for analysis
+        self.llm = None
         
     def _read_recent_logs(self, lines: int = 200) -> str:
         """Reads recent CLI and State logs."""
@@ -54,6 +54,17 @@ class VibeAnalyst:
     async def analyze(self, state: TrinityState) -> Dict[str, Any]:
         """Main analysis entry point."""
         trace(logger, "vibe_analysis_start", {"task": str(state.get("original_task") or "")[:200]})
+
+        try:
+            if self.llm is None:
+                self.llm = get_llm(model_id="anthropic/claude-3-5-sonnet-latest")
+        except Exception as e:
+            report = f"VibeAnalyst unavailable: {e}"
+            try:
+                state["last_vibe_analysis"] = report
+            except Exception:
+                pass
+            return {"last_vibe_analysis": report}
         
         task = state.get("original_task", "Unknown Task")
         logs = self._read_recent_logs(lines=150)
@@ -113,5 +124,5 @@ FORMAT:
         
         return {"last_vibe_analysis": report}
 
-# Expose callable for Graph
-vibe_analyst_node = VibeAnalyst().analyze
+async def vibe_analyst_node(state: TrinityState) -> Dict[str, Any]:
+    return await VibeAnalyst().analyze(state)

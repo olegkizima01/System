@@ -1,3 +1,1 @@
-## My Last Response
-
-Cleanup: Removed legacy project_structure_final.txt, verified CODEMAP.md hook
+[VOICE] LLM is not configured. Set COPILOT_API_KEY or GITHUB_TOKEN in .env (then restart). Missing: COPILOT_API_KEY, GITHUB_TOKEN.

@@ -43,6 +43,13 @@ class AtlasMixin:
             
             # 6. Execute planning request
             raw_plan_data = self._execute_atlas_planning_request(prompt)
+
+            if isinstance(raw_plan_data, dict) and raw_plan_data.get("status") == "llm_unavailable":
+                msg = str(raw_plan_data.get("message") or "LLM unavailable")
+                return {
+                    "current_agent": "end",
+                    "messages": list(context) + [AIMessage(content=f"[VOICE] {msg}")],
+                }
             
             # 7. Check for completion or valid plan
             if isinstance(raw_plan_data, dict) and raw_plan_data.get("status") == "completed":
@@ -172,7 +179,20 @@ Return JSON with ONLY the replacement step.'''))
             self._deduplicated_stream("atlas", chunk)
 
         atlas_model = os.getenv("ATLAS_MODEL") or os.getenv("COPILOT_MODEL") or "gpt-4.1"
-        atlas_llm = CopilotLLM(model_name=atlas_model)
+        try:
+            atlas_llm = CopilotLLM(model_name=atlas_model)
+        except Exception:
+            missing = []
+            if not str(os.getenv("COPILOT_API_KEY") or "").strip():
+                missing.append("COPILOT_API_KEY")
+            if not str(os.getenv("GITHUB_TOKEN") or "").strip():
+                missing.append("GITHUB_TOKEN")
+            hint = " or ".join(["COPILOT_API_KEY", "GITHUB_TOKEN"])
+            extra = f" Missing: {', '.join(missing)}." if missing else ""
+            return {
+                "status": "llm_unavailable",
+                "message": f"LLM is not configured. Set {hint} in .env (then restart).{extra}",
+            }
 
         plan_resp = atlas_llm.invoke_with_stream(prompt.format_messages(), on_delta=on_delta)
         plan_resp_content = getattr(plan_resp, "content", "") if plan_resp is not None else ""
@@ -215,7 +235,10 @@ Return JSON with ONLY the replacement step.'''))
         else:
             # Full replan: optimize new plan
             grisha_model = os.getenv("GRISHA_MODEL") or os.getenv("COPILOT_MODEL") or "gpt-4.1"
-            grisha_llm = CopilotLLM(model_name=grisha_model)
+            try:
+                grisha_llm = CopilotLLM(model_name=grisha_model)
+            except Exception:
+                grisha_llm = getattr(self, "llm", None)
             local_verifier = AdaptiveVerifier(grisha_llm)
             return local_verifier.optimize_plan(raw_plan, meta_config=meta_config)
 

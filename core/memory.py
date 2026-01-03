@@ -54,20 +54,32 @@ class AtlasMemory:
         persist_dir = Path(persist_path).expanduser().resolve()
         persist_dir.mkdir(parents=True, exist_ok=True)
 
+        disable_env = str(os.environ.get("SYSTEM_ATLAS_MEMORY_PERSIST") or "").strip().lower() in {"0", "false", "no", "off", "disable", "disabled"}
+        disable_marker = persist_dir / ".disable_persist"
+
         # Use hardened ChromaDB initialization with repair+retry
         init_res = None
-        try:
-            init_res = create_persistent_client(persist_dir=persist_dir, logger=logger, retry_repair=True)
-        except BaseException as e:
-            logger.warning(f"⚠️ ChromaDB PersistentClient failed for {persist_dir}: {e}")
-            init_res = None
+        if not disable_env and not disable_marker.exists():
+            try:
+                init_res = create_persistent_client(persist_dir=persist_dir, logger=logger, retry_repair=True)
+            except BaseException as e:
+                logger.warning(f"⚠️ ChromaDB PersistentClient failed for {persist_dir}: {e}")
+                init_res = None
 
         if init_res is not None:
             self.client = init_res.client
+            try:
+                if disable_marker.exists():
+                    disable_marker.unlink()
+            except Exception:
+                pass
         else:
             try:
                 self.client = chromadb.Client()
-                logger.info("✅ Using in-memory ChromaDB client as fallback")
+                try:
+                    disable_marker.touch(exist_ok=True)
+                except Exception:
+                    pass
             except Exception as fallback_err:
                 raise RuntimeError(f"ChromaDB completely unavailable: {fallback_err}")
         

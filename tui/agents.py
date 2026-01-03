@@ -342,7 +342,7 @@ def init_agent_tools() -> None:
     from tui.commands import tool_app_command
     from tui.monitoring import (
         tool_monitor_status, tool_monitor_set_source, tool_monitor_set_use_sudo,
-        tool_monitor_start, tool_monitor_stop, tool_monitor_set_mode
+        tool_monitor_start, tool_monitor_stop, tool_monitor_set_mode, tool_monitor_db_prune
     )
 
     agent_session.tools = [
@@ -403,6 +403,11 @@ def init_agent_tools() -> None:
             name="monitor_stop",
             description="Stop monitoring. args: {}",
             handler=lambda _args: tool_monitor_stop(),
+        ),
+        AgentTool(
+            name="monitor_db_prune",
+            description="Prune monitor DB to keep last N events. args: {keep_last?, hard_vacuum?, incremental_pages?}",
+            handler=tool_monitor_db_prune,
         ),
         AgentTool(
             name="llm_status",

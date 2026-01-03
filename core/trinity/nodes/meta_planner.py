@@ -87,11 +87,14 @@ class MetaPlannerMixin:
 
     def _check_master_limits(self, state: TrinityState, context: List[Any]) -> Optional[Dict[str, Any]]:
         lang = self.preferred_language if self.preferred_language in MESSAGES else "en"
-        if state.get("step_count", 0) >= getattr(self, "MAX_STEPS", 50):
-            msg = MESSAGES[lang]["step_limit_reached"].format(limit=getattr(self, "MAX_STEPS", 50))
+        max_steps = getattr(self, "MAX_STEPS", 30)
+        max_replans = getattr(self, "MAX_REPLANS", 10)
+        
+        if state.get("step_count", 0) >= max_steps:
+            msg = MESSAGES[lang]["step_limit_reached"].format(limit=max_steps)
             return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"{VOICE_MARKER} {msg}")]}
-        if state.get("replan_count", 0) >= getattr(self, "MAX_REPLANS", 10):
-            msg = MESSAGES[lang]["replan_limit_reached"].format(limit=getattr(self, "MAX_REPLANS", 10))
+        if state.get("replan_count", 0) >= max_replans:
+            msg = MESSAGES[lang]["replan_limit_reached"].format(limit=max_replans)
             return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"{VOICE_MARKER} {msg}")]}
         return None
 
