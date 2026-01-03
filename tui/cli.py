@@ -265,6 +265,21 @@ from tui.tools import (
     tool_ui_streaming_set as _tool_ui_streaming_set,
 )
 
+# Extracted Modules Imports (Aliased for compatibility)
+from tui.utils import safe_abspath as _safe_abspath
+from tui.scanning import (
+    scan_installed_apps as _scan_installed_apps,
+    scan_installed_app_paths as _scan_installed_app_paths,
+    read_bundle_id as _read_bundle_id,
+    get_installed_browsers as _get_installed_browsers,
+)
+from tui.monitoring import monitor_db_insert as _monitor_db_insert
+from tui.monitoring_service import (
+    DummyProcService as _DummyProcService,
+    ProcTraceService as _ProcTraceService,
+    DummyProcService, # Exposed directly for use
+)
+
 
 
 
@@ -312,26 +327,7 @@ _render_log_cache_ttl_s: float = 0.2
 
 
 
-def _is_greeting(text: str) -> bool:
-    t = str(text or "").strip().lower()
-    if not t:
-        return False
-    t = re.sub(r"[\s\t\n\r\.,!\?;:]+", " ", t).strip()
-    greetings = {
-        "привіт",
-        "привiт",
-        "вітаю",
-        "доброго дня",
-        "добрий день",
-        "добрий вечір",
-        "доброго вечора",
-        "добрий ранок",
-        "доброго ранку",
-        "hello",
-        "hi",
-        "hey",
-    }
-    return t in greetings
+# _is_greeting moved to tui.agents
 
 
 
@@ -356,21 +352,13 @@ def _run_cleanup(cfg: Dict[str, Any], editor: str, dry_run: bool = False, **kwar
 
 
 
-def _monitor_get_sudo_password() -> str:
-    _load_env()
-    return str(os.getenv("SUDO_PASSWORD") or "").strip()
+# _monitor_get_sudo_password moved to tui.monitoring
 
 
 
 
 
-def _maybe_log_monitor_ingest(message: str) -> None:
-    try:
-        fn = globals().get("log")
-        if callable(fn):
-            fn(message, "info")
-    except Exception:
-        return
+# _maybe_log_monitor_ingest removed (circular dep fixed)
 
 
 
@@ -500,61 +488,10 @@ def _apply_default_monitor_targets() -> None:
     pass
 
 
-def _monitor_db_insert(
-    db_path: str,
-    *,
-    source: str,
-    event_type: str,
-    src_path: str,
-    dest_path: str,
-    is_directory: bool,
-    target_key: str,
-    pid: int = 0,
-    process: str = "",
-    raw_line: str = "",
-) -> None:
-    try:
-        conn = sqlite3.connect(db_path)
-        try:
-            conn.execute(
-                "INSERT INTO events(ts, source, event_type, src_path, dest_path, is_directory, target_key, pid, process, raw_line) "
-                "VALUES(?,?,?,?,?,?,?,?,?,?)",
-                (
-                    int(time.time()),
-                    str(source),
-                    str(event_type),
-                    str(src_path),
-                    str(dest_path),
-                    1 if is_directory else 0,
-                    str(target_key),
-                    int(pid or 0),
-                    str(process or ""),
-                    str(raw_line or ""),
-                ),
-            )
-            conn.commit()
-        finally:
-            conn.close()
-    except Exception:
-        return
+# _monitor_db_insert moved to tui.monitoring
 
 
-def _ensure_agent_ready() -> Tuple[bool, str]:
-    if CopilotLLM is None or SystemMessage is None or HumanMessage is None:
-        return False, "LLM недоступний (нема langchain_core або providers/copilot.py)"
-
-    _load_env()
-    _load_llm_settings()
-    sig = _get_llm_signature()
-
-    provider = str(os.getenv("LLM_PROVIDER") or "copilot").strip().lower() or "copilot"
-    if provider != "copilot":
-        return False, f"Unsupported LLM provider: {provider}"
-
-    if agent_session.llm is None or agent_session.llm_signature != sig:
-        agent_session.llm = CopilotLLM(model_name=os.getenv("COPILOT_MODEL"), vision_model_name=os.getenv("COPILOT_VISION_MODEL"))
-        agent_session.llm_signature = sig
-    return True, "OK"
+# _ensure_agent_ready moved to tui.agents
 
 
 
@@ -563,32 +500,7 @@ def _ensure_agent_ready() -> Tuple[bool, str]:
 _agent_last_permissions = CommandPermissions()
 
 
-def _safe_abspath(path: str) -> str:
-    expanded = os.path.expanduser(str(path or "")).strip()
-    if not expanded:
-        return ""
-    if os.path.isabs(expanded):
-        return expanded
-
-    raw = expanded
-    if raw.startswith("./"):
-        raw = raw[2:]
-
-    cleanup_dir = os.path.join(SCRIPT_DIR, "cleanup_scripts")
-    base = os.path.basename(raw)
-
-    candidates = [
-        os.path.abspath(os.path.join(SCRIPT_DIR, raw)),
-        os.path.abspath(os.path.join(cleanup_dir, raw)),
-        os.path.abspath(os.path.join(cleanup_dir, base)),
-        os.path.abspath(os.path.join(SCRIPT_DIR, base)),
-    ]
-
-    for p in candidates:
-        if os.path.exists(p):
-            return p
-
-    return candidates[0]
+# _safe_abspath moved to tui.utils
 
 
 
@@ -598,330 +510,26 @@ def _safe_abspath(path: str) -> str:
 
 
 
-def _agent_send_with_stream(user_text: str) -> Tuple[bool, str]:
-    """Stream agent response in real-time (chat-only; no execution)."""
-    ok, msg = _ensure_agent_ready()
-    if not ok:
-        return False, msg
-
-    _load_ui_settings()
-
-    # Set processing state
-    state.agent_processing = True
-
-    system_prompt = (
-        "You are a chat assistant inside a macOS automation TUI.\n"
-        "Chat mode is for discussion, clarification, and planning only.\n"
-        "Do NOT execute actions.\n"
-        "If the user wants something executed, instruct them to use /task <...> (Trinity).\n\n"
-        f"Reply in {lang_name(state.chat_lang)}. Be concise and practical.\n"
-    )
-
-    if not agent_session.messages:
-        agent_session.messages = [SystemMessage(content=system_prompt)]
-    else:
-        try:
-            if SystemMessage and isinstance(agent_session.messages[0], SystemMessage):
-                agent_session.messages[0] = SystemMessage(content=system_prompt)
-        except Exception:
-            pass
-
-    agent_session.messages.append(HumanMessage(content=str(user_text or "")))
-    
-    # Log user message to Agent Panel
-    _log_agent_message_imported(AgentType.USER, str(user_text or ""))
-
-    llm = agent_session.llm
-    
-    # Start streaming response
-    try:
-        try:
-            from tui.layout import force_ui_update
-            force_ui_update()
-        except ImportError:
-            pass
-
-        accumulated_content = ""
-
-        # Reserve a line for assistant streaming output
-        stream_idx = _log_reserve_line("action")
-
-        def _on_delta(piece: str) -> None:
-            nonlocal accumulated_content, stream_idx
-            accumulated_content += piece
-            
-            # Update Agent Panel (Stream)
-            _log_agent_message_imported(AgentType.ASSISTANT, accumulated_content)
-
-            # Guard against out-of-range index after log trimming
-            if 0 <= stream_idx < len(state.logs):
-                _log_replace_at(stream_idx, accumulated_content, "action")
-            else:
-                # Index became invalid after trimming, reserve new line
-                stream_idx = _log_reserve_line("action")
-                _log_replace_at(stream_idx, accumulated_content, "action")
-            try:
-                from tui.layout import force_ui_update
-                force_ui_update()
-            except Exception:
-                pass
-
-        if hasattr(llm, "invoke_with_stream"):
-            resp = llm.invoke_with_stream(agent_session.messages, on_delta=_on_delta)
-        else:
-            resp = llm.invoke(agent_session.messages)
-            accumulated_content = str(getattr(resp, "content", "") or "")
-            # Guard against out-of-range index after log trimming
-            if 0 <= stream_idx < len(state.logs):
-                _log_replace_at(stream_idx, accumulated_content, "action")
-            else:
-                # Index became invalid after trimming, reserve new line
-                stream_idx = _log_reserve_line("action")
-                _log_replace_at(stream_idx, accumulated_content, "action")
-
-        final_message = resp if isinstance(resp, AIMessage) else AIMessage(content=str(getattr(resp, "content", "") or ""))
-        if not accumulated_content:
-            accumulated_content = str(getattr(final_message, "content", "") or "")
-            # Update Agent Panel (Final fallback)
-            _log_agent_message_imported(AgentType.ASSISTANT, accumulated_content)
-
-            # Guard against out-of-range index after log trimming
-            if 0 <= stream_idx < len(state.logs):
-                _log_replace_at(stream_idx, accumulated_content, "action")
-            else:
-                # Index became invalid after trimming, reserve new line
-                stream_idx = _log_reserve_line("action")
-                _log_replace_at(stream_idx, accumulated_content, "action")
-
-        agent_session.messages.append(final_message)
-
-        return True, accumulated_content
-
-    except Exception as e:
-        return False, f"Streaming error: {str(e)}"
-    finally:
-        state.agent_processing = False
-        _trim_logs_if_needed()
-
-
-def _agent_send_no_stream(user_text: str) -> Tuple[bool, str]:
-    ok, msg = _ensure_agent_ready()
-    if not ok:
-        return False, msg
-
-    _load_ui_settings()
-    state.agent_processing = True
-
-    system_prompt = (
-        "You are a chat assistant inside a macOS automation TUI.\n"
-        "Chat mode is for discussion, clarification, and planning only.\n"
-        "Do NOT execute actions.\n"
-        "If the user wants something executed, instruct them to use /task <...> (Trinity).\n\n"
-        f"Reply in {lang_name(state.chat_lang)}. Be concise and practical.\n"
-    )
-
-    if not agent_session.messages:
-        agent_session.messages = [SystemMessage(content=system_prompt)]
-    else:
-        try:
-            if SystemMessage and isinstance(agent_session.messages[0], SystemMessage):
-                agent_session.messages[0] = SystemMessage(content=system_prompt)
-        except Exception:
-            pass
-
-    agent_session.messages.append(HumanMessage(content=str(user_text or "")))
-    
-    # Log user message to Agent Panel
-    _log_agent_message_imported(AgentType.USER, str(user_text or ""))
-
-    llm = agent_session.llm
-
-    try:
-        resp = llm.invoke(agent_session.messages)
-        final_message = resp if isinstance(resp, AIMessage) else AIMessage(content=str(getattr(resp, "content", "") or ""))
-        agent_session.messages.append(final_message)
-        
-        content = str(getattr(final_message, "content", "") or "")
-        _log_agent_message_imported(AgentType.ASSISTANT, content)
-        
-        return True, content
-    finally:
-        state.agent_processing = False
-        _trim_logs_if_needed()
+# _agent_send* functions moved to tui.agents
 
 
 
 
 
-def _agent_send(user_text: str) -> Tuple[bool, str]:
-    if bool(getattr(state, "ui_streaming", True)):
-        return agent_send_with_stream(user_text)
-    return agent_send_no_stream(user_text)
+# _agent_send moved to tui.agents
 
 
 
 
 
-@dataclass
-class _DummyProcService:
-    running: bool = False
 
-    def start(self, *args: Any, **kwargs: Any) -> Tuple[bool, str]:
-        self.running = True
-        return True, "Monitoring started."
-
-    def stop(self) -> Tuple[bool, str]:
-        self.running = False
-        return True, "Monitoring stopped."
+# _DummyProcService moved to tui.monitoring_service
 
 
 monitor_service = _DummyProcService()
 
 
-class _ProcTraceService:
-    """Simple process-trace service wrapper around fs_usage/opensnoop.
-
-    It spawns the tool, reads stdout lines and tries to parse pid/process/path
-    and writes events into the monitor DB using `_monitor_db_insert`.
-    This is intentionally minimal and fails gracefully when tool is absent or
-    blocked by SIP.
-    """
-
-    def __init__(self, cmd_name: str, cmd_base: list):
-        self.cmd_name = str(cmd_name)
-        self.cmd_base = list(cmd_base)
-        self.proc = None
-        self.thread: Optional[threading.Thread] = None
-        self.stop_event = threading.Event()
-        self.running = False
-
-    def _parse_and_insert(self, line: str) -> None:
-        try:
-            # naive parsing: look for pid and path
-            pid = 0
-            process = ""
-            path = ""
-            # PID: first integer token after timestamp (fallback)
-            m = re.search(r"\b(\d{2,7})\b", line)
-            if m:
-                try:
-                    pid = int(m.group(1))
-                except Exception:
-                    pid = 0
-            # path: first token starting with /
-            m2 = re.search(r"(/[^\s]+)", line)
-            if m2:
-                path = m2.group(1)
-            # process: try last token (often contains execname), prefer token with dot+digits
-            m_proc = re.search(r"([A-Za-z0-9_\-\.]+(?:\.[0-9]+)?)\s*$", line)
-            if m_proc:
-                process = m_proc.group(1)
-
-            # If pid wasn't found, try to resolve by process name using pgrep
-            if not pid and process:
-                try:
-                    out = subprocess.check_output(["pgrep", "-f", process], text=True).strip().splitlines()
-                    if out:
-                        pid = int(out[0])
-                except Exception:
-                    pass
-
-            # Insert into DB using existing utility
-            try:
-                _monitor_db_insert(
-                    MONITOR_EVENTS_DB_PATH,
-                    source=self.cmd_name,
-                    event_type="access",
-                    src_path=path or "",
-                    dest_path="",
-                    is_directory=False,
-                    target_key="",
-                    pid=int(pid or 0),
-                    process=str(process or ""),
-                    raw_line=str(line or ""),
-                )
-            except Exception:
-                return
-        except Exception:
-            return
-
-    def _reader(self, stream: Any) -> None:
-        try:
-            for ln in iter(stream.readline, ""):
-                if self.stop_event.is_set():
-                    break
-                if not ln:
-                    continue
-                line = str(ln or "").strip()
-                if not line:
-                    continue
-                self._parse_and_insert(line)
-        except Exception:
-            return
-
-    def start(self, pid: Optional[int] = None) -> Tuple[bool, str]:
-        if self.running:
-            return True, f"{self.cmd_name} already running"
-        # check availability
-        if shutil.which(self.cmd_base[0]) is None:
-            return False, f"{self.cmd_base[0]} not found on PATH"
-
-        cmd = list(self.cmd_base)
-        if pid:
-            # pass pid as positional argument for tools like fs_usage
-            cmd += [str(int(pid))]
-
-        # Optionally run under sudo if environment / state indicates it
-        use_sudo = False
-        try:
-            from tui.state import state as _st
-            use_sudo = bool(getattr(_st, "monitor_use_sudo", False))
-        except Exception:
-            use_sudo = False
-        if not use_sudo:
-            # also allow explicit env override
-            use_sudo = bool(str(os.environ.get("FORCE_MONITOR_SUDO") or "").strip())
-
-        if use_sudo:
-            sudo_pwd = str(os.environ.get("SUDO_PASSWORD") or "").strip()
-            cmd = ["sudo", "-S"] + cmd
-
-        try:
-            self.stop_event.clear()
-            self.proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, stdin=subprocess.PIPE if use_sudo and sudo_pwd else None, text=True)
-            if use_sudo and sudo_pwd and self.proc.stdin:
-                try:
-                    # supply password
-                    self.proc.stdin.write(sudo_pwd + "\n")
-                    self.proc.stdin.flush()
-                except Exception:
-                    pass
-            if self.proc.stdout:
-                self.thread = threading.Thread(target=self._reader, args=(self.proc.stdout,), daemon=True)
-                self.thread.start()
-            self.running = True
-            return True, f"{self.cmd_name} started"
-        except Exception as e:
-            return False, f"Failed to start {self.cmd_name}: {e}"
-
-    def stop(self) -> Tuple[bool, str]:
-        try:
-            self.stop_event.set()
-            if self.proc:
-                try:
-                    self.proc.terminate()
-                except Exception:
-                    pass
-            if self.thread:
-                try:
-                    self.thread.join(timeout=2)
-                except Exception:
-                    pass
-        finally:
-            self.proc = None
-            self.thread = None
-            self.running = False
-        return True, f"{self.cmd_name} stopped"
+# _ProcTraceService moved to tui.monitoring_service
 
 
 fs_usage_service = _ProcTraceService("fs_usage", ["fs_usage", "-w", "-f", "filesys"])
@@ -1603,110 +1211,16 @@ def _tool_monitor_targets(args: Dict[str, Any]) -> Dict[str, Any]:
     return _tool_monitor_targets_imported(args)
 
 
-def _scan_installed_apps(app_dirs: List[str]) -> List[str]:
-    apps: List[str] = []
-    for d in app_dirs:
-        try:
-            if not os.path.isdir(d):
-                continue
-            for name in os.listdir(d):
-                if name.endswith(".app"):
-                    apps.append(name[:-4])
-        except Exception:
-            continue
-    # unique preserve order
-    seen: Set[str] = set()
-    out: List[str] = []
-    for a in apps:
-        if a not in seen:
-            seen.add(a)
-            out.append(a)
-    return out
+# _scan_installed_apps moved to tui.scanning
 
 
-def _scan_installed_app_paths(app_dirs: List[str]) -> List[Tuple[str, str]]:
-    out: List[Tuple[str, str]] = []
-    for d in app_dirs:
-        try:
-            if not os.path.isdir(d):
-                continue
-            for name in os.listdir(d):
-                if not name.endswith(".app"):
-                    continue
-                app_name = name[:-4]
-                out.append((app_name, os.path.join(d, name)))
-        except Exception:
-            continue
-    # unique by name, prefer first occurrence
-    seen: Set[str] = set()
-    uniq: List[Tuple[str, str]] = []
-    for app_name, app_path in out:
-        if app_name in seen:
-            continue
-        seen.add(app_name)
-        uniq.append((app_name, app_path))
-    return uniq
+# _scan_installed_app_paths moved to tui.scanning
 
 
-def _read_bundle_id(app_path: str) -> str:
-    try:
-        plist_path = os.path.join(app_path, "Contents", "Info.plist")
-        if not os.path.exists(plist_path):
-            return ""
-        with open(plist_path, "rb") as f:
-            data = plistlib.load(f)
-        bid = data.get("CFBundleIdentifier")
-        return str(bid) if bid else ""
-    except Exception:
-        return ""
+# _read_bundle_id moved to tui.scanning
 
 
-def _get_installed_browsers() -> List[str]:
-    app_dirs = ["/Applications", os.path.expanduser("~/Applications")]
-    installed = _scan_installed_app_paths(app_dirs)
-    keywords_name = [
-        "safari",
-        "chrome",
-        "chromium",
-        "firefox",
-        "brave",
-        "arc",
-        "edge",
-        "opera",
-        "vivaldi",
-        "orion",
-        "tor",
-        "duckduckgo",
-        "waterfox",
-        "librewolf",
-        "zen",
-        "yandex",
-    ]
-    keywords_bundle = [
-        "safari",
-        "chrome",
-        "chromium",
-        "firefox",
-        "brave",
-        "arc",
-        "edge",
-        "opera",
-        "vivaldi",
-        "orion",
-        "torbrowser",
-        "duckduckgo",
-        "browser",
-    ]
-    browsers: List[str] = []
-    for app_name, app_path in installed:
-        low = app_name.lower()
-        if any(k in low for k in keywords_name):
-            browsers.append(app_name)
-            continue
-        bid = _read_bundle_id(app_path).lower()
-        if bid and any(k in bid for k in keywords_bundle):
-            browsers.append(app_name)
-    return sorted({b for b in browsers}, key=lambda x: x.lower())
+# _get_installed_browsers moved to tui.scanning
 
 
 @dataclass
@@ -2196,7 +1710,8 @@ def _handle_complex_task_cli(msg: str, logger: Any):
 def _handle_standard_agent_message(msg: str, logger: Any):
     """Send standard message to agent."""
     logger.info("Sending message to agent")
-    ok, answer = _agent_send_no_stream(msg)
+    # Use imported agent_send_no_stream directly
+    ok, answer = agent_send_no_stream(msg)
     print(answer)
     logger.info(f"Agent response sent, status: {ok}")
     if not ok:

@@ -12,63 +12,63 @@
           "id": "deep_windsurf",
           "name": "Deep Windsurf Cleanup",
           "script": "./scripts/cleanup/deep_windsurf_cleanup.sh",
-          "enabled": false,
+          "enabled": true,
           "description": "Глибоке очищення Windsurf (кеші, дані, профілі)"
         },
         {
           "id": "advanced_windsurf",
           "name": "Advanced Windsurf Identifier Cleanup",
           "script": "./scripts/cleanup/advanced_windsurf_cleanup.sh",
-          "enabled": false,
+          "enabled": true,
           "description": "Розширене очищення ідентифікаторів / трекінгу Windsurf"
         },
         {
           "id": "windsurf_identifier_cleanup",
           "name": "Windsurf Identifier Quick Cleanup",
           "script": "./scripts/cleanup/windsurf_identifier_cleanup.sh",
-          "enabled": false,
+          "enabled": true,
           "description": "Швидке точкове очищення ідентифікаторів"
         },
         {
           "id": "deep_vscode_for_windsurf",
           "name": "Deep VS Code Cleanup (Side Effects)",
           "script": "./scripts/cleanup/deep_vscode_cleanup.sh",
-          "enabled": false,
+          "enabled": true,
           "description": "Очищення VS Code, якщо він використовувався разом із Windsurf"
         },
         {
           "id": "stealth_cleanup",
           "name": "Stealth System Traces Cleanup",
           "script": "./scripts/cleanup/stealth_cleanup.sh",
-          "enabled": false,
+          "enabled": true,
           "description": "Агресивне видалення системних слідів (ризиковий модуль)"
         },
         {
           "id": "hardware_spoof",
           "name": "Hardware Fingerprint Spoofing",
           "script": "./scripts/cleanup/hardware_spoof.sh",
-          "enabled": false,
+          "enabled": true,
           "description": "Маніпуляції з hardware fingerprint (потребує sudo)"
         },
         {
           "id": "check_identifier_cleanup",
           "name": "Identifier Cleanup Verification",
           "script": "./scripts/cleanup/check_identifier_cleanup.sh",
-          "enabled": false,
+          "enabled": true,
           "description": "Фінальна перевірка якості очистки"
         },
         {
           "id": "windsurf_cache_local_cleanup",
           "name": "Windsurf Cache and Local Storage Cleanup",
           "script": "./scripts/cleanup/windsurf_cache_local_cleanup.sh",
-          "enabled": false,
+          "enabled": true,
           "description": "Очищення кешів, локального сховища та індексів Windsurf"
         },
         {
           "id": "browser_fingerprint_cleanup",
           "name": "Browser Fingerprint Cleanup",
           "script": "./scripts/cleanup/browser_fingerprint_cleanup.sh",
-          "enabled": false,
+          "enabled": true,
           "description": "Очищує IndexedDB, Service Workers, Canvas, WebGL, аудіо,Font fingerprints",
           "order": 10
         },
@@ -76,7 +76,7 @@
           "id": "evercookie_killer",
           "name": "EverCookie Killer",
           "script": "./scripts/cleanup/evercookie_killer.sh",
-          "enabled": false,
+          "enabled": true,
           "description": "Видаляє персистентні дані: ETag, HTTP Cache, DNS Cache, Beacon API логи",
           "order": 20
         },
@@ -84,7 +84,7 @@
           "id": "locale_spoof",
           "name": "Locale & Timezone Spoofing",
           "script": "./scripts/cleanup/locale_spoof.sh",
-          "enabled": false,
+          "enabled": true,
           "description": "Спуфує системну локаль, timezone, мову браузера (вектор fingerprint)",
           "order": 30
         },
@@ -92,7 +92,7 @@
           "id": "deep_hardware_spoof",
           "name": "Deep Hardware Fingerprint Spoof",
           "script": "./scripts/cleanup/deep_hardware_spoof.sh",
-          "enabled": false,
+          "enabled": true,
           "description": "20+ векторів: UUID, HWID, XPC, SMBIOS, IOKit, Device ID (Гл 4)",
           "order": 40
         },
@@ -117,7 +117,7 @@
           "id": "m1_max_spoof",
           "name": "M1 Max Fingerprint Spoof",
           "script": "./scripts/cleanup/m1_max_spoof.sh",
-          "enabled": false,
+          "enabled": true,
           "description": "Спуфує M1 Max як M2/M3, криє Apple Silicon маркери, рандомізує GPU/RAM",
           "order": 25,
           "requires_password": true
@@ -126,7 +126,7 @@
           "id": "sonoma_detection_bypass",
           "name": "Sonoma Detection Bypass",
           "script": "./scripts/cleanup/sonoma_detection_bypass.sh",
-          "enabled": false,
+          "enabled": true,
           "description": "Блокує macOS 14 специфічні детектори: Privacy Report, TPCD, Safari 17, WebKit",
           "order": 35,
           "requires_password": true
@@ -135,7 +135,7 @@
           "id": "hostname_spoof",
           "name": "Hostname Spoofing",
           "script": "./scripts/cleanup/hostname_spoof.sh",
-          "enabled": false,
+          "enabled": true,
           "description": "Генерує та встановлює випадкове ім'я хоста (HostName, LocalHostName, ComputerName)",
           "order": 60,
           "requires_password": true
@@ -144,7 +144,7 @@
           "id": "editor_cleanup",
           "name": "Universal Editor Cleanup",
           "script": "./scripts/cleanup/editor_cleanup.sh",
-          "enabled": false,
+          "enabled": true,
           "description": "Уніфікований cleanup для всіх редакторів (VS Code, Windsurf, Cursor, Antigravity)",
           "order": 5
         }

@@ -205,6 +205,47 @@ def monitor_db_read_since_id(db_path: str, last_id: int, limit: int = 5000) -> L
     return rows
 
 
+
+def monitor_db_insert(
+    db_path: str,
+    *,
+    source: str,
+    event_type: str,
+    src_path: str,
+    dest_path: str,
+    is_directory: bool,
+    target_key: str,
+    pid: int = 0,
+    process: str = "",
+    raw_line: str = "",
+) -> None:
+    """Insert a new event into the monitor database."""
+    try:
+        conn = sqlite3.connect(db_path)
+        try:
+            conn.execute(
+                "INSERT INTO events(ts, source, event_type, src_path, dest_path, is_directory, target_key, pid, process, raw_line) "
+                "VALUES(?,?,?,?,?,?,?,?,?,?)",
+                (
+                    int(time.time()),
+                    str(source),
+                    str(event_type),
+                    str(src_path),
+                    str(dest_path),
+                    1 if is_directory else 0,
+                    str(target_key),
+                    int(pid or 0),
+                    str(process or ""),
+                    str(raw_line or ""),
+                ),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+    except Exception:
+        return
+
+
 def monitor_db_get_max_id(db_path: str) -> int:
     """Get maximum event ID from database."""
     try:
@@ -515,11 +556,13 @@ def _monitor_startup_log() -> None:
         db = MONITOR_EVENTS_DB_PATH
         exists = os.path.exists(db)
         size = os.path.getsize(db) if exists else 0
-        from tui.cli import _maybe_log_monitor_ingest
-
-        _maybe_log_monitor_ingest(
-            f"Monitor startup: db={db} exists={exists} size={size} source={getattr(state,'monitor_source','')} use_sudo={getattr(state,'monitor_use_sudo',False)} targets={len(getattr(state,'monitor_targets',set()) or set())}"
-        )
+        msg = f"Monitor startup: db={db} exists={exists} size={size} source={getattr(state,'monitor_source','')} use_sudo={getattr(state,'monitor_use_sudo',False)} targets={len(getattr(state,'monitor_targets',set()) or set())}"
+        try:
+             # Try to log to main log if available, else ignored
+             from tui.render import log
+             log(msg, "info")
+        except ImportError:
+             pass
     except Exception:
         return
 
@@ -690,9 +733,9 @@ def tool_monitor_import_log(args: Dict[str, Any]) -> Dict[str, Any]:
     if not os.path.exists(path):
         return {"ok": False, "error": "File not found"}
     try:
-        from tui.cli import _ProcTraceService
+        from tui.monitoring_service import ProcTraceService
 
-        svc = _ProcTraceService("fs_usage", ["fs_usage", "-w", "-f", "filesys"])
+        svc = ProcTraceService("fs_usage", ["fs_usage", "-w", "-f", "filesys"])
         count = 0
         with open(path, "r", encoding="utf-8", errors="ignore") as f:
             for ln in f:

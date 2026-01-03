@@ -60,7 +60,12 @@ class ConfigLoader:
         
         try:
             with open(path, "r") as f:
-                data = yaml.safe_load(f)
+                data = yaml.safe_load(f) or {}
+            
+            # Flatten 'settings' key if present (legacy mismatch fix)
+            if "settings" in data and isinstance(data["settings"], dict):
+                nested = data.pop("settings")
+                data.update(nested)
             
             cls._settings = Settings(**data)
             return cls._settings

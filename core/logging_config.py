@@ -7,6 +7,8 @@ logging for both the CLI/TUI and the backend agents.
 
 import logging
 import logging.handlers
+import atexit
+import queue
 import os
 import sys
 import json
@@ -202,6 +204,29 @@ def setup_global_logging(
     
     if root_dir:
         _setup_legacy_root_logging(root_dir, root_logger)
+
+    # 6. Async Logging Optimization (QueueHandler)
+    # Move all blocking handlers to a background thread listener
+    # This prevents disk I/O from stalling the main thread/TUI
+    blocking_handlers = []
+    
+    # Identify blocking handlers (files) - but keep TUI/Console direct for immediate feedback if desired?
+    # Actually, TUI handler should be fast (in-memory list append), but file handlers are slow.
+    # We will move FILE handlers to the listener.
+    
+    for h in root_logger.handlers[:]:
+        if isinstance(h, logging.handlers.RotatingFileHandler):
+            root_logger.removeHandler(h)
+            blocking_handlers.append(h)
+            
+    if blocking_handlers:
+        log_queue = queue.Queue(-1) # Infinite queue
+        queue_handler = logging.handlers.QueueHandler(log_queue)
+        root_logger.addHandler(queue_handler)
+        
+        listener = logging.handlers.QueueListener(log_queue, *blocking_handlers)
+        listener.start()
+        atexit.register(listener.stop)
 
     return root_logger
 

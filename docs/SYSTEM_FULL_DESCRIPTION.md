@@ -49,7 +49,7 @@
 
 ### 3.3 `tui/cli.py`
 
-Це **основний CLI** з сабкомандами через `argparse`.
+Это **основний CLI** з сабкомандами через `argparse`. До рефакторингу це був монолітний файл, тепер він модульний.
 
 Ключові частини:
 
@@ -59,14 +59,18 @@
   - вантажить cleanup config (`_load_cleanup_config()`)
   - визначає редактор (`_resolve_editor_arg`)
   - диспатчить команди:
-    - `list-editors`
-    - `list-modules`
-    - `run` (очистка)
-    - `enable` / `disable`
-    - `install`
-    - `smart-plan` / `ask`
-    - другий диспатч: self-healing/vibe/eternal-engine/agent toggles
+    - `list-editors`, `list-modules`, `run`, `enable`, `install`
+    - `smart-plan`, `ask`
     - `agent-chat`
+    - допоміжні (self-healing, vibe, eternal-engine)
+
+#### Модульна структура TUI:
+- **`tui/cli.py`**: Точка входу в CLI, обробка аргументів, диспетчеризація команд.
+- **`tui/scanning.py`**: Сканування встановлених програм (браузери, редактори) та отримання bundle ID.
+- **`tui/monitoring.py`**: Логіка роботи з БД моніторингу (`monitor_db_insert`, `monitor_db_read_since_id`).
+- **`tui/monitoring_service.py`**: Сервіси обгорток над `fs_usage`, `opensnoop` (`ProcTraceService`).
+- **`tui/utils.py`**: Загальні утиліти (наприклад, `safe_abspath`).
+- **`tui/agents.py`**: Логіка спілкування з агентом (`agent_send`, `ensure_agent_ready`).
 
 - `main()` у кінці файла просто викликає `cli_main(sys.argv[1:])`.
 
