@@ -526,10 +526,11 @@ fs_usage_service = _ProcTraceService("fs_usage", ["fs_usage", "-w", "-f", "files
 opensnoop_service = _ProcTraceService("opensnoop", ["opensnoop"])
 recorder_service: Any = None
 recorder_last_session_dir: str = ""
-fs_usage_service = _ProcTraceService("fs_usage", ["fs_usage", "-w", "-f", "filesys"])
-opensnoop_service = _ProcTraceService("opensnoop", ["opensnoop"])
-
-
+    analyze_recording_bg(
+        rec_dir=rec_dir, 
+        name=name, 
+        user_context=user_context
+    )
 recorder_service: Any = None
 recorder_last_session_dir: str = ""
 
@@ -1086,8 +1087,8 @@ monitor_service = None  # TODO: Replace with actual initialization or import as 
         find_module=_find_module,
         set_module_enabled=_set_module_enabled,
         AVAILABLE_LOCALES=AVAILABLE_LOCALES,
-        localization=localization,
-monitor_service = None  # TODO: Replace with actual initialization or import as needed
+from .monitor import MonitorService  # Adjust import path as needed
+monitor_service = MonitorService()  # Or appropriate initialization
         monitor_stop_selected=_monitor_stop_selected,
         monitor_start_selected=_monitor_start_selected,
         monitor_service=monitor_service,

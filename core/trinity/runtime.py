@@ -347,6 +347,8 @@ class TrinityRuntime(
                 
                 # Log execution step
                 for node_name, node_state in event.items():
+                    if not isinstance(node_state, dict):
+                        continue
                     agent = node_state.get("current_agent")
                     if agent:
                         self._log_execution_step(agent, node_state)

@@ -4,8 +4,8 @@
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 315
-- **Files Skipped**: 36365
-- **Generated**: 2026-01-03 23:05:24
+- **Files Skipped**: 36379
+- **Generated**: 2026-01-03 23:06:43
 
 ---
 
@@ -243,22 +243,20 @@ NameError: name 'monitor_service' is not defined
 ## Git Diff (Recent Changes)
 
 ```
- CODEMAP.md                 | 105658 +-----------------------------------------
- core/trinity/execution.py  |    153 +-
- core/trinity/nodes/vibe.py |     24 +-
- core/trinity/state.py      |      6 +
- tui/cli.py                 |     11 +-
- 5 files changed, 170 insertions(+), 105682 deletions(-)
+ CODEMAP.md              | 106462 +--------------------------------------------
+ core/trinity/runtime.py |      2 +
+ tui/cli.py              |     13 +-
+ 3 files changed, 11 insertions(+), 106466 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
+3c994f35 Trinity task completed: Відкрий Google у браузері і введи в пошук сучасного фільму про штучний…
 84439c42 Trinity task completed: Відкрий Google у браузері і введи в пошук сучасного фільму про штучний…
 0b72a045 Trinity task completed: Знайди інформацію про Python на Wikipedia
 a1914d17 Trinity task completed: Створи файл test_hello.txt з текстом 'Hello World'
 b5599125 Trinity task completed: Знайди інформацію про Python на Wikipedia
-3d922b4f Trinity task completed: Створи файл test_hello.txt з текстом 'Hello World'
 ```
 
 ---
@@ -13981,7 +13979,7 @@ Trinity Planning module - Strategy and plan optimization.
 __all__ = []
 ```
 
-### `core/trinity/runtime.py` (16.8 KB)
+### `core/trinity/runtime.py` (16.9 KB)
 
 ```python
 import os
@@ -14333,6 +14331,8 @@ class TrinityRuntime(
                 
                 # Log execution step
                 for node_name, node_state in event.items():
+                    if not isinstance(node_state, dict):
+                        continue
                     agent = node_state.get("current_agent")
                     if agent:
                         self._log_execution_step(agent, node_state)
@@ -96206,10 +96206,11 @@ fs_usage_service = _ProcTraceService("fs_usage", ["fs_usage", "-w", "-f", "files
 opensnoop_service = _ProcTraceService("opensnoop", ["opensnoop"])
 recorder_service: Any = None
 recorder_last_session_dir: str = ""
-fs_usage_service = _ProcTraceService("fs_usage", ["fs_usage", "-w", "-f", "filesys"])
-opensnoop_service = _ProcTraceService("opensnoop", ["opensnoop"])
-
-
+    analyze_recording_bg(
+        rec_dir=rec_dir, 
+        name=name, 
+        user_context=user_context
+    )
 recorder_service: Any = None
 recorder_last_session_dir: str = ""
 
@@ -96766,8 +96767,8 @@ monitor_service = None  # TODO: Replace with actual initialization or import as 
         find_module=_find_module,
         set_module_enabled=_set_module_enabled,
         AVAILABLE_LOCALES=AVAILABLE_LOCALES,
-        localization=localization,
-monitor_service = None  # TODO: Replace with actual initialization or import as needed
+from .monitor import MonitorService  # Adjust import path as needed
+monitor_service = MonitorService()  # Or appropriate initialization
         monitor_stop_selected=_monitor_stop_selected,
         monitor_start_selected=_monitor_start_selected,
         monitor_service=monitor_service,
@@ -106687,4 +106688,4 @@ def _render_mcp_client_menu(ctx: dict) -> List[Tuple[str, str]]:
 ## Summary
 
 - **Total Files**: 315
-- **Skipped**: 36365
+- **Skipped**: 36379
